@@ -12,7 +12,7 @@ var server=require("rampart-server");
 rampart.globalize(rampart.utils);
 
 // a message to print after server has started"
-var message = "Go to http://localhost:8088/apps/wikipedia_search/search.html to search.";
+var message = "Go to http://localhost:8088/docs/ to view the docs.";
 
 /*
    a convenient global object to hold configs and
@@ -299,7 +299,7 @@ var serverpid=server.start(
 fprintf(process.scriptPath+"/server.pid", "%d", serverpid);
 chown({user:serverConf.user, path:process.scriptPath+"/server.pid"});
 
-//sleep(0.5);//gimme half a sec, so messages from forked server can print first if logging is off.
+sleep(0.5);//gimme half a sec, so messages from forked server can print first if logging is off.
 
 if(!kill(serverpid, 0)) {
     printf("Failed to start webserver\n");
