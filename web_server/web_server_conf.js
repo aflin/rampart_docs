@@ -11,32 +11,47 @@ var server=require("rampart-server");
 */
 rampart.globalize(rampart.utils);
 
+// a message to print after server has started"
+var message = "Go to http://localhost:8088/apps/wikipedia_search/search.html to search.";
+
 /*
-   a convenient global object to hold
-   locations that we might need to access in
-   modules
+   a convenient global object to hold configs and
+   locations that we might need to access from
+   within modules
 */ 
 
 var serverConf = {
-    bindPort:   8088,
-    htmlRoot:   process.scriptPath + "/html/",
-    appsRoot:   process.scriptPath + "/apps/",
-    wsappsRoot: process.scriptPath + "/wsapps/",
-    user:       "rampart"
+    // for localhost only
+    ipAddr:       "127.0.0.1",
+    ipv6Addr:     "[::1]",
+
+    // bind to all IP Addresses
+    //ip:           "0.0.0.0",
+    //ipv6:         "[::]",
+
+    ipPort:       8088,
+    ipv6Port:     8088,
+    htmlRoot:     process.scriptPath + "/html/",
+    appsRoot:     process.scriptPath + "/apps/",
+    wsappsRoot:   process.scriptPath + "/wsapps/",
+    user:         "nobody"
 }
 
-/* the array holding the ip:port we will bind to */
+/* the array holding the ip:port combos we will bind to */
+var bind = [];
 
-// for binding to all:
-//var bind = [  `0.0.0.0:${serverConf.bindPort}`,`[::]:${serverConf.bindPort}` ];
-//   OR
-// for binding localhost only:
-var bind = [ `[::1]:${serverConf.bindPort}`, `127.0.0.1:${serverConf.bindPort}` ]
+if(serverConf.ipAddr && serverConf.ipPort)
+    bind.push(`${serverConf.ipAddr}:${serverConf.ipPort}`);
 
+if(serverConf.ipv6Addr && serverConf.ipv6Port)
+    bind.push(`${serverConf.ipv6Addr}:${serverConf.ipv6Port}`);
+    
+if(!bind.length)
+    throw("No ip addr/port specified");
 
 /* 
    here, we are either "root" (necessary if binding to port 80)
-   or we are an unprivileged user ("rampart")
+   or we are an unprivileged user (e.g - "nobody")
 */
 var iam = trim(exec('whoami').stdout);
 
@@ -44,8 +59,12 @@ var iam = trim(exec('whoami').stdout);
    Throw an error if we attempt to bind to port <1024 as something
    other than root.
 */
-if(serverConf.bindPort < 1024 && iam != "root")
-    throw("Error: script must be started as root to bind to port " + port);
+if(iam != "root") {
+    if(serverConf.ipPort < 1024)
+        throw("Error: script must be started as root to bind to IP port " + serverConf.ipPort);
+    if(serverConf.ipv6Port < 1024)
+        throw("Error: script must be started as root to bind to IPv6 port " + serverConf.ipv6Port);
+}
 
 /*** custom 404 page ***/
 function notfound(req){
@@ -59,13 +78,13 @@ function notfound(req){
                             The requested URL${%H:req.path.path}
                             was not found on this server.
                         </p>
-                        <p><img style="width:65%" src="/inigo-not-found.jpg"></p>
+                        <p><img style="width:65%" src="/images/inigo-not-found.jpg"></p>
                     </center>
                 </body></html>`
     }
 }
 
-/* this function is the same as the internal one and is 
+/* The dirlist function below is the same as the internal one and is
    provided so that you can make alterations to the default.
 
    The choice between no dir list vs internal vs this script is 
@@ -131,11 +150,11 @@ var serverpid=server.start(
     */
     /* use the following to bind to all ipv4 and ipv6 addresses */
     //bind: [ "[::]:8088", "0.0.0.0:8088" ],
-    bind: bind,          // see top of script, only need ipv4 here.
+    bind: bind,          // see top of script.
 
     /* When binding to 80 or 443, must be started as root, 
        Privileges will be dropped to user:rampart after port is bound.  */
-    user: serverConf.user,
+    user: serverConf.user, //ignored if not root
 
     /* max time to spend running javascript callbacks */
     scriptTimeout: 20.0,
@@ -149,7 +168,7 @@ var serverpid=server.start(
     developerMode: true,
 
     /* turn logging on, by default goes to stdout/stderr */
-    //log: true,
+//    log: true,
 
     /* access log location, instead of stdout. Must be set if daemon==true && log==true */
     accessLog: process.scriptPath+"/logs/access.log",
@@ -278,11 +297,16 @@ var serverpid=server.start(
 */
 
 fprintf(process.scriptPath+"/server.pid", "%d", serverpid);
-//chown({user:serverConf.user, group:serverConf.user, path:process.scriptPath+"/server.pid"});
+chown({user:serverConf.user, path:process.scriptPath+"/server.pid"});
 
-sleep(0.5);//gimme half a sec, so messages from forked server can print first.
+//sleep(0.5);//gimme half a sec, so messages from forked server can print first if logging is off.
 
-printf(`Server has been started.  Go to http://localhost:${serverConf.bindPort}/docs to view documentation.
+if(!kill(serverpid, 0)) {
+    printf("Failed to start webserver\n");
+    process.exit(1);
+}
+
+printf(`Server has been started. ${message}
 Server pid is ${serverpid}.  To stop server use kill as such:
    kill ${serverpid}
 `);
