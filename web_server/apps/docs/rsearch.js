@@ -384,8 +384,8 @@ function build_db() {
                                                         // aka /usr/local/src/rampart/docs/build/html
         "/usr/local/rampart/share/rampart/docs"         // standard install dir
     */
-        "../../../build/html"
-//        "/usr/local/src/rampart/docs/build/html"
+        "../../../build/html",
+        "/usr/local/src/rampart_docs/build/html"
     ];
 
     for (var i = 0; i<trypaths.length; i++) {
