@@ -4,6 +4,10 @@ var db=process.scriptPath + '/data/docs/db';
 
 var sql;
 
+/* This is a dual purpose script.  
+   If run from command line, it will build the database and html pages.
+   If run as a module, it will perform the typeahead and search functions.
+*/
 
 rampart.globalize(rampart.utils);
 
@@ -24,8 +28,21 @@ function corpsug(word)
 {
     var res;
     sql.set({"indexaccess":true});//allow the search of metamorph word index like a table
-    // return array of objects formatted as -> [{ value: "matchedword", data: "search" },...]
-    // ordered by frequency
+    /* Return array of objects formatted as 
+        [
+            { 
+                value: "matchedword1", 
+                data: "search" 
+            },
+            { 
+                value: "matchedword2", 
+                data: "search" 
+            },
+            ...
+        ]
+    ordered by word count.  data: "search" -- indicate that a search should be performed upon clicking.
+    See client javascript below in copy_files().
+    */
     res=sql.exec(
         "select Word value, convert('search','varchar') data from sections_full_text_mmix where Word matches ? order by Count DESC",
         [word+'%']
@@ -41,7 +58,7 @@ function suggest(req)
     var space = q.lastIndexOf(" ");
     if(space == -1)
     {
-        // look for suggestions for an exact title match
+        // look for suggestions as an exact title match
         var res = sql.exec("select full value, plink data from sections where title matches ? order by length(title)",[q+'%'])
         // if less than 10, add word matches
         if (res.rowCount < 10)
@@ -71,6 +88,7 @@ function suggest(req)
     return {json: { "suggestions":  cwords} };
 }
 
+/* return entire sections' html that match query */
 function results(req)
 {
     return { json: 
@@ -86,6 +104,7 @@ function results(req)
 /* load the html module */
 var html=require("rampart-html");
 
+// break up a page into <section>s
 function parse_html_file(file, tofile){
     var res=readFile(file);
     var hres=html.newDocument(res,{"indent":true,wrap:120});
@@ -323,6 +342,7 @@ function make_database(docpath,destpath) {
     /* create table */
     sql.exec("create table sections (title varchar(16), full varchar(64), plink varchar(32), level int, text varchar(128), html varchar(256) );");
 
+    // an array of the list of *.html files in docpath
     var files = readdir(docpath + "/").filter(function(dir){ return /\.html/.test(dir); });
 
     for (var j=0; j<files.length;j++) {
@@ -332,14 +352,18 @@ function make_database(docpath,destpath) {
         for (i=0; i<els.length; i++)
         {
             var el=els[i];
-            var indent=(el.level-1) * 4;
-            /* create title links for sections, e.g. "rampart-server : the rampart-server http module : loading and using the module : configuring and starting the server : start()" */
+            //var indent=(el.level-1) * 4; //for debugging code below
+
+            /* create title links for sections, e.g. 
+               "rampart-server : the rampart-server http module : loading and using the module : configuring and starting the server : start()" */
             var title = el.title.replace(/ ¶ /,"").toLowerCase();//remove pesky ¶ symbols in title tags
+
             fullpath[el.level-1] = title;
             fullname = fullpath.slice(0,el.level).join(' : ')
 
             link = file + "#" + title.replace(/[ \.\/]/g,'-').replace(/[\(\)]/g,'');
 
+            // Some debugging code:
             //printf("SECTION %s, level:%d, length %d\n", link, el.level, el.text.length);
             //printf("%*P\n%!*P\n", indent, title, indent+2, el.text);
 
@@ -359,7 +383,6 @@ function make_index() {
     sql.exec("create fulltext index sections_full_text_mmix on sections(full\\text) " +
              "WITH WORDEXPRESSIONS "+
              "('[\\alnum]+', '[\\alnum_,]+', '[\\alnum_]+>>()=', '[\\alnum_]+(=>>[\\alnum_\\,\\. ]{1,25})=')" +
-             //"('[\\alnum\\x80-\\xFF]{2,99}', '[\\alnum\\x80-\\xFF\\(\\)\\%\\-\\_]{2,99}') "+
              "INDEXMETER 'on'"
     );
 }
@@ -371,6 +394,7 @@ function build_db() {
 
     path=process.scriptPath;
 
+    // remove "/apps/docs"
     path = path.replace(/\/[^\/]+\/[^\/]+$/, "");
 
     dbpath = path + "/data/docs/db";
@@ -378,14 +402,8 @@ function build_db() {
     sql = new Sql.init(dbpath,true);
 
     var trypaths = [
-    /* docs no longer in installation 
-        process.installPath + '/docs',                  // as in /usr/local/rampart/docs or ~/rampart/docs
-        process.installPath + '/share/rampart/docs',    // as in /usr/local/share/rampart/docs
-                                                        // aka /usr/local/src/rampart/docs/build/html
-        "/usr/local/rampart/share/rampart/docs"         // standard install dir
-    */
-        "../../../build/html",
-        "/usr/local/src/rampart_docs/build/html"
+        "../../../build/html", //relative to github dirs
+        "/usr/local/src/rampart_docs/build/html" //absolute, if script moved
     ];
 
     for (var i = 0; i<trypaths.length; i++) {
@@ -437,14 +455,17 @@ function build_db() {
     }
 }
 
+// Command line, or module?
 if(module && module.exports) {
     module.exports = {
         "suggest.json": suggest,
         "results.json": results
     }
 } else {
-    //set to webuser if running as root.
-    //webuser='rampart';
+    // Set "webuser" to chown the database to another user if running as root.
+    // This is also taken care of in start_docs_web_server.sh
+    //webuser='nobody';
+
     build_db();
 }
 
