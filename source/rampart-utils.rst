@@ -629,7 +629,7 @@ Where:
       or ``false``.
 
    *  ``killSignal`` - :green:`Number`. If timeout is reached, use this
-      signal.  Valid if Valid if ``background`` is unset
+      signal.  Valid if ``background`` is unset
       or ``false`` and a ``timeout`` value is set.
 
    *  ``background`` - :green:`Boolean`.  Whether to execute detached and return
