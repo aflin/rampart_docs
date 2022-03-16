@@ -418,11 +418,11 @@ options:
         If false, each cell value is the primitive normalized value.
 
       * ``progressFunc`` - :green:`Function`: A function to monitor the progress
-        of the passes over the csv data.  It takes as arguments ``function (stage, i)``
+        of the passes over the csv data.  It takes as arguments ``function(i, stage)``
         The variable ``stage`` is ``0`` for the initial counting of rows, ``1`` for the parsing
         of the cells in each row and ``2+`` optionally if ``normalize`` is ``true`` for the
         two stages of the analysis of each column in the csv (e.g. ``2`` for column 0 first pass,
-        ``3`` for column 0 second pass, etc.).  The variable ``i`` is the row number.
+        ``3`` for column 0 second pass, etc.).  The variable ``i`` is the current row number.
 
       * ``progressStep`` :green:`Number`: Where number is ``n``, execute
         ``progresFunc`` callback, if provided, for every nth row in each stage.

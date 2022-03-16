@@ -282,25 +282,24 @@ you can also get messages which describe each hit and subhits.</p>
        <span class="p">[</span><span class="k">where</span> <span class="n">CONDITION</span><span class="p">];</span>
 </pre></div>
 </div>
-<dl class="docutils">
-<dt>query</dt>
-<dd>Query should be a string containing a metamorph query.</dd>
-<dt>data</dt>
-<dd>The text to search. May be literal data or a field from the table.</dd>
-<dt>nhits</dt>
-<dd>The maximum number of hits to return. If it is 0, which is the
-default, you will get all the hits.</dd>
-<dt>msgs</dt>
-<dd><p class="first">An integer; controls what information is returned. A bit-wise OR of
+<dl>
+<dt>query</dt><dd><p>Query should be a string containing a metamorph query.</p>
+</dd>
+<dt>data</dt><dd><p>The text to search. May be literal data or a field from the table.</p>
+</dd>
+<dt>nhits</dt><dd><p>The maximum number of hits to return. If it is 0, which is the
+default, you will get all the hits.</p>
+</dd>
+<dt>msgs</dt><dd><p>An integer; controls what information is returned. A bit-wise OR of
 any combination of the following values:</p>
 <ul class="simple">
-<li>1 to get matches and offset/length information</li>
-<li>2 to suppress text from <code class="docutils literal notranslate"><span class="pre">data</span></code> which matches; printed by
-default</li>
-<li>4 to get a count of hits (up to <code class="docutils literal notranslate"><span class="pre">nhits</span></code>)</li>
-<li>8 to get the hit count in a numeric parseable format</li>
-<li>16 to get the offset/length in the original query of each search
-set</li>
+<li><p>1 to get matches and offset/length information</p></li>
+<li><p>2 to suppress text from <code class="docutils literal notranslate"><span class="pre">data</span></code> which matches; printed by
+default</p></li>
+<li><p>4 to get a count of hits (up to <code class="docutils literal notranslate"><span class="pre">nhits</span></code>)</p></li>
+<li><p>8 to get the hit count in a numeric parseable format</p></li>
+<li><p>16 to get the offset/length in the original query of each search
+set</p></li>
 </ul>
 <p>Set offset/length information (value 16) is of the form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Set</span> <span class="n">N</span> <span class="n">offset</span><span class="o">/</span><span class="nb">len</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span> <span class="n">setoff</span> <span class="n">setlen</span>
@@ -316,20 +315,20 @@ byte offset from the start of the query where set <code class="docutils literal 
 </div>
 <p>Where:</p>
 <ul class="simple">
-<li>offset is the offset within the data of the overall hit context
-(sentence, paragraph, etc…)</li>
-<li>length is the length of the overall hit context</li>
-<li>suboff is the offset within the hit of a matching term</li>
-<li>sublen is the length of the matching term</li>
-<li>suboff and sublen will be repeated for as many terms as are
-required to satisfy the query.</li>
+<li><p>offset is the offset within the data of the overall hit context
+(sentence, paragraph, etc…)</p></li>
+<li><p>length is the length of the overall hit context</p></li>
+<li><p>suboff is the offset within the hit of a matching term</p></li>
+<li><p>sublen is the length of the matching term</p></li>
+<li><p>suboff and sublen will be repeated for as many terms as are
+required to satisfy the query.</p></li>
 </ul>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">select</span> <span class="n">mminfo</span><span class="p">(</span><span class="s1">&#39;power struggle @0 w/.&#39;</span><span class="p">,</span><span class="n">Body</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="n">inf</span> <span class="kn">from</span> <span class="nn">html</span>
        <span class="n">where</span> <span class="n">Title</span>\<span class="n">Meta</span>\<span class="n">Body</span> <span class="n">like</span> <span class="s1">&#39;power struggle&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
-<p class="last">Would give a result similar to the following:</p>
+<p>Would give a result similar to the following:</p>
 </dd>
 </dl>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">300</span> <span class="o">&lt;</span><span class="n">Data</span> <span class="kn">from</span> <span class="nn">Texis</span><span class="o">&gt;</span> <span class="mi">62</span> <span class="mi">5</span> <span class="mi">0</span> <span class="mi">5</span>
@@ -358,7 +357,7 @@ syntax is</p>
 <p>This can be useful in a number of situations. Some cases where you might
 want to use convert are</p>
 <ul>
-<li><p class="first">The display format for a different format is more useful. For example
+<li><p>The display format for a different format is more useful. For example
 you might want to convert a field of type COUNTER to a DATE field, so
 you can see when the record was inserted, for example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SELECT</span> <span class="n">convert</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span>
@@ -372,22 +371,22 @@ you can see when the record was inserted, for example:</p>
 </li>
 </ul>
 <ul class="simple">
-<li>If you have an application which is expecting data in a particular
+<li><p>If you have an application which is expecting data in a particular
 type you can use convert to make sure you will receive the correct
-type.</li>
-<li>The optional third argument given to <code class="docutils literal notranslate"><span class="pre">convert()</span></code> is a
+type.</p></li>
+<li><p>The optional third argument given to <code class="docutils literal notranslate"><span class="pre">convert()</span></code> is a
 <a class="reference internal" href="sql-set.html#varchartostrlstmode"><span class="std std-ref">varcharToStrlstMode</span></a> mode value.  This third argument may
 only be supplied when converting to type <code class="docutils literal notranslate"><span class="pre">strlst</span></code> or <code class="docutils literal notranslate"><span class="pre">varstrlst</span></code>.  It
 allows the separator character or mode to be conveniently specified
 locally to the conversion, instead of having to alter the global
-<a class="reference internal" href="sql-set.html#varchartostrlstmode"><span class="std std-ref">varcharToStrlstMode</span></a> mode.</li>
-<li>Note that <code class="docutils literal notranslate"><span class="pre">convert()</span></code>ing data
+<a class="reference internal" href="sql-set.html#varchartostrlstmode"><span class="std std-ref">varcharToStrlstMode</span></a> mode.</p></li>
+<li><p>Note that <code class="docutils literal notranslate"><span class="pre">convert()</span></code>ing data
 from/to <code class="docutils literal notranslate"><span class="pre">varbyte</span></code>/<code class="docutils literal notranslate"><span class="pre">varchar</span></code> does not convert the data to/from
 hexadecimal by default in programs
 other than <code class="docutils literal notranslate"><span class="pre">tsql</span></code>; it is preserved as-is (though truncated at nul
 for <code class="docutils literal notranslate"><span class="pre">varchar</span></code>). See the <a class="reference internal" href="#bintohex">bintohex</a>() and <a class="reference internal" href="#hextobin">hextobin</a>() functions
 for hexadecimal conversion, and the <a class="reference internal" href="sql-set.html#hexifybytes"><span class="std std-ref">hexifyBytes</span></a> SQL property
-for controlling automatic hex conversion.</li>
+for controlling automatic hex conversion.</p></li>
 </ul>
 </div>
 <div class="section" id="seq">
@@ -491,11 +490,11 @@ parameter is returned. This can be useful to visually examine binary
 data that may contain non-printable or nul bytes. The optional second
 argument is one of the following flags:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">stream</span></code>: Use the default output mode: a continuous stream of
-hexadecimal bytes.</li>
-<li><code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Return a “pretty” version of the data: print 16 byte per
+<li><p><code class="docutils literal notranslate"><span class="pre">stream</span></code>: Use the default output mode: a continuous stream of
+hexadecimal bytes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Return a “pretty” version of the data: print 16 byte per
 line, space-separate the hexadecimal bytes, and print an ASCII dump
-on the right side.</li>
+on the right side.</p></li>
 </ul>
 </div>
 <div class="section" id="hextobin">
@@ -508,16 +507,16 @@ on the right side.</li>
 binary representation, and the <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> result returned. The optional
 second argument is one of the following flags:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">stream</span></code>: Only accept the <code class="docutils literal notranslate"><span class="pre">stream</span></code> format of <code class="docutils literal notranslate"><span class="pre">bintohex()</span></code>, i.e.
+<li><p><code class="docutils literal notranslate"><span class="pre">stream</span></code>: Only accept the <code class="docutils literal notranslate"><span class="pre">stream</span></code> format of <code class="docutils literal notranslate"><span class="pre">bintohex()</span></code>, i.e.
 a stream of hexadecimal bytes, the same format that
 <code class="docutils literal notranslate"><span class="pre">bintohex(varbyteData,</span> <span class="pre">'stream')</span></code> returns.
 Whitespace is acceptable, but only between
 (not within) hexadecimal bytes. Case-insensitive. Non-conforming data
-will result in an error message and the function failing.</li>
-<li><code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Accept either <code class="docutils literal notranslate"><span class="pre">stream</span></code> or <code class="docutils literal notranslate"><span class="pre">pretty</span></code> <a class="reference internal" href="#bintohex">bintohex</a> formatted data;
+will result in an error message and the function failing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Accept either <code class="docutils literal notranslate"><span class="pre">stream</span></code> or <code class="docutils literal notranslate"><span class="pre">pretty</span></code> <a class="reference internal" href="#bintohex">bintohex</a> formatted data;
 if the latter, only the hexadecimal bytes are parsed (e.g. ASCII column
 is ignored). Parsing is more liberal, but may be confused if the data
-deviates significantly from either format.</li>
+deviates significantly from either format.</p></li>
 </ul>
 </div>
 <div class="section" id="identifylanguage">
@@ -758,13 +757,13 @@ this SQL:</p>
 </div>
 <p>Note that:</p>
 <ul class="simple">
-<li>In the <code class="docutils literal notranslate"><span class="pre">tsql</span></code> example, the trailing commas in the <code class="docutils literal notranslate"><span class="pre">PriceRange</span></code> values are used
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">tsql</span></code> example, the trailing commas in the <code class="docutils literal notranslate"><span class="pre">PriceRange</span></code> values are used
 to converted to <code class="docutils literal notranslate"><span class="pre">strlst</span></code> values via the <code class="docutils literal notranslate"><span class="pre">convert(..,</span> <span class="pre">..,</span> <span class="pre">'lastchar')</span></code>
 function.  In the Rampart JavaScript version, the array of strings are
 converted into a <code class="docutils literal notranslate"><span class="pre">strlst</span></code> using <code class="docutils literal notranslate"><span class="pre">convert(..,</span> <span class="pre">..,</span> <span class="pre">'json')</span></code> function.
-See <a class="reference internal" href="#convert">convert</a> () mode above for details.</li>
-<li>The empty PriceRange for the fourth row: the -2 Price matched no ranges, and hence an
-empty PriceRange was returned for it.</li>
+See <a class="reference internal" href="#convert">convert</a> () mode above for details.</p></li>
+<li><p>The empty PriceRange for the fourth row: the -2 Price matched no ranges, and hence an
+empty PriceRange was returned for it.</p></li>
 </ul>
 <p>See also: <a class="reference internal" href="#lookupcanonicalizeranges">lookupCanonicalizeRanges</a>, <a class="reference internal" href="#lookupparserange">lookupParseRange</a></p>
 </div>
@@ -807,8 +806,8 @@ Syntax:</p>
 <p>The parts argument is zero or more of the following part tokens as
 strings:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">lowerInclusivity</span></code>: Returns the inclusive/exclusive operator for
-the lower bound, e.g. “{” or “”</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lowerInclusivity</span></code>: Returns the inclusive/exclusive operator for
+the lower bound, e.g. “{” or “”</p></li>
 </ul>
 <p>If a requested part is not present, an empty string is returned for that
 part. The concatenation of the above listed parts, in the above order,
@@ -1027,23 +1026,23 @@ between several different ways of creating the abstract. Note that some
 of these styles require the <code class="docutils literal notranslate"><span class="pre">query</span></code> argument as well, which is a
 Metamorph query to look for:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dumb</span></code> (0) - Start the abstract at the top of the document.</li>
-<li><code class="docutils literal notranslate"><span class="pre">smart</span></code> (1) - This style will look for the first meaningful
+<li><p><code class="docutils literal notranslate"><span class="pre">dumb</span></code> (0) - Start the abstract at the top of the document.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">smart</span></code> (1) - This style will look for the first meaningful
 chunk of text, skipping over any headers at the top of the text.  This
-is the default if neither <code class="docutils literal notranslate"><span class="pre">style</span></code> nor <code class="docutils literal notranslate"><span class="pre">query</span></code> is given.</li>
-<li><code class="docutils literal notranslate"><span class="pre">querysingle</span></code> (2) -
+is the default if neither <code class="docutils literal notranslate"><span class="pre">style</span></code> nor <code class="docutils literal notranslate"><span class="pre">query</span></code> is given.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">querysingle</span></code> (2) -
 Center the abstract contiguously on the best occurence of <code class="docutils literal notranslate"><span class="pre">query</span></code>
-in the document.</li>
-<li><code class="docutils literal notranslate"><span class="pre">querymultiple</span></code> (3) -
+in the document.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">querymultiple</span></code> (3) -
 Like <code class="docutils literal notranslate"><span class="pre">querysingle</span></code>, but also break up the abstract into multiple
 sections (separated with “<code class="docutils literal notranslate"><span class="pre">...</span></code>”) if needed to help ensure all
 terms are visible. Also take care with URLs to try to show the
-start and end.</li>
-<li><code class="docutils literal notranslate"><span class="pre">querybest</span></code> -
+start and end.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">querybest</span></code> -
 An alias for the best available query-based style; currently the
 same as <code class="docutils literal notranslate"><span class="pre">querymultiple</span></code>. Using <code class="docutils literal notranslate"><span class="pre">querybest</span></code> in a script ensures
 that if improved styles become available in future releases, the
-script will automatically “upgrade” to the best style.</li>
+script will automatically “upgrade” to the best style.</p></li>
 </ul>
 <p>If no <code class="docutils literal notranslate"><span class="pre">query</span></code> is given for the <code class="docutils literal notranslate"><span class="pre">query</span></code><span class="math notranslate nohighlight">\(...\)</span> modes, they fall
 back to <code class="docutils literal notranslate"><span class="pre">dumb</span></code> mode. If a <code class="docutils literal notranslate"><span class="pre">query</span></code> is given with a
@@ -1282,12 +1281,12 @@ and <code class="docutils literal notranslate"><span class="pre">fmod</span></co
 argument.</p>
 <p>In addition, the following math-related functions are available:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">isNaN(x)</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">isNaN(x)</span></code>
 Returns 1 if <code class="docutils literal notranslate"><span class="pre">x</span></code> is a float or double NaN (Not a Number) value, 0
 if not. This function should be used to test for NaN, rather than
 using the equality operator (e.g. <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">'NaN'</span></code>), because the IEEE
 standard defines <code class="docutils literal notranslate"><span class="pre">NaN</span> <span class="pre">==</span> <span class="pre">NaN</span></code> to be false, not true as might be
-expected.</li>
+expected.</p></li>
 </ul>
 </div>
 <div class="section" id="date-functions">
@@ -1322,58 +1321,58 @@ least-significant bit of the first integer. 31 is the most-significant
 bit of the first integer, 32 is the least-significant bit of the second
 integer (if a multi-value <code class="docutils literal notranslate"><span class="pre">varint</span></code>), etc.</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">bitand(a,</span> <span class="pre">b)</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitand(a,</span> <span class="pre">b)</span></code>
 Returns the bit-wise AND of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>. If one argument is
-shorter than the other, it will be expanded with 0-value integers.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitor(a,</span> <span class="pre">b)</span></code>
+shorter than the other, it will be expanded with 0-value integers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitor(a,</span> <span class="pre">b)</span></code>
 Returns the bit-wise OR of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>. If one argument is
-shorter than the other, it will be expanded with 0-value integers.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitxor(a,</span> <span class="pre">b)</span></code>
+shorter than the other, it will be expanded with 0-value integers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitxor(a,</span> <span class="pre">b)</span></code>
 Returns the bit-wise XOR (exclusive OR) of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>. If one
 argument is shorter than the other, it will be expanded with
-0-value integers.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitnot(a)</span></code>
-Returns the bit-wise NOT of <code class="docutils literal notranslate"><span class="pre">a</span></code>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitsize(a)</span></code>
+0-value integers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitnot(a)</span></code>
+Returns the bit-wise NOT of <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitsize(a)</span></code>
 Returns the total number of bits in <code class="docutils literal notranslate"><span class="pre">a</span></code>, i.e. the highest bit
-number plus 1.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitcount(a)</span></code>
-Returns the number of bits in <code class="docutils literal notranslate"><span class="pre">a</span></code> that are set to 1.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitmin(a)</span></code>
+number plus 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitcount(a)</span></code>
+Returns the number of bits in <code class="docutils literal notranslate"><span class="pre">a</span></code> that are set to 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitmin(a)</span></code>
 Returns the lowest bit number in <code class="docutils literal notranslate"><span class="pre">a</span></code> that is set to 1. If none
-are set to 1, returns -1.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitmax(a)</span></code>
+are set to 1, returns -1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitmax(a)</span></code>
 Returns the highest bit number in <code class="docutils literal notranslate"><span class="pre">a</span></code> that is set to 1. If none
-are set to 1, returns -1.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitlist(a)</span></code>
+are set to 1, returns -1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitlist(a)</span></code>
 Returns the list of bit numbers of <code class="docutils literal notranslate"><span class="pre">a</span></code>, in ascending order, that
 are set to 1, as a <code class="docutils literal notranslate"><span class="pre">varint</span></code>. Returns a single -1 if no bits are
-set to 1.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitshiftleft(a,</span> <span class="pre">n)</span></code>
+set to 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitshiftleft(a,</span> <span class="pre">n)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">a</span></code> shifted <code class="docutils literal notranslate"><span class="pre">n</span></code> bits to the left, with 0s padded for
-bits on the right. If <code class="docutils literal notranslate"><span class="pre">n</span></code> is negative, shifts right instead.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitshiftright(a,</span> <span class="pre">n)</span></code>
+bits on the right. If <code class="docutils literal notranslate"><span class="pre">n</span></code> is negative, shifts right instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitshiftright(a,</span> <span class="pre">n)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">a</span></code> shifted <code class="docutils literal notranslate"><span class="pre">n</span></code> bits to the right, with 0s padded for
 bits on the left (i.e. an unsigned shift). If <code class="docutils literal notranslate"><span class="pre">n</span></code> is negative,
-shifts left instead.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitrotateleft(a,</span> <span class="pre">n)</span></code>
+shifts left instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitrotateleft(a,</span> <span class="pre">n)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">a</span></code> rotated <code class="docutils literal notranslate"><span class="pre">n</span></code> bits to the left, with left
 (most-significant) bits wrapping around to the right. If <code class="docutils literal notranslate"><span class="pre">n</span></code> is
-negative, rotates right instead.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitrotateright(a,</span> <span class="pre">n)</span></code>
+negative, rotates right instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitrotateright(a,</span> <span class="pre">n)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">a</span></code> rotated <code class="docutils literal notranslate"><span class="pre">n</span></code> bits to the right, with right
 (least-significant) bits wrapping around to the left. If <code class="docutils literal notranslate"><span class="pre">n</span></code> is
-negative, rotates left instead.</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitset(a,</span> <span class="pre">n)</span></code>
+negative, rotates left instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitset(a,</span> <span class="pre">n)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">a</span></code> with bit number <code class="docutils literal notranslate"><span class="pre">n</span></code> set to 1. <code class="docutils literal notranslate"><span class="pre">a</span></code> will be padded
 with 0-value integers if needed to reach <code class="docutils literal notranslate"><span class="pre">n</span></code> (e.g.
-<code class="docutils literal notranslate"><span class="pre">bitset(5,</span> <span class="pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class="pre">varint(2)</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitclear(a,</span> <span class="pre">n)</span></code>
+<code class="docutils literal notranslate"><span class="pre">bitset(5,</span> <span class="pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class="pre">varint(2)</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitclear(a,</span> <span class="pre">n)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">a</span></code> with bit number <code class="docutils literal notranslate"><span class="pre">n</span></code> set to 0. <code class="docutils literal notranslate"><span class="pre">a</span></code> will be padded
 with 0-value integers if needed to reach <code class="docutils literal notranslate"><span class="pre">n</span></code> (e.g.
-<code class="docutils literal notranslate"><span class="pre">bitclear(5,</span> <span class="pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class="pre">varint(2)</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">bitisset(a,</span> <span class="pre">n)</span></code>
-Returns 1 if bit number <code class="docutils literal notranslate"><span class="pre">n</span></code> is set to 1 in <code class="docutils literal notranslate"><span class="pre">a</span></code>, 0 if not.</li>
+<code class="docutils literal notranslate"><span class="pre">bitclear(5,</span> <span class="pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class="pre">varint(2)</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitisset(a,</span> <span class="pre">n)</span></code>
+Returns 1 if bit number <code class="docutils literal notranslate"><span class="pre">n</span></code> is set to 1 in <code class="docutils literal notranslate"><span class="pre">a</span></code>, 0 if not.</p></li>
 </ul>
 </div>
 <div class="section" id="internet-ipv4-address-functions">
@@ -1401,56 +1400,56 @@ A/B/C/D/E rules, but will be large enough to include all given bytes of
 the IP. E.g. 1.2.3.4 is Class A which has a netmask of 8, but the
 netmask will be extended to 32 to include all 4 given bytes.</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">inetabbrev(inet)</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetabbrev(inet)</span></code>
 Returns a possibly shorter-than-canonical representation of
 <code class="docutils literal notranslate"><span class="pre">$inet</span></code>, where trailing zero byte(s) of an IPv4 address may be
 omitted. All bytes of the network, and leading non-zero bytes of
 the host, will be included. E.g. returns 192.100.0/24. The
 /<span class="math notranslate nohighlight">\(B\)</span> netmask is included, except if the network is host-only
 (i.e.netmask is the full size of the IP address). Empty string is
-returned on error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetcanon(inet)</span></code>
+returned on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetcanon(inet)</span></code>
 Returns canonical representation of <code class="docutils literal notranslate"><span class="pre">$inet</span></code>. For IPv4, this is
 dotted-decimal with all 4 bytes. The /<span class="math notranslate nohighlight">\(B\)</span> netmask is
 included, except if
 the network is host-only (i.e. netmask is the full size of the IP
-address). Empty string is returned on error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetnetwork(inet)</span></code>
+address). Empty string is returned on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetnetwork(inet)</span></code>
 Returns string IP address with the network bits of <code class="docutils literal notranslate"><span class="pre">inet</span></code>, and
-the host bits set to 0. Empty string is returned on error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inethost(inet)</span></code>
+the host bits set to 0. Empty string is returned on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inethost(inet)</span></code>
 Returns string IP address with the host bits of <code class="docutils literal notranslate"><span class="pre">inet</span></code>, and the
-network bits set to 0. Empty string is returned on error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetbroadcast(inet)</span></code>
+network bits set to 0. Empty string is returned on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetbroadcast(inet)</span></code>
 Returns string IP broadcast address for <code class="docutils literal notranslate"><span class="pre">inet</span></code>, i.e. with the
 network bits, and host bits set to 1. Empty string is returned on
-error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetnetmask(inet)</span></code>
+error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetnetmask(inet)</span></code>
 Returns string IP netmask for <code class="docutils literal notranslate"><span class="pre">inet</span></code>, i.e. with the network bits
 set to 1, and host bits set to 0. Empty string is returned on
-error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetnetmasklen(inet)</span></code>
+error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetnetmasklen(inet)</span></code>
 Returns integer netmask length of <code class="docutils literal notranslate"><span class="pre">inet</span></code>. -1 is returned on
-error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetcontains(inetA,</span> <span class="pre">inetB)</span></code>
+error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetcontains(inetA,</span> <span class="pre">inetB)</span></code>
 Returns 1 if <code class="docutils literal notranslate"><span class="pre">inetA</span></code> contains <code class="docutils literal notranslate"><span class="pre">inetB</span></code>, i.e. every address in
 <code class="docutils literal notranslate"><span class="pre">inetB</span></code> occurs within the <code class="docutils literal notranslate"><span class="pre">inetA</span></code> network. 0 is returned if
-not, or -1 on error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inetclass(inet)</span></code>
+not, or -1 on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inetclass(inet)</span></code>
 Returns class of <code class="docutils literal notranslate"><span class="pre">inet</span></code>, e.g. A, B, C, D, E or classless if a
 different netmask is used (or the address is IPv6). Empty string is
-returned on error.</li>
-<li><code class="docutils literal notranslate"><span class="pre">inet2int(inet)</span></code>
+returned on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inet2int(inet)</span></code>
 Returns integer representation of IP network/host bits of <code class="docutils literal notranslate"><span class="pre">$inet</span></code>
 (i.e. without netmask); useful for compact storage of address as
 integer(s) instead of string. Returns -1 is returned on error (note
 that -1 may also be returned for an all-ones IP address, e.g.
-255.255.255.255).</li>
-<li><code class="docutils literal notranslate"><span class="pre">int2inet(i)</span></code>
+255.255.255.255).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int2inet(i)</span></code>
 Returns <code class="docutils literal notranslate"><span class="pre">inet</span></code> string for 1- or 4-value varint <code class="docutils literal notranslate"><span class="pre">$i</span></code> taken as an
 IP address. Since no netmask can be stored in the integer form of
 an IP address, the returned IP string will not have a netmask.
-Empty string is returned on error.</li>
+Empty string is returned on error.</p></li>
 </ul>
 <div class="section" id="urlcanonicalize">
 <h3>urlcanonicalize<a class="headerlink" href="#urlcanonicalize" title="Permalink to this headline">¶</a></h3>
@@ -1461,30 +1460,30 @@ Empty string is returned on error.</li>
 <p>Returns a copy of <code class="docutils literal notranslate"><span class="pre">url</span></code>, canonicalized according to case-insensitive
 comma-separated <code class="docutils literal notranslate"><span class="pre">flags</span></code>, which are zero or more of:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">lowerProtocol</span></code>
-Lower-cases the protocol.</li>
-<li><code class="docutils literal notranslate"><span class="pre">lowerHost</span></code>
-Lower-cases the hostname.</li>
-<li><code class="docutils literal notranslate"><span class="pre">removeTrailingDot</span></code>
-Removes trailing dot(s) in hostname.</li>
-<li><code class="docutils literal notranslate"><span class="pre">reverseHost</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">lowerProtocol</span></code>
+Lower-cases the protocol.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lowerHost</span></code>
+Lower-cases the hostname.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">removeTrailingDot</span></code>
+Removes trailing dot(s) in hostname.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reverseHost</span></code>
 Reverse the host/domains in the hostname. E.g.
 <a class="reference external" href="http://host.example.com/">http://host.example.com/</a> becomes <a class="reference external" href="http://com.example.host/">http://com.example.host/</a>. This can
-be used to put the most-significant part of the hostname leftmost.</li>
-<li><code class="docutils literal notranslate"><span class="pre">removeStandardPort</span></code>
-Remove the port number if it is the standard port for the protocol.</li>
-<li><code class="docutils literal notranslate"><span class="pre">decodeSafeBytes</span></code>
+be used to put the most-significant part of the hostname leftmost.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">removeStandardPort</span></code>
+Remove the port number if it is the standard port for the protocol.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">decodeSafeBytes</span></code>
 URL-decode safe bytes, where semantics are unlikely to change. E.g.
 “<code class="docutils literal notranslate"><span class="pre">%41</span></code>” becomes “<code class="docutils literal notranslate"><span class="pre">A</span></code>”, but “<code class="docutils literal notranslate"><span class="pre">%2F</span></code>” remains encoded, because
-it would decode to “<code class="docutils literal notranslate"><span class="pre">/</span></code>”.</li>
-<li><code class="docutils literal notranslate"><span class="pre">upperEncoded</span></code>
-Upper-case the hex characters of encoded bytes.</li>
-<li><code class="docutils literal notranslate"><span class="pre">lowerPath</span></code>
+it would decode to “<code class="docutils literal notranslate"><span class="pre">/</span></code>”.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">upperEncoded</span></code>
+Upper-case the hex characters of encoded bytes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lowerPath</span></code>
 Lower-case the (non-encoded) characters in the path. May be used
 for URLs known to point to case-insensitive filesystems, e.g.
-Windows.</li>
-<li><code class="docutils literal notranslate"><span class="pre">addTrailingSlash</span></code>
-Adds a trailing slash to the path, if no path is present.</li>
+Windows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addTrailingSlash</span></code>
+Adds a trailing slash to the path, if no path is present.</p></li>
 </ul>
 <p>Default flags are all but <code class="docutils literal notranslate"><span class="pre">reverseHost</span></code>, <code class="docutils literal notranslate"><span class="pre">lowerPath</span></code>. A flag may be
 prefixed with the operator <code class="docutils literal notranslate"><span class="pre">+</span></code> to append the flag to existing flags;
@@ -1514,19 +1513,19 @@ is controlled by two optional parameters, <code class="docutils literal notransl
 <p><code class="docutils literal notranslate"><span class="pre">Resolution</span></code> determines how fine-grained the values returned are.
 There are 4 possible values:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">1</span></code> - Only the four cardinal directions are used (N, E, S, W)</li>
-<li><code class="docutils literal notranslate"><span class="pre">2</span></code> <em>(default) - Inter-cardinal directions (N, NE, E, etc.)</em></li>
-<li><code class="docutils literal notranslate"><span class="pre">3</span></code> - In-between inter-cardinal directions (N, NNE, NE, ENE, E,
-etc.)</li>
-<li><code class="docutils literal notranslate"><span class="pre">4</span></code> - “by” values (N, NbE, NNE, NEbN, NE, NEbE, ENE, EbN, E, etc.)</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> - Only the four cardinal directions are used (N, E, S, W)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> <em>(default) - Inter-cardinal directions (N, NE, E, etc.)</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">3</span></code> - In-between inter-cardinal directions (N, NNE, NE, ENE, E,
+etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">4</span></code> - “by” values (N, NbE, NNE, NEbN, NE, NEbE, ENE, EbN, E, etc.)</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">Verbosity</span></code> affects how verbose the resulting text is. There are two
 possible values:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">1</span></code> <em>(default) - Use initials for direction values (N, NbE, NNE,
-etc.)</em></li>
-<li><code class="docutils literal notranslate"><span class="pre">2</span></code> - Use full text for direction values (North, North by east,
-North-northeast, etc.)</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> <em>(default) - Use initials for direction values (N, NbE, NNE,
+etc.)</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> - Use full text for direction values (North, North by east,
+North-northeast, etc.)</p></li>
 </ul>
 <p>For an azimuth value of <code class="docutils literal notranslate"><span class="pre">105</span></code>, here are some example results of
 <code class="docutils literal notranslate"><span class="pre">azimuth2compass</span></code>:</p>
@@ -1551,15 +1550,15 @@ is north, 90 east, etc., up to 360 being north again.</p>
 mathematical method is used to calculate the direction. There are two
 possible values:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">greatcircle</span></code> <em>(default)</em> - The “Great Circle” method is a highly
+<li><p><code class="docutils literal notranslate"><span class="pre">greatcircle</span></code> <em>(default)</em> - The “Great Circle” method is a highly
 accurate tool for calculating distances and directions on a sphere.
-It is used by default.</li>
-<li><code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> - Calculations based on the pythagorean method can
+It is used by default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> - Calculations based on the pythagorean method can
 also be used. They’re faster, but less accurate as the core formulas
 don’t take the curvature of the earth into consideration. Some
 internal adjustments are made, but the values are less accurate than
 the <code class="docutils literal notranslate"><span class="pre">greatcircle</span></code> method, especially over long distances and with
-paths that approach the poles.</li>
+paths that approach the poles.</p></li>
 </ul>
 </div>
 <div class="section" id="azimuthlatlon">
@@ -1575,15 +1574,15 @@ of latitude-longitude points instead of geocode values.</p>
 mathematical method is used to calculate the direction. There are two
 possible values:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">greatcircle</span></code> <em>(default)</em> - The “Great Circle” method is a highly
+<li><p><code class="docutils literal notranslate"><span class="pre">greatcircle</span></code> <em>(default)</em> - The “Great Circle” method is a highly
 accurate tool for calculating distances and directions on a sphere.
-It is used by default.</li>
-<li><code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> - Calculations based on the pythagorean method can
+It is used by default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> - Calculations based on the pythagorean method can
 also be used. They’re faster, but less accurate as the core formulas
 don’t take the curvature of the earth into consideration. Some
 internal adjustments are made, but the values are less accurate than
 the <code class="docutils literal notranslate"><span class="pre">greatcircle</span></code> method, especially over long distances and with
-paths that approach the poles.</li>
+paths that approach the poles.</p></li>
 </ul>
 </div>
 <div class="section" id="dms2dec-dec2dms">
@@ -1623,12 +1622,12 @@ to force that method. “<code class="docutils literal notranslate"><span class=
 method.</p>
 <p>For example:</p>
 <ul class="simple">
-<li>New York (JFK) to Cleveland (CLE), the Pythagorean method is off by
-.8 miles (.1%)</li>
-<li>New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by
-22.2 miles (.8%)</li>
-<li>New York (JFK) to South Africa (PLZ), the Pythagorean method is off
-by 430 miles (5.2%)</li>
+<li><p>New York (JFK) to Cleveland (CLE), the Pythagorean method is off by
+.8 miles (.1%)</p></li>
+<li><p>New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by
+22.2 miles (.8%)</p></li>
+<li><p>New York (JFK) to South Africa (PLZ), the Pythagorean method is off
+by 430 miles (5.2%)</p></li>
 </ul>
 <p>See Also: <a class="reference internal" href="#distlatlon">distlatlon</a></p>
 </div>
@@ -1645,12 +1644,12 @@ can be overridden to use the faster, less accurate Pythagorean method if
 “<code class="docutils literal notranslate"><span class="pre">pythagorean</span></code>” is passed as the optional <code class="docutils literal notranslate"><span class="pre">method</span></code> parameter.</p>
 <p>For example:</p>
 <ul class="simple">
-<li>New York (JFK) to Cleveland (CLE), the Pythagorean method is off by
-.8 miles (.1%)</li>
-<li>New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by
-22.2 miles (.8%)</li>
-<li>New York (JFK) to South Africa (PLZ), the Pythagorean method is off
-by 430 miles (5.2%)</li>
+<li><p>New York (JFK) to Cleveland (CLE), the Pythagorean method is off by
+.8 miles (.1%)</p></li>
+<li><p>New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by
+22.2 miles (.8%)</p></li>
+<li><p>New York (JFK) to South Africa (PLZ), the Pythagorean method is off
+by 430 miles (5.2%)</p></li>
 </ul>
 <p>See Also: <a class="reference internal" href="#distgeocode">distgeocode</a></p>
 </div>
@@ -1751,40 +1750,39 @@ will return <code class="docutils literal notranslate"><span class="pre">NaN</sp
 its value in decimal degrees as a <code class="docutils literal notranslate"><span class="pre">double</span></code>. The coordinate should be
 in one of the following forms (optional parts in square brackets):</p>
 <ul class="simple">
-<li>[<span class="math notranslate nohighlight">\(H\)</span>] <span class="math notranslate nohighlight">\(nnn\)</span> [<span class="math notranslate nohighlight">\(U\)</span>] [:] [<span class="math notranslate nohighlight">\(H\)</span>] [<span class="math notranslate nohighlight">\(nnn\)</span>
-[<span class="math notranslate nohighlight">\(U\)</span>] [:] [<span class="math notranslate nohighlight">\(nnn\)</span> [<span class="math notranslate nohighlight">\(U\)</span>]]] [<span class="math notranslate nohighlight">\(H\)</span>]</li>
-<li><span class="math notranslate nohighlight">\(DDMM\)</span>[<span class="math notranslate nohighlight">\(.MMM\)</span>…]</li>
-<li><span class="math notranslate nohighlight">\(DDMMSS\)</span>[<span class="math notranslate nohighlight">\(.SSS\)</span>…]</li>
+<li><p>[<span class="math notranslate nohighlight">\(H\)</span>] <span class="math notranslate nohighlight">\(nnn\)</span> [<span class="math notranslate nohighlight">\(U\)</span>] [:] [<span class="math notranslate nohighlight">\(H\)</span>] [<span class="math notranslate nohighlight">\(nnn\)</span>
+[<span class="math notranslate nohighlight">\(U\)</span>] [:] [<span class="math notranslate nohighlight">\(nnn\)</span> [<span class="math notranslate nohighlight">\(U\)</span>]]] [<span class="math notranslate nohighlight">\(H\)</span>]</p></li>
+<li><p><span class="math notranslate nohighlight">\(DDMM\)</span>[<span class="math notranslate nohighlight">\(.MMM\)</span>…]</p></li>
+<li><p><span class="math notranslate nohighlight">\(DDMMSS\)</span>[<span class="math notranslate nohighlight">\(.SSS\)</span>…]</p></li>
 </ul>
 <p>where the terms are:</p>
 <ul>
-<li><p class="first"><span class="math notranslate nohighlight">\(nnn\)</span>
+<li><p><span class="math notranslate nohighlight">\(nnn\)</span>
 A number (integer or decimal) with optional plus/minus sign. Only
 the first number may be negative, in which case it is a south
 latitude or west longitude. Note that this is true even for
 <span class="math notranslate nohighlight">\(DDDMMSS\)</span> (DMS) longitudes – i.e. the ISO 6709 east-positive
 standard is followed, not the deprecated Texis west-positive
-standard.</p>
-</li>
-<li><p class="first"><span class="math notranslate nohighlight">\(U\)</span>
+standard.</p></li>
+<li><p><span class="math notranslate nohighlight">\(U\)</span>
 A unit (case-insensitive):</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">d</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">deg</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">deg.</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">degrees</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">'</span></code> (single quote) for minutes</li>
-<li><code class="docutils literal notranslate"><span class="pre">m</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">min</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">min.</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">minutes</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">&quot;</span></code> (double quote) for seconds</li>
-<li><code class="docutils literal notranslate"><span class="pre">s</span></code> (iff <code class="docutils literal notranslate"><span class="pre">d</span></code>/<code class="docutils literal notranslate"><span class="pre">m</span></code> also used for degrees/minutes)</li>
-<li><code class="docutils literal notranslate"><span class="pre">sec</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">sec.</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">seconds</span></code></li>
-<li>Unicode degree-sign (U+00B0), in ISO-8559-1 or UTF-8</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">d</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deg</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deg.</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">degrees</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'</span></code> (single quote) for minutes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min.</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minutes</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;</span></code> (double quote) for seconds</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code> (iff <code class="docutils literal notranslate"><span class="pre">d</span></code>/<code class="docutils literal notranslate"><span class="pre">m</span></code> also used for degrees/minutes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sec.</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code></p></li>
+<li><p>Unicode degree-sign (U+00B0), in ISO-8559-1 or UTF-8</p></li>
 </ul>
 <p>If no unit is given, the first number is assumed to be degrees, the
 second minutes, the third seconds. Note that “<code class="docutils literal notranslate"><span class="pre">s</span></code>” may only be used
@@ -1793,42 +1791,37 @@ degrees/minutes value; this is to help disambiguate “seconds” vs.
 “southern hemisphere”.</p>
 </div></blockquote>
 </li>
-<li><p class="first"><span class="math notranslate nohighlight">\(H\)</span>
+<li><p><span class="math notranslate nohighlight">\(H\)</span>
 A hemisphere (case-insensitive):</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">N</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">north</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">S</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">south</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">E</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">east</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">W</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">west</span></code></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">north</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">south</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">east</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">west</span></code></p></li>
 </ul>
 <p>A longitude hemisphere may not be given for a latitude, and
 vice-versa.</p>
 </div></blockquote>
 </li>
-<li><p class="first"><span class="math notranslate nohighlight">\(DD\)</span>
+<li><p><span class="math notranslate nohighlight">\(DD\)</span>
 A two- or three-digit degree value, with optional sign. Note that
 longitudes are east-positive ala ISO 6709, not west-positive like
-the deprecated Texis standard.</p>
-</li>
-<li><p class="first"><span class="math notranslate nohighlight">\(MM\)</span>
+the deprecated Texis standard.</p></li>
+<li><p><span class="math notranslate nohighlight">\(MM\)</span>
 A two-digit minutes value, with leading zero if needed to make two
-digits.</p>
-</li>
-<li><p class="first"><span class="math notranslate nohighlight">\(.MMM\)</span>…
-A zero or more digit fractional minute value.</p>
-</li>
-<li><p class="first"><span class="math notranslate nohighlight">\(SS\)</span>
+digits.</p></li>
+<li><p><span class="math notranslate nohighlight">\(.MMM\)</span>…
+A zero or more digit fractional minute value.</p></li>
+<li><p><span class="math notranslate nohighlight">\(SS\)</span>
 A two-digit seconds value, with leading zero if needed to make two
-digits.</p>
-</li>
-<li><p class="first"><span class="math notranslate nohighlight">\(.SSS\)</span>…
-A zero or more digit fractional seconds value.</p>
-</li>
+digits.</p></li>
+<li><p><span class="math notranslate nohighlight">\(.SSS\)</span>…
+A zero or more digit fractional seconds value.</p></li>
 </ul>
 <p>Whitespace is generally not required between terms in the first format.
 A hemisphere token may only occur once. Degrees/minutes/seconds numbers
@@ -1892,17 +1885,17 @@ otherwise.</p>
 comma separated.</p>
 <p>Valid <code class="docutils literal notranslate"><span class="pre">FormatOptions</span></code> are:</p>
 <ul class="simple">
-<li>COMPACT - remove all unnecessary whitespace</li>
-<li>INDENT(N) - print the JSON with each object or array member on a new
-line, indented by N spaces to show structure</li>
-<li>SORT-KEYS - sort the keys in the object. By default the order is
-preserved</li>
-<li>EMBED - omit the enclosing <code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">[]</span></code> is using the snippet in
-another object</li>
-<li>ENSURE_ASCII - encode all Unicode characters outside the ASCII range</li>
-<li>ENCODE_ANY - if not a valid JSON document then encode into a JSON
-literal, e.g. to encode a string.</li>
-<li>ESCAPE_SLASH - escape forward slash <code class="docutils literal notranslate"><span class="pre">/</span></code> as <code class="docutils literal notranslate"><span class="pre">\/</span></code></li>
+<li><p>COMPACT - remove all unnecessary whitespace</p></li>
+<li><p>INDENT(N) - print the JSON with each object or array member on a new
+line, indented by N spaces to show structure</p></li>
+<li><p>SORT-KEYS - sort the keys in the object. By default the order is
+preserved</p></li>
+<li><p>EMBED - omit the enclosing <code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">[]</span></code> is using the snippet in
+another object</p></li>
+<li><p>ENSURE_ASCII - encode all Unicode characters outside the ASCII range</p></li>
+<li><p>ENCODE_ANY - if not a valid JSON document then encode into a JSON
+literal, e.g. to encode a string.</p></li>
+<li><p>ESCAPE_SLASH - escape forward slash <code class="docutils literal notranslate"><span class="pre">/</span></code> as <code class="docutils literal notranslate"><span class="pre">\/</span></code></p></li>
 </ul>
 </div>
 <div class="section" id="json-type">
@@ -1913,13 +1906,13 @@ literal, e.g. to encode a string.</li>
 <p>The <code class="docutils literal notranslate"><span class="pre">json_type</span></code> function returns the type of the JSON object or
 element. Valid responses are:</p>
 <ul class="simple">
-<li>OBJECT</li>
-<li>ARRAY</li>
-<li>STRING</li>
-<li>INTEGER</li>
-<li>DOUBLE</li>
-<li>NULL</li>
-<li>BOOLEAN</li>
+<li><p>OBJECT</p></li>
+<li><p>ARRAY</p></li>
+<li><p>STRING</p></li>
+<li><p>INTEGER</p></li>
+<li><p>DOUBLE</p></li>
+<li><p>NULL</p></li>
+<li><p>BOOLEAN</p></li>
 </ul>
 <p>Assuming a field <code class="docutils literal notranslate"><span class="pre">Json</span></code> containing:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;items&quot;</span><span class="p">:</span>
@@ -2143,7 +2136,7 @@ the target document.</p>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
       <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
