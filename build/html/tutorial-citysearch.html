@@ -1,0 +1,1001 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Find Cities and their Closest Neighbors &mdash; Rampart 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
+        <link rel="up" title="Tutorials" href="tutorialtoc.html"/>
+        <link rel="prev" title="Tutorials" href="tutorialtoc.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorialtoc.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Find Cities and their Closest Neighbors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#concepts">Concepts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#importing-the-data">Importing the Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#examine-your-csv">Examine your CSV</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-the-table">Creating the table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#importing-the-csv">Importing the CSV</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#computing-geocodes">Computing Geocodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-indexes">Building Indexes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-final-import-script">The Final Import Script</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorialtoc.html">Tutorials</a> &raquo;</li>
+        
+      <li>Find Cities and their Closest Neighbors</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tutorial-citysearch.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="find-cities-and-their-closest-neighbors">
+<h1>Find Cities and their Closest Neighbors<a class="headerlink" href="#find-cities-and-their-closest-neighbors" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<p>In this tutorial, we will use the <a class="reference internal" href="sqltoc.html#the-rampart-sql-module"><span class="std std-ref">SQL module</span></a>
+and the <a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">Server module</span></a>, along
+with some client side scripting to create a search of city names, which also
+lists the nearest cities to the selected city.</p>
+<p>You can download the complete project from our
+<a class="reference external" href="https://github.com/aflin/rampart_tutorials">Tutorial Repository</a>
+in the <a class="reference external" href="https://github.com/aflin/rampart_tutorials/tree/main/geonames">geonames directory</a>.</p>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+<p>The code related to this tutorial is released under the MIT license.
+The data used to populate the database is licensed under a
+<a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons License</a>.</p>
+</div>
+</div>
+<div class="section" id="concepts">
+<h2>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h2>
+<p>This module will demonstrate:</p>
+<ul class="simple">
+<li><p>Using the <a class="reference internal" href="sqltoc.html#the-rampart-sql-module"><span class="std std-ref">SQL module</span></a> to
+<a class="reference internal" href="rampart-sql.html#importcsvfile"><span class="std std-ref">import</span></a> csv data.</p></li>
+<li><p>Using the <a class="reference internal" href="sqltoc.html#the-rampart-sql-module"><span class="std std-ref">SQL module</span></a> to create a fulltext search for
+the client side autocomplete search.</p></li>
+<li><p>Using the <a class="reference internal" href="sql-server-funcs.html#geographical-coordinate-functions"><span class="std std-ref">SQL geocode functions</span></a>
+to encode latitude/longitude pairs for each entry in the database, and to
+find the closest cities to any given latitude/longitude pair.</p></li>
+</ul>
+<p>In order to complete this tutorial, you should have basic knowledge of JavaScript, SQL and client side
+scripting using JavaScript (a passing knowledge of jQuery is also helpful).</p>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>In order to search by name and by location, we need to create a database
+that contains both place names and latitude/longitude information.
+Fortunately, the good folks at <a class="reference external" href="http://www.geonames.org/">GeoNames.org</a>
+have provided us a CSV formatted file that accomplishes that and which is
+licensed under a
+<a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons License</a>.</p>
+<p>You can navigate to <a class="reference external" href="http://download.geonames.org/export/zip/">http://download.geonames.org/export/zip/</a> and choose
+the file that suits your needs.  In this tutorial, we will use the world
+database titled <a class="reference external" href="http://download.geonames.org/export/zip/allCountries.zip">AllCountries.zip</a>.</p>
+<p>Your first task will be to download your file of choice and unzip it in a
+working directory (here we use <code class="docutils literal notranslate"><span class="pre">./geonames/</span></code>).  We will assume your directory
+contains the <code class="docutils literal notranslate"><span class="pre">allCountries.txt</span></code> file.</p>
+</div>
+<div class="section" id="importing-the-data">
+<h2>Importing the Data<a class="headerlink" href="#importing-the-data" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="examine-your-csv">
+<h3>Examine your CSV<a class="headerlink" href="#examine-your-csv" title="Permalink to this headline">¶</a></h3>
+<p>The first step for importing a CSV file is to have a look at the format of the
+data in the file.  CSV can vary quite a bit, and to import it, we will want to
+know a few thing such as (but not limited to):</p>
+<ul class="simple">
+<li><p>Does every column contain the same type?</p></li>
+<li><p>Are text columns quoted?</p></li>
+<li><p>Are single quotes present inside unquoted text fields?</p></li>
+<li><p>Are records separated by <code class="docutils literal notranslate"><span class="pre">,</span></code> or by <code class="docutils literal notranslate"><span class="pre">\t</span></code>?</p></li>
+<li><p>Is there a header row as the first line in the file?</p></li>
+</ul>
+<p>Let’s examine the first few rows of <code class="docutils literal notranslate"><span class="pre">allCountries.txt</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ head ./allCountries.txt
+AD      AD100   Canillo Canillo 02                                      42.5833 1.6667  6
+AD      AD200   Encamp  Encamp  03                                      42.5333 1.6333  6
+AD      AD400   La Massana      La Massana      04                                      42.5667 1.4833  6
+AD      AD300   Ordino  Ordino  05                                      42.6    1.55    6
+AD      AD600   Sant Julià de Lòria     Sant Julià de Lòria     06                                      42.4667 1.5     6
+AD      AD500   Andorra la Vella        Andorra la Vella        07                                      42.5    1.5     6
+AD      AD700   Escaldes-Engordany      Escaldes-Engordany      08                                      42.5    1.5667  6
+AR      3636    POZO CERCADO (EL CHORRO (F), DPTO. RIVADAVIA (S))       Salta   A                                       -23.4933        -61.9267        3
+AR      4123    LAS SALADAS     Salta   A                                       -25.7833        -64.5   4
+AR      4126    TALA    Salta   A                                       -26.1167        -65.2833        4
+</pre></div>
+</div>
+<p>Immediately we can see that records are separated by tabs (<code class="docutils literal notranslate"><span class="pre">\t</span></code>), that the second column (postal codes)
+has both number and text types and that text fields are not quoted.  Also the first row appears to be data, and not
+column names.</p>
+<p>Next let’s check if there are embedded single quotes in text fields:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">grep</span> <span class="s2">&quot;&#39;&quot;</span> <span class="o">./</span><span class="n">allCountries</span><span class="o">.</span><span class="n">txt</span> <span class="o">|</span> <span class="n">head</span>
+<span class="n">AR</span>      <span class="mi">6646</span>    <span class="n">GENERAL</span> <span class="n">O</span><span class="s1">&#39;BRIEN Buenos Aires    B                                       -34.9   -60.75  4</span>
+<span class="n">AR</span>      <span class="mi">6748</span>    <span class="n">O</span><span class="s1">&#39;HIGGINS       Buenos Aires    B                                       -34.5833        -60.7   4</span>
+<span class="n">AR</span>      <span class="mi">7541</span>    <span class="n">D</span><span class="s1">&#39;ORBIGNY       Buenos Aires    B                                       -37.6833        -61.7167        4</span>
+<span class="n">AR</span>      <span class="mi">8514</span>    <span class="n">VICEALMIRANTE</span> <span class="n">EDUARDO</span> <span class="n">O</span><span class="s1">&#39;CONNOR (ESTACION FCGR)  Rio Negro       R                                       -40.7722        -63.9889        3</span>
+<span class="n">AR</span>      <span class="mi">2117</span>    <span class="n">COLONIA</span> <span class="n">O</span><span class="s1">&#39;FARRELL       Santa Fe        S                                       -33.3278        -60.8694        1</span>
+<span class="n">AR</span>      <span class="mi">3050</span>    <span class="n">LUCIO</span> <span class="n">D</span><span class="s1">&#39;ABREU   Santa Fe        S                                       -29.9   -60.3   3</span>
+<span class="n">AR</span>      <span class="mi">3358</span>    <span class="n">COLONIA</span> <span class="n">LIEBIG</span><span class="s1">&#39;S        Corrientes      W                                       -27.9   -55.8583        3</span>
+<span class="n">AR</span>      <span class="mi">2645</span>    <span class="n">CAPITAN</span> <span class="n">GENERAL</span> <span class="n">BERNARDO</span> <span class="n">O</span><span class="s1">&#39;HIGGINS      Cordoba X                                       -33.25  -62.2833        4</span>
+<span class="n">AR</span>      <span class="mi">2645</span>    <span class="n">PIEDRAS</span> <span class="n">ANCHAS</span> <span class="p">(</span><span class="n">CAP</span><span class="o">.</span><span class="n">GRAL</span><span class="o">.</span><span class="n">B</span><span class="o">.</span><span class="n">O</span><span class="s1">&#39;HIGGINS, DPTO.MARCOS JUAREZ)       Cordoba X                                       -33.2708        -62.2375     3</span>
+<span class="n">AU</span>      <span class="mi">2602</span>    <span class="n">O</span><span class="s1">&#39;Connor        Australian Capital Territory    ACT     CANBERRA                                -35.2584        149.1202        4</span>
+</pre></div>
+</div>
+<p>And indeed there are single quotes in place names.</p>
+<p>So to answer our earlier questions:</p>
+<ul class="simple">
+<li><p>Does every column contain the same type? – <span class="red">NO</span></p></li>
+<li><p>Are text columns quoted?  – <span class="red">NO</span></p></li>
+<li><p>Are single quotes present inside unquoted text fields? – <span class="green">YES</span></p></li>
+<li><p>Are records separated by <code class="docutils literal notranslate"><span class="pre">,</span></code> or by <code class="docutils literal notranslate"><span class="pre">\t</span></code>?  – <span class="green">Uses tabs</span></p></li>
+<li><p>Is there a header row as the first line in the file? <span class="red">NO</span></p></li>
+</ul>
+<p>Note that although the file is separated by tabs, we will continue to use the term
+<code class="docutils literal notranslate"><span class="pre">CSV</span></code> in order to keep things consistent.</p>
+<p>Next lets find out which field is which.  According to GeoNames.org:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">data</span> <span class="nb">format</span> <span class="ow">is</span> <span class="n">tab</span><span class="o">-</span><span class="n">delimited</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">utf8</span> <span class="n">encoding</span><span class="p">,</span> <span class="k">with</span> <span class="n">the</span> <span class="n">following</span> <span class="n">fields</span> <span class="p">:</span>
+
+<span class="n">country</span> <span class="n">code</span>      <span class="p">:</span> <span class="n">iso</span> <span class="n">country</span> <span class="n">code</span><span class="p">,</span> <span class="mi">2</span> <span class="n">characters</span>
+<span class="n">postal</span> <span class="n">code</span>       <span class="p">:</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">place</span> <span class="n">name</span>        <span class="p">:</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">180</span><span class="p">)</span>
+<span class="n">admin</span> <span class="n">name1</span>       <span class="p">:</span> <span class="mf">1.</span> <span class="n">order</span> <span class="n">subdivision</span> <span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">admin</span> <span class="n">code1</span>       <span class="p">:</span> <span class="mf">1.</span> <span class="n">order</span> <span class="n">subdivision</span> <span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">admin</span> <span class="n">name2</span>       <span class="p">:</span> <span class="mf">2.</span> <span class="n">order</span> <span class="n">subdivision</span> <span class="p">(</span><span class="n">county</span><span class="o">/</span><span class="n">province</span><span class="p">)</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">admin</span> <span class="n">code2</span>       <span class="p">:</span> <span class="mf">2.</span> <span class="n">order</span> <span class="n">subdivision</span> <span class="p">(</span><span class="n">county</span><span class="o">/</span><span class="n">province</span><span class="p">)</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">admin</span> <span class="n">name3</span>       <span class="p">:</span> <span class="mf">3.</span> <span class="n">order</span> <span class="n">subdivision</span> <span class="p">(</span><span class="n">community</span><span class="p">)</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">admin</span> <span class="n">code3</span>       <span class="p">:</span> <span class="mf">3.</span> <span class="n">order</span> <span class="n">subdivision</span> <span class="p">(</span><span class="n">community</span><span class="p">)</span> <span class="n">varchar</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">latitude</span>          <span class="p">:</span> <span class="n">estimated</span> <span class="n">latitude</span> <span class="p">(</span><span class="n">wgs84</span><span class="p">)</span>
+<span class="n">longitude</span>         <span class="p">:</span> <span class="n">estimated</span> <span class="n">longitude</span> <span class="p">(</span><span class="n">wgs84</span><span class="p">)</span>
+<span class="n">accuracy</span>          <span class="p">:</span> <span class="n">accuracy</span> <span class="n">of</span> <span class="n">lat</span><span class="o">/</span><span class="n">lng</span> <span class="kn">from</span> <span class="mi">1</span><span class="o">=</span><span class="n">estimated</span><span class="p">,</span> <span class="mi">4</span><span class="o">=</span><span class="n">geonameid</span><span class="p">,</span> <span class="mi">6</span><span class="o">=</span><span class="n">centroid</span> <span class="n">of</span> <span class="n">addresses</span> <span class="ow">or</span> <span class="n">shape</span>
+</pre></div>
+</div>
+<p>From this we can see that except for <code class="docutils literal notranslate"><span class="pre">latitude</span></code>, <code class="docutils literal notranslate"><span class="pre">longitude</span></code> and <code class="docutils literal notranslate"><span class="pre">accuracy</span></code>, every one of our fields
+is text.  While the <code class="docutils literal notranslate"><span class="pre">country</span> <span class="pre">code</span></code> is always 2 characters, the rest of the fields are of variable length.</p>
+<p>Armed with this knowledge, we are ready to create a script that imports our data.</p>
+</div>
+<div class="section" id="creating-the-table">
+<h3>Creating the table<a class="headerlink" href="#creating-the-table" title="Permalink to this headline">¶</a></h3>
+<p>We will create a column for each column of the CSV file.  In addition we will add
+two more columns.</p>
+<p>The first will be a texis <code class="docutils literal notranslate"><span class="pre">counter</span></code> type.  This will be used to create
+a unique identifier for each row (similar to a primary key, but automatically
+generated).</p>
+<p>The second requires a bit of knowledge of how a bounded geographic search works.
+We will get to that later.  For now, trust that you need another field that is
+typed as <code class="docutils literal notranslate"><span class="pre">long</span></code>.  We will call it <code class="docutils literal notranslate"><span class="pre">geocode</span></code>.</p>
+<p>So let’s create a script that will make our table.</p>
+<p>To begin, we need to load the SQL module and open a database;</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./geonames_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In the above code, the <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">Sql</span> <span class="pre">=</span> <span class="pre">require(&quot;rampart-sql&quot;);</span></code> line
+loads the SQL module that is distributed with Rampart as
+<code class="docutils literal notranslate"><span class="pre">rampart-sql.so</span></code>.  The second line,
+<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">sql</span> <span class="pre">=</span> <span class="pre">new</span> <span class="pre">Sql.init(&quot;./geonames_db&quot;,</span> <span class="pre">true);</span></code> opens the database.</p>
+<p>Note the <code class="docutils literal notranslate"><span class="pre">true</span></code> in <code class="docutils literal notranslate"><span class="pre">Sql.init()</span></code>.  It signifies that if the database
+does not exist, create the directory and the metadata files necessary
+for a new, blank database.</p>
+<p>When creating a new database, be sure that:</p>
+<ul class="simple">
+<li><p>The directory does not (yet) exist (it will be created).  If
+it exists and does not contain the metadata files, the opening
+of the database will fail.</p></li>
+<li><p>The parent directory (in this case <code class="docutils literal notranslate"><span class="pre">./</span></code>) does exist, and that
+you have read/write permissions.</p></li>
+</ul>
+<p>So now that we have the code to open, and optionally create our
+database, let’s make our table.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+ <span class="c1">// use process.scriptPath to make sure we have the</span>
+ <span class="c1">// correct path if running from another working directory</span>
+ <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span> <span class="o">+</span> <span class="s2">&quot;/geonames_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+ <span class="c1">// put the create statement into its own function</span>
+ <span class="c1">// since we are doing this in stages</span>
+
+ <span class="kd">function</span> <span class="nx">create_table</span><span class="p">()</span> <span class="p">{</span>
+
+     <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table geonames (&quot;</span> <span class="o">+</span>
+         <span class="s2">&quot;id           counter, &quot;</span>       <span class="o">+</span>
+         <span class="s2">&quot;country_code char(2), &quot;</span>       <span class="o">+</span>
+         <span class="s2">&quot;postal_code  varchar(8), &quot;</span>    <span class="o">+</span>
+         <span class="s2">&quot;place_name   varchar(16), &quot;</span>   <span class="o">+</span>
+         <span class="s2">&quot;admin_name1  varchar(16), &quot;</span>   <span class="o">+</span>
+         <span class="s2">&quot;admin_code1  varchar(8), &quot;</span>    <span class="o">+</span>
+         <span class="s2">&quot;admin_name2  varchar(16), &quot;</span>   <span class="o">+</span>
+         <span class="s2">&quot;admin_code2  varchar(8), &quot;</span>    <span class="o">+</span>
+         <span class="s2">&quot;admin_name3  varchar(16), &quot;</span>   <span class="o">+</span>
+         <span class="s2">&quot;admin_code3  varchar(8), &quot;</span>    <span class="o">+</span>
+         <span class="s2">&quot;latitude     double, &quot;</span>        <span class="o">+</span>
+         <span class="s2">&quot;longitude    double, &quot;</span>        <span class="o">+</span>
+         <span class="s2">&quot;geocode      long, &quot;</span>          <span class="o">+</span>
+         <span class="s2">&quot;accuracy     int           );&quot;</span>
+     <span class="p">);</span>
+
+ <span class="p">}</span>
+
+ <span class="nx">create_table</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>This should all be self expanatory.  If not, please brush up on
+your <a class="reference external" href="https://www.w3schools.com/sql/sql_create_table.asp">SQL</a>.</p>
+<p>Note though that <code class="docutils literal notranslate"><span class="pre">varchar(x)</span></code> in Texis SQL, the size <code class="docutils literal notranslate"><span class="pre">x</span></code> is
+merely a suggestion.  If the text put into this field is larger
+that what is specified, it will not truncate the text or affect any indexing.</p>
+<p>Now we have our table.  Let’s get that data in!</p>
+</div>
+<div class="section" id="importing-the-csv">
+<h3>Importing the CSV<a class="headerlink" href="#importing-the-csv" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-settings">
+<h4>The Settings<a class="headerlink" href="#the-settings" title="Permalink to this headline">¶</a></h4>
+<p>The SQL module has a convient function to import CSV data.  It has many options
+and often takes carefull examination of the data to be imported to get it correct.
+Fortunately that large number of options allows us to get well formatted
+CSV data imported correctly.</p>
+<p>See the section for <a class="reference internal" href="rampart-sql.html#importcsvfile"><span class="std std-ref">importCsvFile()</span></a> for a full
+listing.</p>
+<p>Knowing what we discovered when we examined the <code class="docutils literal notranslate"><span class="pre">allCountries.txt</span></code> file above, we
+can make our <code class="docutils literal notranslate"><span class="pre">importCsvFile()</span></code> call look like this:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">importCsvFile</span><span class="p">(</span>
+    <span class="s2">&quot;allCountries.txt&quot;</span><span class="p">,</span>  <span class="c1">//file to import</span>
+    <span class="p">{</span>
+        <span class="nx">normalize</span><span class="o">:</span>       <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">singleQuoteNest</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">delimiter</span><span class="o">:</span>       <span class="s1">&#39;\t&#39;</span><span class="p">,</span>
+        <span class="nx">hasHeaderRow</span><span class="o">:</span>    <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">tableName</span><span class="o">:</span>       <span class="s2">&quot;geonames&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="cm">/* numbers are column-in positions (-1 means leave blank, or add counter if field type is &#39;counter&#39;)</span>
+<span class="cm">       position in array is column-out positions  */</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">]</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>So the <span class="green">Object</span> of settings passed to <code class="docutils literal notranslate"><span class="pre">importCsvFile()</span></code> addresses the answers to all our
+questions above (<code class="docutils literal notranslate"><span class="pre">singleQuoteNest:</span> <span class="pre">false</span></code> is because there are single quotes present AND they
+are not quoted in double quotes – one setting for those two questions).</p>
+<p>We also pass an array (<code class="docutils literal notranslate"><span class="pre">[-1,0,1,2,3,4,5,6,7,8,9,10,-1,11]</span></code>).</p>
+<p>This array lets the import function know which columns from the CSV file go to which
+columns in the SQL table.  In this case, the first column in the SQL database is a
+<code class="docutils literal notranslate"><span class="pre">counter</span></code> type.  We want this to be created automatically.  So the first member of this
+array (<code class="docutils literal notranslate"><span class="pre">-1</span></code>) tells the import function to fill the first column in the SQL database with
+the default value.</p>
+<p>For default values using <code class="docutils literal notranslate"><span class="pre">-1</span></code>, the actual value depends on the column
+type.  For <code class="docutils literal notranslate"><span class="pre">varchar</span></code> it is a blank string.  For <code class="docutils literal notranslate"><span class="pre">int</span></code> it is <code class="docutils literal notranslate"><span class="pre">0</span></code>.  And
+for <code class="docutils literal notranslate"><span class="pre">counter</span></code> it is a unique number based on a time stamp and a counter
+value.</p>
+<p>Moving on, the second number in the array is <code class="docutils literal notranslate"><span class="pre">0</span></code> (“[1,<span class="red">0</span>,1,…]”).
+Since it is in the second position, it refers to the second column of the
+SQL table.  Since it is <code class="docutils literal notranslate"><span class="pre">0</span></code>, the data from the first column of the CSV
+will be used to populate the SQL table, column 1.</p>
+<p>The rest follow suit with column 2 of the CSV populating column 3 of the
+SQL table and so on.</p>
+<p>We want to insert zeros into the <cite>geocode</cite> field since it will be calculated
+later.  Hence the <code class="docutils literal notranslate"><span class="pre">-1</span></code> in the 13th position (“[-1,0,1,2,3,4,5,6,7,8,9,10,<span class="red">-1</span>,11]).</p>
+<p>We are ready to import the data.  But before we do, we know this will take a bit of time.
+Let’s set up a function to monitor the progress so we aren’t staring at a blank screen
+wondering when the import will be finished.</p>
+</div>
+<div class="section" id="monitoring-the-import">
+<h4>Monitoring the Import<a class="headerlink" href="#monitoring-the-import" title="Permalink to this headline">¶</a></h4>
+<p>There are two major stages at which we can monitor the import.  The first
+is while <code class="docutils literal notranslate"><span class="pre">importCsvFile()</span></code> is analysing the data, and the second is
+as the data is being inserted into the SQL table.</p>
+<p>In the first, analysis stage, a monitoring function is passed two parameters:
+<code class="docutils literal notranslate"><span class="pre">monitor_import(count,</span> <span class="pre">stage)</span></code>.  The analysis takes at least two passes.
+If <code class="docutils literal notranslate"><span class="pre">normalize</span></code>, is set <code class="docutils literal notranslate"><span class="pre">true</span></code>, two more passes are added for each column.</p>
+<p>Note that the first stage is significantly faster than the second.  Therefore if your
+dataset is not very large, you might want to skip reporting on the progress
+of the first page.</p>
+<p>In the second, insert stage, a monitoring function is passed only one parameter:
+<code class="docutils literal notranslate"><span class="pre">monitor_import(count)</span></code>.</p>
+<p>Knowing this, we can write a single function to print out our progress, which may be used
+at either/both major stage.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// cuz no one likes writing out &#39;rampart.utils.printf()&#39;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
+<span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="c1">//we won&#39;t know the total until we finish the first pass</span>
+
+<span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">count</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span><span class="o">!==</span><span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// progressfunc</span>
+        <span class="nx">stage</span><span class="o">=</span><span class="nx">stg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">//differentiate between 0 and undefined</span>
+    <span class="p">{</span>
+        <span class="nx">total</span><span class="o">=</span><span class="nx">count</span><span class="p">;</span> <span class="c1">//update our total in the first stage.</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d       \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d of %d      \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">fflush</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="putting-it-together">
+<h4>Putting it Together<a class="headerlink" href="#putting-it-together" title="Permalink to this headline">¶</a></h4>
+<p>Putting this all together, and using the <code class="docutils literal notranslate"><span class="pre">callbackStep</span></code> and <code class="docutils literal notranslate"><span class="pre">progressStep</span></code>
+settings, we end up with this:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// cuz no one likes writing out &#39;rampart.utils.printf()&#39;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
+<span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="c1">//we won&#39;t know the total until we finish the first pass</span>
+
+<span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">count</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span><span class="o">!==</span><span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// progressfunc</span>
+        <span class="nx">stage</span><span class="o">=</span><span class="nx">stg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">//differentiate between 0 and undefined</span>
+    <span class="p">{</span>
+        <span class="nx">total</span><span class="o">=</span><span class="nx">count</span><span class="p">;</span> <span class="c1">//update our total in the first stage.</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d       \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d of %d      \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">fflush</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="nx">total</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">importCsvFile</span><span class="p">(</span>
+    <span class="s2">&quot;allCountries.txt&quot;</span><span class="p">,</span>  <span class="c1">//file to import</span>
+    <span class="p">{</span>
+        <span class="nx">normalize</span><span class="o">:</span>       <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">singleQuoteNest</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">delimiter</span><span class="o">:</span>       <span class="s1">&#39;\t&#39;</span><span class="p">,</span>
+        <span class="nx">hasHeaderRow</span><span class="o">:</span>    <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">tableName</span><span class="o">:</span>       <span class="s2">&quot;geonames&quot;</span><span class="p">,</span>
+        <span class="nx">callbackStep</span><span class="o">:</span>    <span class="nx">step</span><span class="p">,</span> <span class="c1">//callback run every 100th row</span>
+        <span class="nx">progressStep</span><span class="o">:</span>    <span class="nx">step</span><span class="p">,</span> <span class="c1">//progressfunc run every 100th row for each stage</span>
+        <span class="nx">progressFunc</span><span class="o">:</span>    <span class="nx">monitor_import</span> <span class="c1">//progress function while processing csv</span>
+    <span class="p">},</span>
+    <span class="cm">/* numbers are column-in positions (-1 means leave blank, or add counter if field type is &#39;counter&#39;)</span>
+<span class="cm">       position in array is column-out positions  */</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">],</span>
+    <span class="nx">monitor_import</span> <span class="c1">//callback function upon actual import</span>
+<span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span><span class="c1">//end with a newline</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-script-thus-far">
+<h4>The Script Thus Far<a class="headerlink" href="#the-script-thus-far" title="Permalink to this headline">¶</a></h4>
+<p>We can wrap the import into its own function and add it to our script from above:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="c1">// use process.scriptPath to make sure we have the</span>
+<span class="c1">// correct path if running from another working directory</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span> <span class="o">+</span> <span class="s2">&quot;/geonames_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="c1">// cuz no one likes writing out &#39;rampart.utils.printf()&#39;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="c1">// put the create statement into its own function</span>
+<span class="c1">// since we are doing this in stages</span>
+
+<span class="kd">function</span> <span class="nx">create_table</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table geonames (&quot;</span> <span class="o">+</span>
+        <span class="s2">&quot;id           counter, &quot;</span>       <span class="o">+</span>
+        <span class="s2">&quot;country_code char(2), &quot;</span>       <span class="o">+</span>
+        <span class="s2">&quot;postal_code  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;place_name   varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_name1  varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_code1  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;admin_name2  varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_code2  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;admin_name3  varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_code3  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;latitude     double, &quot;</span>        <span class="o">+</span>
+        <span class="s2">&quot;longitude    double, &quot;</span>        <span class="o">+</span>
+        <span class="s2">&quot;geocode      long, &quot;</span>          <span class="o">+</span>
+        <span class="s2">&quot;accuracy     int           );&quot;</span>
+    <span class="p">);</span>
+
+<span class="p">}</span>
+
+
+<span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
+<span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="c1">//we won&#39;t know the total until we finish the first pass</span>
+
+<span class="cm">/* a single function to monitor the import for both pre-processing (progressFunc)</span>
+<span class="cm">   and import (callback function supplied to sql.importCsvFile as a paramater)   */</span>
+<span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">count</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span><span class="o">!==</span><span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// progressfunc</span>
+        <span class="nx">stage</span><span class="o">=</span><span class="nx">stg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">//differentiate between 0 and undefined</span>
+    <span class="p">{</span>
+        <span class="nx">total</span><span class="o">=</span><span class="nx">count</span><span class="p">;</span> <span class="c1">//update our total in the first stage.</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d       \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d of %d      \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">fflush</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">import_data</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">total</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">importCsvFile</span><span class="p">(</span>
+        <span class="s2">&quot;allCountries.txt&quot;</span><span class="p">,</span>  <span class="c1">//file to import</span>
+        <span class="p">{</span>
+            <span class="nx">normalize</span><span class="o">:</span>       <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">singleQuoteNest</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">delimiter</span><span class="o">:</span>       <span class="s1">&#39;\t&#39;</span><span class="p">,</span>
+            <span class="nx">hasHeaderRow</span><span class="o">:</span>    <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">tableName</span><span class="o">:</span>       <span class="s2">&quot;geonames&quot;</span><span class="p">,</span>
+            <span class="nx">callbackStep</span><span class="o">:</span>    <span class="nx">step</span><span class="p">,</span> <span class="c1">//callback run every 100th row</span>
+            <span class="nx">progressStep</span><span class="o">:</span>    <span class="nx">step</span><span class="p">,</span> <span class="c1">//progressfunc run every 100th row for each stage</span>
+            <span class="nx">progressFunc</span><span class="o">:</span>    <span class="nx">monitor_import</span> <span class="c1">//progress function while processing csv</span>
+        <span class="p">},</span>
+        <span class="cm">/* numbers are column-in positions (-1 means leave blank, or add counter if field type is &#39;counter&#39;)</span>
+<span class="cm">           position in array is column-out positions  */</span>
+        <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">],</span>
+        <span class="nx">monitor_import</span> <span class="c1">//callback function upon actual import</span>
+    <span class="p">);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span><span class="c1">//end with a newline</span>
+<span class="p">}</span>
+
+<span class="nx">create_table</span><span class="p">();</span>
+<span class="nx">import_data</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="computing-geocodes">
+<h3>Computing Geocodes<a class="headerlink" href="#computing-geocodes" title="Permalink to this headline">¶</a></h3>
+<p>Now we have all the data from the CSV imported into the SQL table.  But remember the <code class="docutils literal notranslate"><span class="pre">geocode</span></code>
+field?  They have all been set to <code class="docutils literal notranslate"><span class="pre">0</span></code>.  So what is this field for?  We
+will use it for a geocode that allows us to search bounded regions.  The function
+<code class="docutils literal notranslate"><span class="pre">latlon2geocode</span></code> will compute it for us using the latitude and
+longitude already in the table.</p>
+<p>According to the <a class="reference internal" href="sql-server-funcs.html#latlon2geocode-latlon2geocodearea"><span class="std std-ref">documentation</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>The latlon2geocode function encodes a given latitude/longitude coordinate
+into one long return value.  This encoded value – a “geocode” value – can
+be indexed and used with a special variant of Texis’ BETWEEN operator for
+bounded-area searches of a geographical region.
+</pre></div>
+</div>
+<p>That is exactly what we need to efficiently search for other places close to a given one.</p>
+<p>So lets compute that field.  Fortunately it can be done in a single sql statement:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">update</span> <span class="n">geonames</span> <span class="k">set</span> <span class="n">geocode</span> <span class="o">=</span> <span class="n">latlon2geocode</span><span class="p">(</span><span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Once again, let’s wrap that in a function and put it in our script:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">make_geocode</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Computing geocode column:\n&quot;</span><span class="p">);</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;update geonames set geocode = latlon2geocode(latitude, longitude);&quot;</span><span class="p">,</span>
+             <span class="c1">//monitor our progress with a callback</span>
+             <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+                 <span class="k">if</span><span class="p">(</span><span class="o">!</span> <span class="p">(</span><span class="nx">i</span><span class="o">%</span><span class="mi">100</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+                     <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d of %d    \r&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+                     <span class="nx">fflush</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+                 <span class="p">}</span>
+             <span class="p">}</span>
+    <span class="p">);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span><span class="c1">//end with a newline</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Like magic, we now have everything we need to do a geographic bounded search.</p>
+<p>Lets prove it.  After computing the <code class="docutils literal notranslate"><span class="pre">geocode</span></code> columnt, lets find zip codes
+in Oakland, CA and surrounding cities.  From the command line, we will use
+the <code class="docutils literal notranslate"><span class="pre">tsql</span></code> utility to try this out.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ tsql -l 30 -d geonames_db/ &quot;select place_name, postal_code,  distlatlon(37.8, -122.3, latitude, longitude) MilesAway from geonames where geocode between (select latlon2geocodearea(37.8, -122.3, 0.2)) order by 3 asc&quot;
+
+ place_name  postal_code   MilesAway
+------------+------------+------------+
+Oakland      94615            0.463117
+Oakland      94607            0.949234
+Oakland      94604             1.62171
+Oakland      94623             1.62171
+Oakland      94624             1.62171
+Oakland      94649             1.62171
+Oakland      94659             1.62171
+Oakland      94660             1.62171
+Oakland      94661             1.62171
+Oakland      94666             1.62171
+Oakland      94617              1.6351
+Oakland      94612             1.90388
+Emeryville   94662             2.30697
+Emeryville   94608             2.73752
+Alameda      94501             2.79463
+Oakland      94606             3.12938
+Oakland      94610             3.16062
+Oakland      94609              3.1832
+Oakland      94622             3.61777
+Piedmont     94620             4.09376
+San Francisco 94130             4.10287
+Berkeley     94701             4.18801
+Oakland      94618             4.41511
+Berkeley     94703             4.56013
+Berkeley     94702             4.60167
+Oakland      94601             4.74365
+Berkeley     94705             4.79358
+Berkeley     94710             4.81075
+Oakland      94602             4.88881
+San Francisco 94105             4.95664
+</pre></div>
+</div>
+<p>Yes, that worked.  But why did it take so long?</p>
+</div>
+<div class="section" id="building-indexes">
+<h3>Building Indexes<a class="headerlink" href="#building-indexes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-geocode-index">
+<h4>The geocode index<a class="headerlink" href="#the-geocode-index" title="Permalink to this headline">¶</a></h4>
+<p>We need to create an index to speed up that bounded search.  And we should
+do that in our script.  And once again, we are going to wrap it in a function.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">make_geocode_index</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating index on geocode\n&quot;</span><span class="p">);</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create index geonames_geocode_x on geonames(geocode) WITH INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A couple of things to note:</p>
+<p>First – when this index is made, it will backed by a
+file named <code class="docutils literal notranslate"><span class="pre">geonames_geocode_x.btr</span></code>.  It is so named because it will be
+easy to find using <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">-l</span></code> (it will come right before the table, named
+<code class="docutils literal notranslate"><span class="pre">geonames.tbl</span></code>, and it lets you know the field indexed (<code class="docutils literal notranslate"><span class="pre">_geocode</span></code>) and
+the type of index (<code class="docutils literal notranslate"><span class="pre">_x</span></code> for plain index, i.e.  - not fulltext or unique).
+Your methodology for naming indexes is not as important as making sure you
+are consistent, can read it and know what the index is for without having to
+resort to looking it up.</p>
+<p>However if you do not know what an index is for, you can always look it up in the System
+Catalog:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># tsql -d geonames_db/ &quot;select * from SYSINDEX where NAME=&#39;geonames_geocode_x&#39;&quot;</span>
+
+    <span class="n">NAME</span>        <span class="n">TBNAME</span>       <span class="n">FNAME</span>       <span class="n">COLLSEQ</span>        <span class="n">TYPE</span>      <span class="n">NON_UNIQUE</span>     <span class="n">FIELDS</span>       <span class="n">PARAMS</span>
+<span class="o">------------+------------+------------+------------+------------+------------+------------+------------+</span>
+<span class="n">geonames_geocode_x</span> <span class="n">geonames</span>     <span class="n">geonames_geocode_x</span> <span class="n">A</span>            <span class="n">B</span>                      <span class="mi">01</span> <span class="n">geocode</span>      <span class="n">stringcomparemode</span><span class="o">=</span><span class="n">unicodemulti</span><span class="p">,</span><span class="n">respectcase</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Second –  note the <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">INDEXMETER</span> <span class="pre">'on'</span></code> in the SQL statement.  This will tell
+Texis to print a pretty meter to let you know the progress of your index creation.</p>
+<p>When you have built your index, try the <code class="docutils literal notranslate"><span class="pre">tsql</span></code> query above again.  It should be much, much faster.</p>
+</div>
+<div class="section" id="the-id-index">
+<h4>The id index<a class="headerlink" href="#the-id-index" title="Permalink to this headline">¶</a></h4>
+<p>Eventually, when we write our client-side script, we will want to look up records based on the
+<code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">counter</span></code> field.  So we will make a function to make an index on that as well.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">make_id_index</span><span class="p">(){</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating index on id\n&quot;</span><span class="p">);</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create index geonames_id_x on geonames(id) WITH INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-fulltext-index">
+<h4>The fulltext index<a class="headerlink" href="#the-fulltext-index" title="Permalink to this headline">¶</a></h4>
+<p>When making a fulltext index, often it is best to leave most settings as is.  The one exception
+is the <a class="reference internal" href="rampart-sql.html#rex"><span class="std std-ref">rex</span></a> expressions used to define what is a word.
+Often we want to make sure we include utf-8 encoded text.</p>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>, which is similar to doing <code class="docutils literal notranslate"><span class="pre">mydoc.match(/[a-zA-Z0-9]+/g)</span></code>.
+Since we are processing utf-8 text, and since we have names of places from all over the world,
+we had better accommodate bytes larger than <code class="docutils literal notranslate"><span class="pre">0x79</span></code>.</p>
+<p>To change the expression used during fulltext index creation, we can use
+<a class="reference internal" href="sql-set.html#delexp"><span class="std std-ref">delExp</span></a> and <a class="reference internal" href="sql-set.html#addexp"><span class="std std-ref">addExp</span></a>.  However
+as a shortcut, we can specify the expressions that will be used in the SQL
+statement itself by utilizing the <code class="docutils literal notranslate"><span class="pre">WITH</span></code> keyword:</p>
+<p><code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">WORDEXPRESSIONS</span> <span class="pre">('[\\alnum\\x80-\\xFF]{2,99}')</span></code></p>
+<p>That will find words consisting of ascii letters and numbers, plus utf-8 multibyte characters as well.</p>
+<p>Now we also have a database that does not contain normal text.  It is worth thinking about where this
+might bite us in the future.  Let’s look at the <a class="reference internal" href="sql-set.html#noiselist"><span class="std std-ref">list of noise words</span></a>.
+The excluded <code class="docutils literal notranslate"><span class="pre">us</span></code>, <code class="docutils literal notranslate"><span class="pre">to</span></code> and <code class="docutils literal notranslate"><span class="pre">in</span></code> look suspect.  They are the same as some of our country codes.
+And <code class="docutils literal notranslate"><span class="pre">or</span></code> is an <code class="docutils literal notranslate"><span class="pre">admin_code1</span></code> abbreviation for Oregon.</p>
+<p>Though for searching any normal English text, removing all the noise words would hurt performance,
+in this very specific circumstance it serves no purpose but to exclude some
+codes we want in our index.  So we will delete the noiseList.</p>
+<p>You should always have a very good reason for altering or deleting the
+noiseList.  It is something that is rarely needed and can have adverse
+consequences.  However, this time we do have a good reason.</p>
+<p>Now - what to index?  Naturally we want to be able to look up a place based
+upon any of the text fields.  So we will create one “virtual” field made up
+of all our text fields.  To do that, in the SQL statement we separate all
+the fields using a <code class="docutils literal notranslate"><span class="pre">\</span></code>;  But since it is JavaScript, we will need to escape
+the backslash with another backslash.  We should end up with this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">place_name</span>\\<span class="n">postal_code</span>\\<span class="n">admin_name1</span>\\<span class="n">admin_code1</span>\\<span class="n">country_code</span>\\<span class="n">admin_name2</span>\\<span class="n">admin_code2</span>\\<span class="n">admin_name3</span>\\<span class="n">admin_code3</span>
+</pre></div>
+</div>
+<p>Ordering is important.  Those queries we will do later, that have matches at
+the beginning of our virtual field will match higher than those at the end.
+(This can be adjusted: see <a class="reference internal" href="sql-set.html#rank-knobs"><span class="std std-ref">Rank Knobs</span></a>.</p>
+<p>So, let’s see our SQL statement, within a <code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>, in its own function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">make_text_index</span><span class="p">(){</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating indexes on location names\n&quot;</span><span class="p">);</span>
+
+    <span class="c1">// noiselist as detailed at https://rampart.dev/docs/sql-set.html#noiselist</span>
+    <span class="c1">// This is not English text and some geographic abbreviations like OR IN DO TO SO and US</span>
+    <span class="c1">// are also on the noise words list.</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span> <span class="nx">noiseList</span><span class="o">:</span><span class="p">[]});</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index geonames_textcols_ftx on geonames&quot;</span><span class="o">+</span>
+        <span class="s2">&quot;(place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3)&quot;</span><span class="o">+</span>
+        <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="the-final-import-script">
+<h3>The Final Import Script<a class="headerlink" href="#the-final-import-script" title="Permalink to this headline">¶</a></h3>
+<p>We put it all together and it looks something like this:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="c1">// use process.scriptPath to make sure we have the</span>
+<span class="c1">// correct path if running from another working directory</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span> <span class="o">+</span> <span class="s2">&quot;/geonames_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="c1">// cuz no one likes writing out &#39;rampart.utils.printf()&#39;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="c1">// put the create statement into its own function</span>
+<span class="c1">// since we are doing this in stages</span>
+
+<span class="kd">function</span> <span class="nx">create_table</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table geonames (&quot;</span> <span class="o">+</span>
+        <span class="s2">&quot;id           counter, &quot;</span>       <span class="o">+</span>
+        <span class="s2">&quot;country_code char(2), &quot;</span>       <span class="o">+</span>
+        <span class="s2">&quot;postal_code  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;place_name   varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_name1  varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_code1  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;admin_name2  varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_code2  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;admin_name3  varchar(16), &quot;</span>   <span class="o">+</span>
+        <span class="s2">&quot;admin_code3  varchar(8), &quot;</span>    <span class="o">+</span>
+        <span class="s2">&quot;latitude     double, &quot;</span>        <span class="o">+</span>
+        <span class="s2">&quot;longitude    double, &quot;</span>        <span class="o">+</span>
+        <span class="s2">&quot;geocode      long, &quot;</span>          <span class="o">+</span>
+        <span class="s2">&quot;accuracy     int           );&quot;</span>
+    <span class="p">);</span>
+
+<span class="p">}</span>
+
+
+<span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
+<span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="c1">//we won&#39;t know the total until we finish the first pass</span>
+
+<span class="cm">/* a single function to monitor the import for both pre-processing (progressFunc)</span>
+<span class="cm">   and import (callback function supplied to sql.importCsvFile as a paramater)   */</span>
+<span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">count</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span><span class="o">!==</span><span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// progressfunc</span>
+        <span class="nx">stage</span><span class="o">=</span><span class="nx">stg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">stg</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">//differentiate between 0 and undefined</span>
+    <span class="p">{</span>
+        <span class="nx">total</span><span class="o">=</span><span class="nx">count</span><span class="p">;</span> <span class="c1">//update our total in the first stage.</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d       \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Stage: %s, Count: %d of %d      \r&quot;</span><span class="p">,</span> <span class="nx">stage</span><span class="p">,</span> <span class="nx">count</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">fflush</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">import_data</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">total</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">importCsvFile</span><span class="p">(</span>
+        <span class="s2">&quot;allCountries.txt&quot;</span><span class="p">,</span>  <span class="c1">//file to import</span>
+        <span class="p">{</span>
+            <span class="nx">normalize</span><span class="o">:</span>       <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">singleQuoteNest</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">delimiter</span><span class="o">:</span>       <span class="s1">&#39;\t&#39;</span><span class="p">,</span>
+            <span class="nx">hasHeaderRow</span><span class="o">:</span>    <span class="kc">false</span><span class="p">,</span>
+            <span class="nx">tableName</span><span class="o">:</span>       <span class="s2">&quot;geonames&quot;</span><span class="p">,</span>
+            <span class="nx">callbackStep</span><span class="o">:</span>    <span class="nx">step</span><span class="p">,</span> <span class="c1">//callback run every 100th row</span>
+            <span class="nx">progressStep</span><span class="o">:</span>    <span class="nx">step</span><span class="p">,</span> <span class="c1">//progressfunc run every 100th row for each stage</span>
+            <span class="nx">progressFunc</span><span class="o">:</span>    <span class="nx">monitor_import</span> <span class="c1">//progress function while processing csv</span>
+        <span class="p">},</span>
+        <span class="cm">/* numbers are column-in positions (-1 means leave blank, or add counter if field type is &#39;counter&#39;)</span>
+<span class="cm">           position in array is column-out positions  */</span>
+        <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">],</span>
+        <span class="nx">monitor_import</span> <span class="c1">//callback function upon actual import</span>
+    <span class="p">);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span><span class="c1">//end with a newline</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">make_geocode</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Computing geocode column:\n&quot;</span><span class="p">);</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;update geonames set geocode = latlon2geocode(latitude, longitude);&quot;</span><span class="p">,</span>
+             <span class="c1">//monitor our progress with a callback</span>
+             <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+                 <span class="k">if</span><span class="p">(</span><span class="o">!</span> <span class="p">(</span><span class="nx">i</span><span class="o">%</span><span class="mi">100</span><span class="p">)</span> <span class="p">)</span> <span class="p">{</span>
+                     <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d of %d    \r&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+                     <span class="nx">fflush</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+                 <span class="p">}</span>
+             <span class="p">}</span>
+    <span class="p">);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span><span class="c1">//end with a newline</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">make_geocode_index</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating index on geocode\n&quot;</span><span class="p">);</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create index geonames_geocode_x on geonames(geocode) WITH INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">make_id_index</span><span class="p">(){</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating index on id\n&quot;</span><span class="p">);</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create index geonames_id_x on geonames(id) WITH INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">make_text_index</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating indexes on location names\n&quot;</span><span class="p">);</span>
+
+    <span class="c1">// noiselist as detailed at https://rampart.dev/docs/sql-set.html#noiselist</span>
+    <span class="c1">// This is not English text and some geographic abbreviations like OR IN DO TO SO and US</span>
+    <span class="c1">// are also on the noise words list.</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span> <span class="nx">noiseList</span><span class="o">:</span><span class="p">[]});</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index geonames_textcols_ftx on geonames&quot;</span><span class="o">+</span>
+        <span class="s2">&quot;(place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3)&quot;</span><span class="o">+</span>
+        <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">create_table</span><span class="p">();</span>
+<span class="nx">import_data</span><span class="p">();</span>
+<span class="nx">make_geocode</span><span class="p">();</span>
+<span class="nx">make_geocode_index</span><span class="p">();</span>
+<span class="nx">make_id_index</span><span class="p">();</span>
+<span class="nx">make_text_index</span><span class="p">();</span>
+
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;All Done\n&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="tutorialtoc.html" class="btn btn-neutral" title="Tutorials" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
