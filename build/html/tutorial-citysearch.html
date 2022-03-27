@@ -112,6 +112,15 @@
 <li class="toctree-l4"><a class="reference internal" href="#the-final-import-script">The Final Import Script</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#web-server-script">Web Server Script</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#web-server-layout">Web Server Layout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#web-server-script-mapping">Web Server Script Mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#delivering-static-content">Delivering Static Content</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#client-side-scripting">Client-Side Scripting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#formatting-auto-complete-results">Formatting Auto-Complete Results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-complete-server-side-script">The Complete Server-Side Script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -211,8 +220,10 @@ the client side autocomplete search.</p></li>
 to encode latitude/longitude pairs for each entry in the database, and to
 find the closest cities to any given latitude/longitude pair.</p></li>
 </ul>
-<p>In order to complete this tutorial, you should have basic knowledge of JavaScript, SQL and client side
-scripting using JavaScript (a passing knowledge of jQuery is also helpful).</p>
+<p>In order to complete this tutorial, you should have basic knowledge of
+JavaScript, SQL and client side scripting using JavaScript (a passing
+knowledge of jQuery is also helpful).  This tutorial will not provide an
+in-depth explanation of how client-side scripting works.</p>
 </div>
 <div class="section" id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
@@ -226,7 +237,7 @@ licensed under a
 the file that suits your needs.  In this tutorial, we will use the world
 database titled <a class="reference external" href="http://download.geonames.org/export/zip/allCountries.zip">AllCountries.zip</a>.</p>
 <p>Your first task will be to download your file of choice and unzip it in a
-working directory (here we use <code class="docutils literal notranslate"><span class="pre">./geonames/</span></code>).  We will assume your directory
+working directory (here we use <code class="docutils literal notranslate"><span class="pre">~/geonames/</span></code>).  We will assume your directory
 contains the <code class="docutils literal notranslate"><span class="pre">allCountries.txt</span></code> file.</p>
 </div>
 <div class="section" id="importing-the-data">
@@ -284,7 +295,7 @@ column names.</p>
 <li><p>Is there a header row as the first line in the file? <span class="red">NO</span></p></li>
 </ul>
 <p>Note that although the file is separated by tabs, we will continue to use the term
-<code class="docutils literal notranslate"><span class="pre">CSV</span></code> in order to keep things consistent.</p>
+<code class="docutils literal notranslate"><span class="pre">CSV</span></code>.</p>
 <p>Next lets find out which field is which.  According to GeoNames.org:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">data</span> <span class="nb">format</span> <span class="ow">is</span> <span class="n">tab</span><span class="o">-</span><span class="n">delimited</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">utf8</span> <span class="n">encoding</span><span class="p">,</span> <span class="k">with</span> <span class="n">the</span> <span class="n">following</span> <span class="n">fields</span> <span class="p">:</span>
 
@@ -320,13 +331,13 @@ typed as <code class="docutils literal notranslate"><span class="pre">long</span
 <p>To begin, we need to load the SQL module and open a database;</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./geonames_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;~/geonames/geonames_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>In the above code, the <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">Sql</span> <span class="pre">=</span> <span class="pre">require(&quot;rampart-sql&quot;);</span></code> line
 loads the SQL module that is distributed with Rampart as
 <code class="docutils literal notranslate"><span class="pre">rampart-sql.so</span></code>.  The second line,
-<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">sql</span> <span class="pre">=</span> <span class="pre">new</span> <span class="pre">Sql.init(&quot;./geonames_db&quot;,</span> <span class="pre">true);</span></code> opens the database.</p>
+<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">sql</span> <span class="pre">=</span> <span class="pre">new</span> <span class="pre">Sql.init(&quot;~geonames/geonames_db&quot;,</span> <span class="pre">true);</span></code> opens the database.</p>
 <p>Note the <code class="docutils literal notranslate"><span class="pre">true</span></code> in <code class="docutils literal notranslate"><span class="pre">Sql.init()</span></code>.  It signifies that if the database
 does not exist, create the directory and the metadata files necessary
 for a new, blank database.</p>
@@ -386,7 +397,7 @@ that what is specified, it will not truncate the text or affect any indexing.</p
 <h4>The Settings<a class="headerlink" href="#the-settings" title="Permalink to this headline">¶</a></h4>
 <p>The SQL module has a convient function to import CSV data.  It has many options
 and often takes carefull examination of the data to be imported to get it correct.
-Fortunately that large number of options allows us to get well formatted
+Fortunately the large number of options allows us to get well formatted
 CSV data imported correctly.</p>
 <p>See the section for <a class="reference internal" href="rampart-sql.html#importcsvfile"><span class="std std-ref">importCsvFile()</span></a> for a full
 listing.</p>
@@ -411,23 +422,27 @@ can make our <code class="docutils literal notranslate"><span class="pre">import
 questions above (<code class="docutils literal notranslate"><span class="pre">singleQuoteNest:</span> <span class="pre">false</span></code> is because there are single quotes present AND they
 are not quoted in double quotes – one setting for those two questions).</p>
 <p>We also pass an array (<code class="docutils literal notranslate"><span class="pre">[-1,0,1,2,3,4,5,6,7,8,9,10,-1,11]</span></code>).</p>
-<p>This array lets the import function know which columns from the CSV file go to which
-columns in the SQL table.  In this case, the first column in the SQL database is a
-<code class="docutils literal notranslate"><span class="pre">counter</span></code> type.  We want this to be created automatically.  So the first member of this
-array (<code class="docutils literal notranslate"><span class="pre">-1</span></code>) tells the import function to fill the first column in the SQL database with
-the default value.</p>
+<p>Column numbers start at <code class="docutils literal notranslate"><span class="pre">0</span></code> and end at <code class="docutils literal notranslate"><span class="pre">n-1</span></code> columns.</p>
+<p>The array is like the layout of a SQL table row.  The numbers in the array
+correspond to columns in the CSV.  As such, the array lets the import
+function know which columns from the CSV file go to which columns in the SQL
+table.</p>
+<p>In this case, column 0 in the SQL database is a <code class="docutils literal notranslate"><span class="pre">counter</span></code> type.
+We want this to be created automatically.  So the first member of this array
+(<code class="docutils literal notranslate"><span class="pre">-1</span></code>) tells the import function to fill the first column in the SQL
+database with the default value.</p>
 <p>For default values using <code class="docutils literal notranslate"><span class="pre">-1</span></code>, the actual value depends on the column
 type.  For <code class="docutils literal notranslate"><span class="pre">varchar</span></code> it is a blank string.  For <code class="docutils literal notranslate"><span class="pre">int</span></code> it is <code class="docutils literal notranslate"><span class="pre">0</span></code>.  And
 for <code class="docutils literal notranslate"><span class="pre">counter</span></code> it is a unique number based on a time stamp and a counter
 value.</p>
-<p>Moving on, the second number in the array is <code class="docutils literal notranslate"><span class="pre">0</span></code> (“[1,<span class="red">0</span>,1,…]”).
-Since it is in the second position, it refers to the second column of the
-SQL table.  Since it is <code class="docutils literal notranslate"><span class="pre">0</span></code>, the data from the first column of the CSV
-will be used to populate the SQL table, column 1.</p>
-<p>The rest follow suit with column 2 of the CSV populating column 3 of the
+<p>Moving on, the second number in the array is <code class="docutils literal notranslate"><span class="pre">0</span></code> (“[-1,<span class="red">0</span>,1,…]”).  Since it is in the <code class="docutils literal notranslate"><span class="pre">array[1]</span></code> position, it refers to column 1
+(the second column) of SQL table.  Since it is <code class="docutils literal notranslate"><span class="pre">0</span></code>, the data from column 0
+of the CSV will be used to populate column 1 of the SQL table.</p>
+<p>The rest follow suit with column 1 of the CSV populating column 2 of the
 SQL table and so on.</p>
 <p>We want to insert zeros into the <cite>geocode</cite> field since it will be calculated
-later.  Hence the <code class="docutils literal notranslate"><span class="pre">-1</span></code> in the 13th position (“[-1,0,1,2,3,4,5,6,7,8,9,10,<span class="red">-1</span>,11]).</p>
+later.  Hence there is the <code class="docutils literal notranslate"><span class="pre">-1</span></code> in the <code class="docutils literal notranslate"><span class="pre">array[12]</span></code> position (again,
+starting at 0; “[-1,0,1,2,3,4,5,6,7,8,9,10,<span class="red">-1</span>,11]).</p>
 <p>We are ready to import the data.  But before we do, we know this will take a bit of time.
 Let’s set up a function to monitor the progress so we aren’t staring at a blank screen
 wondering when the import will be finished.</p>
@@ -444,9 +459,9 @@ If <code class="docutils literal notranslate"><span class="pre">normalize</span>
 dataset is not very large, you might want to skip reporting on the progress
 of the first page.</p>
 <p>In the second, insert stage, a monitoring function is passed only one parameter:
-<code class="docutils literal notranslate"><span class="pre">monitor_import(count)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">monitor_import(count)</span></code>.  There is only one pass for the second stage.</p>
 <p>Knowing this, we can write a single function to print out our progress, which may be used
-at either/both major stage.</p>
+at either of or both of the major stages.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// cuz no one likes writing out &#39;rampart.utils.printf()&#39;</span>
 <span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
@@ -620,11 +635,11 @@ settings, we end up with this:</p>
 </div>
 <div class="section" id="computing-geocodes">
 <h3>Computing Geocodes<a class="headerlink" href="#computing-geocodes" title="Permalink to this headline">¶</a></h3>
-<p>Now we have all the data from the CSV imported into the SQL table.  But remember the <code class="docutils literal notranslate"><span class="pre">geocode</span></code>
-field?  They have all been set to <code class="docutils literal notranslate"><span class="pre">0</span></code>.  So what is this field for?  We
-will use it for a geocode that allows us to search bounded regions.  The function
-<code class="docutils literal notranslate"><span class="pre">latlon2geocode</span></code> will compute it for us using the latitude and
-longitude already in the table.</p>
+<p>Now we have all the data from the CSV imported into the SQL table.  But
+remember the <code class="docutils literal notranslate"><span class="pre">geocode</span></code> field?  They have all been set to <code class="docutils literal notranslate"><span class="pre">0</span></code>.  So what
+is this field for?  We will use it to store a “geocode” that allows us to
+search bounded regions.  The function <code class="docutils literal notranslate"><span class="pre">latlon2geocode</span></code> will compute it for
+us using the latitude and longitude already in each row of the table.</p>
 <p>According to the <a class="reference internal" href="sql-server-funcs.html#latlon2geocode-latlon2geocodearea"><span class="std std-ref">documentation</span></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>The latlon2geocode function encodes a given latitude/longitude coordinate
 into one long return value.  This encoded value – a “geocode” value – can
@@ -658,7 +673,9 @@ bounded-area searches of a geographical region.
 <p>Lets prove it.  After computing the <code class="docutils literal notranslate"><span class="pre">geocode</span></code> columnt, lets find zip codes
 in Oakland, CA and surrounding cities.  From the command line, we will use
 the <code class="docutils literal notranslate"><span class="pre">tsql</span></code> utility to try this out.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ tsql -l 30 -d geonames_db/ &quot;select place_name, postal_code,  distlatlon(37.8, -122.3, latitude, longitude) MilesAway from geonames where geocode between (select latlon2geocodearea(37.8, -122.3, 0.2)) order by 3 asc&quot;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ tsql -l 30 -d geonames_db/ &quot;select place_name, postal_code,
+  distlatlon(37.8, -122.3, latitude, longitude) MilesAway
+  from geonames where geocode between (select latlon2geocodearea(37.8, -122.3, 0.2)) order by 3 asc&quot;
 
  place_name  postal_code   MilesAway
 ------------+------------+------------+
@@ -694,14 +711,15 @@ Oakland      94602             4.88881
 San Francisco 94105             4.95664
 </pre></div>
 </div>
-<p>Yes, that worked.  But why did it take so long?</p>
+<p>Yes, that worked.  But why was it so slow?</p>
 </div>
 <div class="section" id="building-indexes">
 <h3>Building Indexes<a class="headerlink" href="#building-indexes" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="the-geocode-index">
 <h4>The geocode index<a class="headerlink" href="#the-geocode-index" title="Permalink to this headline">¶</a></h4>
-<p>We need to create an index to speed up that bounded search.  And we should
-do that in our script.  And once again, we are going to wrap it in a function.</p>
+<p>We need to create an index to speed up the bounded “geocode” search above.
+And we should do that in our script.  And once again, we are going to wrap
+it in a function.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">make_geocode_index</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating index on geocode\n&quot;</span><span class="p">);</span>
     <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create index geonames_geocode_x on geonames(geocode) WITH INDEXMETER &#39;on&#39;;&quot;</span><span class="p">);</span>
@@ -754,28 +772,32 @@ we had better accommodate bytes larger than <code class="docutils literal notran
 as a shortcut, we can specify the expressions that will be used in the SQL
 statement itself by utilizing the <code class="docutils literal notranslate"><span class="pre">WITH</span></code> keyword:</p>
 <p><code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">WORDEXPRESSIONS</span> <span class="pre">('[\\alnum\\x80-\\xFF]{2,99}')</span></code></p>
-<p>That will find words consisting of ascii letters and numbers, plus utf-8 multibyte characters as well.</p>
-<p>Now we also have a database that does not contain normal text.  It is worth thinking about where this
-might bite us in the future.  Let’s look at the <a class="reference internal" href="sql-set.html#noiselist"><span class="std std-ref">list of noise words</span></a>.
-The excluded <code class="docutils literal notranslate"><span class="pre">us</span></code>, <code class="docutils literal notranslate"><span class="pre">to</span></code> and <code class="docutils literal notranslate"><span class="pre">in</span></code> look suspect.  They are the same as some of our country codes.
-And <code class="docutils literal notranslate"><span class="pre">or</span></code> is an <code class="docutils literal notranslate"><span class="pre">admin_code1</span></code> abbreviation for Oregon.</p>
-<p>Though for searching any normal English text, removing all the noise words would hurt performance,
-in this very specific circumstance it serves no purpose but to exclude some
-codes we want in our index.  So we will delete the noiseList.</p>
+<p>That will find words consisting of 7-bit ascii letters and numbers, plus utf-8 multibyte characters as well.</p>
+<p>Now we also have a database that does not contain normal text.  It is worth
+thinking about where this might bite us when we perform a search.  Let’s
+look at the <a class="reference internal" href="sql-set.html#noiselist"><span class="std std-ref">list of noise words</span></a>.  The excluded
+<code class="docutils literal notranslate"><span class="pre">us</span></code>, <code class="docutils literal notranslate"><span class="pre">to</span></code> and <code class="docutils literal notranslate"><span class="pre">in</span></code> look suspect.  They are the same as some of our
+country codes.  And <code class="docutils literal notranslate"><span class="pre">or</span></code> is an <code class="docutils literal notranslate"><span class="pre">admin_code1</span></code> abbreviation for Oregon.</p>
+<p>Normally when searching normal English text, removing all the noise words
+would hurt performance.  However, in this very specific circumstance, noise
+words serve no purpose.  Further, they will exclude some codes we want in
+our index.  So we will delete the noiseList.</p>
 <p>You should always have a very good reason for altering or deleting the
-noiseList.  It is something that is rarely needed and can have adverse
-consequences.  However, this time we do have a good reason.</p>
-<p>Now - what to index?  Naturally we want to be able to look up a place based
-upon any of the text fields.  So we will create one “virtual” field made up
-of all our text fields.  To do that, in the SQL statement we separate all
-the fields using a <code class="docutils literal notranslate"><span class="pre">\</span></code>;  But since it is JavaScript, we will need to escape
-the backslash with another backslash.  We should end up with this:</p>
+noiseList.  It is something that is rarely needed for English text and can
+have adverse consequences.  However, this time we do have a good reason.</p>
+<p>Now - what exactly do we want to index?  Naturally we want to be able to
+look up a place based upon any of the text fields.  So we will create one
+“virtual” field made up of all our text fields.  To do that, in the SQL
+statement we separate all the fields using a <code class="docutils literal notranslate"><span class="pre">\</span></code>; But since it is
+JavaScript, we will need to escape the backslash with another backslash.  We
+should end up with this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">place_name</span>\\<span class="n">postal_code</span>\\<span class="n">admin_name1</span>\\<span class="n">admin_code1</span>\\<span class="n">country_code</span>\\<span class="n">admin_name2</span>\\<span class="n">admin_code2</span>\\<span class="n">admin_name3</span>\\<span class="n">admin_code3</span>
 </pre></div>
 </div>
-<p>Ordering is important.  Those queries we will do later, that have matches at
+<p>Ordering is important.  The queries we will do later, that have matches at
 the beginning of our virtual field will match higher than those at the end.
-(This can be adjusted: see <a class="reference internal" href="sql-set.html#rank-knobs"><span class="std std-ref">Rank Knobs</span></a>.</p>
+(This, along with other ranking knobs can be adjusted – see
+<a class="reference internal" href="sql-set.html#rank-knobs"><span class="std std-ref">Rank Knobs</span></a>).</p>
 <p>So, let’s see our SQL statement, within a <code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>, in its own function:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">make_text_index</span><span class="p">(){</span>
     <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;creating indexes on location names\n&quot;</span><span class="p">);</span>
@@ -925,6 +947,1461 @@ the beginning of our virtual field will match higher than those at the end.
 <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;All Done\n&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="web-server-script">
+<h2>Web Server Script<a class="headerlink" href="#web-server-script" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="web-server-layout">
+<h3>Web Server Layout<a class="headerlink" href="#web-server-layout" title="Permalink to this headline">¶</a></h3>
+<p>In the Rampart binary distribution is a sample web server tree.  We will use
+that for this project.  The
+<a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">The rampart-server HTTP module</span></a>
+is configured and loaded from the included <code class="docutils literal notranslate"><span class="pre">web_server/web_server_conf.js</span></code>
+script.  It defines <code class="docutils literal notranslate"><span class="pre">web_server/html</span></code> as the default directory for static
+html, <code class="docutils literal notranslate"><span class="pre">web_server/apps</span></code> as the default directory for scripts and
+<code class="docutils literal notranslate"><span class="pre">web_server/data</span></code> as a standard location for databases.</p>
+<p>To get started, copy the <code class="docutils literal notranslate"><span class="pre">web_server</span></code> directory to a convenient place for
+this project, then copy the <code class="docutils literal notranslate"><span class="pre">geonames_db</span></code> folder to
+<code class="docutils literal notranslate"><span class="pre">web_server/data/geonames_db</span></code>.  Also, for our purposes, we do not need
+anything in the <code class="docutils literal notranslate"><span class="pre">web_server/apps/test_modules</span></code> or
+<code class="docutils literal notranslate"><span class="pre">web_server/apps/wsapps</span></code> directories, so you can delete the copy of those
+files. We will also add an empty file for our web interface at
+<code class="docutils literal notranslate"><span class="pre">web_server/apps/citysearch.js</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>user@localhost:~$ mkdir citysearch_demo
+user@localhost:~$ cd citysearch_demo
+user@localhost:~/citysearch_demo$ cp -a /usr/local/rampart/web_server ./
+user@localhost:~/citysearch_demo$ cd web_server/
+user@localhost:~/citysearch_demo/web_server$ cp -a ~/geonames/geonames_db data/
+user@localhost:~/citysearch_demo/web_server$ sudo chown -R nobody data/geonames_db/
+user@localhost:~/citysearch_demo/web_server$ rm -rf apps/test_modules wsapps/* html/index.html
+user@localhost:~/citysearch_demo/web_server$ touch ./apps/citysearch.js
+user@localhost:~/citysearch_demo/web_server$ find .
+.
+./start_server.sh
+./stop_server.sh
+./web_server_conf.js
+./apps
+./apps/citysearch.js
+./html
+./html/images
+./html/images/inigo-not-fount.jpg
+./logs
+./data
+./data/geonames_db
+./data/geonames_db/SYSUSERS.tbl
+./data/geonames_db/geonames.tbl
+./data/geonames_db/geonames_textcols_ftx_P.tbl
+./data/geonames_db/geonames_textcols_ftx.tok
+./data/geonames_db/geonames_textcols_ftx_D.btr
+./data/geonames_db/geonames_geocode_x.btr
+./data/geonames_db/geonames_textcols_ftx_T.btr
+./data/geonames_db/SYSPERMS.tbl
+./data/geonames_db/SYSINDEX.tbl
+./data/geonames_db/geonames_textcols_ftx.btr
+./data/geonames_db/SYSSTATS.tbl
+./data/geonames_db/SYSCOLUMNS.tbl
+./data/geonames_db/SYSTABLES.tbl
+./data/geonames_db/geonames_textcols_ftx.dat
+./data/geonames_db/SYSMETAINDEX.tbl
+./data/geonames_db/geonames_id_x.btr
+./data/geonames_db/SYSTRIG.tbl
+./wsapps
+</pre></div>
+</div>
+</div>
+<div class="section" id="web-server-script-mapping">
+<h3>Web Server Script Mapping<a class="headerlink" href="#web-server-script-mapping" title="Permalink to this headline">¶</a></h3>
+<p>We will start by editing the <code class="docutils literal notranslate"><span class="pre">apps/citysearch.js</span></code> file in order to map
+functions to urls.</p>
+<p>With your preferred editor, open the <code class="docutils literal notranslate"><span class="pre">apps/citysearch.js</span></code> file and
+use this stub script as our starting point:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Load the sql module</span>
+<span class="kd">var</span> <span class="nx">Sql</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="c1">// serverConf is defined in web_server/web_server_conf.js</span>
+<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">serverConf</span><span class="p">.</span><span class="nx">dataRoot</span> <span class="o">+</span> <span class="s1">&#39;/geonames_db&#39;</span><span class="p">);</span>
+
+<span class="c1">// function stubs</span>
+<span class="kd">function</span> <span class="nx">htmlpage</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+
+<span class="c1">// url to function mapping</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>               <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/</span>
+    <span class="s2">&quot;/index.html&quot;</span><span class="o">:</span>     <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/index.html</span>
+    <span class="s2">&quot;/autocomp.json&quot;</span><span class="o">:</span>  <span class="nx">autocomp</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/autocomp.json</span>
+    <span class="s2">&quot;/ajaxres.json&quot;</span><span class="o">:</span>   <span class="nx">ajaxres</span>    <span class="c1">//http://localhost:8088/apps/citysearch/ajaxres.json</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Notice that <code class="docutils literal notranslate"><span class="pre">module.exports</span></code> is set to an <span class="green">Object</span>.  This allows a
+single module script to serve pages at multiple URLs.  Here <code class="docutils literal notranslate"><span class="pre">/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/index.html</span></code> will be used to return html and <code class="docutils literal notranslate"><span class="pre">/autocomp.json</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/ajaxres.json</span></code> will be used for AJAX requests and will return JSON.</p>
+</div>
+<div class="section" id="delivering-static-content">
+<h3>Delivering Static Content<a class="headerlink" href="#delivering-static-content" title="Permalink to this headline">¶</a></h3>
+<p>Looking at the stub script above, there are two distinct times that the code
+therein will be run: 1) once upon module load and 2) upon each request from
+a client as mapped in the <code class="docutils literal notranslate"><span class="pre">module.exports</span></code> <span class="green">Object</span>.  For security
+purposes, it is important to keep this in mind as you write scripts.
+Variables set in the module outside of the <code class="docutils literal notranslate"><span class="pre">htmlpage()</span></code>, <code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">autocomp()</span></code> functions are long lived and span multiple requests.</p>
+<p>That being said, we can set a single variable in the script to deliver
+static content.  It only needs to be loaded once as it contains the
+html and client side javascript that will be delivered to every client, and
+does not change.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Load the sql module</span>
+<span class="kd">var</span> <span class="nx">Sql</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="c1">// serverConf is defined in web_server/web_server_conf.js</span>
+<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">serverConf</span><span class="p">.</span><span class="nx">dataRoot</span> <span class="o">+</span> <span class="s1">&#39;/geonames_db&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">client_script</span> <span class="o">=</span> <span class="sb">`</span>
+<span class="sb">    // client-side javascript goes here</span>
+<span class="sb">`</span><span class="p">;</span>
+
+
+<span class="c1">// page is defined once upon script load here rather than upon each request in</span>
+<span class="c1">// htmlpage() below.</span>
+<span class="kd">var</span> <span class="nx">page</span><span class="o">=</span><span class="sb">`&lt;!DOCTYPE HTML&gt;</span>
+<span class="sb">&lt;html&gt;</span>
+<span class="sb">    &lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+<span class="sb">    &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js&quot;&gt;&lt;/script&gt;</span>
+<span class="sb">    &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js&quot;&gt;&lt;/script&gt;</span>
+<span class="sb">    &lt;style&gt;</span>
+<span class="sb">        body,h1,h2,h3,h4,h5,h6 {font-family: &quot;Varela Round&quot;, Sans-Serif;}</span>
+<span class="sb">        .autocomplete-suggestions {</span>
+<span class="sb">            border: 1px solid #999;</span>
+<span class="sb">            background: #FFF;</span>
+<span class="sb">            overflow: auto;</span>
+<span class="sb">            width: auto !important;</span>
+<span class="sb">            padding-right:5px;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-suggestion {</span>
+<span class="sb">            padding: 2px 5px;</span>
+<span class="sb">            white-space: nowrap;</span>
+<span class="sb">            overflow: hidden;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-suggestions strong {</span>
+<span class="sb">            font-weight: normal;</span>
+<span class="sb">            color: #3399FF;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-group strong {</span>
+<span class="sb">            display: block;</span>
+<span class="sb">            border-bottom: 1px solid #000;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-selected { background: #F0F0F0; }</span>
+<span class="sb">        .autocomplete-group { padding: 2px 5px; }</span>
+<span class="sb">        .zip { display: inline-block; width:140px;}</span>
+<span class="sb">        #main {</span>
+<span class="sb">            background-color: white;</span>
+<span class="sb">            margin: auto;</span>
+<span class="sb">            min-height: 300px;</span>
+<span class="sb">            width: 600px;</span>
+<span class="sb">        }</span>
+<span class="sb">        #idiv {</span>
+<span class="sb">            width:500px;</span>
+<span class="sb">            height:39px;</span>
+<span class="sb">            border-bottom: lightGray 1px solid;</span>
+<span class="sb">            padding:15px 0px 15px 0px;</span>
+<span class="sb">        }</span>
+<span class="sb">        #cstextbox {</span>
+<span class="sb">            min-width:150px;</span>
+<span class="sb">            width:100%;</span>
+<span class="sb">            height:30px;</span>
+<span class="sb">            font:normal 18px arial,sans-serif;</span>
+<span class="sb">            padding: 1px 3px;</span>
+<span class="sb">            border: 2px solid #ccc;</span>
+<span class="sb">            box-sizing: border-box;</span>
+<span class="sb">        }</span>
+<span class="sb">    &lt;/style&gt;</span>
+<span class="sb">    &lt;title&gt;City Search Tutorial&lt;/title&gt;</span>
+<span class="sb">    &lt;/head&gt;</span>
+<span class="sb">    &lt;body&gt;</span>
+<span class="sb">    &lt;div id=&quot;main&quot;&gt;</span>
+<span class="sb">      &lt;form id=&quot;mf&quot;&gt;</span>
+<span class="sb">          &lt;div id=&quot;idiv&quot;&gt;</span>
+<span class="sb">              &lt;input type=&quot;text&quot; id=&quot;cstextbox&quot; name=&quot;q&quot; value=&quot;&quot; placeholder=&quot;Search for a city&quot;&gt;</span>
+<span class="sb">          &lt;/div&gt;</span>
+<span class="sb">      &lt;/form&gt;</span>
+<span class="sb">      &lt;div id=&quot;res&quot;&gt;&lt;/div&gt;</span>
+<span class="sb">      &lt;/body&gt;</span>
+<span class="sb">      &lt;script&gt;</span>
+<span class="sb">          </span><span class="si">${</span><span class="nx">client_script</span><span class="si">}</span><span class="sb"></span>
+<span class="sb">      &lt;/script&gt;</span>
+<span class="sb">&lt;/html&gt;`</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">htmlpage</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// just return the html.</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span><span class="nx">page</span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+
+<span class="c1">// url to function mapping</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>               <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/</span>
+    <span class="s2">&quot;/index.html&quot;</span><span class="o">:</span>     <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/index.html</span>
+    <span class="s2">&quot;/autocomp.json&quot;</span><span class="o">:</span>  <span class="nx">autocomp</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/autocomp.json</span>
+    <span class="s2">&quot;/ajaxres.json&quot;</span><span class="o">:</span>   <span class="nx">ajaxres</span>    <span class="c1">//http://localhost:8088/apps/citysearch/ajaxres.json</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The variable <code class="docutils literal notranslate"><span class="pre">page</span></code> is set to a basic web page with a form and text box for
+searching, as well as loading some external JavaScript.  We will use the
+variable <code class="docutils literal notranslate"><span class="pre">client_script</span></code> for our inline client-side scripting.</p>
+<p>We will use the text input in the form to search for cities and load the
+nearest cities, displaying the results in the <code class="docutils literal notranslate"><span class="pre">&lt;div</span> <span class="pre">id=&quot;res&quot;&gt;&lt;/div&gt;</span></code> div
+at the bottom of the page.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">page</span></code> variable is returned in an <span class="green">Object</span> at
+the end of the <code class="docutils literal notranslate"><span class="pre">htmlpage()</span></code> function (<code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{html:page};</span></code>).  The
+property <code class="docutils literal notranslate"><span class="pre">html</span></code> sets the mime-type of the returned page to <code class="docutils literal notranslate"><span class="pre">text/html</span></code>
+and the value is set to the <code class="docutils literal notranslate"><span class="pre">page</span></code> variable to set the content to
+be returned to the client.</p>
+</div>
+<div class="section" id="client-side-scripting">
+<h3>Client-Side Scripting<a class="headerlink" href="#client-side-scripting" title="Permalink to this headline">¶</a></h3>
+<p>In order to make the AJAX autocomplete search, we will use
+<a class="reference external" href="https://jquery.com/">jQuery</a> and
+<a class="reference external" href="https://github.com/devbridge/jQuery-Autocomplete">jQuery-Autocomplete</a>,
+both of which are included at the top of the script.  Please see the
+<a class="reference external" href="https://github.com/devbridge/jQuery-Autocomplete">jQuery-Autocomplete page</a>
+for more information on how it works.</p>
+<p>Below is our script so far, with the client-side JavaScript added.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Load the sql module</span>
+<span class="kd">var</span> <span class="nx">Sql</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="c1">// serverConf is defined in web_server/web_server_conf.js</span>
+<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">serverConf</span><span class="p">.</span><span class="nx">dataRoot</span> <span class="o">+</span> <span class="s1">&#39;/geonames_db&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">useKilometers</span><span class="o">=</span><span class="kc">true</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">distvar</span> <span class="o">=</span> <span class="s2">&quot;mi&quot;</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">useKilometers</span><span class="p">)</span>
+    <span class="nx">distvar</span> <span class="o">=</span> <span class="s2">&quot;km&quot;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">client_script</span> <span class="o">=</span> <span class="sb">`</span>
+<span class="sb">// function to get query parameters from url</span>
+<span class="sb">function getparams() {</span>
+<span class="sb">    if (window.location.search.length==0)</span>
+<span class="sb">        return {};</span>
+
+<span class="sb">    var qstr  = window.location.search.substring(1);</span>
+<span class="sb">    var pairs = qstr.split(&#39;&amp;&#39;);</span>
+<span class="sb">    var ret = {}, i=0;</span>
+
+<span class="sb">    for (i = 0; i &lt; pairs.length; i++) {</span>
+<span class="sb">        var kv = pairs[i].split(&#39;=&#39;);</span>
+<span class="sb">        ret[kv[0]]=kv[1];</span>
+<span class="sb">    }</span>
+<span class="sb">    return ret;</span>
+<span class="sb">};</span>
+
+<span class="sb">$(document).ready(function(){</span>
+
+<span class="sb">    var curzip, curid;</span>
+<span class="sb">    var params = getparams();</span>
+
+<span class="sb">    // format the results, stick them in the div below the search form</span>
+<span class="sb">    // update url to match state if curid is set</span>
+<span class="sb">    function format_res(res_cities) {</span>
+<span class="sb">        var resdiv = $(&#39;#res&#39;);</span>
+<span class="sb">        var places = Object.keys(res_cities);</span>
+<span class="sb">        var reshtml=&quot;&lt;h2&gt;Closest places to &quot; + $(&#39;#cstextbox&#39;).val() +&#39;&lt;/h2&gt;&#39;;;</span>
+<span class="sb">        resdiv.html(&#39;&#39;);</span>
+
+<span class="sb">        for (var i=0;i&lt;places.length;i++) {</span>
+<span class="sb">            var j=0, place=places[i];</span>
+<span class="sb">            var placeObj = res_cities[place];</span>
+<span class="sb">            var zkeys = Object.keys(placeObj);</span>
+<span class="sb">            var ziphtml=&#39;&#39;;</span>
+<span class="sb">            var is_self=false; //flag if we are processing zip codes in the current city</span>
+
+<span class="sb">            for(j=0;j&lt;zkeys.length;j++) {</span>
+<span class="sb">                var zip=zkeys[j];</span>
+<span class="sb">                if(zip == &#39;avgdist&#39;)</span>
+<span class="sb">                    continue;</span>
+<span class="sb">                if(zip == curzip ) {</span>
+<span class="sb">                    is_self=true;</span>
+<span class="sb">                    continue;</span>
+<span class="sb">                }</span>
+<span class="sb">                var zipObj = placeObj[zip];</span>
+<span class="sb">                //console.log(zipObj);</span>
+<span class="sb">                ziphtml+=&#39;&lt;a class=&quot;zip&quot; href=&quot;#&quot; data-zip=&quot;&#39; + zip + &#39;&quot; data-lat=&quot;&#39; + zipObj.lat + &#39;&quot; data-lon=&quot;&#39; +</span>
+<span class="sb">                         zipObj.lon + &#39;&quot; data-id=&quot;&#39; + zipObj.id + &#39;&quot;&gt;&#39; + zip + &#39;(&#39; + zipObj.dist.toFixed(1) +</span>
+<span class="sb">                         &#39;&amp;nbsp;&#39; + zipObj.heading + &#39;)&lt;/a&gt; &#39;;</span>
+<span class="sb">            }</span>
+<span class="sb">            if(ziphtml) {// skip self if only one zip.</span>
+<span class="sb">                if(is_self)</span>
+<span class="sb">                    reshtml += &#39;&lt;span&gt;&lt;h3&gt;Other zip codes in &lt;span class=&quot;place&quot;&gt;&#39; + place + &#39;&lt;/span&gt;&lt;/h3&gt;&#39;</span>
+<span class="sb">                            + ziphtml + &quot;&lt;/span&gt;&quot;;</span>
+<span class="sb">                else</span>
+<span class="sb">                    reshtml += &#39;&lt;span&gt;&lt;h3&gt;&lt;span class=&quot;place&quot;&gt;&#39; + place + &#39;&lt;/span&gt; (&#39; +</span>
+<span class="sb">                                parseFloat(placeObj.avgdist).toFixed(1)  +&#39; </span><span class="si">${</span><span class="nx">distvar</span><span class="si">}</span><span class="sb">.)&lt;/h3&gt;&#39; +</span>
+<span class="sb">                                ziphtml + &quot;&lt;/span&gt;&quot;;</span>
+<span class="sb">            }</span>
+<span class="sb">        }</span>
+<span class="sb">        resdiv.html(reshtml);</span>
+
+<span class="sb">        if(curid){</span>
+<span class="sb">            var nurl = window.location.origin + window.location.pathname + &#39;?id=&#39; + curid;</span>
+<span class="sb">            window.history.pushState({},&#39;&#39;,nurl);</span>
+<span class="sb">        }</span>
+<span class="sb">    }</span>
+
+<span class="sb">    // Use &#39;body&#39; and filter with class &#39;zip&#39; so the event will pick up not-yet-written content</span>
+<span class="sb">    $(&#39;body&#39;).on(&#39;click&#39;,&#39;.zip&#39;,function(e) {</span>
+<span class="sb">        //perform a new search on the zip code that was clicked.</span>
+<span class="sb">        var t = $(this);</span>
+<span class="sb">        var lat = t.attr(&#39;data-lat&#39;),</span>
+<span class="sb">            lon=t.attr(&#39;data-lon&#39;),</span>
+<span class="sb">            zip=t.attr(&#39;data-zip&#39;);</span>
+<span class="sb">        var place = t.closest(&#39;span&#39;).find(&#39;.place&#39;).text();</span>
+
+<span class="sb">        //curid is for the change of url in order to save the state.</span>
+<span class="sb">        curid = t.attr(&#39;data-id&#39;);</span>
+
+<span class="sb">        // recreate the place name with the zip code in it</span>
+<span class="sb">        place = place.substring(0, place.length-2) +zip + &#39;, &#39; + place.substring(place.length-2, place.length);</span>
+<span class="sb">        // put it in the search box</span>
+<span class="sb">        $(&#39;#cstextbox&#39;).val(place);</span>
+
+<span class="sb">        // fetch new list of closest cities and display</span>
+<span class="sb">        $.getJSON(</span>
+<span class="sb">            &quot;/apps/citysearch/ajaxres.json&quot;,</span>
+<span class="sb">            {lat:lat, lon: lon},</span>
+<span class="sb">            function(res) {</span>
+<span class="sb">                curzip=zip;</span>
+<span class="sb">                format_res(res.cities);</span>
+<span class="sb">            }</span>
+<span class="sb">        );</span>
+<span class="sb">        return false; //don&#39;t actually go to the href in the clicked &lt;a&gt;</span>
+<span class="sb">    });</span>
+
+<span class="sb">    // the autocomplete plugin from  https://github.com/devbridge/jQuery-Autocomplete</span>
+<span class="sb">    // jquery and plugin included from cloudflare in &lt;script src=&quot;xyz&quot;&gt; tags above.</span>
+<span class="sb">    $(&#39;#cstextbox&#39;).autocomplete(</span>
+<span class="sb">        {</span>
+<span class="sb">            serviceUrl: &#39;/apps/citysearch/autocomp.json&#39;,</span>
+<span class="sb">            minChars: 2,</span>
+<span class="sb">            autoSelectFirst: true,</span>
+<span class="sb">            showNoSuggestionNotice: true,</span>
+<span class="sb">            onSelect: function(sel)</span>
+<span class="sb">            {</span>
+<span class="sb">                $.getJSON(</span>
+<span class="sb">                    &quot;/apps/citysearch/ajaxres.json&quot;,</span>
+<span class="sb">                    {lat:sel.latitude, lon: sel.longitude},</span>
+<span class="sb">                    function(res) {</span>
+<span class="sb">                        curzip = sel.zip;</span>
+<span class="sb">                        curid = sel.id;</span>
+<span class="sb">                        format_res(res.cities);</span>
+<span class="sb">                    }</span>
+<span class="sb">                );</span>
+<span class="sb">            }</span>
+<span class="sb">        }</span>
+<span class="sb">    );</span>
+
+<span class="sb">    // prevent form submission - all results are already in the autocomplete</span>
+<span class="sb">    $(&#39;#cstextbox&#39;).on(&#39;keypress&#39;, function(e){</span>
+<span class="sb">        var key = e.charCode || e.keyCode || 0;</span>
+<span class="sb">        if (key == 13) {</span>
+<span class="sb">            e.preventDefault();</span>
+<span class="sb">            return false;</span>
+<span class="sb">        }</span>
+<span class="sb">    });</span>
+
+<span class="sb">    function refresh(id) {</span>
+<span class="sb">        $.getJSON(</span>
+<span class="sb">            &quot;/apps/citysearch/ajaxres.json&quot;,</span>
+<span class="sb">            {id:params.id},</span>
+<span class="sb">            function(res) {</span>
+<span class="sb">                curzip = res.zip;</span>
+<span class="sb">                $(&#39;#cstextbox&#39;).val(res.place);</span>
+<span class="sb">                //no curid necessary here</span>
+<span class="sb">                format_res(res.cities);</span>
+<span class="sb">            }</span>
+<span class="sb">        );</span>
+<span class="sb">    }</span>
+<span class="sb">    // if we refresh the page, then reload the content</span>
+<span class="sb">    if(params.id) {</span>
+<span class="sb">        refresh(params.id);</span>
+<span class="sb">    }</span>
+
+<span class="sb">    window.onpopstate = function(event) {</span>
+<span class="sb">        // url has changed, but page was not reloaded</span>
+<span class="sb">        params = getparams();</span>
+<span class="sb">        curid=false;</span>
+<span class="sb">        if(params.id)</span>
+<span class="sb">            refresh(params.id);</span>
+<span class="sb">        else {</span>
+<span class="sb">            $(&#39;#cstextbox&#39;).val(&#39;&#39;);</span>
+<span class="sb">            $(&#39;#res&#39;).html(&#39;&#39;);</span>
+<span class="sb">        }</span>
+<span class="sb">    };</span>
+
+<span class="sb">});</span>
+<span class="sb">`</span><span class="p">;</span>
+
+
+<span class="c1">// page is defined once upon script load here rather than upon each request in</span>
+<span class="c1">// htmlpage() below.</span>
+<span class="kd">var</span> <span class="nx">page</span><span class="o">=</span><span class="sb">`&lt;!DOCTYPE HTML&gt;</span>
+<span class="sb">&lt;html&gt;</span>
+<span class="sb">    &lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+<span class="sb">    &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js&quot;&gt;&lt;/script&gt;</span>
+<span class="sb">    &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js&quot;&gt;&lt;/script&gt;</span>
+<span class="sb">    &lt;style&gt;</span>
+<span class="sb">        body,h1,h2,h3,h4,h5,h6 {font-family: &quot;Varela Round&quot;, Sans-Serif;}</span>
+<span class="sb">        .autocomplete-suggestions {</span>
+<span class="sb">            border: 1px solid #999;</span>
+<span class="sb">            background: #FFF;</span>
+<span class="sb">            overflow: auto;</span>
+<span class="sb">            width: auto !important;</span>
+<span class="sb">            padding-right:5px;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-suggestion {</span>
+<span class="sb">            padding: 2px 5px;</span>
+<span class="sb">            white-space: nowrap;</span>
+<span class="sb">            overflow: hidden;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-suggestions strong {</span>
+<span class="sb">            font-weight: normal;</span>
+<span class="sb">            color: #3399FF;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-group strong {</span>
+<span class="sb">            display: block;</span>
+<span class="sb">            border-bottom: 1px solid #000;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-selected { background: #F0F0F0; }</span>
+<span class="sb">        .autocomplete-group { padding: 2px 5px; }</span>
+<span class="sb">        .zip { display: inline-block; width:140px;}</span>
+<span class="sb">        #main {</span>
+<span class="sb">            background-color: white;</span>
+<span class="sb">            margin: auto;</span>
+<span class="sb">            min-height: 300px;</span>
+<span class="sb">            width: 600px;</span>
+<span class="sb">        }</span>
+<span class="sb">        #idiv {</span>
+<span class="sb">            width:500px;</span>
+<span class="sb">            height:39px;</span>
+<span class="sb">            border-bottom: lightGray 1px solid;</span>
+<span class="sb">            padding:15px 0px 15px 0px;</span>
+<span class="sb">        }</span>
+<span class="sb">        #cstextbox {</span>
+<span class="sb">            min-width:150px;</span>
+<span class="sb">            width:100%;</span>
+<span class="sb">            height:30px;</span>
+<span class="sb">            font:normal 18px arial,sans-serif;</span>
+<span class="sb">            padding: 1px 3px;</span>
+<span class="sb">            border: 2px solid #ccc;</span>
+<span class="sb">            box-sizing: border-box;</span>
+<span class="sb">        }</span>
+<span class="sb">    &lt;/style&gt;</span>
+<span class="sb">    &lt;title&gt;City Search Tutorial&lt;/title&gt;</span>
+<span class="sb">    &lt;/head&gt;</span>
+<span class="sb">    &lt;body&gt;</span>
+<span class="sb">    &lt;div id=&quot;main&quot;&gt;</span>
+<span class="sb">      &lt;form id=&quot;mf&quot;&gt;</span>
+<span class="sb">          &lt;div id=&quot;idiv&quot;&gt;</span>
+<span class="sb">              &lt;input type=&quot;text&quot; id=&quot;cstextbox&quot; name=&quot;q&quot; value=&quot;&quot; placeholder=&quot;Search for a city&quot;&gt;</span>
+<span class="sb">          &lt;/div&gt;</span>
+<span class="sb">      &lt;/form&gt;</span>
+<span class="sb">      &lt;div id=&quot;res&quot;&gt;&lt;/div&gt;</span>
+<span class="sb">      &lt;/body&gt;</span>
+<span class="sb">      &lt;script&gt;</span>
+<span class="sb">          </span><span class="si">${</span><span class="nx">client_script</span><span class="si">}</span><span class="sb"></span>
+<span class="sb">      &lt;/script&gt;</span>
+<span class="sb">&lt;/html&gt;`</span><span class="p">;</span>
+
+
+
+<span class="kd">function</span> <span class="nx">htmlpage</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// just return the html.</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span><span class="nx">page</span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+
+
+<span class="c1">// url to function mapping</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>               <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/</span>
+    <span class="s2">&quot;/index.html&quot;</span><span class="o">:</span>     <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/index.html</span>
+    <span class="s2">&quot;/autocomp.json&quot;</span><span class="o">:</span>  <span class="nx">autocomp</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/autocomp.json</span>
+    <span class="s2">&quot;/ajaxres.json&quot;</span><span class="o">:</span>   <span class="nx">ajaxres</span>    <span class="c1">//http://localhost:8088/apps/citysearch/ajaxres.json</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>As mentioned before, we are going to concentrate on the server side
+functionality, so explaining the client-side JavaScript functionality
+is beyond the scope of this tutorial.  Instead, know that the script expects
+the following:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// autocomp() results must be formatted as such:</span>
+<span class="p">{</span>
+    <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="s2">&quot;Vaulion, Canton de Vaud, 1325, CH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233eaf65bd&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="o">:</span><span class="mf">46.6848</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="o">:</span><span class="mf">6.3832</span><span class="p">,</span>
+            <span class="s2">&quot;zip&quot;</span><span class="o">:</span><span class="s2">&quot;1325&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="s2">&quot;Vallorbe, Canton de Vaud, 1337, CH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233eaf65c6&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="o">:</span><span class="mf">46.7078</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="o">:</span><span class="mf">6.3714</span><span class="p">,</span>
+            <span class="s2">&quot;zip&quot;</span><span class="o">:</span><span class="s2">&quot;1337&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="s2">&quot;Valeyres-sous-Rances, Canton de Vaud, 1358, CH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233eaf6608&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="o">:</span><span class="mf">46.7482</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="o">:</span><span class="mf">6.5354</span><span class="p">,</span>
+            <span class="s2">&quot;zip&quot;</span><span class="o">:</span><span class="s2">&quot;1358&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="s2">&quot;Valeyres-sous-Ursins, Canton de Vaud, 1412, CH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233eaf663b&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="o">:</span><span class="mf">46.7453</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="o">:</span><span class="mf">6.6533</span><span class="p">,</span>
+            <span class="s2">&quot;zip&quot;</span><span class="o">:</span><span class="s2">&quot;1412&quot;</span>
+        <span class="p">},</span>
+        <span class="c1">// ...</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c1">// ajaxres() results must be formatted as such:</span>
+<span class="p">{</span>
+    <span class="s2">&quot;cities&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;Dixon, California, US&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;95620&quot;</span><span class="o">:</span><span class="p">{</span>
+                <span class="s2">&quot;dist&quot;</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;lon&quot;</span><span class="o">:-</span><span class="mf">121.8088</span><span class="p">,</span>
+                <span class="s2">&quot;lat&quot;</span><span class="o">:</span><span class="mf">38.4403</span><span class="p">,</span>
+                <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233ef9f79d&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;heading&quot;</span><span class="o">:</span><span class="s2">&quot;N&quot;</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;avgdist&quot;</span><span class="o">:</span><span class="mi">0</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;Davis, California, US&quot;</span><span class="o">:</span><span class="p">{</span>
+            <span class="s2">&quot;95616&quot;</span><span class="o">:</span><span class="p">{</span>
+                <span class="s2">&quot;dist&quot;</span><span class="o">:</span><span class="mf">13.892710766687838</span><span class="p">,</span>
+                <span class="s2">&quot;lon&quot;</span><span class="o">:-</span><span class="mf">121.7418</span><span class="p">,</span>
+                <span class="s2">&quot;lat&quot;</span><span class="o">:</span><span class="mf">38.5538</span><span class="p">,</span>
+                <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233ef9fa43&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;heading&quot;</span><span class="o">:</span><span class="s2">&quot;NNE&quot;</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;95617&quot;</span><span class="o">:</span><span class="p">{</span>
+                <span class="s2">&quot;dist&quot;</span><span class="o">:</span><span class="mf">14.13145261199491</span><span class="p">,</span>
+                <span class="s2">&quot;lon&quot;</span><span class="o">:-</span><span class="mf">121.7253</span><span class="p">,</span>
+                <span class="s2">&quot;lat&quot;</span><span class="o">:</span><span class="mf">38.5494</span><span class="p">,</span>
+                <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233ef9fa46&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;heading&quot;</span><span class="o">:</span><span class="s2">&quot;NNE&quot;</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;95618&quot;</span><span class="o">:</span><span class="p">{</span>
+                <span class="s2">&quot;dist&quot;</span><span class="o">:</span><span class="mf">13.052788618796216</span><span class="p">,</span>
+                <span class="s2">&quot;lon&quot;</span><span class="o">:-</span><span class="mf">121.7405</span><span class="p">,</span>
+                <span class="s2">&quot;lat&quot;</span><span class="o">:</span><span class="mf">38.5449</span><span class="p">,</span>
+                <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233ef9fa49&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;heading&quot;</span><span class="o">:</span><span class="s2">&quot;NNE&quot;</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;avgdist&quot;</span><span class="o">:</span><span class="mf">13.692317332492989</span>
+        <span class="p">},</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+    <span class="c1">// included if lookup by id:</span>
+    <span class="s2">&quot;place&quot;</span><span class="o">:</span> <span class="s2">&quot;Dixon, California, 95620, US&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zip&quot;</span><span class="o">:</span> <span class="s2">&quot;95620&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Also added is the variable <code class="docutils literal notranslate"><span class="pre">useKilometers</span></code>, which will be used both
+client-side and for formatting the JSON results.</p>
+</div>
+<div class="section" id="formatting-auto-complete-results">
+<h3>Formatting Auto-Complete Results<a class="headerlink" href="#formatting-auto-complete-results" title="Permalink to this headline">¶</a></h3>
+<p>First step will be to construct our SQL statement and query in order
+to get a list of cities that are closest to a city or lat/lon requested.</p>
+<p>When we made our fulltext index on our table, we used the virtual field
+<code class="docutils literal notranslate"><span class="pre">place_name\postal_code\admin_name1\admin_code1\country_code\admin_name2\admin_code2\admin_name3\admin_code3</span></code>
+in order to concatenate all the text we might want to use to look up a city.</p>
+<p>So to find a city, let’s construct a SQL statement which will return cities
+that match a query</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT
+place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; + country_code value,
+id, latitude, longitude, postal_code zip
+FROM geonames WHERE
+place_name\postal_code\admin_name1\admin_code1\country_code\admin_name2\admin_code2\admin_name3\admin_code3
+LIKEP ?;
+</pre></div>
+</div>
+<p>Taking it line by line:</p>
+<p><code class="docutils literal notranslate"><span class="pre">SELECT</span></code> - We are looking up and returning rows in the table.</p>
+<p><code class="docutils literal notranslate"><span class="pre">place_name</span> <span class="pre">+',</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">admin_name1</span> <span class="pre">+</span> <span class="pre">',</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">postal_code</span> <span class="pre">+</span> <span class="pre">',</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">country_code</span> <span class="pre">value,</span></code>
+- We are formatting several column so it will return, e.g.,
+<code class="docutils literal notranslate"><span class="pre">San</span> <span class="pre">Francisco,</span> <span class="pre">CA,</span> <span class="pre">94143,</span> <span class="pre">US</span></code> and naming the string <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">id,</span> <span class="pre">latitude,</span> <span class="pre">longitude,</span> <span class="pre">postal_code</span> <span class="pre">zip</span></code> - Other columns we need.</p>
+<p><code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">geonames</span> <span class="pre">WHERE</span></code> - The name of the table, and <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> for the
+search on the next line.</p>
+<p><code class="docutils literal notranslate"><span class="pre">place_name\...\admin_name3\admin_code3</span></code>
+- Specifying the virtual field upon which the fulltext index is build.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LIKEP</span> <span class="pre">?</span></code> - <code class="docutils literal notranslate"><span class="pre">likep</span></code> signifies a fulltext search where word positions are
+significant.  This will be your most used type of <code class="docutils literal notranslate"><span class="pre">like</span></code> search for normal
+fulltext queries.  The <code class="docutils literal notranslate"><span class="pre">?</span></code> corresponds to a variable we will give
+<code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>, as explained below.</p>
+<p>So lets start writing our <code class="docutils literal notranslate"><span class="pre">autocomp()</span></code> function, using this query:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* autocomp() results must be formatted as such:</span>
+<span class="cm">{</span>
+<span class="cm">    &quot;suggestions&quot;: [</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vaulion, Canton de Vaud, 1325, CH&quot;,&quot;id&quot;:&quot;6233eaf65bd&quot;,&quot;latitude&quot;:46.6848,&quot;longitude&quot;:6.3832,&quot;zip&quot;:&quot;1325&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vallorbe, Canton de Vaud, 1337, CH&quot;,&quot;id&quot;:&quot;6233eaf65c6&quot;,&quot;latitude&quot;:46.7078,&quot;longitude&quot;:6.3714,&quot;zip&quot;:&quot;1337&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Rances, Canton de Vaud, 1358, CH&quot;,&quot;id&quot;:&quot;6233eaf6608&quot;,&quot;latitude&quot;:46.7482,&quot;longitude&quot;:6.5354,&quot;zip&quot;:&quot;1358&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Ursins, Canton de Vaud, 1412, CH&quot;,&quot;id&quot;:&quot;6233eaf663b&quot;,&quot;latitude&quot;:46.7453,&quot;longitude&quot;:6.6533,&quot;zip&quot;:&quot;1412&quot;},</span>
+<span class="cm">        ...</span>
+<span class="cm">    ]</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">;</span>
+
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; + country_code value,</span>
+<span class="sb">        id, latitude, longitude, postal_code zip</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3</span>
+<span class="sb">        LIKEP ?;`</span><span class="p">,</span>
+        <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="c1">// corresponding to the &quot;?&quot; in &quot;LIKEP ?&quot;</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">}};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Indeed this will return JSON formatted results in the format needed by the
+client-side JavaScript.  Unfortunately, it will not match cities unless the
+query contains full words.  Further, if jquery.autocomplete doesn’t get
+results for, e.g., <code class="docutils literal notranslate"><span class="pre">ber</span></code>, it will not look for <code class="docutils literal notranslate"><span class="pre">berk</span></code>, making our search pretty
+much non-functional.</p>
+<p>We would like a query like <code class="docutils literal notranslate"><span class="pre">ber</span></code> to match <code class="docutils literal notranslate"><span class="pre">Berkeley</span></code> and all other
+results that have words beginning with <code class="docutils literal notranslate"><span class="pre">ber</span></code>.  So lets add a <code class="docutils literal notranslate"><span class="pre">*</span></code> to the
+last word in our search.  However, note that we only want to do that if the
+last partial word is at least two characters long, since looking up every
+city starting with <code class="docutils literal notranslate"><span class="pre">b*</span></code> would produce too many results to be meaningful.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* autocomp() results must be formatted as such:</span>
+<span class="cm">{</span>
+<span class="cm">    &quot;suggestions&quot;: [</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vaulion, Canton de Vaud, 1325, CH&quot;,&quot;id&quot;:&quot;6233eaf65bd&quot;,&quot;latitude&quot;:46.6848,&quot;longitude&quot;:6.3832,&quot;zip&quot;:&quot;1325&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vallorbe, Canton de Vaud, 1337, CH&quot;,&quot;id&quot;:&quot;6233eaf65c6&quot;,&quot;latitude&quot;:46.7078,&quot;longitude&quot;:6.3714,&quot;zip&quot;:&quot;1337&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Rances, Canton de Vaud, 1358, CH&quot;,&quot;id&quot;:&quot;6233eaf6608&quot;,&quot;latitude&quot;:46.7482,&quot;longitude&quot;:6.5354,&quot;zip&quot;:&quot;1358&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Ursins, Canton de Vaud, 1412, CH&quot;,&quot;id&quot;:&quot;6233eaf663b&quot;,&quot;latitude&quot;:46.7453,&quot;longitude&quot;:6.6533,&quot;zip&quot;:&quot;1412&quot;},</span>
+<span class="cm">        ...</span>
+<span class="cm">    ]</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">;</span>
+
+    <span class="c1">// ignore one character partial words</span>
+
+    <span class="c1">// remove any spaces at the beginning of q</span>
+    <span class="nx">q</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^\s+/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+    <span class="c1">// if query is only one char, return an empty set</span>
+    <span class="c1">//   (even though client-side autocomplete is set to 2 char min)</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="p">[]}}</span>
+
+    <span class="c1">// we will need at least two chars in our last word</span>
+    <span class="c1">// since it will get a &#39;*&#39; wildcard added to it</span>
+    <span class="nx">q</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/ \S$/</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">);</span>
+
+
+    <span class="c1">// if last character is not a space, add wildcard</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nx">q</span> <span class="o">+=</span> <span class="s1">&#39;*&#39;</span><span class="p">;</span>
+
+    <span class="c1">// perform a text search on the words or partial words we have, and return a list of best matching locations</span>
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; + country_code value,</span>
+<span class="sb">        id, latitude, longitude, postal_code zip</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3</span>
+<span class="sb">        LIKEP ?;`</span><span class="p">,</span>
+        <span class="p">[</span><span class="nx">q</span><span class="p">]</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">}};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Using the example of <code class="docutils literal notranslate"><span class="pre">be</span></code> as a search, our script will add a <code class="docutils literal notranslate"><span class="pre">*</span></code> to it
+and pass it to <code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>.</p>
+<p>Texis’ fulltext search will first search its index for all words beginning
+with <code class="docutils literal notranslate"><span class="pre">be</span></code> and add them to the query.  Since this could potentially be
+thousands of words added to our query, we need to make a few adjustments to
+the default limits.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
+    <span class="s1">&#39;qMaxWords&#39;</span>    <span class="o">:</span> <span class="mi">5000</span><span class="p">,</span>  <span class="c1">// allow query and sets to be larger than normal for &#39;*&#39; wildcard searches</span>
+    <span class="s1">&#39;qMaxSetWords&#39;</span> <span class="o">:</span> <span class="mi">5000</span>   <span class="c1">// see https://rampart.dev/docs/sql-set.html#qmaxsetwords</span>
+                            <span class="c1">// and https://rampart.dev/docs/sql-set.html#qmaxwords .</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>For our next tweak – normally we want to return the best results for a given
+query, even if every word in the query is not match in any single document.
+However, in this case, we want to handle things a bit differently.  Our
+objective is to narrow down our list of possible matches as we type.  So we
+want to make sure that we do not return rows unless they match every term
+given.  So we will set <code class="docutils literal notranslate"><span class="pre">likepAllmatch</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
+    <span class="s1">&#39;likepAllmatch&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>  <span class="c1">// match every word or partial word</span>
+    <span class="s1">&#39;qMaxWords&#39;</span>    <span class="o">:</span> <span class="mi">5000</span><span class="p">,</span>  <span class="c1">// allow query and sets to be larger than normal for &#39;*&#39; wildcard searches</span>
+    <span class="s1">&#39;qMaxSetWords&#39;</span> <span class="o">:</span> <span class="mi">5000</span>   <span class="c1">// see https://rampart.dev/docs/sql-set.html#qmaxsetwords</span>
+                            <span class="c1">// and https://rampart.dev/docs/sql-set.html#qmaxwords .</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Our completed function now looks like this:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* autocomp() results must be formatted as such:</span>
+<span class="cm">{</span>
+<span class="cm">    &quot;suggestions&quot;: [</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vaulion, Canton de Vaud, 1325, CH&quot;,&quot;id&quot;:&quot;6233eaf65bd&quot;,&quot;latitude&quot;:46.6848,&quot;longitude&quot;:6.3832,&quot;zip&quot;:&quot;1325&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vallorbe, Canton de Vaud, 1337, CH&quot;,&quot;id&quot;:&quot;6233eaf65c6&quot;,&quot;latitude&quot;:46.7078,&quot;longitude&quot;:6.3714,&quot;zip&quot;:&quot;1337&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Rances, Canton de Vaud, 1358, CH&quot;,&quot;id&quot;:&quot;6233eaf6608&quot;,&quot;latitude&quot;:46.7482,&quot;longitude&quot;:6.5354,&quot;zip&quot;:&quot;1358&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Ursins, Canton de Vaud, 1412, CH&quot;,&quot;id&quot;:&quot;6233eaf663b&quot;,&quot;latitude&quot;:46.7453,&quot;longitude&quot;:6.6533,&quot;zip&quot;:&quot;1412&quot;},</span>
+<span class="cm">        ...</span>
+<span class="cm">    ]</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">;</span>
+
+    <span class="c1">// ignore one character partial words</span>
+
+    <span class="c1">// remove any spaces at the beginning of q</span>
+    <span class="nx">q</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^\s+/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+    <span class="c1">// if query is only one char, return an empty set</span>
+    <span class="c1">//   (even though client-side autocomplete is set to 2 char min)</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="p">[]}}</span>
+
+    <span class="c1">// we will need at least two chars in our last word</span>
+    <span class="c1">// since it will get a &#39;*&#39; wildcard added to it</span>
+    <span class="nx">q</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/ \S$/</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">);</span>
+
+
+    <span class="c1">// if last character is not a space, add wildcard</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nx">q</span> <span class="o">+=</span> <span class="s1">&#39;*&#39;</span><span class="p">;</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
+        <span class="s1">&#39;likepAllmatch&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>  <span class="c1">// match every word or partial word</span>
+        <span class="s1">&#39;qMaxWords&#39;</span>    <span class="o">:</span> <span class="mi">5000</span><span class="p">,</span>  <span class="c1">// allow query and sets to be larger than normal for &#39;*&#39; wildcard searches</span>
+        <span class="s1">&#39;qMaxSetWords&#39;</span> <span class="o">:</span> <span class="mi">5000</span>   <span class="c1">// see https://rampart.dev/docs/sql-set.html#qmaxsetwords</span>
+                                <span class="c1">// and https://rampart.dev/docs/sql-set.html#qmaxwords .</span>
+    <span class="p">});</span>
+
+    <span class="c1">// perform a text search on the words or partial words we have, and return a list of best matching locations</span>
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; + country_code value,</span>
+<span class="sb">        id, latitude, longitude, postal_code zip</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3</span>
+<span class="sb">        LIKEP ?;`</span><span class="p">,</span>
+        <span class="p">[</span><span class="nx">q</span><span class="p">]</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">}};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Finding and Formatting Nearest Cities:</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> function, we will return a set of results
+corresponding to the closest cities to a given city or lat/lon query.</p>
+<p>To do so, we will use Texis’ built-in SQL server function
+<a class="reference internal" href="sql-server-funcs.html#latlon2geocode-latlon2geocodearea"><span class="std std-ref">latlon2geocodearea</span></a>.
+We also want to retrieve how far away the location is from the given
+lat/lon (using <a class="reference internal" href="sql-server-funcs.html#distlatlon"><span class="std std-ref">distlatlon</span></a> function), as
+well as which compass direction the location is from the given lat/lon
+(using the <a class="reference internal" href="sql-server-funcs.html#azimuthlatlon"><span class="std std-ref">azimuthlatlon</span></a> and
+<a class="reference internal" href="sql-server-funcs.html#azimuth2compass"><span class="std std-ref">azimuth2compass</span></a> functions).</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>
+<span class="n">place_name</span> <span class="o">+</span><span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="n">admin_name1</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="n">country_code</span> <span class="n">place</span><span class="p">,</span>
+<span class="n">id</span><span class="p">,</span> <span class="n">postal_code</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span>
+<span class="n">DISTLATLON</span><span class="p">(</span><span class="o">?</span><span class="n">lat</span><span class="p">,</span> <span class="o">?</span><span class="n">lon</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">)</span> <span class="n">dist</span><span class="p">,</span>
+<span class="n">AZIMUTH2COMPASS</span><span class="p">(</span> <span class="n">AZIMUTHLATLON</span><span class="p">(</span><span class="o">?</span><span class="n">lat</span><span class="p">,</span> <span class="o">?</span><span class="n">lon</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">),</span> <span class="mi">3</span> <span class="p">)</span> <span class="n">heading</span>
+<span class="k">FROM</span> <span class="n">geonames</span> <span class="k">WHERE</span>
+<span class="n">geocode</span> <span class="k">BETWEEN</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">LATLON2GEOCODEAREA</span><span class="p">(</span><span class="o">?</span><span class="n">lat</span><span class="p">,</span> <span class="o">?</span><span class="n">lon</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">))</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="mi">6</span> <span class="k">ASC</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SELECT</span></code> - We are looking up and returning rows in the table.</p>
+<p><code class="docutils literal notranslate"><span class="pre">place_name</span> <span class="pre">+',</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">admin_name1</span> <span class="pre">+</span> <span class="pre">',</span> <span class="pre">'</span> <span class="pre">+</span> <span class="pre">country_code</span> <span class="pre">place,</span></code>
+- We are formatting several column so it will return, e.g.,
+<code class="docutils literal notranslate"><span class="pre">San</span> <span class="pre">Francisco,</span> <span class="pre">CA,</span> <span class="pre">US</span></code> and naming the string <code class="docutils literal notranslate"><span class="pre">place</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">id,</span> <span class="pre">postal_code,</span> <span class="pre">latitude,</span> <span class="pre">longitude</span></code> - Other columns we need.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DISTLATLON(?lat,</span> <span class="pre">?lon,</span> <span class="pre">latitude,</span> <span class="pre">longitude)</span> <span class="pre">dist,</span></code> - Calculate the
+distance between the given lat/lon and the <code class="docutils literal notranslate"><span class="pre">latitude</span></code> and <code class="docutils literal notranslate"><span class="pre">longitude</span></code>
+columns of the selected row.  Name the result <code class="docutils literal notranslate"><span class="pre">dist</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">AZIMUTH2COMPASS(</span> <span class="pre">AZIMUTHLATLON(?lat,</span> <span class="pre">?lon,</span> <span class="pre">latitude,</span> <span class="pre">longitude),</span> <span class="pre">3</span> <span class="pre">)</span> <span class="pre">heading</span></code> -
+First calculate the compass direction (azimuth) from lat/lon to the row’s
+<code class="docutils literal notranslate"><span class="pre">latitude</span></code> and <code class="docutils literal notranslate"><span class="pre">longitude</span></code> columns.  Then convert that to a more friendly 2 or 3
+letter direction abbreviation (i.e. - <code class="docutils literal notranslate"><span class="pre">SE</span></code>, <code class="docutils literal notranslate"><span class="pre">NW</span></code>, <code class="docutils literal notranslate"><span class="pre">ENE</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">geonames</span> <span class="pre">WHERE</span></code> - The name of the table, and <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> for the
+search on the next line.</p>
+<p><code class="docutils literal notranslate"><span class="pre">geocode</span> <span class="pre">BETWEEN</span> <span class="pre">(SELECT</span> <span class="pre">LATLON2GEOCODEAREA(?lat,</span> <span class="pre">?lon,</span> <span class="pre">1.0))</span></code> - We use
+our computed <code class="docutils literal notranslate"><span class="pre">geocode</span></code> field to limit returned rows to those that are
+within one (<code class="docutils literal notranslate"><span class="pre">1.0</span></code>) degrees of our given lat/lon (see
+<span class="xref std std-ref">latlon2geocodearea</span>
+for precise definition of bounding box search).  This will give us a search
+radius (box center to side) of about 69 miles (111 km) at the equator,
+decreasing in width as we approach the poles.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">6</span> <span class="pre">ASC</span></code> - we will order by the sixth selected column (in this
+case – <code class="docutils literal notranslate"><span class="pre">dist</span></code>);</p>
+<p>So lets start writing our <code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> function, using this query:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">lon</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lon</span><span class="p">,</span> <span class="nx">lat</span><span class="o">=</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lat</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">lon</span> <span class="o">||</span> <span class="o">!</span><span class="nx">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="p">{}};</span>
+
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + country_code place,</span>
+<span class="sb">        id, postal_code, latitude, longitude,</span>
+<span class="sb">        DISTLATLON(?lat, ?lon, latitude, longitude) dist,</span>
+<span class="sb">        AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))</span>
+<span class="sb">        ORDER BY 6 ASC;`</span><span class="p">,</span>
+        <span class="p">{</span><span class="nx">lat</span><span class="o">:</span><span class="nx">lat</span><span class="p">,</span> <span class="nx">lon</span><span class="o">:</span><span class="nx">lon</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span> <span class="p">}</span>
+    <span class="p">);</span>
+</pre></div>
+</div>
+<p>Here we use the object <code class="docutils literal notranslate"><span class="pre">{lat:lat,</span> <span class="pre">lon:lon}</span></code> to fill in the <code class="docutils literal notranslate"><span class="pre">?lat</span></code> and
+<code class="docutils literal notranslate"><span class="pre">?lon</span></code> in the SQL query.  In this case it is easier than the using <code class="docutils literal notranslate"><span class="pre">?,?</span></code>
+style and providing an <span class="green">Array</span> since the same lat/lon values are
+being use multiple times.</p>
+<p>We also provide the object <code class="docutils literal notranslate"><span class="pre">{maxRows:</span> <span class="pre">100}</span></code> to override the default of ten
+rows.</p>
+<p>This will return something similar to:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">res</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;columns&quot;</span><span class="o">:</span><span class="p">[</span><span class="s2">&quot;place&quot;</span><span class="p">,</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="s2">&quot;postal_code&quot;</span><span class="p">,</span><span class="s2">&quot;latitude&quot;</span><span class="p">,</span><span class="s2">&quot;longitude&quot;</span><span class="p">,</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span><span class="s2">&quot;heading&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;rows&quot;</span><span class="o">:</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;place&quot;</span><span class="o">:</span><span class="s2">&quot;Dixon, California, US&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233ef9f79d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;postal_code&quot;</span><span class="o">:</span><span class="s2">&quot;95620&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="o">:</span><span class="mf">38.4403</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="o">:-</span><span class="mf">121.8088</span><span class="p">,</span>
+            <span class="s2">&quot;dist&quot;</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;heading&quot;</span><span class="o">:</span><span class="s2">&quot;N&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;place&quot;</span><span class="o">:</span><span class="s2">&quot;Davis, California, US&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;6233ef9fa49&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;postal_code&quot;</span><span class="o">:</span><span class="s2">&quot;95618&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="o">:</span><span class="mf">38.5449</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="o">:-</span><span class="mf">121.7405</span><span class="p">,</span>
+            <span class="s2">&quot;dist&quot;</span><span class="o">:</span><span class="mf">8.110646984972856</span><span class="p">,</span>
+            <span class="s2">&quot;heading&quot;</span><span class="o">:</span><span class="s2">&quot;NNE&quot;</span>
+        <span class="p">},</span>
+        <span class="c1">// ...</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;rowCount&quot;</span><span class="o">:</span><span class="mi">100</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>That’s nice, but not in the format that we need.  We need to group results by
+<code class="docutils literal notranslate"><span class="pre">place</span></code> and format the result as needed by the client-side JavaScript.</p>
+<p>So let’s write a function to do that:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">distconv</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">useKilometers</span><span class="p">)</span>
+    <span class="nx">distconv</span><span class="o">=</span><span class="mf">1.60934</span>
+
+<span class="c1">// reorganize our data for easy handling client side.</span>
+<span class="kd">function</span> <span class="nx">reorg_places</span><span class="p">(</span><span class="nx">places</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">ret</span><span class="o">=</span><span class="p">{};</span>
+    <span class="cm">/* group by city, with entries for distance for each zip code */</span>
+    <span class="k">for</span> <span class="p">(;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">places</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nx">places</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">ret</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">place</span><span class="p">])</span>
+            <span class="nx">ret</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">place</span><span class="p">]</span><span class="o">=</span><span class="p">{};</span>
+        <span class="nx">ret</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">place</span><span class="p">][</span><span class="nx">p</span><span class="p">.</span><span class="nx">postal_code</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">dist</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">dist</span> <span class="o">*</span> <span class="nx">distconv</span><span class="p">,</span>
+            <span class="nx">lon</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">longitude</span><span class="p">,</span>
+            <span class="nx">lat</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">latitude</span><span class="p">,</span>
+            <span class="nx">id</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+            <span class="nx">heading</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">heading</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+    <span class="c1">// calc average distance</span>
+    <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">ret</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">placeName</span> <span class="o">=</span> <span class="nx">keys</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="kd">var</span> <span class="nx">placeObj</span> <span class="o">=</span> <span class="nx">ret</span><span class="p">[</span><span class="nx">placeName</span><span class="p">];</span>
+        <span class="kd">var</span> <span class="nx">zkeys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">placeObj</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">cnt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">avg</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">zkeys</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">zkey</span> <span class="o">=</span> <span class="nx">zkeys</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+            <span class="nx">avg</span> <span class="o">+=</span> <span class="nx">placeObj</span><span class="p">[</span><span class="nx">zkey</span><span class="p">].</span><span class="nx">dist</span><span class="p">;</span>
+            <span class="nx">cnt</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">avg</span> <span class="o">/=</span> <span class="nx">cnt</span><span class="p">;</span>
+        <span class="nx">placeObj</span><span class="p">.</span><span class="nx">avgdist</span><span class="o">=</span><span class="nx">avg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="cm">/* ret will be something like:</span>
+<span class="cm">{</span>
+<span class="cm">    &quot;Rocklin, California, US&quot;:</span>
+<span class="cm">    {</span>
+<span class="cm">        &quot;95677&quot;:{&quot;dist&quot;:0,&quot;lon&quot;:-121.2366,&quot;lat&quot;:38.7877,&quot;id&quot;:&quot;6232be7e18b&quot;,&quot;heading&quot;:&quot;N&quot;},</span>
+<span class="cm">        &quot;95765&quot;:{&quot;dist&quot;:3.9415328848914677,&quot;lon&quot;:-121.2677,&quot;lat&quot;:38.8136,&quot;id&quot;:&quot;6232be7e1b2&quot;,&quot;heading&quot;:&quot;NW&quot;},</span>
+<span class="cm">        &quot;avgdist&quot;:1.9707664424457338</span>
+<span class="cm">    },</span>
+<span class="cm">    &quot;Roseville, California, US&quot;:{</span>
+<span class="cm">        &quot;95661&quot;:{&quot;dist&quot;:5.904624610176184,&quot;lon&quot;:-121.234,&quot;lat&quot;:38.7346,&quot;id&quot;:&quot;6232be7e185&quot;,&quot;heading&quot;:&quot;S&quot;},</span>
+<span class="cm">        &quot;95678&quot;:{&quot;dist&quot;:5.2635315744972475,&quot;lon&quot;:-121.2867,&quot;lat&quot;:38.7609,&quot;id&quot;:&quot;6232be7e18e&quot;,&quot;heading&quot;:&quot;SW&quot;},</span>
+<span class="cm">        &quot;95747&quot;:{&quot;dist&quot;:8.926222554334897,&quot;lon&quot;:-121.3372,&quot;lat&quot;:38.7703,&quot;id&quot;:&quot;6232be7e1af&quot;,&quot;heading&quot;:&quot;WSW&quot;},</span>
+<span class="cm">        &quot;avgdist&quot;:6.698126246336109</span>
+<span class="cm">    },</span>
+<span class="cm">    ...</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This function groups each <code class="docutils literal notranslate"><span class="pre">place</span></code> (city) name and adds the rows indexed by
+the property <code class="docutils literal notranslate"><span class="pre">postal_code</span></code> (AKA zip code in the US).  It also calculates
+an average distance for each <code class="docutils literal notranslate"><span class="pre">postal_code</span></code> and adds that as the property
+<code class="docutils literal notranslate"><span class="pre">avgdist</span></code>.</p>
+<p>Using that function, we can update our <code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> function to look like
+this:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">lon</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lon</span><span class="p">,</span> <span class="nx">lat</span><span class="o">=</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lat</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">lon</span> <span class="o">||</span> <span class="o">!</span><span class="nx">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="p">{}};</span>
+
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + country_code place,</span>
+<span class="sb">        id, postal_code, latitude, longitude,</span>
+<span class="sb">        DISTLATLON(?lat, ?lon, latitude, longitude) dist,</span>
+<span class="sb">        AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))</span>
+<span class="sb">        ORDER BY 6 ASC;`</span><span class="p">,</span>
+        <span class="p">{</span><span class="nx">lat</span><span class="o">:</span><span class="nx">lat</span><span class="p">,</span> <span class="nx">lon</span><span class="o">:</span><span class="nx">lon</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span> <span class="p">}</span>
+    <span class="p">);</span>
+
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span><span class="nx">cities</span><span class="o">:</span> <span class="nx">reorg_places</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">)};</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="nx">ret</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This is looking good so far.  However the client-side JavaScript
+also needs to look up by the location <code class="docutils literal notranslate"><span class="pre">id</span></code> column.  and when it
+does so, it will also need to provide the name and postal code of
+that location. So we will add a bit more functionality to
+<code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> for our final version:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">id_res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">lon</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lon</span><span class="p">,</span> <span class="nx">lat</span><span class="o">=</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lat</span><span class="p">;</span>
+
+    <span class="c1">// if we are given an id, look up the lat/lon</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">id_res</span><span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s2">&quot;SELECT &quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; +country_code place, &quot;</span>  <span class="o">+</span>
+            <span class="s2">&quot;postal_code zip, latitude lat, longitude lon &quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;FROM geonames WHERE id=?;&quot;</span><span class="p">,</span>
+            <span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span>
+        <span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">id_res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">lon</span><span class="o">=</span><span class="nx">id_res</span><span class="p">.</span><span class="nx">lon</span><span class="p">;</span>
+            <span class="nx">lat</span><span class="o">=</span><span class="nx">id_res</span><span class="p">.</span><span class="nx">lat</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">lon</span> <span class="o">||</span> <span class="o">!</span><span class="nx">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="p">{}};</span>
+
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + country_code place,</span>
+<span class="sb">        id, postal_code, latitude, longitude,</span>
+<span class="sb">        DISTLATLON(?lat, ?lon, latitude, longitude) dist,</span>
+<span class="sb">        AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))</span>
+<span class="sb">        ORDER BY 6 ASC;`</span><span class="p">,</span>
+        <span class="p">{</span><span class="nx">lat</span><span class="o">:</span><span class="nx">lat</span><span class="p">,</span> <span class="nx">lon</span><span class="o">:</span><span class="nx">lon</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span> <span class="p">}</span>
+    <span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span><span class="nx">cities</span><span class="o">:</span> <span class="nx">reorg_places</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">)};</span>
+
+    <span class="c1">// if look up by id, add name and zip for display</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">place</span> <span class="o">=</span> <span class="nx">id_res</span><span class="p">.</span><span class="nx">place</span><span class="p">;</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">zip</span> <span class="o">=</span> <span class="nx">id_res</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="nx">ret</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-complete-server-side-script">
+<h3>The Complete Server-Side Script<a class="headerlink" href="#the-complete-server-side-script" title="Permalink to this headline">¶</a></h3>
+<p>We now have all we need to perform the autocomplete search and nearest
+city search.  This is the final script which, as layed out may be accessed
+at <code class="docutils literal notranslate"><span class="pre">http://localhost:8088/apps/citysearch/</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Load the sql module</span>
+<span class="kd">var</span> <span class="nx">Sql</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="c1">// serverConf is defined in web_server/web_server_conf.js</span>
+<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">serverConf</span><span class="p">.</span><span class="nx">dataRoot</span> <span class="o">+</span> <span class="s1">&#39;/geonames_db&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">useKilometers</span><span class="o">=</span><span class="kc">true</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">distvar</span> <span class="o">=</span> <span class="s2">&quot;mi&quot;</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">useKilometers</span><span class="p">)</span>
+    <span class="nx">distvar</span> <span class="o">=</span> <span class="s2">&quot;km&quot;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">client_script</span> <span class="o">=</span> <span class="sb">`</span>
+<span class="sb">// function to get query parameters from url</span>
+<span class="sb">function getparams() {</span>
+<span class="sb">    if (window.location.search.length==0)</span>
+<span class="sb">        return {};</span>
+
+<span class="sb">    var qstr  = window.location.search.substring(1);</span>
+<span class="sb">    var pairs = qstr.split(&#39;&amp;&#39;);</span>
+<span class="sb">    var ret = {}, i=0;</span>
+
+<span class="sb">    for (i = 0; i &lt; pairs.length; i++) {</span>
+<span class="sb">        var kv = pairs[i].split(&#39;=&#39;);</span>
+<span class="sb">        ret[kv[0]]=kv[1];</span>
+<span class="sb">    }</span>
+<span class="sb">    return ret;</span>
+<span class="sb">};</span>
+
+<span class="sb">$(document).ready(function(){</span>
+
+<span class="sb">    var curzip, curid;</span>
+<span class="sb">    var params = getparams();</span>
+
+<span class="sb">    // format the results, stick them in the div below the search form</span>
+<span class="sb">    // update url to match state if curid is set</span>
+<span class="sb">    function format_res(res_cities) {</span>
+<span class="sb">        var resdiv = $(&#39;#res&#39;);</span>
+<span class="sb">        var places = Object.keys(res_cities);</span>
+<span class="sb">        var reshtml=&quot;&lt;h2&gt;Closest places to &quot; + $(&#39;#cstextbox&#39;).val() +&#39;&lt;/h2&gt;&#39;;;</span>
+<span class="sb">        resdiv.html(&#39;&#39;);</span>
+
+<span class="sb">        for (var i=0;i&lt;places.length;i++) {</span>
+<span class="sb">            var j=0, place=places[i];</span>
+<span class="sb">            var placeObj = res_cities[place];</span>
+<span class="sb">            var zkeys = Object.keys(placeObj);</span>
+<span class="sb">            var ziphtml=&#39;&#39;;</span>
+<span class="sb">            var is_self=false; //flag if we are processing zip codes in the current city</span>
+
+<span class="sb">            for(j=0;j&lt;zkeys.length;j++) {</span>
+<span class="sb">                var zip=zkeys[j];</span>
+<span class="sb">                if(zip == &#39;avgdist&#39;)</span>
+<span class="sb">                    continue;</span>
+<span class="sb">                if(zip == curzip ) {</span>
+<span class="sb">                    is_self=true;</span>
+<span class="sb">                    continue;</span>
+<span class="sb">                }</span>
+<span class="sb">                var zipObj = placeObj[zip];</span>
+<span class="sb">                //console.log(zipObj);</span>
+<span class="sb">                ziphtml+=&#39;&lt;a class=&quot;zip&quot; href=&quot;#&quot; data-zip=&quot;&#39; + zip + &#39;&quot; data-lat=&quot;&#39; + zipObj.lat + &#39;&quot; data-lon=&quot;&#39; +</span>
+<span class="sb">                         zipObj.lon + &#39;&quot; data-id=&quot;&#39; + zipObj.id + &#39;&quot;&gt;&#39; + zip + &#39;(&#39; + zipObj.dist.toFixed(1) +</span>
+<span class="sb">                         &#39;&amp;nbsp;&#39; + zipObj.heading + &#39;)&lt;/a&gt; &#39;;</span>
+<span class="sb">            }</span>
+<span class="sb">            if(ziphtml) {// skip self if only one zip.</span>
+<span class="sb">                if(is_self)</span>
+<span class="sb">                    reshtml += &#39;&lt;span&gt;&lt;h3&gt;Other zip codes in &lt;span class=&quot;place&quot;&gt;&#39; + place + &#39;&lt;/span&gt;&lt;/h3&gt;&#39;</span>
+<span class="sb">                            + ziphtml + &quot;&lt;/span&gt;&quot;;</span>
+<span class="sb">                else</span>
+<span class="sb">                    reshtml += &#39;&lt;span&gt;&lt;h3&gt;&lt;span class=&quot;place&quot;&gt;&#39; + place + &#39;&lt;/span&gt; (&#39; +</span>
+<span class="sb">                                parseFloat(placeObj.avgdist).toFixed(1)  +&#39; </span><span class="si">${</span><span class="nx">distvar</span><span class="si">}</span><span class="sb">.)&lt;/h3&gt;&#39; +</span>
+<span class="sb">                                ziphtml + &quot;&lt;/span&gt;&quot;;</span>
+<span class="sb">            }</span>
+<span class="sb">        }</span>
+<span class="sb">        resdiv.html(reshtml);</span>
+
+<span class="sb">        if(curid){</span>
+<span class="sb">            var nurl = window.location.origin + window.location.pathname + &#39;?id=&#39; + curid;</span>
+<span class="sb">            window.history.pushState({},&#39;&#39;,nurl);</span>
+<span class="sb">        }</span>
+<span class="sb">    }</span>
+
+<span class="sb">    // Use &#39;body&#39; and filter with class &#39;zip&#39; so the event will pick up not-yet-written content</span>
+<span class="sb">    $(&#39;body&#39;).on(&#39;click&#39;,&#39;.zip&#39;,function(e) {</span>
+<span class="sb">        //perform a new search on the zip code that was clicked.</span>
+<span class="sb">        var t = $(this);</span>
+<span class="sb">        var lat = t.attr(&#39;data-lat&#39;),</span>
+<span class="sb">            lon=t.attr(&#39;data-lon&#39;),</span>
+<span class="sb">            zip=t.attr(&#39;data-zip&#39;);</span>
+<span class="sb">        var place = t.closest(&#39;span&#39;).find(&#39;.place&#39;).text();</span>
+
+<span class="sb">        //curid is for the change of url in order to save the state.</span>
+<span class="sb">        curid = t.attr(&#39;data-id&#39;);</span>
+
+<span class="sb">        // recreate the place name with the zip code in it</span>
+<span class="sb">        place = place.substring(0, place.length-2) +zip + &#39;, &#39; + place.substring(place.length-2, place.length);</span>
+<span class="sb">        // put it in the search box</span>
+<span class="sb">        $(&#39;#cstextbox&#39;).val(place);</span>
+
+<span class="sb">        // fetch new list of closest cities and display</span>
+<span class="sb">        $.getJSON(</span>
+<span class="sb">            &quot;/apps/citysearch/ajaxres.json&quot;,</span>
+<span class="sb">            {lat:lat, lon: lon},</span>
+<span class="sb">            function(res) {</span>
+<span class="sb">                curzip=zip;</span>
+<span class="sb">                format_res(res.cities);</span>
+<span class="sb">            }</span>
+<span class="sb">        );</span>
+<span class="sb">        return false; //don&#39;t actually go to the href in the clicked &lt;a&gt;</span>
+<span class="sb">    });</span>
+
+<span class="sb">    // the autocomplete plugin from  https://github.com/devbridge/jQuery-Autocomplete</span>
+<span class="sb">    // jquery and plugin included from cloudflare in &lt;script src=&quot;xyz&quot;&gt; tags above.</span>
+<span class="sb">    $(&#39;#cstextbox&#39;).autocomplete(</span>
+<span class="sb">        {</span>
+<span class="sb">            serviceUrl: &#39;/apps/citysearch/autocomp.json&#39;,</span>
+<span class="sb">            minChars: 2,</span>
+<span class="sb">            autoSelectFirst: true,</span>
+<span class="sb">            showNoSuggestionNotice: true,</span>
+<span class="sb">            onSelect: function(sel)</span>
+<span class="sb">            {</span>
+<span class="sb">                $.getJSON(</span>
+<span class="sb">                    &quot;/apps/citysearch/ajaxres.json&quot;,</span>
+<span class="sb">                    {lat:sel.latitude, lon: sel.longitude},</span>
+<span class="sb">                    function(res) {</span>
+<span class="sb">                        curzip = sel.zip;</span>
+<span class="sb">                        curid = sel.id;</span>
+<span class="sb">                        format_res(res.cities);</span>
+<span class="sb">                    }</span>
+<span class="sb">                );</span>
+<span class="sb">            }</span>
+<span class="sb">        }</span>
+<span class="sb">    );</span>
+
+<span class="sb">    // prevent form submission - all results are already in the autocomplete</span>
+<span class="sb">    $(&#39;#cstextbox&#39;).on(&#39;keypress&#39;, function(e){</span>
+<span class="sb">        var key = e.charCode || e.keyCode || 0;</span>
+<span class="sb">        if (key == 13) {</span>
+<span class="sb">            e.preventDefault();</span>
+<span class="sb">            return false;</span>
+<span class="sb">        }</span>
+<span class="sb">    });</span>
+
+<span class="sb">    function refresh(id) {</span>
+<span class="sb">        $.getJSON(</span>
+<span class="sb">            &quot;/apps/citysearch/ajaxres.json&quot;,</span>
+<span class="sb">            {id:params.id},</span>
+<span class="sb">            function(res) {</span>
+<span class="sb">                curzip = res.zip;</span>
+<span class="sb">                $(&#39;#cstextbox&#39;).val(res.place);</span>
+<span class="sb">                //no curid necessary here</span>
+<span class="sb">                format_res(res.cities);</span>
+<span class="sb">            }</span>
+<span class="sb">        );</span>
+<span class="sb">    }</span>
+<span class="sb">    // if we refresh the page, then reload the content</span>
+<span class="sb">    if(params.id) {</span>
+<span class="sb">        refresh(params.id);</span>
+<span class="sb">    }</span>
+
+<span class="sb">    window.onpopstate = function(event) {</span>
+<span class="sb">        // url has changed, but page was not reloaded</span>
+<span class="sb">        params = getparams();</span>
+<span class="sb">        curid=false;</span>
+<span class="sb">        if(params.id)</span>
+<span class="sb">            refresh(params.id);</span>
+<span class="sb">        else {</span>
+<span class="sb">            $(&#39;#cstextbox&#39;).val(&#39;&#39;);</span>
+<span class="sb">            $(&#39;#res&#39;).html(&#39;&#39;);</span>
+<span class="sb">        }</span>
+<span class="sb">    };</span>
+
+<span class="sb">});</span>
+<span class="sb">`</span><span class="p">;</span>
+
+
+<span class="c1">// page is defined once upon script load here rather than upon each request in</span>
+<span class="c1">// htmlpage() below.</span>
+<span class="kd">var</span> <span class="nx">page</span><span class="o">=</span><span class="sb">`&lt;!DOCTYPE HTML&gt;</span>
+<span class="sb">&lt;html&gt;</span>
+<span class="sb">    &lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+<span class="sb">    &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js&quot;&gt;&lt;/script&gt;</span>
+<span class="sb">    &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js&quot;&gt;&lt;/script&gt;</span>
+<span class="sb">    &lt;style&gt;</span>
+<span class="sb">        body,h1,h2,h3,h4,h5,h6 {font-family: &quot;Varela Round&quot;, Sans-Serif;}</span>
+<span class="sb">        .autocomplete-suggestions {</span>
+<span class="sb">            border: 1px solid #999;</span>
+<span class="sb">            background: #FFF;</span>
+<span class="sb">            overflow: auto;</span>
+<span class="sb">            width: auto !important;</span>
+<span class="sb">            padding-right:5px;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-suggestion {</span>
+<span class="sb">            padding: 2px 5px;</span>
+<span class="sb">            white-space: nowrap;</span>
+<span class="sb">            overflow: hidden;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-suggestions strong {</span>
+<span class="sb">            font-weight: normal;</span>
+<span class="sb">            color: #3399FF;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-group strong {</span>
+<span class="sb">            display: block;</span>
+<span class="sb">            border-bottom: 1px solid #000;</span>
+<span class="sb">        }</span>
+<span class="sb">        .autocomplete-selected { background: #F0F0F0; }</span>
+<span class="sb">        .autocomplete-group { padding: 2px 5px; }</span>
+<span class="sb">        .zip { display: inline-block; width:140px;}</span>
+<span class="sb">        #main {</span>
+<span class="sb">            background-color: white;</span>
+<span class="sb">            margin: auto;</span>
+<span class="sb">            min-height: 300px;</span>
+<span class="sb">            width: 600px;</span>
+<span class="sb">        }</span>
+<span class="sb">        #idiv {</span>
+<span class="sb">            width:500px;</span>
+<span class="sb">            height:39px;</span>
+<span class="sb">            border-bottom: lightGray 1px solid;</span>
+<span class="sb">            padding:15px 0px 15px 0px;</span>
+<span class="sb">        }</span>
+<span class="sb">        #cstextbox {</span>
+<span class="sb">            min-width:150px;</span>
+<span class="sb">            width:100%;</span>
+<span class="sb">            height:30px;</span>
+<span class="sb">            font:normal 18px arial,sans-serif;</span>
+<span class="sb">            padding: 1px 3px;</span>
+<span class="sb">            border: 2px solid #ccc;</span>
+<span class="sb">            box-sizing: border-box;</span>
+<span class="sb">        }</span>
+<span class="sb">    &lt;/style&gt;</span>
+<span class="sb">    &lt;title&gt;City Search Tutorial&lt;/title&gt;</span>
+<span class="sb">    &lt;/head&gt;</span>
+<span class="sb">    &lt;body&gt;</span>
+<span class="sb">    &lt;div id=&quot;main&quot;&gt;</span>
+<span class="sb">      &lt;form id=&quot;mf&quot;&gt;</span>
+<span class="sb">          &lt;div id=&quot;idiv&quot;&gt;</span>
+<span class="sb">              &lt;input type=&quot;text&quot; id=&quot;cstextbox&quot; name=&quot;q&quot; value=&quot;&quot; placeholder=&quot;Search for a city&quot;&gt;</span>
+<span class="sb">          &lt;/div&gt;</span>
+<span class="sb">      &lt;/form&gt;</span>
+<span class="sb">      &lt;div id=&quot;res&quot;&gt;&lt;/div&gt;</span>
+<span class="sb">      &lt;/body&gt;</span>
+<span class="sb">      &lt;script&gt;</span>
+<span class="sb">          </span><span class="si">${</span><span class="nx">client_script</span><span class="si">}</span><span class="sb"></span>
+<span class="sb">      &lt;/script&gt;</span>
+<span class="sb">&lt;/html&gt;`</span><span class="p">;</span>
+
+
+
+<span class="kd">function</span> <span class="nx">htmlpage</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// just return the html.</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span><span class="nx">page</span><span class="p">};</span>
+<span class="p">}</span>
+
+
+<span class="kd">var</span> <span class="nx">distconv</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">useKilometers</span><span class="p">)</span>
+    <span class="nx">distconv</span><span class="o">=</span><span class="mf">1.60934</span>
+
+<span class="c1">// reorganize our data for easy handling client side.</span>
+<span class="kd">function</span> <span class="nx">reorg_places</span><span class="p">(</span><span class="nx">places</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">ret</span><span class="o">=</span><span class="p">{};</span>
+    <span class="cm">/* group by city, with entries for distance for each zip code */</span>
+    <span class="k">for</span> <span class="p">(;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">places</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nx">places</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">ret</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">place</span><span class="p">])</span>
+            <span class="nx">ret</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">place</span><span class="p">]</span><span class="o">=</span><span class="p">{};</span>
+        <span class="nx">ret</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">place</span><span class="p">][</span><span class="nx">p</span><span class="p">.</span><span class="nx">postal_code</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">dist</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">dist</span> <span class="o">*</span> <span class="nx">distconv</span><span class="p">,</span>
+            <span class="nx">lon</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">longitude</span><span class="p">,</span>
+            <span class="nx">lat</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">latitude</span><span class="p">,</span>
+            <span class="nx">id</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+            <span class="nx">heading</span><span class="o">:</span> <span class="nx">p</span><span class="p">.</span><span class="nx">heading</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+    <span class="c1">// calc average distance</span>
+    <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">ret</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">placeName</span> <span class="o">=</span> <span class="nx">keys</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="kd">var</span> <span class="nx">placeObj</span> <span class="o">=</span> <span class="nx">ret</span><span class="p">[</span><span class="nx">placeName</span><span class="p">];</span>
+        <span class="kd">var</span> <span class="nx">zkeys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">placeObj</span><span class="p">);</span>
+        <span class="kd">var</span> <span class="nx">cnt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">avg</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">j</span><span class="o">&lt;</span><span class="nx">zkeys</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">zkey</span> <span class="o">=</span> <span class="nx">zkeys</span><span class="p">[</span><span class="nx">j</span><span class="p">];</span>
+            <span class="nx">avg</span> <span class="o">+=</span> <span class="nx">placeObj</span><span class="p">[</span><span class="nx">zkey</span><span class="p">].</span><span class="nx">dist</span><span class="p">;</span>
+            <span class="nx">cnt</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">avg</span> <span class="o">/=</span> <span class="nx">cnt</span><span class="p">;</span>
+        <span class="nx">placeObj</span><span class="p">.</span><span class="nx">avgdist</span><span class="o">=</span><span class="nx">avg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="cm">/* ret will be something like:</span>
+<span class="cm">{</span>
+<span class="cm">    &quot;Rocklin, California, US&quot;:</span>
+<span class="cm">    {</span>
+<span class="cm">        &quot;95677&quot;:{&quot;dist&quot;:0,&quot;lon&quot;:-121.2366,&quot;lat&quot;:38.7877,&quot;id&quot;:&quot;6232be7e18b&quot;,&quot;heading&quot;:&quot;N&quot;},</span>
+<span class="cm">        &quot;95765&quot;:{&quot;dist&quot;:3.9415328848914677,&quot;lon&quot;:-121.2677,&quot;lat&quot;:38.8136,&quot;id&quot;:&quot;6232be7e1b2&quot;,&quot;heading&quot;:&quot;NW&quot;},</span>
+<span class="cm">        &quot;avgdist&quot;:1.9707664424457338</span>
+<span class="cm">    },</span>
+<span class="cm">    &quot;Roseville, California, US&quot;:{</span>
+<span class="cm">        &quot;95661&quot;:{&quot;dist&quot;:5.904624610176184,&quot;lon&quot;:-121.234,&quot;lat&quot;:38.7346,&quot;id&quot;:&quot;6232be7e185&quot;,&quot;heading&quot;:&quot;S&quot;},</span>
+<span class="cm">        &quot;95678&quot;:{&quot;dist&quot;:5.2635315744972475,&quot;lon&quot;:-121.2867,&quot;lat&quot;:38.7609,&quot;id&quot;:&quot;6232be7e18e&quot;,&quot;heading&quot;:&quot;SW&quot;},</span>
+<span class="cm">        &quot;95747&quot;:{&quot;dist&quot;:8.926222554334897,&quot;lon&quot;:-121.3372,&quot;lat&quot;:38.7703,&quot;id&quot;:&quot;6232be7e1af&quot;,&quot;heading&quot;:&quot;WSW&quot;},</span>
+<span class="cm">        &quot;avgdist&quot;:6.698126246336109</span>
+<span class="cm">    },</span>
+<span class="cm">    ...</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">id_res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">lon</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lon</span><span class="p">,</span> <span class="nx">lat</span><span class="o">=</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">lat</span><span class="p">;</span>
+
+    <span class="c1">// if we are given an id, look up the lat/lon</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">id_res</span><span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s2">&quot;SELECT &quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; +country_code place, &quot;</span>  <span class="o">+</span>
+            <span class="s2">&quot;postal_code zip, latitude lat, longitude lon &quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;FROM geonames WHERE id=?;&quot;</span><span class="p">,</span>
+            <span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span>
+        <span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">id_res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">lon</span><span class="o">=</span><span class="nx">id_res</span><span class="p">.</span><span class="nx">lon</span><span class="p">;</span>
+            <span class="nx">lat</span><span class="o">=</span><span class="nx">id_res</span><span class="p">.</span><span class="nx">lat</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">lon</span> <span class="o">||</span> <span class="o">!</span><span class="nx">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="p">{}};</span>
+
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + country_code place,</span>
+<span class="sb">        id, postal_code, latitude, longitude,</span>
+<span class="sb">        DISTLATLON(?lat, ?lon, latitude, longitude) dist,</span>
+<span class="sb">        AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))</span>
+<span class="sb">        ORDER BY 6 ASC;`</span><span class="p">,</span>
+        <span class="p">{</span><span class="nx">lat</span><span class="o">:</span><span class="nx">lat</span><span class="p">,</span> <span class="nx">lon</span><span class="o">:</span><span class="nx">lon</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span> <span class="p">}</span>
+    <span class="p">);</span>
+
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span><span class="nx">cities</span><span class="o">:</span> <span class="nx">reorg_places</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">)};</span>
+
+    <span class="c1">// if look up by id, add name and zip for display</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">place</span> <span class="o">=</span> <span class="nx">id_res</span><span class="p">.</span><span class="nx">place</span><span class="p">;</span>
+        <span class="nx">ret</span><span class="p">.</span><span class="nx">zip</span> <span class="o">=</span> <span class="nx">id_res</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span><span class="nx">ret</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/* autocomp() results must be formatted as such:</span>
+<span class="cm">{</span>
+<span class="cm">    &quot;suggestions&quot;: [</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vaulion, Canton de Vaud, 1325, CH&quot;,&quot;id&quot;:&quot;6233eaf65bd&quot;,&quot;latitude&quot;:46.6848,&quot;longitude&quot;:6.3832,&quot;zip&quot;:&quot;1325&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Vallorbe, Canton de Vaud, 1337, CH&quot;,&quot;id&quot;:&quot;6233eaf65c6&quot;,&quot;latitude&quot;:46.7078,&quot;longitude&quot;:6.3714,&quot;zip&quot;:&quot;1337&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Rances, Canton de Vaud, 1358, CH&quot;,&quot;id&quot;:&quot;6233eaf6608&quot;,&quot;latitude&quot;:46.7482,&quot;longitude&quot;:6.5354,&quot;zip&quot;:&quot;1358&quot;},</span>
+<span class="cm">        {&quot;value&quot;:&quot;Valeyres-sous-Ursins, Canton de Vaud, 1412, CH&quot;,&quot;id&quot;:&quot;6233eaf663b&quot;,&quot;latitude&quot;:46.7453,&quot;longitude&quot;:6.6533,&quot;zip&quot;:&quot;1412&quot;},</span>
+<span class="cm">        ...</span>
+<span class="cm">    ]</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+<span class="kd">function</span> <span class="nx">autocomp</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">;</span>
+
+    <span class="c1">// ignore one character partial words</span>
+
+    <span class="c1">// remove any spaces at the beginning of q</span>
+    <span class="nx">q</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^\s+/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+    <span class="c1">// if query is only one char, return an empty set</span>
+    <span class="c1">//   (even though client-side autocomplete is set to 2 char min)</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="p">[]}}</span>
+
+    <span class="c1">// we will need at least two chars in our last word</span>
+    <span class="c1">// since it will get a &#39;*&#39; wildcard added to it</span>
+    <span class="nx">q</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/ \S$/</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">);</span>
+
+
+    <span class="c1">// if last character is not a space, add wildcard</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nx">q</span> <span class="o">+=</span> <span class="s1">&#39;*&#39;</span><span class="p">;</span>
+
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
+        <span class="s1">&#39;likepAllmatch&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>  <span class="c1">// match every word or partial word</span>
+        <span class="s1">&#39;qMaxWords&#39;</span>    <span class="o">:</span> <span class="mi">5000</span><span class="p">,</span>  <span class="c1">// allow query and sets to be larger than normal for &#39;*&#39; wildcard searches</span>
+        <span class="s1">&#39;qMaxSetWords&#39;</span> <span class="o">:</span> <span class="mi">5000</span>   <span class="c1">// see https://rampart.dev/docs/sql-set.html#qmaxsetwords</span>
+                                <span class="c1">// and https://rampart.dev/docs/sql-set.html#qmaxwords .</span>
+    <span class="p">});</span>
+
+    <span class="c1">// perform a text search on the words or partial words we have, and return a list of best matching locations</span>
+    <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="sb">`SELECT</span>
+<span class="sb">        place_name +&#39;, &#39; + admin_name1 + &#39;, &#39; + postal_code + &#39;, &#39; + country_code value,</span>
+<span class="sb">        id, latitude, longitude, postal_code zip</span>
+<span class="sb">        FROM geonames WHERE</span>
+<span class="sb">        place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3</span>
+<span class="sb">        LIKEP ?;`</span><span class="p">,</span>
+        <span class="p">[</span><span class="nx">q</span><span class="p">]</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;suggestions&quot;</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">}};</span>
+<span class="p">}</span>
+
+<span class="c1">// url to function mapping</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>               <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/</span>
+    <span class="s2">&quot;/index.html&quot;</span><span class="o">:</span>     <span class="nx">htmlpage</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/index.html</span>
+    <span class="s2">&quot;/autocomp.json&quot;</span><span class="o">:</span>  <span class="nx">autocomp</span><span class="p">,</span>  <span class="c1">//http://localhost:8088/apps/citysearch/autocomp.json</span>
+    <span class="s2">&quot;/ajaxres.json&quot;</span><span class="o">:</span>   <span class="nx">ajaxres</span>    <span class="c1">//http://localhost:8088/apps/citysearch/ajaxres.json</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Enjoy.</p>
 </div>
 </div>
 </div>

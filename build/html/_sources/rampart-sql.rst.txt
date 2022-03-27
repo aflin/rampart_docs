@@ -2649,7 +2649,7 @@ In addition to the ``options`` available in `rex()`_, (``exclude`` and
 
 *  ``delimiter`` - pattern to match at the end of the read buffer.  Default
    is ``$`` (end of line).  If your pattern crosses lines (includes a
-   ``\n`` character), this may be use to specify a delimiter which will not
+   ``\n`` character), this may be used to specify a delimiter which will not
    be included in the pattern to be matched.  As such, this provides the
    guarantee that matching of the desired pattern will occur even if a match
    would otherwise cross the internal read buffer boundry.
