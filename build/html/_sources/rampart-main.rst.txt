@@ -255,6 +255,23 @@ Where:
    * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.utils.on()`
      function above.
 
+rampart.event.scopeToModule()
+'''''''''''''''''''''''''''''
+
+Scope ``rampart.event`` functions set with ``rampart.event.on`` from inside
+a module to that module only.  If set, ``rampart.event.trigger`` will only
+trigger the named event from inside a module if it was set in the same
+module.  This is useful for long lived scripts such as used with :ref:`the
+rampart server module <rampart-server:The rampart-server HTTP module>`.
+
+This setting also separates events set and triggered in modules from those
+in the main script.
+
+See `Using the require Function to Import Modules`_ below for information on
+modules.
+
+Note: This should be set before any events are created.  Once this is turned
+on, it cannot be turned off in the same invocation of the script.
 
 Example
 '''''''

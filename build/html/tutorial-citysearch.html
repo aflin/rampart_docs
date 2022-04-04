@@ -39,6 +39,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
         <link rel="up" title="Tutorials" href="tutorialtoc.html"/>
+        <link rel="next" title="Using Websockets to Build a Chat" href="tutorial-wschat.html"/>
         <link rel="prev" title="Tutorials" href="tutorialtoc.html"/> 
 
   
@@ -118,11 +119,13 @@
 <li class="toctree-l4"><a class="reference internal" href="#delivering-static-content">Delivering Static Content</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#client-side-scripting">Client-Side Scripting</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#formatting-auto-complete-results">Formatting Auto-Complete Results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#finding-and-formatting-nearest-cities">Finding and Formatting Nearest Cities</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#the-complete-server-side-script">The Complete Server-Side Script</a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial-wschat.html">Using Websockets to Build a Chat</a></li>
 </ul>
 </li>
 </ul>
@@ -953,9 +956,11 @@ the beginning of our virtual field will match higher than those at the end.
 <h2>Web Server Script<a class="headerlink" href="#web-server-script" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="web-server-layout">
 <h3>Web Server Layout<a class="headerlink" href="#web-server-layout" title="Permalink to this headline">¶</a></h3>
-<p>In the Rampart binary distribution is a sample web server tree.  We will use
-that for this project.  The
-<a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">The rampart-server HTTP module</span></a>
+<p>In the Rampart binary distribution is a sample web server tree.  For our
+purposes here, we assume you have downloaded and unzipped the Rampart binary
+distribution into a directory named <code class="docutils literal notranslate"><span class="pre">~/downloads/rampart</span></code>. We will use
+that for this project.
+The <a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">The rampart-server HTTP module</span></a>
 is configured and loaded from the included <code class="docutils literal notranslate"><span class="pre">web_server/web_server_conf.js</span></code>
 script.  It defines <code class="docutils literal notranslate"><span class="pre">web_server/html</span></code> as the default directory for static
 html, <code class="docutils literal notranslate"><span class="pre">web_server/apps</span></code> as the default directory for scripts and
@@ -969,7 +974,7 @@ files. We will also add an empty file for our web interface at
 <code class="docutils literal notranslate"><span class="pre">web_server/apps/citysearch.js</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>user@localhost:~$ mkdir citysearch_demo
 user@localhost:~$ cd citysearch_demo
-user@localhost:~/citysearch_demo$ cp -a /usr/local/rampart/web_server ./
+user@localhost:~/citysearch_demo$ cp -a ~/downloads/rampart/web_server ./
 user@localhost:~/citysearch_demo$ cd web_server/
 user@localhost:~/citysearch_demo/web_server$ cp -a ~/geonames/geonames_db data/
 user@localhost:~/citysearch_demo/web_server$ sudo chown -R nobody data/geonames_db/
@@ -1735,7 +1740,9 @@ given.  So we will set <code class="docutils literal notranslate"><span class="p
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Finding and Formatting Nearest Cities:</p>
+</div>
+<div class="section" id="finding-and-formatting-nearest-cities">
+<h3>Finding and Formatting Nearest Cities<a class="headerlink" href="#finding-and-formatting-nearest-cities" title="Permalink to this headline">¶</a></h3>
 <p>In the <code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> function, we will return a set of results
 corresponding to the closest cities to a given city or lat/lon query.</p>
 <p>To do so, we will use Texis’ built-in SQL server function
@@ -1777,7 +1784,7 @@ for precise definition of bounding box search).  This will give us a search
 radius (box center to side) of about 69 miles (111 km) at the equator,
 decreasing in width as we approach the poles.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">6</span> <span class="pre">ASC</span></code> - we will order by the sixth selected column (in this
-case – <code class="docutils literal notranslate"><span class="pre">dist</span></code>);</p>
+case – <code class="docutils literal notranslate"><span class="pre">dist</span></code>).</p>
 <p>So lets start writing our <code class="docutils literal notranslate"><span class="pre">ajaxres()</span></code> function, using this query:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">ajaxres</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
@@ -2412,6 +2419,8 @@ at <code class="docutils literal notranslate"><span class="pre">http://localhost
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial-wschat.html" class="btn btn-neutral float-right" title="Using Websockets to Build a Chat" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="tutorialtoc.html" class="btn btn-neutral" title="Tutorials" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

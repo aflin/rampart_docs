@@ -136,9 +136,9 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#websockets">Websockets</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#req-wssend">req.wsSend()</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#req-wsend">req.wsEnd()</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#req-wsondisconnect">req.wsOnDisconnect()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#req-wssend-data">req.wsSend(data)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#req-wsend-immediate">req.wsEnd([immediate])</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#req-wsondisconnect-func">req.wsOnDisconnect(func)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#req-wsisbin">req.wsIsBin</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#req-count">req.count</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#req-websocketid">req.websocketId</a></li>
@@ -1739,9 +1739,9 @@ format that is used in <code class="docutils literal notranslate"><span class="p
 </ul>
 <p>In addition to the above, several variables and functions are available only
 when using websockets:</p>
-<div class="section" id="req-wssend">
-<h4>req.wsSend()<a class="headerlink" href="#req-wssend" title="Permalink to this headline">¶</a></h4>
-<p>Send data to the client.  How it is sent depends on the type of the data
+<div class="section" id="req-wssend-data">
+<h4>req.wsSend(data)<a class="headerlink" href="#req-wssend-data" title="Permalink to this headline">¶</a></h4>
+<p>Send data to the client.  How it is sent depends on the type of <code class="docutils literal notranslate"><span class="pre">data</span></code>
 being sent (the type of the variable given to wsSend as a parameter):</p>
 <blockquote>
 <div><ul class="simple">
@@ -1757,12 +1757,16 @@ the outgoing data.</p>
 <code class="docutils literal notranslate"><span class="pre">req.printf</span></code> or <code class="docutils literal notranslate"><span class="pre">req.put</span></code>, that data can be sent to the client by
 calling  <code class="docutils literal notranslate"><span class="pre">req.wsSend(null)</span></code>.</p>
 </div>
-<div class="section" id="req-wsend">
-<h4>req.wsEnd()<a class="headerlink" href="#req-wsend" title="Permalink to this headline">¶</a></h4>
-<p>Close the websocket connection.</p>
+<div class="section" id="req-wsend-immediate">
+<h4>req.wsEnd([immediate])<a class="headerlink" href="#req-wsend-immediate" title="Permalink to this headline">¶</a></h4>
+<p>Close the websocket connection.  By default <code class="docutils literal notranslate"><span class="pre">wsEnd()</span></code> closes the
+connection after pending messages have been written.  The optional
+<code class="docutils literal notranslate"><span class="pre">immediate</span></code> is a <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> the connection will be
+closed immediately regardless of whether any pending data (such as messages
+sent with <code class="docutils literal notranslate"><span class="pre">req.wsSend()</span></code>) have been flushed to the client.</p>
 </div>
-<div class="section" id="req-wsondisconnect">
-<h4>req.wsOnDisconnect()<a class="headerlink" href="#req-wsondisconnect" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="req-wsondisconnect-func">
+<h4>req.wsOnDisconnect(func)<a class="headerlink" href="#req-wsondisconnect-func" title="Permalink to this headline">¶</a></h4>
 <p>Takes a <span class="green">Function</span> as its sole parameter, which is a function to run
 when either the client disconnects or req.wsEnd() is called.</p>
 </div>

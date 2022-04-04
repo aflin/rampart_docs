@@ -863,9 +863,11 @@ Web Server Script
 Web Server Layout
 ~~~~~~~~~~~~~~~~~
 
-In the Rampart binary distribution is a sample web server tree.  We will use
-that for this project.  The 
-:ref:`The rampart-server HTTP module <rampart-server:The rampart-server HTTP module>`
+In the Rampart binary distribution is a sample web server tree.  For our
+purposes here, we assume you have downloaded and unzipped the Rampart binary
+distribution into a directory named ``~/downloads/rampart``. We will use
+that for this project.  
+The :ref:`The rampart-server HTTP module <rampart-server:The rampart-server HTTP module>`
 is configured and loaded from the included ``web_server/web_server_conf.js``
 script.  It defines ``web_server/html`` as the default directory for static
 html, ``web_server/apps`` as the default directory for scripts and
@@ -883,7 +885,7 @@ files. We will also add an empty file for our web interface at
 
     user@localhost:~$ mkdir citysearch_demo
     user@localhost:~$ cd citysearch_demo
-    user@localhost:~/citysearch_demo$ cp -a /usr/local/rampart/web_server ./
+    user@localhost:~/citysearch_demo$ cp -a ~/downloads/rampart/web_server ./
     user@localhost:~/citysearch_demo$ cd web_server/
     user@localhost:~/citysearch_demo/web_server$ cp -a ~/geonames/geonames_db data/
     user@localhost:~/citysearch_demo/web_server$ sudo chown -R nobody data/geonames_db/
@@ -1695,7 +1697,8 @@ Our completed function now looks like this:
         return {json: { "suggestions": res.rows}};
     }
 
-Finding and Formatting Nearest Cities:
+Finding and Formatting Nearest Cities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the ``ajaxres()`` function, we will return a set of results
 corresponding to the closest cities to a given city or lat/lon query.
@@ -1748,7 +1751,7 @@ radius (box center to side) of about 69 miles (111 km) at the equator,
 decreasing in width as we approach the poles.
 
 ``ORDER BY 6 ASC`` - we will order by the sixth selected column (in this
-case -- ``dist``);
+case -- ``dist``).
 
 So lets start writing our ``ajaxres()`` function, using this query:
 

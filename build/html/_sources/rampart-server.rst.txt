@@ -1655,10 +1655,10 @@ the same as a normal http callback, with a few exceptions:
 In addition to the above, several variables and functions are available only
 when using websockets:
 
-req.wsSend()
-""""""""""""
+req.wsSend(data)
+""""""""""""""""
 
-Send data to the client.  How it is sent depends on the type of the data
+Send data to the client.  How it is sent depends on the type of ``data``
 being sent (the type of the variable given to wsSend as a parameter):
 
    * :green:`String` - The string is sent as text.
@@ -1673,13 +1673,17 @@ If all the necessary data has been stored in the server buffer using
 ``req.printf`` or ``req.put``, that data can be sent to the client by
 calling  ``req.wsSend(null)``.
 
-req.wsEnd()
-""""""""""""
+req.wsEnd([immediate])
+""""""""""""""""""""""
 
-Close the websocket connection.
+Close the websocket connection.  By default ``wsEnd()`` closes the
+connection after pending messages have been written.  The optional
+``immediate`` is a :green:`Boolean`.  If ``true`` the connection will be
+closed immediately regardless of whether any pending data (such as messages
+sent with ``req.wsSend()``) have been flushed to the client.
 
-req.wsOnDisconnect()
-""""""""""""""""""""
+req.wsOnDisconnect(func)
+""""""""""""""""""""""""
 
 Takes a :green:`Function` as its sole parameter, which is a function to run
 when either the client disconnects or req.wsEnd() is called.
