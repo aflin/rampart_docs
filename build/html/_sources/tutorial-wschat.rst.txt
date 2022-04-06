@@ -83,8 +83,9 @@ files. We will also add an empty file at
 The Client HTML and Script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As stated before, we assume that you have a basic understand the client-side scripting
-and therefore will dispense with a lengthy discussion about it.  The main points are:
+As stated before, we assume that you have a basic understanding of the
+client-side scripting and therefore will dispense with a lengthy discussion
+about it.  The main points are:
 
 * There is no security or user management.  A new chat client merely types in a name
   and is connected via websockets to the server.
@@ -320,9 +321,9 @@ Websockets Server Script
 The Basics of Rampart-Server Websockets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As you are probably know, server scripts are passed a ``req`` object
+As you probably know, server scripts are passed a ``req`` object
 when serving content via the http and https protocols.  Each request from a
-client results in a call to the appropriate JavaScript callback, which recieves
+client results in a call to the appropriate JavaScript callback, which receives
 a fresh ``req`` object with the details of the request.
 
 Websocket connections differ in that the ``req`` object is long lived and is unique
@@ -1365,9 +1366,9 @@ However there are two caveats:
 
   *  Since Redis can store data of many types,
      we will need to manually parse the received JSON data from Redis.
-  *  Buffers cannot be converted to JSON, so we will encode them with 
-     base64.  Note that an alternative would be to use 
-     `CBOR <https://duktape.org/guide.html#builtin-cbor>`_ encoding instead.
+  *  JSON is not the ideal format for binary buffer data, so we will 
+     encode the file to a base64 string.  Note that an alternative would be
+     to use `CBOR <https://duktape.org/guide.html#builtin-cbor>`_ encoding.
 
 We'll create a function to do just that when sending data back to the client
 with ``req.wsSend()``:
@@ -1409,7 +1410,8 @@ so instead we will embed the ``receive_message()`` function inside the
 ``setup_event_listen`` function.  That way ``req`` will be in scope and 
 available.
 
-Also, since we now have the ``sendWsMsg()`` function, we can use it instead:
+Also, since we now have the ``sendWsMsg()`` function, we can use it in place
+of the ``req.wsSend()`` logic we were previously using.
 
 .. code-block:: javascript
 
@@ -1917,8 +1919,8 @@ Improvements
 ------------
 
 We purposely kept these examples very simple in order to clearly
-demonstrate the concepts we covered.  So it has a long way to go
-to be used in production.  
+demonstrate the concepts we covered, so it has a long way to go
+to be used in production.
 
 There are several ways you could improve the above scripts on
 your way to building a full app. Some of the more obvious ones 

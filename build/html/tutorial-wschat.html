@@ -277,8 +277,9 @@ user@localhost:~/wschat_demo/web_server$ find .
 </div>
 <div class="section" id="the-client-html-and-script">
 <h3>The Client HTML and Script<a class="headerlink" href="#the-client-html-and-script" title="Permalink to this headline">¶</a></h3>
-<p>As stated before, we assume that you have a basic understand the client-side scripting
-and therefore will dispense with a lengthy discussion about it.  The main points are:</p>
+<p>As stated before, we assume that you have a basic understanding of the
+client-side scripting and therefore will dispense with a lengthy discussion
+about it.  The main points are:</p>
 <ul class="simple">
 <li><p>There is no security or user management.  A new chat client merely types in a name
 and is connected via websockets to the server.</p></li>
@@ -512,9 +513,9 @@ the following:</p>
 <h2>Websockets Server Script<a class="headerlink" href="#websockets-server-script" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="the-basics-of-rampart-server-websockets">
 <h3>The Basics of Rampart-Server Websockets<a class="headerlink" href="#the-basics-of-rampart-server-websockets" title="Permalink to this headline">¶</a></h3>
-<p>As you are probably know, server scripts are passed a <code class="docutils literal notranslate"><span class="pre">req</span></code> object
+<p>As you probably know, server scripts are passed a <code class="docutils literal notranslate"><span class="pre">req</span></code> object
 when serving content via the http and https protocols.  Each request from a
-client results in a call to the appropriate JavaScript callback, which recieves
+client results in a call to the appropriate JavaScript callback, which receives
 a fresh <code class="docutils literal notranslate"><span class="pre">req</span></code> object with the details of the request.</p>
 <p>Websocket connections differ in that the <code class="docutils literal notranslate"><span class="pre">req</span></code> object is long lived and is unique
 to the server-client connection rather than unique to a single request.  More
@@ -1519,9 +1520,9 @@ to JSON is handled automatically.</p>
 <div><ul class="simple">
 <li><p>Since Redis can store data of many types,
 we will need to manually parse the received JSON data from Redis.</p></li>
-<li><p>Buffers cannot be converted to JSON, so we will encode them with
-base64.  Note that an alternative would be to use
-<a class="reference external" href="https://duktape.org/guide.html#builtin-cbor">CBOR</a> encoding instead.</p></li>
+<li><p>JSON is not the ideal format for binary buffer data, so we will
+encode the file to a base64 string.  Note that an alternative would be
+to use <a class="reference external" href="https://duktape.org/guide.html#builtin-cbor">CBOR</a> encoding.</p></li>
 </ul>
 </div></blockquote>
 <p>We’ll create a function to do just that when sending data back to the client
@@ -1561,7 +1562,8 @@ in the registered callback function.  Using Redis, we don’t have that option,
 so instead we will embed the <code class="docutils literal notranslate"><span class="pre">receive_message()</span></code> function inside the
 <code class="docutils literal notranslate"><span class="pre">setup_event_listen</span></code> function.  That way <code class="docutils literal notranslate"><span class="pre">req</span></code> will be in scope and
 available.</p>
-<p>Also, since we now have the <code class="docutils literal notranslate"><span class="pre">sendWsMsg()</span></code> function, we can use it instead:</p>
+<p>Also, since we now have the <code class="docutils literal notranslate"><span class="pre">sendWsMsg()</span></code> function, we can use it in place
+of the <code class="docutils literal notranslate"><span class="pre">req.wsSend()</span></code> logic we were previously using.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">receive_message</span><span class="p">(</span><span class="nx">strdata</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">strdata</span><span class="p">){</span> <span class="c1">// undefined on disconnect</span>
         <span class="nx">req</span><span class="p">.</span><span class="nx">wsSend</span><span class="p">({</span><span class="nx">from</span><span class="o">:</span><span class="s1">&#39;System&#39;</span><span class="p">,</span> <span class="nx">id</span><span class="o">:</span><span class="nx">req</span><span class="p">.</span><span class="nx">websocketId</span><span class="p">,</span> <span class="nx">msg</span><span class="o">:</span> <span class="s2">&quot;you are now disconnected.&quot;</span><span class="p">})</span>
@@ -2056,7 +2058,7 @@ and when sending a file, we base64 encode it using <code class="docutils literal
 <div class="section" id="improvements">
 <h2>Improvements<a class="headerlink" href="#improvements" title="Permalink to this headline">¶</a></h2>
 <p>We purposely kept these examples very simple in order to clearly
-demonstrate the concepts we covered.  So it has a long way to go
+demonstrate the concepts we covered, so it has a long way to go
 to be used in production.</p>
 <p>There are several ways you could improve the above scripts on
 your way to building a full app. Some of the more obvious ones

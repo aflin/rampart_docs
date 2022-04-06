@@ -217,7 +217,7 @@ The data used to populate the database is licensed under a
 <ul class="simple">
 <li><p>Using the <a class="reference internal" href="sqltoc.html#the-rampart-sql-module"><span class="std std-ref">SQL module</span></a> to
 <a class="reference internal" href="rampart-sql.html#importcsvfile"><span class="std std-ref">import</span></a> csv data.</p></li>
-<li><p>Using the <a class="reference internal" href="sqltoc.html#the-rampart-sql-module"><span class="std std-ref">SQL module</span></a> to create a fulltext search for
+<li><p>Using the <a class="reference internal" href="sqltoc.html#the-rampart-sql-module"><span class="std std-ref">SQL module</span></a> to create a Fulltext search for
 the client side autocomplete search.</p></li>
 <li><p>Using the <a class="reference internal" href="sql-server-funcs.html#geographical-coordinate-functions"><span class="std std-ref">SQL geocode functions</span></a>
 to encode latitude/longitude pairs for each entry in the database, and to
@@ -324,7 +324,7 @@ is text.  While the <code class="docutils literal notranslate"><span class="pre"
 <h3>Creating the table<a class="headerlink" href="#creating-the-table" title="Permalink to this headline">¶</a></h3>
 <p>We will create a column for each column of the CSV file.  In addition we will add
 two more columns.</p>
-<p>The first will be a texis <code class="docutils literal notranslate"><span class="pre">counter</span></code> type.  This will be used to create
+<p>The first will be a Texis <code class="docutils literal notranslate"><span class="pre">counter</span></code> type.  This will be used to create
 a unique identifier for each row (similar to a primary key, but automatically
 generated).</p>
 <p>The second requires a bit of knowledge of how a bounded geographic search works.
@@ -398,8 +398,8 @@ that what is specified, it will not truncate the text or affect any indexing.</p
 <h3>Importing the CSV<a class="headerlink" href="#importing-the-csv" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="the-settings">
 <h4>The Settings<a class="headerlink" href="#the-settings" title="Permalink to this headline">¶</a></h4>
-<p>The SQL module has a convient function to import CSV data.  It has many options
-and often takes carefull examination of the data to be imported to get it correct.
+<p>The SQL module has a convenient function to import CSV data.  It has many options
+and often takes careful examination of the data to be imported to get it correct.
 Fortunately the large number of options allows us to get well formatted
 CSV data imported correctly.</p>
 <p>See the section for <a class="reference internal" href="rampart-sql.html#importcsvfile"><span class="std std-ref">importCsvFile()</span></a> for a full
@@ -673,7 +673,7 @@ bounded-area searches of a geographical region.
 </pre></div>
 </div>
 <p>Like magic, we now have everything we need to do a geographic bounded search.</p>
-<p>Lets prove it.  After computing the <code class="docutils literal notranslate"><span class="pre">geocode</span></code> columnt, lets find zip codes
+<p>Lets prove it.  After computing the <code class="docutils literal notranslate"><span class="pre">geocode</span></code> column, lets find zip codes
 in Oakland, CA and surrounding cities.  From the command line, we will use
 the <code class="docutils literal notranslate"><span class="pre">tsql</span></code> utility to try this out.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ tsql -l 30 -d geonames_db/ &quot;select place_name, postal_code,
@@ -734,7 +734,7 @@ it in a function.</p>
 file named <code class="docutils literal notranslate"><span class="pre">geonames_geocode_x.btr</span></code>.  It is so named because it will be
 easy to find using <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">-l</span></code> (it will come right before the table, named
 <code class="docutils literal notranslate"><span class="pre">geonames.tbl</span></code>, and it lets you know the field indexed (<code class="docutils literal notranslate"><span class="pre">_geocode</span></code>) and
-the type of index (<code class="docutils literal notranslate"><span class="pre">_x</span></code> for plain index, i.e.  - not fulltext or unique).
+the type of index (<code class="docutils literal notranslate"><span class="pre">_x</span></code> for plain index, i.e.  - not Fulltext or unique).
 Your methodology for naming indexes is not as important as making sure you
 are consistent, can read it and know what the index is for without having to
 resort to looking it up.</p>
@@ -763,14 +763,14 @@ Texis to print a pretty meter to let you know the progress of your index creatio
 </div>
 </div>
 <div class="section" id="the-fulltext-index">
-<h4>The fulltext index<a class="headerlink" href="#the-fulltext-index" title="Permalink to this headline">¶</a></h4>
-<p>When making a fulltext index, often it is best to leave most settings as is.  The one exception
+<h4>The Fulltext index<a class="headerlink" href="#the-fulltext-index" title="Permalink to this headline">¶</a></h4>
+<p>When making a Fulltext index, often it is best to leave most settings as is.  The one exception
 is the <a class="reference internal" href="rampart-sql.html#rex"><span class="std std-ref">rex</span></a> expressions used to define what is a word.
 Often we want to make sure we include utf-8 encoded text.</p>
 <p>The default is <code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>, which is similar to doing <code class="docutils literal notranslate"><span class="pre">mydoc.match(/[a-zA-Z0-9]+/g)</span></code>.
 Since we are processing utf-8 text, and since we have names of places from all over the world,
 we had better accommodate bytes larger than <code class="docutils literal notranslate"><span class="pre">0x79</span></code>.</p>
-<p>To change the expression used during fulltext index creation, we can use
+<p>To change the expression used during Fulltext index creation, we can use
 <a class="reference internal" href="sql-set.html#delexp"><span class="std std-ref">delExp</span></a> and <a class="reference internal" href="sql-set.html#addexp"><span class="std std-ref">addExp</span></a>.  However
 as a shortcut, we can specify the expressions that will be used in the SQL
 statement itself by utilizing the <code class="docutils literal notranslate"><span class="pre">WITH</span></code> keyword:</p>
@@ -786,8 +786,9 @@ would hurt performance.  However, in this very specific circumstance, noise
 words serve no purpose.  Further, they will exclude some codes we want in
 our index.  So we will delete the noiseList.</p>
 <p>You should always have a very good reason for altering or deleting the
-noiseList.  It is something that is rarely needed for English text and can
-have adverse consequences.  However, this time we do have a good reason.</p>
+noiseList.  For English text, there is rarely a need to do so and it can
+have adverse consequences on performance and quality of results.  However,
+this time we do have a good reason.</p>
 <p>Now - what exactly do we want to index?  Naturally we want to be able to
 look up a place based upon any of the text fields.  So we will create one
 “virtual” field made up of all our text fields.  To do that, in the SQL
@@ -1546,7 +1547,7 @@ client-side and for formatting the JSON results.</p>
 <h3>Formatting Auto-Complete Results<a class="headerlink" href="#formatting-auto-complete-results" title="Permalink to this headline">¶</a></h3>
 <p>First step will be to construct our SQL statement and query in order
 to get a list of cities that are closest to a city or lat/lon requested.</p>
-<p>When we made our fulltext index on our table, we used the virtual field
+<p>When we made our Fulltext index on our table, we used the virtual field
 <code class="docutils literal notranslate"><span class="pre">place_name\postal_code\admin_name1\admin_code1\country_code\admin_name2\admin_code2\admin_name3\admin_code3</span></code>
 in order to concatenate all the text we might want to use to look up a city.</p>
 <p>So to find a city, let’s construct a SQL statement which will return cities
@@ -1568,10 +1569,10 @@ LIKEP ?;
 <p><code class="docutils literal notranslate"><span class="pre">FROM</span> <span class="pre">geonames</span> <span class="pre">WHERE</span></code> - The name of the table, and <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> for the
 search on the next line.</p>
 <p><code class="docutils literal notranslate"><span class="pre">place_name\...\admin_name3\admin_code3</span></code>
-- Specifying the virtual field upon which the fulltext index is build.</p>
-<p><code class="docutils literal notranslate"><span class="pre">LIKEP</span> <span class="pre">?</span></code> - <code class="docutils literal notranslate"><span class="pre">likep</span></code> signifies a fulltext search where word positions are
+- Specifying the virtual field upon which the Fulltext index is build.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LIKEP</span> <span class="pre">?</span></code> - <code class="docutils literal notranslate"><span class="pre">likep</span></code> signifies a Fulltext search where word positions are
 significant.  This will be your most used type of <code class="docutils literal notranslate"><span class="pre">like</span></code> search for normal
-fulltext queries.  The <code class="docutils literal notranslate"><span class="pre">?</span></code> corresponds to a variable we will give
+Fulltext queries.  The <code class="docutils literal notranslate"><span class="pre">?</span></code> corresponds to a variable we will give
 <code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>, as explained below.</p>
 <p>So lets start writing our <code class="docutils literal notranslate"><span class="pre">autocomp()</span></code> function, using this query:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* autocomp() results must be formatted as such:</span>
@@ -1660,7 +1661,7 @@ city starting with <code class="docutils literal notranslate"><span class="pre">
 </div>
 <p>Using the example of <code class="docutils literal notranslate"><span class="pre">be</span></code> as a search, our script will add a <code class="docutils literal notranslate"><span class="pre">*</span></code> to it
 and pass it to <code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>.</p>
-<p>Texis’ fulltext search will first search its index for all words beginning
+<p>Texis’ Fulltext search will first search its index for all words beginning
 with <code class="docutils literal notranslate"><span class="pre">be</span></code> and add them to the query.  Since this could potentially be
 thousands of words added to our query, we need to make a few adjustments to
 the default limits.</p>
@@ -1779,7 +1780,7 @@ search on the next line.</p>
 <p><code class="docutils literal notranslate"><span class="pre">geocode</span> <span class="pre">BETWEEN</span> <span class="pre">(SELECT</span> <span class="pre">LATLON2GEOCODEAREA(?lat,</span> <span class="pre">?lon,</span> <span class="pre">1.0))</span></code> - We use
 our computed <code class="docutils literal notranslate"><span class="pre">geocode</span></code> field to limit returned rows to those that are
 within one (<code class="docutils literal notranslate"><span class="pre">1.0</span></code>) degrees of our given lat/lon (see
-<span class="xref std std-ref">latlon2geocodearea</span>
+<a class="reference internal" href="sql-server-funcs.html#latlon2geocode-latlon2geocodearea"><span class="std std-ref">latlon2geocodearea</span></a>
 for precise definition of bounding box search).  This will give us a search
 radius (box center to side) of about 69 miles (111 km) at the equator,
 decreasing in width as we approach the poles.</p>

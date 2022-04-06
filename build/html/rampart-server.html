@@ -318,7 +318,7 @@ the following may be used:</p>
 <p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">&quot;[::]:80&quot;,</span> <span class="pre">&quot;0.0.0.0:80&quot;</span> <span class="pre">]</span></code>.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scriptTimeout</span></code>: A <span class="green">Number</span>, amount of time in seconds (or fraction
-thereof) to wait for a script to run before cancelling the request and
+thereof) to wait for a script to run before canceling the request and
 returning a <code class="docutils literal notranslate"><span class="pre">500</span> <span class="pre">Internal</span> <span class="pre">Server</span> <span class="pre">Error</span></code> timeout message to the
 connecting client.  Default is no timeout/unlimited.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code>: A <span class="green">Number</span>, amount of time in seconds (or fraction
@@ -600,7 +600,7 @@ of the state of <code class="docutils literal notranslate"><span class="pre">use
 might be caused by this limitation can be mostly avoided by placing
 functions in separate scripts as modules, since variables declared in the
 module will be available and properly scoped (though separately and
-distintly; variables are never shared between threads).</p>
+distinctly; variables are never shared between threads).</p>
 <p>Example of a scoped variable that would not be available:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
 
@@ -1922,18 +1922,18 @@ requests and one for websockets conversations.</p></li>
 general, no data is shared between them.</p></li>
 <li><p>An event loop is created for each thread.</p></li>
 <li><p>Global variables and functions from “begin code” are copied from the
-main thread’s duktape context to all the duktape thread contexts.
+main thread’s Duktape context to all the Duktape thread contexts.
 Local variables are lost.</p></li>
 <li><p>The main thread listens for HTTP connections in its event loop and
 assigns them to the least busy server thread’s event loops.</p></li>
 <li><p>The thread event loops accept the http connections and pass the http
-request data to the appropriate duktape context for that thread.  That
+request data to the appropriate Duktape context for that thread.  That
 context runs the matching callback and returns data which is passed on
 to the client.</p></li>
 <li><p>Each thread may be handling http requests and multiple websocket
 connections at the same time from within its event loop.</p></li>
-<li><p>The duktape context for http requests may be destroyed and recreated
-upon timeout. In contrast, the websocket duktape context will always persist.</p></li>
+<li><p>The Duktape context for http requests may be destroyed and recreated
+upon timeout. In contrast, the websocket Duktape context will always persist.</p></li>
 <li><p>Any events or setTimeouts set from within server callbacks are run
 within that thread’s event loop.  Events and setTimeouts run outside
 the server (in “begin code” or before “end of script”) are run in the
@@ -1941,7 +1941,7 @@ main event loop.  Certain event data is stored in the main thread so
 events can be triggered regardless on which thread they reside.</p></li>
 <li><p>HTTP requests which have a timeout are run from a new thread which can
 be interrupted.  If the timeout is reached before the callback
-function finishes, the thread is cancelled and the threads duktape
+function finishes, the thread is canceled and the threads Duktape
 context is destroyed and recreated in order to serve the next request.</p></li>
 <li><p>Since websockets do not timeout, destroying their contexts would
 interrupt its conversation with the client.  So a second, separate
@@ -1964,7 +1964,7 @@ running, it is reloaded.</p></li>
 <p>Return values from server callback function.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Strings are copied from duktape to the buffer that will be returned to
+<li><p>Strings are copied from Duktape to the buffer that will be returned to
 the client.</p></li>
 <li><p>Wherever possible, buffers are passed by reference without copy to be
 returned to the client.</p></li>

@@ -117,7 +117,7 @@ Where:
       ``[ "[::]:80", "0.0.0.0:80" ]``.
 
     * ``scriptTimeout``: A :green:`Number`, amount of time in seconds (or fraction
-      thereof) to wait for a script to run before cancelling the request and
+      thereof) to wait for a script to run before canceling the request and
       returning a ``500 Internal Server Error`` timeout message to the
       connecting client.  Default is no timeout/unlimited.
 
@@ -434,7 +434,7 @@ NOTE:
   might be caused by this limitation can be mostly avoided by placing
   functions in separate scripts as modules, since variables declared in the
   module will be available and properly scoped (though separately and
-  distintly; variables are never shared between threads).
+  distinctly; variables are never shared between threads).
 
   Example of a scoped variable that would not be available:
   
@@ -1859,22 +1859,22 @@ happen:
     * An event loop is created for each thread.
 
     * Global variables and functions from "begin code" are copied from the
-      main thread's duktape context to all the duktape thread contexts. 
+      main thread's Duktape context to all the Duktape thread contexts. 
       Local variables are lost.
 
     * The main thread listens for HTTP connections in its event loop and
       assigns them to the least busy server thread's event loops.
 
     * The thread event loops accept the http connections and pass the http
-      request data to the appropriate duktape context for that thread.  That
+      request data to the appropriate Duktape context for that thread.  That
       context runs the matching callback and returns data which is passed on
       to the client.
 
     * Each thread may be handling http requests and multiple websocket
       connections at the same time from within its event loop.
 
-    * The duktape context for http requests may be destroyed and recreated
-      upon timeout. In contrast, the websocket duktape context will always persist.
+    * The Duktape context for http requests may be destroyed and recreated
+      upon timeout. In contrast, the websocket Duktape context will always persist.
 
     * Any events or setTimeouts set from within server callbacks are run
       within that thread's event loop.  Events and setTimeouts run outside
@@ -1884,7 +1884,7 @@ happen:
       
     * HTTP requests which have a timeout are run from a new thread which can
       be interrupted.  If the timeout is reached before the callback
-      function finishes, the thread is cancelled and the threads duktape
+      function finishes, the thread is canceled and the threads Duktape
       context is destroyed and recreated in order to serve the next request.
 
     * Since websockets do not timeout, destroying their contexts would
@@ -1907,7 +1907,7 @@ Modules vs Global callback functions:
 
 Return values from server callback function.
 
-    * Strings are copied from duktape to the buffer that will be returned to
+    * Strings are copied from Duktape to the buffer that will be returned to
       the client.
 
     * Wherever possible, buffers are passed by reference without copy to be

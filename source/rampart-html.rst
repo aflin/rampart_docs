@@ -9,7 +9,7 @@ Acknowledgment
 
 The rampart-html module uses the 
 `Tidy-HTML5 <http://www.html-tidy.org/>`_ library
-to parse, fix-up, and manipulate html formatted documents.
+to parse, fix-up, and manipulate HTML formatted documents.
 The developers of Rampart are extremely grateful for the excellent api and ease
 of use of the `Tidy-HTML5 <http://www.html-tidy.org/>`_ library.
 
@@ -93,7 +93,7 @@ where:
      is set ``true``. The default is ``2``.
 
   *  ``wrap`` - a :green:`Number` indicating the maximum length of a
-     line of text or html used when using `prettyPrint`_ and ``indent``
+     line of text or HTML used when using `prettyPrint`_ and ``indent``
      above is set ``true``.  The default is ``68``.  There may be some
      circumstances where it is not possible to wrap a line.
 
@@ -177,7 +177,7 @@ The html object
 
 An *html object* is an :green:`Object` which contains an opaque list of elements in
 the HTML document parsed with `newDocument`_ above.
-An element is a single parsed html tag (such as "``<br />``")
+An element is a single parsed HTML tag (such as "``<br />``")
 with links to its descendant elements and/or plain text content, if any.
 
 The *top level html object* is the :green:`Object` returned from
@@ -191,7 +191,7 @@ classes changed with the functions below.
 
 Each *html object* created from any other *html object* will refer
 to elements in the same document.  These elements represent the actual
-content in the html document, and if manipulated, will change the contents
+content in the HTML document, and if manipulated, will change the contents
 returned from `prettyPrint`_\ .
 
 Additionally, the *html object* includes the ``length`` property (number of elements in
@@ -904,7 +904,7 @@ Where
 
 * ``newlist`` is the returned *html object*.
 * ``oldlist`` is the *html object* with an array of elements to be appended.
-* ``additions`` is an *html object* or a :green:`String` of text or html
+* ``additions`` is an *html object* or a :green:`String` of text or HTML
   to be added to the list.
 
 Example:
@@ -982,7 +982,7 @@ hasAttr
 """""""
 
 Test each element in the current list for the presence of an attribute. 
-Returns an array of booleans, one for each element.
+Returns an :green:`Array` of :green:`Booleans`, one for each element.
 
 Example:
 
@@ -1012,8 +1012,8 @@ Example:
 
 hasClass
 """"""""
-Test each element in the current list for a tag name. Returns an array of
-booleans, one for each element.
+Test each element in the current list for a tag name. Returns an
+:green:`Array` of :green:`Booleans`, one for each element.
 
 Example:
 
@@ -1215,7 +1215,7 @@ Where
 
 * ``oldlist`` contains the given elements to append.
 
-* ``elems`` is an *html object* or a :green:`String`  of text or html
+* ``elems`` is an *html object* or a :green:`String`  of text or HTML
   to be appended to the given elements.
 
 Example:
@@ -1321,7 +1321,7 @@ Where
 
 * ``oldlist`` contains the given elements which provide a reference for placement.
 
-* ``elems`` is an *html object* or a :green:`String`  of text or html
+* ``elems`` is an *html object* or a :green:`String`  of text or HTML
   to be placed after to the given elements.
 
 Example:

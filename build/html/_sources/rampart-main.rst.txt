@@ -482,7 +482,7 @@ Return Value:
     With a callback, the return value is set to number of rows in the
     csv file (not including the Header if ``hasHeaderRow`` is ``true``).
 
-Note: In the callback, the loop can be cancelled at any point by returning
+Note: In the callback, the loop can be canceled at any point by returning
 ``false``.  The return value (number of rows) will still be the total number
 of rows in the csv file.
 
@@ -1075,7 +1075,7 @@ setInterval()
 """""""""""""
 
 Similar to `setTimeout()`_ except it repeats every ``interval`` milliseconds
-until cancelled via `clearInterval()`_.
+until canceled via `clearInterval()`_.
 
 Usage:
 

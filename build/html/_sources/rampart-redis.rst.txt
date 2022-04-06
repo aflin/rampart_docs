@@ -21,15 +21,15 @@ How does it work?
 
 The rampart-redis module connects to an existing Redis server and allows
 commands to be sent, and responses to be retrieved from Redis.  For most
-operations, commands and replies are syncronous, meaning that the module
+operations, commands and replies are synchronous, meaning that the module
 waits for a return value from Redis and provides it to the script before
-moving on.  However, any command may be optionally run asyncronously. If so,
+moving on.  However, any command may be optionally run asynchronously. If so,
 the command will be sent immediately to the server with the reply from the
 server handled in Rampart's event loop.
 
 Note: Unlike Redis modules in other frameworks (e.g., Node), a separate
-connection is maintained for syncronous and asyncronous requests from a
-single handle.  However, only one asyncronous request can be active at a
+connection is maintained for synchronous and asynchronous requests from a
+single handle.  However, only one asynchronous request can be active at a
 time per handle.
 
 Loading and Using the Module
@@ -79,7 +79,7 @@ init()
       default if not specified is ``6379``.
 
     * ``timeout`` is a :green:`Number`, the amount of time to wait for redis to
-      reply to a syncronous request for data in seconds.  The default is ``-1``,
+      reply to a synchronous request for data in seconds.  The default is ``-1``,
       which means to wait forever.
         
     Return Value:
@@ -122,7 +122,7 @@ Client Commands
            properties:
 
             * ``timeout`` - the :green:`Number` of seconds to wait for a response from the redis
-              server when using a syncronous command. It overrides the timeout set
+              server when using a synchronous command. It overrides the timeout set
               in ``redis.init`` for the single command.
 
             * ``async`` - a :green:`Boolean`, which if ``true``, the client will
@@ -136,7 +136,7 @@ Client Commands
         See below.
 
     Note: 
-        All commands are by default syncronous commands, except
+        All commands are by default synchronous commands, except
         for shortcut commands which end in ``*_async`` and for the
         ``subscribe``/``psubscribe`` commands.
 

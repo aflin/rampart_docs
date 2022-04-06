@@ -13,7 +13,7 @@ The tsql Command Line Utility
 =============================
 
 The tsql utility is the main program provided for interactive use of a
-Rampart sql database.  It should either be executed the database directory,
+Rampart/Texis SQL database.  It should either be executed the database directory,
 or else specified on the command line as the -d <database> option.
 
 If a query is present on the command line then tsql will execute that
@@ -76,7 +76,7 @@ The kdbfchk Command Line Utility
 ================================
 
 The kdbfchk utility scans database tables (files ending in ``.tbl``) for
-errors, and optionally writes a repaired file which may be added or readded
+errors, and optionally writes a repaired file which may be added or re-added
 to the Database using ``addtable`` below.
 
 ::

@@ -10,7 +10,7 @@ Acknowledgment
 The rampart-robots module uses 
 `Google's Robotstxt library <https://github.com/google/robotstxt>`_.
 The authors of Rampart extend our thanks to 
-`the authors and contributers <https://github.com/google/robotstxt/graphs/contributors>`_
+`the authors and contributors <https://github.com/google/robotstxt/graphs/contributors>`_
 to this library.
 
 License

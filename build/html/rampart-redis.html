@@ -214,14 +214,14 @@ existing Redis server.</p>
 <h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
 <p>The rampart-redis module connects to an existing Redis server and allows
 commands to be sent, and responses to be retrieved from Redis.  For most
-operations, commands and replies are syncronous, meaning that the module
+operations, commands and replies are synchronous, meaning that the module
 waits for a return value from Redis and provides it to the script before
-moving on.  However, any command may be optionally run asyncronously. If so,
+moving on.  However, any command may be optionally run asynchronously. If so,
 the command will be sent immediately to the server with the reply from the
 server handled in Rampart’s event loop.</p>
 <p>Note: Unlike Redis modules in other frameworks (e.g., Node), a separate
-connection is maintained for syncronous and asyncronous requests from a
-single handle.  However, only one asyncronous request can be active at a
+connection is maintained for synchronous and asynchronous requests from a
+single handle.  However, only one asynchronous request can be active at a
 time per handle.</p>
 </div>
 </div>
@@ -261,7 +261,7 @@ default if not specified is <code class="docutils literal notranslate"><span cla
 <li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> is a <span class="green">Number</span>, the port number of the Redis server.  The
 default if not specified is <code class="docutils literal notranslate"><span class="pre">6379</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> is a <span class="green">Number</span>, the amount of time to wait for redis to
-reply to a syncronous request for data in seconds.  The default is <code class="docutils literal notranslate"><span class="pre">-1</span></code>,
+reply to a synchronous request for data in seconds.  The default is <code class="docutils literal notranslate"><span class="pre">-1</span></code>,
 which means to wait forever.</p></li>
 </ul>
 <dl class="simple">
@@ -302,7 +302,7 @@ properties:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - the <span class="green">Number</span> of seconds to wait for a response from the redis
-server when using a syncronous command. It overrides the timeout set
+server when using a synchronous command. It overrides the timeout set
 in <code class="docutils literal notranslate"><span class="pre">redis.init</span></code> for the single command.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">async</span></code> - a <span class="green">Boolean</span>, which if <code class="docutils literal notranslate"><span class="pre">true</span></code>, the client will
 send the command to server and wait for reply in the
@@ -317,7 +317,7 @@ Rampart event loop.  If <code class="docutils literal notranslate"><span class="
 <dl>
 <dt>Return Value:</dt><dd><p>See below.</p>
 </dd>
-<dt>Note:</dt><dd><p>All commands are by default syncronous commands, except
+<dt>Note:</dt><dd><p>All commands are by default synchronous commands, except
 for shortcut commands which end in <code class="docutils literal notranslate"><span class="pre">*_async</span></code> and for the
 <code class="docutils literal notranslate"><span class="pre">subscribe</span></code>/<code class="docutils literal notranslate"><span class="pre">psubscribe</span></code> commands.</p>
 <p>Only one <code class="docutils literal notranslate"><span class="pre">async</span></code> command may be active at any given time.

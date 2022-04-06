@@ -1982,7 +1982,7 @@ argument as well, which is a Metamorph search query:
     skipping over any headers at the top of the text.  This is the default if
     neither ``style`` nor ``query`` is given.
 
-*   ``querysingle`` Center the abstract contiguously on the best occurence
+*   ``querysingle`` Center the abstract contiguously on the best occurrence
     of ``query`` in the document.
 
 *   ``querymultiple`` Like ``querysingle``, but also break up the abstract into
@@ -2411,7 +2411,7 @@ Expressions
     characters, whereas ``finish{2,4}`` matches 2 to 4 times the length
     of ``finish``.
 
-Repitition Operators
+Repetition Operators
 """"""""""""""""""""
 *   A regular expression may be followed by a repetition operator in
     order to indicate the number of times it may be repeated.

@@ -8,7 +8,7 @@ Acknowledgment
 ~~~~~~~~~~~~~~
 
 The rampart-lmdb module uses 
-`Symas LMDB library <https://symas.com/lmdb/>`_.
+`Symas' LMDB library <https://symas.com/lmdb/>`_.
 The authors of Rampart extend our thanks to 
 `Symas <https://symas.com/>`_
 for this library.
@@ -248,13 +248,13 @@ Where:
       retrieve.  If a positive number, the ``key`` will be returned
       along with the next ``nKeys - 1`` keys that follow in lexical
       order.  If a negative number, the ``key`` will be returned
-      along with the previous ``nKeys - 1`` keys that preceed in lexical
+      along with the previous ``nKeys - 1`` keys that precede in lexical
       order. NOTE that if key is not found, no other keys will be returned.
       See the glob version in ``endkey`` below for that functionality.
 
     * ``endkey`` is an optional :green:`String`, the last key to retrieve, retrieving
       all keys between ``key`` and ``endKey`` (but no more than ``max``, if given).  If
-      ``endKey`` preceeds ``key`` in lexical order, the keys and values will
+      ``endKey`` precedes ``key`` in lexical order, the keys and values will
       be returned in reverse order (but no more than ``max``, if given).
 
       Globbing: If ``endKey`` is set to the special string ``"*"``, all keys beginning
@@ -371,7 +371,7 @@ Note:
 sync
 ~~~~
 
-Sync the database envirnoment.  Useful if ``mapAsync`` or ``noSync``
+Sync the database environment.  Useful if ``mapAsync`` or ``noSync``
 is set in order to manually sync data to the disk.
 
 Usage:
@@ -584,7 +584,7 @@ LMDB Transaction Functions
 
 Transactions provide lower level access to lmdb function.  In the above
 functions, transactions are automatically opened and closed without
-explicitely having to do so.  In order to have more flexibility and possibly
+explicitly having to do so.  In order to have more flexibility and possibly
 see a performance gain, the transaction model outlined below provides
 the relevant functions.
 
@@ -939,7 +939,7 @@ Where:
       (the default)``value`` will be a :green:`Buffer`.
 
 Return Value:
-    An :green:`Object` with the propertis ``key`` and ``value`` set to the 
+    An :green:`Object` with the properties ``key`` and ``value`` set to the 
     key and value of the retrieved item (e.g. 
     ``{"key": "database_key", "value": "database_value"}``).
 

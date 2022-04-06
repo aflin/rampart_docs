@@ -50,7 +50,7 @@ The SQL to use is as follows:
                [where CONDITION];
 
 query
-    Query should be a string containing a metamorph query.
+    Query should be a string containing a Metamorph query.
 
 data
     The text to search. May be literal data or a field from the table.
@@ -1759,7 +1759,7 @@ possible values:
    accurate tool for calculating distances and directions on a sphere.
    It is used by default.
 
--  ``pythagorean`` - Calculations based on the pythagorean method can
+-  ``pythagorean`` - Calculations based on the Pythagorean method can
    also be used. They’re faster, but less accurate as the core formulas
    don’t take the curvature of the earth into consideration. Some
    internal adjustments are made, but the values are less accurate than
@@ -1788,7 +1788,7 @@ possible values:
    accurate tool for calculating distances and directions on a sphere.
    It is used by default.
 
--  ``pythagorean`` - Calculations based on the pythagorean method can
+-  ``pythagorean`` - Calculations based on the Pythagorean method can
    also be used. They’re faster, but less accurate as the core formulas
    don’t take the curvature of the earth into consideration. Some
    internal adjustments are made, but the values are less accurate than

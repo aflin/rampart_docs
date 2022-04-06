@@ -27,7 +27,7 @@ This module will demonstrate:
 
 *  Using the :ref:`SQL module <sqltoc:The rampart-sql module>` to 
    :ref:`import <rampart-sql:importCsvFile()>` csv data.
-*  Using the :ref:`SQL module <sqltoc:The rampart-sql module>` to create a fulltext search for
+*  Using the :ref:`SQL module <sqltoc:The rampart-sql module>` to create a Fulltext search for
    the client side autocomplete search.  
 *  Using the :ref:`SQL geocode functions <sql-server-funcs:Geographical coordinate functions>` 
    to encode latitude/longitude pairs for each entry in the database, and to
@@ -152,7 +152,7 @@ Creating the table
 We will create a column for each column of the CSV file.  In addition we will add
 two more columns.  
 
-The first will be a texis ``counter`` type.  This will be used to create
+The first will be a Texis ``counter`` type.  This will be used to create
 a unique identifier for each row (similar to a primary key, but automatically
 generated).
 
@@ -241,8 +241,8 @@ Importing the CSV
 The Settings
 ^^^^^^^^^^^^
 
-The SQL module has a convient function to import CSV data.  It has many options
-and often takes carefull examination of the data to be imported to get it correct.
+The SQL module has a convenient function to import CSV data.  It has many options
+and often takes careful examination of the data to be imported to get it correct.
 Fortunately the large number of options allows us to get well formatted
 CSV data imported correctly.
 
@@ -550,7 +550,7 @@ Once again, let's wrap that in a function and put it in our script:
 
 Like magic, we now have everything we need to do a geographic bounded search.
 
-Lets prove it.  After computing the ``geocode`` columnt, lets find zip codes
+Lets prove it.  After computing the ``geocode`` column, lets find zip codes
 in Oakland, CA and surrounding cities.  From the command line, we will use
 the ``tsql`` utility to try this out.
 
@@ -618,7 +618,7 @@ First -- when this index is made, it will backed by a
 file named ``geonames_geocode_x.btr``.  It is so named because it will be
 easy to find using ``ls -l`` (it will come right before the table, named
 ``geonames.tbl``, and it lets you know the field indexed (``_geocode``) and
-the type of index (``_x`` for plain index, i.e.  - not fulltext or unique). 
+the type of index (``_x`` for plain index, i.e.  - not Fulltext or unique). 
 Your methodology for naming indexes is not as important as making sure you
 are consistent, can read it and know what the index is for without having to
 resort to looking it up.
@@ -654,10 +654,10 @@ Eventually, when we write our client-side script, we will want to look up record
     }
 
 
-The fulltext index
+The Fulltext index
 ^^^^^^^^^^^^^^^^^^
 
-When making a fulltext index, often it is best to leave most settings as is.  The one exception
+When making a Fulltext index, often it is best to leave most settings as is.  The one exception
 is the :ref:`rex <rampart-sql:rex()>` expressions used to define what is a word. 
 Often we want to make sure we include utf-8 encoded text.
 
@@ -665,7 +665,7 @@ The default is ``\alnum{2,99}``, which is similar to doing ``mydoc.match(/[a-zA-
 Since we are processing utf-8 text, and since we have names of places from all over the world,
 we had better accommodate bytes larger than ``0x79``.
 
-To change the expression used during fulltext index creation, we can use
+To change the expression used during Fulltext index creation, we can use
 :ref:`delExp <sql-set:delExp>` and :ref:`addExp <sql-set:addExp>`.  However
 as a shortcut, we can specify the expressions that will be used in the SQL
 statement itself by utilizing the ``WITH`` keyword:
@@ -686,8 +686,9 @@ words serve no purpose.  Further, they will exclude some codes we want in
 our index.  So we will delete the noiseList.
 
 You should always have a very good reason for altering or deleting the
-noiseList.  It is something that is rarely needed for English text and can
-have adverse consequences.  However, this time we do have a good reason.
+noiseList.  For English text, there is rarely a need to do so and it can
+have adverse consequences on performance and quality of results.  However, 
+this time we do have a good reason.
 
 Now - what exactly do we want to index?  Naturally we want to be able to
 look up a place based upon any of the text fields.  So we will create one
@@ -1476,7 +1477,7 @@ Formatting Auto-Complete Results
 First step will be to construct our SQL statement and query in order
 to get a list of cities that are closest to a city or lat/lon requested.
 
-When we made our fulltext index on our table, we used the virtual field
+When we made our Fulltext index on our table, we used the virtual field
 ``place_name\postal_code\admin_name1\admin_code1\country_code\admin_name2\admin_code2\admin_name3\admin_code3``
 in order to concatenate all the text we might want to use to look up a city.
 
@@ -1506,11 +1507,11 @@ Taking it line by line:
 search on the next line.
 
 ``place_name\...\admin_name3\admin_code3``
-- Specifying the virtual field upon which the fulltext index is build.
+- Specifying the virtual field upon which the Fulltext index is build.
 
-``LIKEP ?`` - ``likep`` signifies a fulltext search where word positions are
+``LIKEP ?`` - ``likep`` signifies a Fulltext search where word positions are
 significant.  This will be your most used type of ``like`` search for normal
-fulltext queries.  The ``?`` corresponds to a variable we will give
+Fulltext queries.  The ``?`` corresponds to a variable we will give
 ``sql.exec()``, as explained below.
 
 So lets start writing our ``autocomp()`` function, using this query:
@@ -1607,7 +1608,7 @@ city starting with ``b*`` would produce too many results to be meaningful.
 Using the example of ``be`` as a search, our script will add a ``*`` to it
 and pass it to ``sql.exec()``.
  
-Texis' fulltext search will first search its index for all words beginning
+Texis' Fulltext search will first search its index for all words beginning
 with ``be`` and add them to the query.  Since this could potentially be
 thousands of words added to our query, we need to make a few adjustments to
 the default limits.
@@ -1745,7 +1746,7 @@ search on the next line.
 ``geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))`` - We use
 our computed ``geocode`` field to limit returned rows to those that are
 within one (``1.0``) degrees of our given lat/lon (see
-:ref:`latlon2geocodearea <sql-server-funcs:latlon2geocode,latlon2geocodearea>` 
+:ref:`latlon2geocodearea <sql-server-funcs:latlon2geocode, latlon2geocodearea>` 
 for precise definition of bounding box search).  This will give us a search
 radius (box center to side) of about 69 miles (111 km) at the equator,
 decreasing in width as we approach the poles.

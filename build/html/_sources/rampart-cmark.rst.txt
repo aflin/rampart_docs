@@ -10,7 +10,7 @@ Acknowledgment
 The rampart-cmark module uses 
 `cmark library <https://github.com/commonmark/cmark>`_
 The authors of Rampart extend our thanks to 
-`the authors and contributers <https://github.com/commonmark/cmark/graphs/contributors>`_
+`the authors and contributors <https://github.com/commonmark/cmark/graphs/contributors>`_
 to this library.
 
 License

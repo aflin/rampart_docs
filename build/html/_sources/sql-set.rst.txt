@@ -174,7 +174,7 @@ stringCompareMode/textSearchMode parameters
    ``+``, ``-`` or ``=`` (clear the setting first) is given.
 
    The *case-folding style* determines the result of the case folding operation.
-   It is exactly oneof:
+   It is exactly one of:
 
       *  ``respectCase`` aka ``preserveCase`` aka ``caseSensitive`` -  Do not
          change case at all, for case-sensitive searches.
@@ -832,7 +832,7 @@ hyphenPhrase
 wordc
 """""
     For language or wildcard query terms during linear (non-index) searches,
-    this defines which characters in the document consitute a word.  When a
+    this defines which characters in the document constitute a word.  When a
     match is found for language/wildcard terms, the hit is expanded to
     include all surrounding word characters, as defined by this setting. 
     The resulting expansion must then match the query term for the hit to be
@@ -2059,12 +2059,12 @@ triggerMode
 
 paramChk
 """"""""
-    Enables or disables the checking of parameters in the SQL statement.
-    By default it is enabled, which will cause any unset parameters to
-    cause an error. If paramchk is set to ``false`` then unset parameters will
-    not cause an error, and will be ignored. This lets a single complex
-    query be given, yet parameter values need only be supplied for those
-    clauses that should take effect on the query.
+    Enables or disables the checking of parameters in the SQL statement.  By
+    default it is enabled, which will cause any unset parameters to throw an
+    error.  If paramchk is set to ``false`` then unset parameters will not
+    cause an error, and will be ignored.  This lets a single complex query
+    be given, yet parameter values need only be supplied for those clauses
+    that should take effect on the query.
 
     Example:
 

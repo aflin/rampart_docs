@@ -773,7 +773,7 @@ Where:
           ``X509v3 Subject Alternative Name`` value of ``DNS:example.com, DNS:www.example.com``.  Possible values are ``dns`` (the
           default if not specified), ``ip``, ``email``, ``uri``, ``x400``, ``dirname``, ``rid`` or ``othername`` (case insensitive).
           See openssl documentation for meaning and usage of each.  For requesting an SSL/TLS certificate for a webserver, ``dns``
-          should be used, particularily where the requested certificate will cover more than one domain name.
+          should be used, particularly where the requested certificate will cover more than one domain name.
 
     * ``password`` - if ``private_key`` is password protected, the password to decrypt the private key.
 

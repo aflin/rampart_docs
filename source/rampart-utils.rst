@@ -1718,7 +1718,7 @@ Return Value:
    An opaque `hll` :green:`Object` containing the following functions: ``add``, ``addFile``, ``count``, ``merge``,
    and ``getBuffer``.
 
-Note that an `hll` can be refered to from different threads in the
+Note that an `hll` can be referred to from different threads in the
 :ref:`Rampart Server <rampart-server:The rampart-server HTTP module>`. Each server
 thread may specify the same `hll` by using the same name.  In addition, the below
 functions are thread-safe.
