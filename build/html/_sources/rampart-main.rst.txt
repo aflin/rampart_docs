@@ -820,20 +820,10 @@ Modules are searched for in the following order:
 
 #. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
 
+#. In the ``modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+
 #. In the current working directory. If ``/module.js`` is given, 
    ``./module.js`` is checked.
-
-#. In the ``lib/rampart_modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
-
-#. In the ``~/.rampart/lib/rampart_modules`` directory of current user's home directory 
-   as provided by the ``$HOME`` environment variable.
-
-#. In the ``lib/rampart_modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
-   was compiled.  The default is ``/usr/local/rampart/lib/rampart_modules``. Or
-   preferentially, if set, the path pointed to by the environment variable
-   ``$RAMPART_PATH`` + "/lib/rampart_modules".
-
-#. In :ref:`process.installPath <rampart-main:installPath>`\ .
 
 #. In the ``modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
 
@@ -843,7 +833,21 @@ Modules are searched for in the following order:
 #. In the ``modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
    was compiled.  The default is ``/usr/local/rampart/modules``. Or
    preferentially, if set, the path pointed to by the environment variable
-   ``$RAMPART_PATH`` + "/modules".
+   ``$RAMPART_PATH`` + ``/modules``.
+
+#. In :ref:`process.installPath <rampart-main:installPath>`\ .
+
+#. In the ``/lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+
+#. In the ``lib/rampart_modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
+
+#. In the ``~/.rampart/lib/rampart_modules`` directory of current user's home directory 
+   as provided by the ``$HOME`` environment variable.
+
+#. In the ``lib/rampart_modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
+   was compiled.  The default is ``/usr/local/rampart/lib/rampart_modules``. Or
+   preferentially, if set, the path pointed to by the environment variable
+   ``$RAMPART_PATH`` + ``/lib/rampart_modules``.
 
 
 Extra JavaScript Functionality
