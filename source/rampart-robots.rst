@@ -94,8 +94,8 @@ Example
     var url2 = "https://www.google.com/search?q=funny+gifs";
 
     if(rtxt.status == 200) {
-        var res1 = robots.isAllowed(agent, rtxt.text, url1); 
-        var res2 = robots.isAllowed(agent, rtxt.text, url2);
+        var res1 = robots.isAllowed(agent, rtxt.body, url1); 
+        var res2 = robots.isAllowed(agent, rtxt.body, url2);
 
         /* expected results: 
             res1 == true
