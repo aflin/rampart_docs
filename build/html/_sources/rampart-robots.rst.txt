@@ -58,7 +58,7 @@ isAllowed()
 ~~~~~~~~~~~
 
     The ``isAllowed`` function takes three :green:`Strings`, the text of a 
-    robots.txt file, a user agent string, and a URL.
+    robots.txt file (may also be a :green:`buffer`), a user agent string, and a URL.
     
     Usage:
 
@@ -72,7 +72,7 @@ isAllowed()
     
     * ``user_agent`` is a :green:`String`, the name of the user agent to check.
 
-    * ``robotstxt`` is a :green:`String`, the contents of a robots.txt file.
+    * ``robotstxt`` is a :green:`String` or :green:`Buffer`, the contents of a robots.txt file.
 
     * ``url`` is a :green:`String`, the URL of the resource to be accessed.
     
@@ -93,15 +93,14 @@ Example
     var url1 = "https://www.google.com/";
     var url2 = "https://www.google.com/search?q=funny+gifs";
 
-    if(rtxt.status != 200) {
-        console.log("Failed to download robots.txt file");
-        process.exit(1);
+    if(rtxt.status == 200) {
+        var res1 = robots.isAllowed(agent, rtxt.text, url1); 
+        var res2 = robots.isAllowed(agent, rtxt.text, url2);
+
+        /* expected results: 
+            res1 == true
+            res2 == false
+        */
+    } else {
+        console.log("Failed to download robots.txt file with status:" + rtxt.status);
     }
-
-    var res1 = robots.isAllowed(agent, rtxt.text, url1); 
-    var res2 = robots.isAllowed(agent, rtxt.text, url2);
-
-    /* expected results: 
-        res1 == true
-        res2 == false
-    */
