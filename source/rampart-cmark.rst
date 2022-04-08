@@ -80,17 +80,21 @@ toHtml
         * ``hardBreaks`` - A :green:`Boolean`. If ``true`` render softbreak
     	  elements as hard line breaks.
 
-    	* ``unsafe`` - A :green:`Boolean`. If ``true``  Render  raw  HTML
+    	* ``unsafe`` - A :green:`Boolean`. If ``true``  render  raw  HTML
           and unsafe links (javascript:, vbscript:, file:, and data:, except
           for image/png, image/gif, image/jpeg, or image/webp mime
        	  types). By default, raw HTML is replaced by a placeholder HTML
           comment. Unsafe links are replaced by empty strings.
 
-        * ``noBreaks`` - A :green:`Boolean`. If ``true`` Render softbreak
+        * ``noBreaks`` - A :green:`Boolean`. If ``true`` render softbreak
           elements as spaces.
 
-        * ``smart`` - A :green:`Boolean`. If ``true`` Convert straight
+        * ``smart`` - A :green:`Boolean`. If ``true`` convert straight
           quotes to curly, ``---`` to em dashes, ``--`` to en dashes.
+
+        * ``sourcePos`` -  A :green:`Boolean`. If ``true`` embed
+          source position information in tags as attributes named
+          ``data-sourcepos``.
 
     Return Value:
         A :green:`String` - The document converted to HTML.
