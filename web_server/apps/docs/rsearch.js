@@ -201,6 +201,15 @@ function copy_files(path, docpath, destpath){
 
     fprintf(destpath + "/_static/client_search.js", '%s',
 `$(document).ready(function(){
+    var query = document.location.search;
+    var params = new URLSearchParams(query);
+    var q = params.get("q");
+
+    if(q) {
+        window.history.pushState({}, "", window.location.href.replace(/\?.*/,''));
+        $('#rtd-search-form').find('input[type=text]').val(q);
+        dosearch(q);
+    }
 
     function dosearch(q)
     {
