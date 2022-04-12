@@ -206,7 +206,7 @@ function copy_files(path, docpath, destpath){
     var q = params.get("q");
 
     if(q) {
-        window.history.pushState({}, "", window.location.href.replace(/\?.*/,''));
+        window.history.replaceState({}, "", window.location.href.replace(/\?.*/,''));
         $('#rtd-search-form').find('input[type=text]').val(q);
         dosearch(q);
     }
