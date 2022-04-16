@@ -860,7 +860,7 @@ Posting JSON Data
 
         server.start(
         {
-            user:"root",
+            user:"nobody",
             map : {
                 "post.html": function(){
                     var html = '<html><head><script>\n'+
@@ -1595,7 +1595,7 @@ Sending mjpeg, using ffmpeg and a webcam on Linux:
     printf("Starting https server\nmjpeg is at http://localhost:8088/mjpeg.jpg\n\n");
     var serverpid=server.start(
     {
-        user:'root',
+        user:'nobody',
         map:
         {
             "/":  function(req){ 
