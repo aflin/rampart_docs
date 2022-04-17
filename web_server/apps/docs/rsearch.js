@@ -45,7 +45,7 @@ function corpsug(word)
     */
     res=sql.exec(
         "select Word value, convert('search','varchar') data from sections_full_text_mmix where Word matches ? order by Count DESC",
-        [word+'%']
+        [word.toLowerCase()+'%']
     );
     return res.rows;
 }
@@ -206,7 +206,7 @@ function copy_files(path, docpath, destpath){
     var q = params.get("q");
 
     if(q) {
-        window.history.replaceState({}, "", window.location.href.replace(/\?.*/,''));
+        window.history.replaceState({}, "", window.location.href.replace(/\\?.*/,''));
         $('#rtd-search-form').find('input[type=text]').val(q);
         dosearch(q);
     }
