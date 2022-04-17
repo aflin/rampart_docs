@@ -1411,7 +1411,7 @@ Where ``data`` is a :green:`String`, :green:`Buffer` (or optionally a :green:`Nu
 :green:`String`) - The data to send back to the client.
 
 A string starting with `@` is used to send the contents of the file
-specified (see `The Return Object`_\ for details).
+specified (see `The Return Object`_ for details).
 
 In addition ``data`` may be ``null`` or ``undefined``, in which case, any
 data in the server buffer (e.g., when using `req.printf()` or `req.put()` 

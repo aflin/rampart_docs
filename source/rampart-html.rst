@@ -1,5 +1,5 @@
-The rampart-server HTML module
-==============================
+The rampart-html module
+=======================
 
 Preface
 -------

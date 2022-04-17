@@ -8,3 +8,4 @@ Tutorials
    
    tutorial-citysearch
    tutorial-wschat
+   tutorial-pi_news
