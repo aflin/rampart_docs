@@ -253,7 +253,7 @@ ease of use of this library.</p>
 <p>Also included in Rampart is
 <a class="reference external" href="https://github.com/antirez/linenoise">linenoise.c</a> (under the
 <a class="reference external" href="https://github.com/antirez/linenoise/blob/master/LICENSE">BSD 2 Clause License</a>),
-<a class="reference external" href="https://github.com/msantos/runcron/blob/master/setproctitle.c">setproctitle.c</a>(under
+<a class="reference external" href="https://github.com/msantos/runcron/blob/master/setproctitle.c">setproctitle.c</a> (under
 the MIT license) and <a class="reference external" href="https://github.com/gpakosz/whereami">whereami.c</a> (under the
 MIT license or the WTFPLv2).  The developers of Rampart wish to extend their thanks
 for the excellent code.</p>
@@ -266,7 +266,7 @@ and information management applications.  At its core is the Duktape
 JavaScript library and added to it is a SQL database, full text search
 engine, a fast and innovative NOSQL Mmap database, a fast multi-threaded
 webserver, client functionality via the Curl and crypto functions via
-Openssl.  It attempts to provide performance, maximum flexibility and
+OpenSSL.  It attempts to provide performance, maximum flexibility and
 ease of use through the marriage of C code and JavaScript scripting.</p>
 </div>
 </div>
@@ -305,9 +305,9 @@ following:</p>
 JavaScript transpiler.</p></li>
 <li><p>Full Text Search and SQL databasing via <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>.</p></li>
 <li><p>Multi-threaded http(s) server from libevhtp_ws via <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>.</p></li>
-<li><p>http, ftp, etc. client functionality via <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code>.</p></li>
-<li><p>Cryptography functions from Openssl via <code class="docutils literal notranslate"><span class="pre">rampart-crypto</span></code>.</p></li>
-<li><p>Html parsing and and error correcting via <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code>.</p></li>
+<li><p>HTTP, FTP, etc. client functionality via <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code>.</p></li>
+<li><p>Cryptography functions from OpenSSL via <code class="docutils literal notranslate"><span class="pre">rampart-crypto</span></code>.</p></li>
+<li><p>HTML parsing and and error correcting via <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code>.</p></li>
 <li><p>Fast NOSQL database via <code class="docutils literal notranslate"><span class="pre">rampart-lmdb</span></code>.</p></li>
 <li><p>Redis Client via <code class="docutils literal notranslate"><span class="pre">rampart-redis</span></code>.</p></li>
 <li><p>Simple Event functions via <a class="reference internal" href="#rampart-event">rampart.event</a>.</p></li>
@@ -912,10 +912,8 @@ statement <code class="docutils literal notranslate"><span class="pre">require(&
 </div>
 <div class="section" id="example-creating-a-c-module">
 <h3>Example creating a C module<a class="headerlink" href="#example-creating-a-c-module" title="Permalink to this headline">¶</a></h3>
-<p>A module can also be written in C.  When exporting from C, the module should
-return a <span class="green">Function</span> or an <span class="green">Object</span> which may contain functions
-and/or other JavaScript variables.</p>
-<p>Example (where filename is <code class="docutils literal notranslate"><span class="pre">times3.c</span></code>):</p>
+<p>A module can also be written in C.  Below is an example where the filename
+is <code class="docutils literal notranslate"><span class="pre">times3.c</span></code>:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;rampart.h&quot;</span><span class="cp"></span>
 
 <span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">timesthree</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
@@ -939,6 +937,16 @@ and/or other JavaScript variables.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>In this example, the item on the top of the
+<a class="reference external" href="https://duktape.org/api.html#concepts.4">value stack</a> (when the C function
+returns <code class="docutils literal notranslate"><span class="pre">1</span></code>) in the <code class="docutils literal notranslate"><span class="pre">timesthree()</span></code> function will be the return value of
+the exported function.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">timesthree</span></code> function is made available to JavaScript in a function
+that must be named <code class="docutils literal notranslate"><span class="pre">duk_open_module</span></code>.  The C function pushed to the top of
+the stack (when <code class="docutils literal notranslate"><span class="pre">duk_open_module()</span></code> returns <code class="docutils literal notranslate"><span class="pre">1</span></code>) will be
+the return value of the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function in JavaScript.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">duk_open_module</span></code> alternatively can push an <span class="green">Object</span> which
+contains functions and/or other JavaScript variables.</p>
 <p>This could be compiled with GCC as follows:</p>
 <p><code class="docutils literal notranslate"><span class="pre">cc</span> <span class="pre">-I/usr/local/rampart/include</span> <span class="pre">-fPIC</span> <span class="pre">-shared</span> <span class="pre">-Wl,-soname,times3.so</span> <span class="pre">-o</span> <span class="pre">times3.so</span> <span class="pre">times3.c</span></code></p>
 <p>On MacOs, the following might be used:</p>
@@ -1058,12 +1066,11 @@ experimentally (unsupported) and is limited in scope.</p>
 </div>
 <div class="section" id="template-literals-and-sprintf">
 <h3>Template Literals and sprintf<a class="headerlink" href="#template-literals-and-sprintf" title="Permalink to this headline">¶</a></h3>
-<p>A non-standard shortcut syntax may be used in template literals in place of
-<a class="reference internal" href="rampart-utils.html#sprintf"><span class="std std-ref">rampart.utils.sprintf</span></a> by specifying a format
-string followed by a colon <code class="docutils literal notranslate"><span class="pre">:</span></code> in a substituted variable (<code class="docutils literal notranslate"><span class="pre">${}</span></code>).  If
-the string begins with a <code class="docutils literal notranslate"><span class="pre">%</span></code>, or if the string is quoted with single or
-double quotes <a class="reference internal" href="rampart-utils.html#sprintf"><span class="std std-ref">rampart.utils.sprintf</span></a> is
-called.</p>
+<p>A <strong>non-standard</strong> (and unique to Rampart) shortcut syntax may be used in
+template literals in place of <a class="reference internal" href="rampart-utils.html#sprintf"><span class="std std-ref">rampart.utils.sprintf</span></a> by specifying a format string followed by a colon
+<code class="docutils literal notranslate"><span class="pre">:</span></code> in a substituted variable (<code class="docutils literal notranslate"><span class="pre">${}</span></code>).  If the string begins with a
+<code class="docutils literal notranslate"><span class="pre">%</span></code>, or if the string is quoted with single or double quotes
+<a class="reference internal" href="rampart-utils.html#sprintf"><span class="std std-ref">rampart.utils.sprintf</span></a> is called.</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myhtml</span> <span class="o">=</span> <span class="sb">`</span>
 <span class="sb">&lt;div&gt;</span>
@@ -1375,7 +1382,7 @@ the original script was named <code class="docutils literal notranslate"><span c
 named <code class="docutils literal notranslate"><span class="pre">myfile.babel.js</span></code>.</p>
 <p>When the original script is run again, Rampart will check the date on the
 script, and if it was not modified after the modification date of the
-<code class="docutils literal notranslate"><span class="pre">*.babel.js</span></code> file, the transpile stage will be skipped and the cached,
+<code class="docutils literal notranslate"><span class="pre">*.babel.js</span></code> file, the transpile stage will be skipped and the
 transpiled script will be run directly.</p>
 </div>
 <div class="section" id="caveats">

@@ -20,7 +20,7 @@ Duktape and the Core Rampart program are MIT licensed.
 Also included in Rampart is 
 `linenoise.c <https://github.com/antirez/linenoise>`_ (under the
 `BSD 2 Clause License <https://github.com/antirez/linenoise/blob/master/LICENSE>`_\ ),
-`setproctitle.c <https://github.com/msantos/runcron/blob/master/setproctitle.c>`_\ (under
+`setproctitle.c <https://github.com/msantos/runcron/blob/master/setproctitle.c>`_ (under
 the MIT license) and `whereami.c <https://github.com/gpakosz/whereami>`_ (under the
 MIT license or the WTFPLv2).  The developers of Rampart wish to extend their thanks
 for the excellent code.
@@ -33,7 +33,7 @@ and information management applications.  At its core is the Duktape
 JavaScript library and added to it is a SQL database, full text search
 engine, a fast and innovative NOSQL Mmap database, a fast multi-threaded 
 webserver, client functionality via the Curl and crypto functions via
-Openssl.  It attempts to provide performance, maximum flexibility and 
+OpenSSL.  It attempts to provide performance, maximum flexibility and 
 ease of use through the marriage of C code and JavaScript scripting.
 
 
@@ -83,11 +83,11 @@ following:
 
 * Multi-threaded http(s) server from libevhtp_ws via ``rampart-server``.
 
-* http, ftp, etc. client functionality via ``rampart-curl``.
+* HTTP, FTP, etc. client functionality via ``rampart-curl``.
 
-* Cryptography functions from Openssl via ``rampart-crypto``.
+* Cryptography functions from OpenSSL via ``rampart-crypto``.
 
-* Html parsing and and error correcting via ``rampart-html``. 
+* HTML parsing and and error correcting via ``rampart-html``. 
 
 * Fast NOSQL database via ``rampart-lmdb``.
 
@@ -755,11 +755,8 @@ statement ``require("mod.js")`` will have
 Example creating a C module
 """""""""""""""""""""""""""
 
-A module can also be written in C.  When exporting from C, the module should
-return a :green:`Function` or an :green:`Object` which may contain functions
-and/or other JavaScript variables.
-
-Example (where filename is ``times3.c``):
+A module can also be written in C.  Below is an example where the filename
+is ``times3.c``:
 
 .. code-block:: C
 
@@ -784,6 +781,19 @@ Example (where filename is ``times3.c``):
 
      return 1;
    }
+
+In this example, the item on the top of the 
+`value stack <https://duktape.org/api.html#concepts.4>`_ (when the C function
+returns ``1``) in the ``timesthree()`` function will be the return value of
+the exported function.
+
+The ``timesthree`` function is made available to JavaScript in a function
+that must be named ``duk_open_module``.  The C function pushed to the top of
+the stack (when ``duk_open_module()`` returns ``1``) will be
+the return value of the ``require()`` function in JavaScript.
+
+The ``duk_open_module`` alternatively can push an :green:`Object` which
+contains functions and/or other JavaScript variables.
 
 This could be compiled with GCC as follows:
 
@@ -937,12 +947,12 @@ Rest Parameter syntax may also be used for arguments to functions.
 Template Literals and sprintf
 """""""""""""""""""""""""""""
 
-A non-standard shortcut syntax may be used in template literals in place of
-:ref:`rampart.utils.sprintf <rampart-utils:sprintf>` by specifying a format
-string followed by a colon ``:`` in a substituted variable (``${}``).  If
-the string begins with a ``%``, or if the string is quoted with single or
-double quotes :ref:`rampart.utils.sprintf <rampart-utils:sprintf>` is
-called.
+A **non-standard** (and unique to Rampart) shortcut syntax may be used in
+template literals in place of :ref:`rampart.utils.sprintf
+<rampart-utils:sprintf>` by specifying a format string followed by a colon
+``:`` in a substituted variable (``${}``).  If the string begins with a
+``%``, or if the string is quoted with single or double quotes
+:ref:`rampart.utils.sprintf <rampart-utils:sprintf>` is called.
 
 Example:
 
@@ -1333,7 +1343,7 @@ named ``myfile.babel.js``.
 
 When the original script is run again, Rampart will check the date on the
 script, and if it was not modified after the modification date of the
-``*.babel.js`` file, the transpile stage will be skipped and the cached,
+``*.babel.js`` file, the transpile stage will be skipped and the
 transpiled script will be run directly.
 
 Caveats

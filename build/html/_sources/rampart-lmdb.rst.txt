@@ -824,7 +824,7 @@ Where:
 
     * ``key`` is a :green:`String` or :green:`Buffer`, the key of a single key:value pair.
     
-    * ``value`` is a :green:`String` :green:`Buffer`, or :green:`Object`. The value of a single key:value pair.
+    * ``value`` is a :green:`String`, :green:`Buffer` or :green:`Object`. The value of a single key:value pair.
       If ``value`` is an :green:`Object`, it will be automatically converted
       to a :green:`Buffer` using ``CBOR.encode()``.  Note, when retrieved
       using ``txn.get`` or ``txn.cursorGet``, a CBOR encoded value will not
@@ -930,13 +930,13 @@ Where:
     * ``key`` is the key of the item to be retrieved.  Used for ``op_set``
       and ``op_setRange``.
 
-    * ``key_is_string`` is a :green:`Boolean`. If ``true`` (the default),
+    * ``key_is_string`` is a :green:`Boolean`. If ``true``,
       the return ``key`` will be converted to a :green:`String`.
       If ``false``, (the default) the return ``key`` will be a :green:`Buffer`.
 
-    * ``val_is_string`` is a :green:`Boolean`. If ``true``, the returned
+    * ``val_is_string`` is a :green:`Boolean`. If ``true``, the return
       ``value`` will be converted to a :green:`String`.  If ``false``,
-      (the default)``value`` will be a :green:`Buffer`.
+      (the default) the return ``value`` will be a :green:`Buffer`.
 
 Return Value:
     An :green:`Object` with the properties ``key`` and ``value`` set to the 

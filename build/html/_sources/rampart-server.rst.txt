@@ -53,7 +53,7 @@ context and each runs independently.  Modules are likewise loaded from
 within each thread and checked for changes upon each request.
 
 It is worth noting that not all rampart-sql functions are thread safe.  When
-sql functions are executed from within a function or module, rampart may
+SQL functions are executed from within a function or module, rampart may
 create a fork, one per thread, in order to handle such functions.
 
 A timeout for script execution may also be set.  Should the script timeout,
@@ -306,7 +306,7 @@ Where:
       is not set to ``false``).
 
       Keys/paths used for mapping a :green:`Function` may be given in one of
-      four different formats, which are tested for a match in the following order:
+      three different formats, which are tested for a match in the following order:
        
       * Exact Paths - Paths starting with a "/" and having no unescaped ``*`` characters
         will be matched exactly with the incoming request.
@@ -434,7 +434,9 @@ NOTE:
   might be caused by this limitation can be mostly avoided by placing
   functions in separate scripts as modules, since variables declared in the
   module will be available and properly scoped (though separately and
-  distinctly; variables are never shared between threads).
+  distinctly; variables are never shared between threads -- though note that
+  when using :ref:`rampart.event <rampart-main:rampart.event>`, the triggering
+  of events and the ``callbackTriggerVar`` do cross threads).
 
   Example of a scoped variable that would not be available:
   
@@ -555,7 +557,7 @@ The Request Object
   of the request.  For example, if the url
   ``http://localhost:8088/showreq.html?q=search+terms`` is requested 
   (with a cookie set), the
-  object passed to the function might look something like this:
+  :green:`Object` passed to the function might look something like this:
   
   .. code-block::  javascript
 
@@ -1365,7 +1367,7 @@ For a large file, sending in chunks allows the current server thread to
 service other requests in between each sent chunk.
 
 For mjpegs, it allow a continuous stream of JPEGs to be sent, also allowing
-for other requests to be serviced between chunks.
+for other requests to be serviced between each frame.
 
 A chunked document is specified by setting ``chunk:true`` in
 `The Return Object`_\ .  A delay between chunks can be set in milliseconds

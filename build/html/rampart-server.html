@@ -268,7 +268,7 @@ and mapped functions passed to <a class="reference internal" href="#start">start
 context and each runs independently.  Modules are likewise loaded from
 within each thread and checked for changes upon each request.</p>
 <p>It is worth noting that not all rampart-sql functions are thread safe.  When
-sql functions are executed from within a function or module, rampart may
+SQL functions are executed from within a function or module, rampart may
 create a fork, one per thread, in order to handle such functions.</p>
 <p>A timeout for script execution may also be set.  Should the script timeout,
 the serving thread will cancel the request and re-initialize the JavaScript
@@ -479,7 +479,7 @@ will have priority over <code class="docutils literal notranslate"><span class="
 executed while anything else will match <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> (assuming <code class="docutils literal notranslate"><span class="pre">mapSort</span></code>
 is not set to <code class="docutils literal notranslate"><span class="pre">false</span></code>).</p>
 <p>Keys/paths used for mapping a <span class="green">Function</span> may be given in one of
-four different formats, which are tested for a match in the following order:</p>
+three different formats, which are tested for a match in the following order:</p>
 <ul class="simple">
 <li><p>Exact Paths - Paths starting with a “/” and having no unescaped <code class="docutils literal notranslate"><span class="pre">*</span></code> characters
 will be matched exactly with the incoming request.</p></li>
@@ -601,7 +601,9 @@ of the state of <code class="docutils literal notranslate"><span class="pre">use
 might be caused by this limitation can be mostly avoided by placing
 functions in separate scripts as modules, since variables declared in the
 module will be available and properly scoped (though separately and
-distinctly; variables are never shared between threads).</p>
+distinctly; variables are never shared between threads – though note that
+when using <a class="reference internal" href="rampart-main.html#rampart-event"><span class="std std-ref">rampart.event</span></a>, the triggering
+of events and the <code class="docutils literal notranslate"><span class="pre">callbackTriggerVar</span></code> do cross threads).</p>
 <p>Example of a scoped variable that would not be available:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
 
@@ -712,7 +714,7 @@ from <code class="docutils literal notranslate"><span class="pre">/my/dir/</span
 of the request.  For example, if the url
 <code class="docutils literal notranslate"><span class="pre">http://localhost:8088/showreq.html?q=search+terms</span></code> is requested
 (with a cookie set), the
-object passed to the function might look something like this:</p>
+<span class="green">Object</span> passed to the function might look something like this:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="s2">&quot;ip&quot;</span><span class="o">:</span> <span class="s2">&quot;::1&quot;</span><span class="p">,</span>
    <span class="s2">&quot;port&quot;</span><span class="o">:</span> <span class="mi">33948</span><span class="p">,</span>
@@ -1479,7 +1481,7 @@ a large file, or when sending an <a class="reference external" href="https://en.
 <p>For a large file, sending in chunks allows the current server thread to
 service other requests in between each sent chunk.</p>
 <p>For mjpegs, it allow a continuous stream of JPEGs to be sent, also allowing
-for other requests to be serviced between chunks.</p>
+for other requests to be serviced between each frame.</p>
 <p>A chunked document is specified by setting <code class="docutils literal notranslate"><span class="pre">chunk:true</span></code> in
 <a class="reference internal" href="#the-return-object">The Return Object</a>.  A delay between chunks can be set in milliseconds
 with the following: <code class="docutils literal notranslate"><span class="pre">chunkDelay:delay_in_ms</span></code>. This delay works in the same

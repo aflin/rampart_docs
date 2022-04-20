@@ -27,6 +27,8 @@ This module will demonstrate:
 *  Using the :ref:`Server module <rampart-server:The rampart-server HTTP module>` to connect
    with clients using websockets.
 *  Handling both text and files using websockets.
+*  Using :ref:`rampart-redis module <rampart-redis:The rampart-redis module>`
+   to replace rampart.event so we can have a saved history.
 
 In order to complete this tutorial, you should have basic knowledge of
 JavaScript and client side scripting using JavaScript (a passing

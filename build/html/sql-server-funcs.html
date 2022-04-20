@@ -165,6 +165,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#json-modify">json_modify</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#json-merge-patch">json_merge_patch</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#json-merge-preserve">json_merge_preserve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#full-example-using-json">Full Example Using Json</a></li>
 </ul>
 </li>
 </ul>
@@ -2082,6 +2083,276 @@ the target document.</p>
 <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="s2">&quot;b&quot;</span><span class="p">,</span><span class="s2">&quot;c&quot;</span><span class="p">:</span><span class="n">null</span><span class="p">}]</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="full-example-using-json">
+<h3>Full Example Using Json<a class="headerlink" href="#full-example-using-json" title="Permalink to this headline">¶</a></h3>
+<p>JSON fields can be operated on with database functions and SQL statements in
+the same manner as normal fields.  Here is the
+<a class="reference internal" href="rampart-sql.html#exec-full-example"><span class="std std-ref">sql.exec() example</span></a> using a JSON
+varchar field in the place of multiple columns:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="cm">/* create database if it does not exist */</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span>
+
+<span class="cm">/* check if table exists */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="s2">&quot;select * from SYSTABLES where NAME=&#39;employees&#39;&quot;</span><span class="p">,</span>
+    <span class="p">{</span><span class="s2">&quot;returnType&quot;</span><span class="o">:</span><span class="s2">&quot;novars&quot;</span><span class="p">}</span> <span class="cm">/* we only need the count */</span>
+<span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rowCount</span><span class="p">)</span> <span class="cm">/* 1 if the table exists */</span>
+<span class="p">{</span>
+    <span class="cm">/* drop table from previous test run of this script */</span>
+    <span class="nx">res</span><span class="o">=</span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;drop table employees&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/* (re)create the table */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+        <span class="s2">&quot;create table employees (Classification varchar(8), &quot;</span> <span class="o">+</span>
+        <span class="s2">&quot;Name varchar(16), EmpData varchar(256) );&quot;</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;returnType&quot;</span><span class="o">:</span><span class="s2">&quot;novars&quot;</span><span class="p">}</span>
+<span class="p">);</span>
+
+<span class="cm">/* populate variables for insertion */</span>
+<span class="kd">var</span> <span class="nx">emp1</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">cl</span><span class="o">:</span>     <span class="s2">&quot;principal&quot;</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;Debbie Dreamer&quot;</span><span class="p">,</span>
+  <span class="nx">empdata</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">age</span><span class="o">:</span>    <span class="mi">63</span><span class="p">,</span>
+    <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;Chief Executive Officer&quot;</span><span class="p">,</span>
+    <span class="nx">start</span><span class="o">:</span>  <span class="s1">&#39;1999-12-31&#39;</span><span class="p">,</span>
+    <span class="nx">salary</span><span class="o">:</span> <span class="mi">250000</span><span class="p">,</span>
+    <span class="nx">bio</span><span class="o">:</span>    <span class="s2">&quot;Born and raised in Manhattan, New York. U.C. Berkeley graduate. &quot;</span> <span class="o">+</span>
+              <span class="s2">&quot;Loves to skydive. Built Company from scratch. Still uses word-perfect.&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">emp2</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">cl</span><span class="o">:</span>     <span class="s2">&quot;principal&quot;</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;Rusty Grump&quot;</span><span class="p">,</span>
+  <span class="nx">empdata</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">age</span><span class="o">:</span>    <span class="mi">58</span><span class="p">,</span>
+    <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;Chief Financial Officer&quot;</span><span class="p">,</span>
+    <span class="nx">start</span><span class="o">:</span>  <span class="s1">&#39;1999-12-31&#39;</span><span class="p">,</span> <span class="c1">// Strings are converted to local time</span>
+    <span class="nx">salary</span><span class="o">:</span> <span class="mi">250000</span><span class="p">,</span>
+    <span class="nx">bio</span><span class="o">:</span>    <span class="s2">&quot;Born in Switzerland, raised in South Dakota. Columbia graduate. &quot;</span> <span class="o">+</span>
+              <span class="s2">&quot;Financed operation with inheritance. Has no sense of humor.&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">emp3</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">cl</span><span class="o">:</span>     <span class="s2">&quot;salary&quot;</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;Georgia Geek&quot;</span><span class="p">,</span>
+  <span class="nx">empdata</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">age</span><span class="o">:</span>    <span class="mi">44</span><span class="p">,</span>
+    <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;Lead Programmer&quot;</span><span class="p">,</span>
+    <span class="nx">start</span><span class="o">:</span>  <span class="s1">&#39;2001-3-15&#39;</span><span class="p">,</span>
+    <span class="nx">salary</span><span class="o">:</span> <span class="mi">100000</span><span class="p">,</span>
+    <span class="nx">bio</span><span class="o">:</span>    <span class="s2">&quot;Stanford graduate. Enjoys pizza and beer. Proficient in Perl, COBOL,&quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;FORTRAN and IBM System/360&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">emp4</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">cl</span><span class="o">:</span>     <span class="s2">&quot;salary&quot;</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;Sydney Slacker&quot;</span><span class="p">,</span>
+  <span class="nx">empdata</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">age</span><span class="o">:</span>    <span class="mi">44</span><span class="p">,</span>
+    <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;Programmer&quot;</span><span class="p">,</span>
+    <span class="nx">start</span><span class="o">:</span>  <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2002-5-12T00:00:00.0-0800&#39;</span><span class="p">),</span> <span class="c1">// Dates are UTC unless offset is given.</span>
+    <span class="nx">salary</span><span class="o">:</span> <span class="mi">100000</span><span class="p">,</span>
+    <span class="nx">bio</span><span class="o">:</span>    <span class="s2">&quot;DeVry University graduate. Enjoys a good nap. Proficient in Python, &quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;Perl and JavaScript&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">emp5</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">cl</span><span class="o">:</span>     <span class="s2">&quot;hourly&quot;</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;Pat Particular&quot;</span><span class="p">,</span>
+  <span class="nx">empdata</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">age</span><span class="o">:</span>    <span class="mi">32</span><span class="p">,</span>
+    <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;Systems Administrator&quot;</span><span class="p">,</span>
+    <span class="nx">start</span><span class="o">:</span>  <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2003-7-14&#39;</span><span class="p">),</span>
+    <span class="nx">salary</span><span class="o">:</span> <span class="mi">80000</span><span class="p">,</span>
+    <span class="nx">bio</span><span class="o">:</span>    <span class="s2">&quot;Lincoln High School graduate. Self taught Linux and windows administration skills. Proficient in &quot;</span> <span class="o">+</span>
+          <span class="s2">&quot;Bash and GNU utilities. Capable of crashing or resurrecting machines with a single ping.&quot;</span><span class="p">,</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">emp6</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">cl</span><span class="o">:</span>     <span class="s2">&quot;intern&quot;</span><span class="p">,</span>
+  <span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;Billie Barista&quot;</span><span class="p">,</span>
+  <span class="nx">empdata</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">age</span><span class="o">:</span>    <span class="mi">22</span><span class="p">,</span>
+    <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;Intern&quot;</span><span class="p">,</span>
+    <span class="nx">start</span><span class="o">:</span>  <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2020-3-18&#39;</span><span class="p">),</span>
+    <span class="nx">salary</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nx">bio</span><span class="o">:</span>    <span class="s2">&quot;Harvard graduate, full ride scholarship, top of class.  Proficient in C, C++, &quot;</span> <span class="o">+</span>
+            <span class="s2">&quot;Rust, Haskell, Node, Python. Into skydiving. Makes a mean latte.&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">employees</span> <span class="o">=</span> <span class="p">[</span> <span class="nx">emp1</span><span class="p">,</span> <span class="nx">emp2</span><span class="p">,</span> <span class="nx">emp3</span><span class="p">,</span> <span class="nx">emp4</span><span class="p">,</span> <span class="nx">emp5</span><span class="p">,</span> <span class="nx">emp6</span> <span class="p">];</span>
+
+<span class="cm">/* insert rows */</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">employees</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// empdata:{} is automatically converted to JSON</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+        <span class="s2">&quot;insert into employees values(?cl,?name,?empdata)&quot;</span><span class="p">,</span>
+        <span class="nx">employees</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+    <span class="p">);</span>
+<span class="p">}</span>
+
+
+
+<span class="cm">/* create text index */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index employees_Bio_text on employees( EmpData.$.bio );&quot;</span><span class="p">);</span>
+
+<span class="cm">/* perform some queries */</span>
+<span class="nx">res</span><span class="o">=</span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;select Name, EmpData.$.age Age from employees&quot;</span><span class="p">);</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;%3J\n%s\n&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">   {</span>
+<span class="cm">       &quot;columns&quot;: [</span>
+<span class="cm">           &quot;Name&quot;,</span>
+<span class="cm">           &quot;Age&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;rows&quot;: [</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Debbie Dreamer&quot;,</span>
+<span class="cm">               &quot;Age&quot;: 63</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Rusty Grump&quot;,</span>
+<span class="cm">               &quot;Age&quot;: 58</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Georgia Geek&quot;,</span>
+<span class="cm">               &quot;Age&quot;: 44</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Sydney Slacker&quot;,</span>
+<span class="cm">               &quot;Age&quot;: 44</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Pat Particular&quot;,</span>
+<span class="cm">               &quot;Age&quot;: 32</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Billie Barista&quot;,</span>
+<span class="cm">               &quot;Age&quot;: 22</span>
+<span class="cm">           }</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;rowCount&quot;: 6</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
+
+<span class="nx">res</span><span class="o">=</span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="s2">&quot;select Name, EmpData.$.age  Age from employees&quot;</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">returnType</span><span class="o">:</span><span class="s1">&#39;array&#39;</span><span class="p">,</span> <span class="nx">maxRows</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="nx">includeCounts</span><span class="o">:</span><span class="kc">true</span><span class="p">}</span>
+<span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;%3J\n&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">   {</span>
+<span class="cm">       &quot;columns&quot;: [</span>
+<span class="cm">           &quot;Name&quot;,</span>
+<span class="cm">           &quot;Age&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;rows&quot;: [</span>
+<span class="cm">           [</span>
+<span class="cm">               &quot;Debbie Dreamer&quot;,</span>
+<span class="cm">               63</span>
+<span class="cm">           ],</span>
+<span class="cm">           [</span>
+<span class="cm">               &quot;Rusty Grump&quot;,</span>
+<span class="cm">               58</span>
+<span class="cm">           ]</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;countInfo&quot;: {</span>
+<span class="cm">           &quot;indexCount&quot;: -1,</span>
+<span class="cm">           &quot;rowsMatchedMin&quot;: -1,</span>
+<span class="cm">           &quot;rowsMatchedMax&quot;: -2,</span>
+<span class="cm">           &quot;rowsReturnedMin&quot;: -1,</span>
+<span class="cm">           &quot;rowsReturnedMax&quot;: -2</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;rowCount&quot;: 2</span>
+<span class="cm">   }</span>
+<span class="cm">             Note that countInfo values are all negative since no</span>
+<span class="cm">             text search was performed.</span>
+<span class="cm">*/</span>
+<span class="nx">res</span><span class="o">=</span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="s2">&quot;select Name from employees where EmpData.$.bio likep &#39;proficient&#39; and convert(EmpData.$.salary, &#39;float&#39;) &gt; 50000&quot;</span><span class="p">,</span>
+     <span class="p">{</span><span class="nx">includeCounts</span><span class="o">:</span><span class="kc">true</span><span class="p">}</span>
+<span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;%3J\n&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+
+<span class="cm">/* expected output:</span>
+<span class="cm">   {</span>
+<span class="cm">       &quot;columns&quot;: [</span>
+<span class="cm">           &quot;Name&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;rows&quot;: [</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Georgia Geek&quot;</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Sydney Slacker&quot;</span>
+<span class="cm">           },</span>
+<span class="cm">           {</span>
+<span class="cm">               &quot;Name&quot;: &quot;Pat Particular&quot;</span>
+<span class="cm">           }</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;countInfo&quot;: {</span>
+<span class="cm">           &quot;indexCount&quot;: 4,</span>
+<span class="cm">           &quot;rowsMatchedMin&quot;: 0,</span>
+<span class="cm">           &quot;rowsMatchedMax&quot;: 4,</span>
+<span class="cm">           &quot;rowsReturnedMin&quot;: 0,</span>
+<span class="cm">           &quot;rowsReturnedMax&quot;: 4</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;rowCount&quot;: 3</span>
+<span class="cm">   }</span>
+<span class="cm">   Note that indexCount is the count before &quot;Salary &gt; 50000&quot; filter</span>
+<span class="cm">*/</span>
+
+<span class="cm">/* skydive =&gt; skydiving */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
+    <span class="nx">minwordlen</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="nx">suffixproc</span><span class="o">:</span> <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">nrows</span><span class="o">=</span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="s2">&quot;select Name, EmpData.$.salary Salary from employees where EmpData.$.bio likep &#39;skydive&#39; &quot;</span> <span class="o">+</span>
+      <span class="s2">&quot;order by convert(EmpData.$.salary, &#39;float&#39;)  desc&quot;</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">returnType</span><span class="o">:</span><span class="s2">&quot;array&quot;</span><span class="p">,</span> <span class="nx">includeCounts</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span>
+    <span class="kd">function</span> <span class="p">(</span><span class="nx">row</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">coln</span><span class="p">,</span> <span class="nx">cinfo</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+               <span class="s2">&quot;Total approximate number of matches in db: &quot;</span> <span class="o">+</span>
+               <span class="nx">cinfo</span><span class="p">.</span><span class="nx">indexCount</span>
+            <span class="p">);</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="nx">coln</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="nx">row</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Total: &quot;</span> <span class="o">+</span> <span class="nx">nrows</span><span class="p">);</span> <span class="c1">// 2</span>
+
+<span class="cm">/* expected output:</span>
+<span class="cm">   Total approximate number of matches in db: 2</span>
+<span class="cm">   - [&quot;Name&quot;,&quot;Salary&quot;]</span>
+<span class="cm">   1 [&quot;Debbie Dreamer&quot;,250000]</span>
+<span class="cm">   2 [&quot;Billie Barista&quot;,0]</span>
+<span class="cm">   Total: 2</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p>Note that it is more efficient and less cumbersome to place values in
+dedicated columns.  However, when the table may need to accomodate future
+fields, or where fields vary per row, using JSON fields can allow for
+greater flexibility.</p>
 </div>
 </div>
 </div>

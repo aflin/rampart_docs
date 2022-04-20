@@ -2419,3 +2419,276 @@ the target document.
     json_merge_preserve('[1,2]', '{"a":"b", "c":null}')
     ---------------------------------------------------
     [1,2,{"a":"b","c":null}]
+
+Full Example Using Json
+"""""""""""""""""""""""
+
+JSON fields can be operated on with database functions and SQL statements in
+the same manner as normal fields.  Here is the 
+:ref:`sql.exec() example <rampart-sql:Exec Full Example>` using a JSON
+varchar field in the place of multiple columns:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+
+    /* create database if it does not exist */
+    var sql = new Sql.init("./mytestdb",true);
+
+    /* check if table exists */
+    var res = sql.exec(
+        "select * from SYSTABLES where NAME='employees'",
+        {"returnType":"novars"} /* we only need the count */
+    );
+
+    if(res.rowCount) /* 1 if the table exists */
+    {
+        /* drop table from previous test run of this script */
+        res=sql.exec("drop table employees");
+    }
+
+    /* (re)create the table */
+    sql.exec(
+            "create table employees (Classification varchar(8), " +
+            "Name varchar(16), EmpData varchar(256) );",
+            {"returnType":"novars"}
+    );
+
+    /* populate variables for insertion */
+    var emp1 = {
+      cl:     "principal",
+      name:   "Debbie Dreamer",
+      empdata: {
+        age:    63,
+        title:  "Chief Executive Officer",
+        start:  '1999-12-31',
+        salary: 250000,
+        bio:    "Born and raised in Manhattan, New York. U.C. Berkeley graduate. " +
+                  "Loves to skydive. Built Company from scratch. Still uses word-perfect."
+      }
+    }
+
+    var emp2 = {
+      cl:     "principal",
+      name:   "Rusty Grump",
+      empdata: {
+        age:    58,
+        title:  "Chief Financial Officer",
+        start:  '1999-12-31', // Strings are converted to local time
+        salary: 250000,
+        bio:    "Born in Switzerland, raised in South Dakota. Columbia graduate. " +
+                  "Financed operation with inheritance. Has no sense of humor."
+      }
+    }
+
+    var emp3 = {
+      cl:     "salary",
+      name:   "Georgia Geek",
+      empdata: {
+        age:    44,
+        title:  "Lead Programmer",
+        start:  '2001-3-15',
+        salary: 100000,
+        bio:    "Stanford graduate. Enjoys pizza and beer. Proficient in Perl, COBOL," +
+                "FORTRAN and IBM System/360"
+      }
+    }
+
+    var emp4 = {
+      cl:     "salary",
+      name:   "Sydney Slacker",
+      empdata: {
+        age:    44,
+        title:  "Programmer",
+        start:  new Date('2002-5-12T00:00:00.0-0800'), // Dates are UTC unless offset is given.
+        salary: 100000,
+        bio:    "DeVry University graduate. Enjoys a good nap. Proficient in Python, " +
+                "Perl and JavaScript"
+      }
+    }
+
+    var emp5 = {
+      cl:     "hourly",
+      name:   "Pat Particular",
+      empdata: {
+        age:    32,
+        title:  "Systems Administrator",
+        start:  new Date('2003-7-14'),
+        salary: 80000,
+        bio:    "Lincoln High School graduate. Self taught Linux and windows administration skills. Proficient in " +
+              "Bash and GNU utilities. Capable of crashing or resurrecting machines with a single ping.",
+      }
+    }
+
+    var emp6 = {
+      cl:     "intern",
+      name:   "Billie Barista",
+      empdata: {
+        age:    22,
+        title:  "Intern",
+        start:  new Date('2020-3-18'),
+        salary: 0,
+        bio:    "Harvard graduate, full ride scholarship, top of class.  Proficient in C, C++, " +
+                "Rust, Haskell, Node, Python. Into skydiving. Makes a mean latte."
+      }
+    }
+
+    var employees = [ emp1, emp2, emp3, emp4, emp5, emp6 ];
+
+    /* insert rows */
+    for (var i=0; i<employees.length; i++)
+    {
+        // empdata:{} is automatically converted to JSON
+        sql.exec(
+            "insert into employees values(?cl,?name,?empdata)",
+            employees[i]
+        );
+    }
+
+
+
+    /* create text index */
+    sql.exec("create fulltext index employees_Bio_text on employees( EmpData.$.bio );");
+
+    /* perform some queries */
+    res=sql.exec("select Name, EmpData.$.age Age from employees");
+
+    rampart.utils.printf('%3J\n%s\n', res,sql.errMsg);
+    /* expected output:
+       {
+           "columns": [
+               "Name",
+               "Age"
+           ],
+           "rows": [
+               {
+                   "Name": "Debbie Dreamer",
+                   "Age": 63
+               },
+               {
+                   "Name": "Rusty Grump",
+                   "Age": 58
+               },
+               {
+                   "Name": "Georgia Geek",
+                   "Age": 44
+               },
+               {
+                   "Name": "Sydney Slacker",
+                   "Age": 44
+               },
+               {
+                   "Name": "Pat Particular",
+                   "Age": 32
+               },
+               {
+                   "Name": "Billie Barista",
+                   "Age": 22
+               }
+           ],
+           "rowCount": 6
+       }
+    */
+
+    res=sql.exec(
+        "select Name, EmpData.$.age  Age from employees",
+        {returnType:'array', maxRows:2, includeCounts:true}
+    );
+    rampart.utils.printf('%3J\n', res);
+    /* expected output:
+       {
+           "columns": [
+               "Name",
+               "Age"
+           ],
+           "rows": [
+               [
+                   "Debbie Dreamer",
+                   63
+               ],
+               [
+                   "Rusty Grump",
+                   58
+               ]
+           ],
+           "countInfo": {
+               "indexCount": -1,
+               "rowsMatchedMin": -1,
+               "rowsMatchedMax": -2,
+               "rowsReturnedMin": -1,
+               "rowsReturnedMax": -2
+           },
+           "rowCount": 2
+       }
+                 Note that countInfo values are all negative since no
+                 text search was performed.
+    */
+    res=sql.exec(
+        "select Name from employees where EmpData.$.bio likep 'proficient' and convert(EmpData.$.salary, 'float') > 50000",
+         {includeCounts:true}
+    );
+    rampart.utils.printf('%3J\n', res);
+
+    /* expected output:
+       {
+           "columns": [
+               "Name"
+           ],
+           "rows": [
+               {
+                   "Name": "Georgia Geek"
+               },
+               {
+                   "Name": "Sydney Slacker"
+               },
+               {
+                   "Name": "Pat Particular"
+               }
+           ],
+           "countInfo": {
+               "indexCount": 4,
+               "rowsMatchedMin": 0,
+               "rowsMatchedMax": 4,
+               "rowsReturnedMin": 0,
+               "rowsReturnedMax": 4
+           },
+           "rowCount": 3
+       }
+       Note that indexCount is the count before "Salary > 50000" filter
+    */
+
+    /* skydive => skydiving */
+    sql.set({
+        minwordlen: 5,
+        suffixproc: true
+    });
+
+    nrows=sql.exec(
+        "select Name, EmpData.$.salary Salary from employees where EmpData.$.bio likep 'skydive' " +
+          "order by convert(EmpData.$.salary, 'float')  desc",
+        {returnType:"array", includeCounts:true},
+        function (row, i, coln, cinfo) {
+            if(!i) {
+                console.log(
+                   "Total approximate number of matches in db: " +
+                   cinfo.indexCount
+                );
+                console.log("-", coln);
+            }
+            console.log(i+1,row);
+        }
+    );
+    console.log("Total: " + nrows); // 2
+
+    /* expected output:
+       Total approximate number of matches in db: 2
+       - ["Name","Salary"]
+       1 ["Debbie Dreamer",250000]
+       2 ["Billie Barista",0]
+       Total: 2
+    */
+
+Note that it is more efficient and less cumbersome to place values in
+dedicated columns.  However, when the table may need to accomodate future
+fields, or where fields vary per row, using JSON fields can allow for
+greater flexibility.

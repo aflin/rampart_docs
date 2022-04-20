@@ -99,7 +99,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#loading-the-javascript-module">Loading the Javascript Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#database-functions">Database Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#init-constructor">init() constructor</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#exec">exec()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exec">exec()</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#exec-full-example">Exec Full Example</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#one">one()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#set">set()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reset">reset()</a></li>
@@ -228,7 +231,7 @@ Texis library and the decades of development behind it.</p>
 <div class="section" id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
 <p>Use of the <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> module and the Texis library is governed by the
-Rampart Source Available License.</p>
+<a class="reference external" href="https://github.com/aflin/rampart/blob/main/LICENSE-rsal.txt">Rampart Source Available License</a>.</p>
 </div>
 <div class="section" id="what-does-it-do">
 <h2>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h2>
@@ -427,7 +430,8 @@ statement.</p>
 <span class="p">);</span>
 </pre></div>
 </div>
-<p>The use of Parameters can make the handling of user input safe from sql injection.
+<p>The use of Parameters can make the handling of user input safe from
+<a class="reference external" href="https://en.wikipedia.org/wiki/SQL_injection">SQL injection</a>.
 Note that if there is only one parameter, it still must be contained in an
 <span class="green">Array</span> or <span class="green">Object</span>.</p>
 <dl id="execopts">
@@ -691,10 +695,9 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 <span class="cm">*/</span>
 </pre></div>
 </div>
-<dl class="simple" id="exec-full-example">
-<dt>Full Example:</dt><dd><p>Below is a full example of <code class="docutils literal notranslate"><span class="pre">exec()</span></code> functionality:</p>
-</dd>
-</dl>
+<div class="section" id="exec-full-example">
+<h3>Exec Full Example<a class="headerlink" href="#exec-full-example" title="Permalink to this headline">¶</a></h3>
+<p>Below is a full example of <code class="docutils literal notranslate"><span class="pre">exec()</span></code> functionality:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
 <span class="cm">/* create database if it does not exist */</span>
@@ -937,6 +940,7 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 <span class="cm">   Total: 2</span>
 <span class="cm">*/</span>
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="one">
@@ -2585,8 +2589,8 @@ position within the text.</p>
 </div></blockquote>
 <p>Note that when using <code class="docutils literal notranslate"><span class="pre">\</span></code> escapes in JavaScript <span class="green">Strings</span>, they must be
 double escaped as javascript interprets the <code class="docutils literal notranslate"><span class="pre">\</span></code> before it is passed on to
-the <code class="docutils literal notranslate"><span class="pre">rex</span></code> function (.e.g.  <code class="docutils literal notranslate"><span class="pre">Sql.rex(&quot;\\n=[^\\n]+&quot;</span></code>, text)``).
-However the following <em>unsupported</em> syntax can also be used in most cases:
+the <code class="docutils literal notranslate"><span class="pre">rex</span></code> function (.e.g.  <code class="docutils literal notranslate"><span class="pre">Sql.rex(&quot;\\n=[^\\n]+&quot;,</span> <span class="pre">text)</span></code>).
+However the following <strong>unsupported</strong> syntax can also be used in limited cases:
 <code class="docutils literal notranslate"><span class="pre">Sql.rex(/\n=[^\n]+/,</span> <span class="pre">text)</span></code>.  This may be useful for quick
 scripting, but as the <code class="docutils literal notranslate"><span class="pre">/pattern/</span></code> is compiled by javascript, and then
 again by <code class="docutils literal notranslate"><span class="pre">rex</span></code>, this will perform unnecessary computation and can fail if

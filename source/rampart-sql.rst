@@ -11,7 +11,7 @@ License
 ~~~~~~~
 
 Use of the ``rampart-sql`` module and the Texis library is governed by the
-Rampart Source Available License.
+`Rampart Source Available License <https://github.com/aflin/rampart/blob/main/LICENSE-rsal.txt>`_\ .
 
 What does it do?
 ~~~~~~~~~~~~~~~~
@@ -198,7 +198,8 @@ SQL Parameters:
         { salary: 50000, date: "2018-12-31"}
     );
 
-The use of Parameters can make the handling of user input safe from sql injection.
+The use of Parameters can make the handling of user input safe from
+`SQL injection <https://en.wikipedia.org/wiki/SQL_injection>`_\ .
 Note that if there is only one parameter, it still must be contained in an
 :green:`Array` or :green:`Object`.
 
@@ -482,10 +483,10 @@ Error Messages:
       sql.errMsg is similar.
    */
 
-.. _exec_full_example:
+Exec Full Example
+"""""""""""""""""
 
-Full Example:
-  Below is a full example of ``exec()`` functionality:
+Below is a full example of ``exec()`` functionality:
 
 .. code-block:: javascript
 
@@ -2573,8 +2574,8 @@ Rule 3 example:
 
 Note that when using ``\`` escapes in JavaScript :green:`Strings`, they must be
 double escaped as javascript interprets the ``\`` before it is passed on to
-the ``rex`` function (.e.g.  ``Sql.rex("\\n=[^\\n]+"``, text)``). 
-However the following *unsupported* syntax can also be used in most cases:
+the ``rex`` function (.e.g.  ``Sql.rex("\\n=[^\\n]+", text)``). 
+However the following **unsupported** syntax can also be used in limited cases:
 ``Sql.rex(/\n=[^\n]+/, text)``.  This may be useful for quick
 scripting, but as the ``/pattern/`` is compiled by javascript, and then
 again by ``rex``, this will perform unnecessary computation and can fail if

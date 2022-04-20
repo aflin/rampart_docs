@@ -149,8 +149,8 @@ Armed with this knowledge, we are ready to create a script that imports our data
 Creating the table
 ~~~~~~~~~~~~~~~~~~
 
-We will create a column for each column of the CSV file.  In addition we will add
-two more columns.  
+In our SQL table, we will create a column for each column of the CSV file. 
+In addition we will add two more columns.
 
 The first will be a Texis ``counter`` type.  This will be used to create
 a unique identifier for each row (similar to a primary key, but automatically
@@ -1778,12 +1778,12 @@ So lets start writing our ``ajaxres()`` function, using this query:
         );
 
 
-Here we use the object ``{lat:lat, lon:lon}`` to fill in the ``?lat`` and
+Here we use the :green:`Object` ``{lat:lat, lon:lon}`` to fill in the ``?lat`` and
 ``?lon`` in the SQL query.  In this case it is easier than the using ``?,?``
 style and providing an :green:`Array` since the same lat/lon values are
 being use multiple times.
 
-We also provide the object ``{maxRows: 100}`` to override the default of ten
+We also provide the :green:`Object` ``{maxRows: 100}`` to override the default of ten
 rows.
 
 This will return something similar to:

@@ -1,7 +1,7 @@
 rampart.utils
 =============
 
-Utility functions are provided by the global ``rampart.utils`` :green:`Object`.
+Utility functions are provided in the global ``rampart.utils`` :green:`Object`.
 These functions bring file io and other functionality to Duktape JavaScript.
 
 
@@ -547,7 +547,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var st = stat(file);
+   var st = rampart.utils.stat(file);
 
 Where ``file`` is a :green:`String` (name of file).
 
@@ -1070,8 +1070,9 @@ Usage:
 
 Return Value:
   A :green:`String`, one of ``String``, ``Array``, ``Number``, ``Function``,
-  ``Boolean``, ``Buffer`` (any buffer type), ``Nan``, ``Null``, ``Undefined``,
-  ``Date`` or ``Object``.
+  ``Boolean``, ``Buffer`` (any buffer type), ``Nan``, ``Null``,
+  ``Undefined``, ``Date`` or ``Object`` (excluding any of the other types of
+  :green:`Objects` such as ``Null``, ``Array`` or ``Function``) .
 
 dateFmt
 '''''''
@@ -1408,13 +1409,13 @@ Set the file position to the beginning of the file.  It is equivalent to:
 
 .. code-block:: javascript
 
-   fseek(handle, 0, "seek_set")
+   rampart.utils.fseek(handle, 0, "seek_set")
 
 Usage:
 
 .. code-block:: javascript
 
-   rewind(handle);
+   rampart.utils.rewind(handle);
 
 Return Value:
    ``undefined``
