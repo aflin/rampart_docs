@@ -1506,22 +1506,17 @@ Return Value:
 fgets
 '''''
 
-Similar to ``fread()``, except that ``max_size`` and ``chunk_size`` are set to the same
-value ``nchars``, and a :green:`String` is returned.
-
 Usage:
 
 .. code-block:: javascript
 
-    var instr = rampart.utils.fgets([handle|file] [, nchars]);
+    var data = rampart.utils.fgets([handle|file] [, max_size]);
 
-Where ``handle`` or ``file`` is identical to `fread`_ above and optional ``nchars``
-is the number of characters (bytes) to read.  The default for ``nchars``, if not
-specified is ``1``;
+Read data from file, up to ``max_size`` bytes (default ``1``), stopping at the 
+and including the first ``\n`` or the end of the file.  
 
 Return Value:
-   A :green:`String` of length ``nchars``.
-
+    A :green:`String`.
 
 fwrite
 ''''''
