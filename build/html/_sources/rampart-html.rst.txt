@@ -81,14 +81,15 @@ where:
   Some of these options apply to the rules for parsing the document, while
   others apply to the appearance of the document (such as indentation and
   line wrapping) when it is output is `prettyPrint`_\ ed.  Other options
-  that deal with file i/o are ignored.
+  that deal with file i/o are ignored.  Options with a ``-`` may also be
+  given as camelCase.
 
   A small subset of these options include:
   
   *  ``indent`` - a :green:`Boolean`, whether to add indentation and word wrapping
      to the output when using `prettyPrint`_\ .
 
-  *  ``indent-spaces`` - a :green:`Number` indicating the number of spaces
+  *  ``indent-spaces`` (aka ``indentSpaces``) - a :green:`Number` indicating the number of spaces
      to indent the output when using `prettyPrint`_ and ``indent`` above 
      is set ``true``. The default is ``2``.
 
@@ -97,10 +98,10 @@ where:
      above is set ``true``.  The default is ``68``.  There may be some
      circumstances where it is not possible to wrap a line.
 
-  *  ``drop-empty-elements`` - a :green:`Boolean`, whether to drop empty
+  *  ``drop-empty-elements`` (aka ``dropEmptyElements``) - a :green:`Boolean`, whether to drop empty
      elements. **In Rampart** the default is ``false``.
   
-  *  ``tidy-mark`` - a :green:`Boolean`, whether to insert a ``meta`` tag
+  *  ``tidy-mark`` (aka ``tidyMark``) - a :green:`Boolean`, whether to insert a ``meta`` tag
      in the head of the document indicating that the 
      `Tidy-HTML5 <http://www.html-tidy.org/>`_ library was used to process
      the document.  **In Rampart** the default is ``false``.
@@ -110,13 +111,13 @@ where:
 
 Return Value:
   An *html object* with all the functions for manipulating the HTML
-  document.  In addition, this *top level html object*
+  document.  In addition, this will be the *root html object*, which
   will also contain the ``prettyPrint()`` function.
 
 prettyPrint
 ~~~~~~~~~~~
 
-The *top level html object* includes an additional function which will
+The *root html object* includes an additional function which will
 output the entire text of the document with optional indentation.
 
 Example:
@@ -180,11 +181,11 @@ the HTML document parsed with `newDocument`_ above.
 An element is a single parsed HTML tag (such as "``<br />``")
 with links to its descendant elements and/or plain text content, if any.
 
-The *top level html object* is the :green:`Object` returned from
+The *root html object* is the :green:`Object` returned from
 `newDocument`_\ .  It is identical to other *html objects*, except that it
 additionally includes the `prettyPrint`_ function.
 
-In addition to the *top level html object*, new ones can be created.  
+In addition to the *root html object*, new ones can be created.  
 A new list of elements is returned in an *html object* when they are
 selected, detached, moved, copied or have their attributes and
 classes changed with the functions below.
@@ -496,14 +497,16 @@ Example:
 toText
 """"""
 
-Return an :green:`Array` of :green:`Strings`, each string the plain text of each of the given
-elements and their children.
+Return an :green:`Array` of :green:`Strings`, each string the plain text
+extracted from each of the given elements and their children.  By default,
+``toText()`` attempts to extract only visible text.  Options below allow for
+some formatting and other relevant text to be returned as well.
 
 Usage:
 
 .. code-block:: javascript
 
-    var tags = hobj.toHtml([options]);
+    var tags = hobj.toText([options]);
 
 Where:
 
@@ -517,30 +520,37 @@ Where:
       a :green:`String` consisting of the concatenated output from each given
       element.  Default is ``false``.
 
-    * ``imageAltText`` - a :green:`Boolean` if true, alt text from images
-      will also be output.  Default is ``true``.
-
     * ``metaDescription`` - a :green:`Boolean` if true, text from the
       ``content`` of an existing ``<meta name="description" content="text">``
-      will also be output.  Default is ``true``. 
+      will also be output.  Default is ``false``. 
 
     * ``metaKeywords`` - a :green:`Boolean` if true, text from the
       ``content`` of an existing ``<meta name="keywords" content="text">``
-      will also be output.  Default is ``true``. 
+      will also be output.  Default is ``false``. 
+
+    * ``enumerateLists`` - a :green:`Boolean` if true, text in ``<li>`` tags
+      will be indented and prepended with an asterisk ``*`` for unordered lists
+      (``<ul>``) or a sequential number followed by a period (e.g. ``1.``) for ordered
+      lists (``<ol>``). Text inside ``<dl>/<dt>/<dd>`` tags will also be indented.
+      Default is ``false``.
 
     * ``titleText`` - a :green:`Boolean` if true, text from any element
       which contains a ``title`` attribute will also be output.
       Default is ``false``.
 
-    * ``aLinks`` - a :green:`Boolean` if true, the ``href`` value from
-      ``<a>`` tags will be output after the enclosed text in parentheses. 
-      Default is ``false``.
+    * ``showHRTags``- a :green:`Boolean` if true, ``<hr>`` will be replaced
+      with ``\n---\n`` instead of ``\n``.  Default is ``false``.
 
-    * ``enumerateLists`` - a :green:`Boolean` if true, text in ``<li>`` tags
-      will be prepended with an asterisk ``*`` for unordered lists
-      (``<ul>``) or a sequential number followed by a period (e.g. ``1.``) for ordered
-      lists (``<ol>``). Text following ``<dd>`` tags will also be indented four spaces.
-      Default is ``true``.
+    * ``aLinks`` - a :green:`Boolean` if true, the ``href`` value from
+      ``<a>`` tags will be output after the enclosed text in parentheses
+      in markdown style.  Default is ``false``.
+
+    * ``imgAltText`` - a :green:`Boolean` if true, alt text from images
+      will also be output.  Default is ``false``.
+
+    * ``imgLinks`` - a :green:`Boolean` if true, the ``src`` value from
+      ``<img>`` tags will be output after the enclosed text in parentheses
+      in markdown style.  Default is ``false``.
 
 Example:
 
@@ -553,29 +563,67 @@ Example:
         '<meta name="keywords" content="awesome adventure love happiness redemption">' +
         '<title>My Awesome Story</title>' +
         '<h1>Table of Contents</h1><ol><li>Chapter 1</li><li>Chapter 2</li></ol>' +
-        '<h2 title="Chapter 1">I was born</h2><img src="myimage.jpg" alt="me as a baby">' +
+        '<h2 title="Chapter 1">I was born</h2><img src="myimage.jpg" alt="me as a baby" title="My Baby Pic">' +
         '<div>I was born a poor ...</div>' +
         '<h2 title="Chapter 2">I left home</h2><img src="myimage2.jpg" alt="me at 21">' +
-        '<div>I got a job guessing weights at <a href="http://example.com/">a carnival</a>...</div>'
+        '<div>I got a job guessing weights at <a title="The Carnival Website" href="http://example.com/">a carnival</a>...</div>'
     );
 
-    console.log(doc.toText({aLinks:true, titleText:true})[0]);
+    console.log("___DEFAULT___");
+    console.log(doc.toText()[0]);
+    console.log("-----------\n\n___WITH_EXTRAS___");
+    console.log(doc.toText({
+        metaDescription:true,
+        metaKeywords: true,
+        enumerateLists: true,
+        aLinks:true, 
+        titleText:true,
+        showHRTags:true, 
+        imgLinks:true, 
+        imgAltText:true
+    })[0]);
 
     /* expected output:
-
-    my awesome story as told by me
-
-    awesome adventure love happiness redemption
+    ___DEFAULT___
     My Awesome Story
+
     Table of Contents
-    1. Chapter 1
-    2. Chapter 2
-     Chapter 1 I was born
-     me as a baby 
+
+    Chapter 1
+    Chapter 2
+
+    I was born
+
     I was born a poor ...
-     Chapter 2 I left home
-     me at 21 
-    I got a job guessing weights at a carnival  (http://example.com/)...
+
+    I left home
+
+    I got a job guessing weights at a carnival ...
+
+    -----------
+
+    ___WITH_EXTRAS___
+    description: my awesome story as told by me
+    keywords: awesome adventure love happiness redemption
+
+    My Awesome Story
+
+    Table of Contents
+
+            1. Chapter 1
+            2. Chapter 2
+
+    Chapter 1
+    I was born
+
+    ![me as a baby](myimage.jpg "My Baby Pic")
+    I was born a poor ...
+
+    Chapter 2
+    I left home
+
+    ![me at 21](myimage2.jpg)
+    I got a job guessing weights at [a carnival](http://example.com/ "The Carnival Website")...
 
     */
 
@@ -709,7 +757,7 @@ like all *html object* functions, returns a unique list.
 getDocument
 """""""""""
 
-Given an *html object* return the *top level html object*.
+Given an *html object* return the *root html object*.
 
 Example:
 
@@ -717,7 +765,7 @@ Example:
 
     var html = require("rampart-html");
  
-    /* var doc is our top level object */
+    /* var doc is our root object */
     var doc = html.newDocument(
         '<span>one</span><div class="myclass">two</div>' +
         '<span>three</span><div class="myclass">four</div>'
@@ -725,7 +773,7 @@ Example:
 
     var spans = doc.findTag("span");
 
-    /* demonstrate that getDocument returns the top level object */
+    /* demonstrate that getDocument returns the root object */
     console.log( (doc == spans.getDocument()) );
 
     /* expected output:

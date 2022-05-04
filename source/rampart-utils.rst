@@ -456,7 +456,7 @@ Usage:
       file: filename
       [, offset: offsetPos]
       [, length: rLength]
-      [, retString: return_str]
+      [, returnString: return_str]
    });
 
    /* or */

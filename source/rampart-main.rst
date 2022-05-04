@@ -333,7 +333,7 @@ The ``rampart.include`` function is similar to the following code:
 
 .. code-block:: javascript
 
-   var icode = rampart.utils.readFile({file: jsfile, retString:true});
+   var icode = rampart.utils.readFile({file: jsfile, returnString:true});
    eval(icode);
 
 With the exception that it:
