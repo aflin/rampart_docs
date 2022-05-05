@@ -140,6 +140,9 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rand-hash-and-hyperloglog">Rand, Hash and HyperLogLog</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#rand">rand</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#irand">irand</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gaussrand">gaussrand</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normrand">normrand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#srand">srand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hash">hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hll">hll</a></li>
@@ -1706,13 +1709,73 @@ and random numbers, see <a class="reference internal" href="rampart-crypto.html#
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">min</span></code> is the floor and <code class="docutils literal notranslate"><span class="pre">max</span></code>
-is the ceiling of the range of the random number to produce.</p>
+is the ceiling (EXCLUSIVE) of the range of the random number to produce.
+If not provided, <code class="docutils literal notranslate"><span class="pre">min</span></code> and <code class="docutils literal notranslate"><span class="pre">max</span></code> default to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">1.0</span></code> respectively.</p>
 <dl class="simple">
 <dt>Return Value:</dt><dd><p>A <span class="green">Number</span> - the generated random number.</p>
 </dd>
 </dl>
 <p>Note that if srand has not been called before use, the random number generator
 will be automatically seeded.</p>
+</div>
+<div class="section" id="irand">
+<h3>irand<a class="headerlink" href="#irand" title="Permalink to this headline">¶</a></h3>
+<p>Generate a random integer using a fast, non-cryptographic random number generator.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">rn</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">irand</span><span class="p">([</span><span class="nx">min</span><span class="p">,</span> <span class="nx">max</span><span class="p">]);</span>
+
+   <span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">rn</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="nx">max</span><span class="p">);</span>
+
+   <span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">rn</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">rand</span><span class="p">([</span><span class="nx">max</span><span class="p">[</span><span class="nx">min</span><span class="p">,</span><span class="nx">max</span><span class="p">]],</span><span class="nx">callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">min</span></code> is the floor and <code class="docutils literal notranslate"><span class="pre">max</span></code>
+is the ceiling (INCLUSIVE) of the range of the random integeers to produce.
+If not provided, <code class="docutils literal notranslate"><span class="pre">min</span></code> and <code class="docutils literal notranslate"><span class="pre">max</span></code> default to <code class="docutils literal notranslate"><span class="pre">0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">99</span></code> respectively.</p>
+<p>If provided, <code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> <code class="docutils literal notranslate"><span class="pre">callback(r,i)</span></code> where
+<code class="docutils literal notranslate"><span class="pre">r</span></code> is the random integer and i is the loop count. The <span class="green">Function</span>
+will be called repeatedly until it returns <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<dl class="simple">
+<dt>Return Value:</dt><dd><p>A <span class="green">Number</span> - the generated random integer as a number. If
+a function is provided, returns <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
+</dd>
+</dl>
+<p>Note that if srand has not been called before use, the random number generator
+will be automatically seeded.</p>
+<p>Note also because of JavaScript <span class="green">Number</span> precision, the maximum and
+minimum <code class="docutils literal notranslate"><span class="pre">max</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> that may be provided is <code class="docutils literal notranslate"><span class="pre">9007199254740991</span></code> and
+<code class="docutils literal notranslate"><span class="pre">-9007199254740991</span></code> respectively.</p>
+</div>
+<div class="section" id="gaussrand">
+<h3>gaussrand<a class="headerlink" href="#gaussrand" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">gaussrand([sigma])</span></code> function returns a random <span class="green">Number</span> using a
+fast, non-cryptographic random number generator and based on
+a normal distribution centered at zero (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>), where <code class="docutils literal notranslate"><span class="pre">sigma</span></code> is one
+standard deviation.  <code class="docutils literal notranslate"><span class="pre">sigma</span></code> is optional, defaulting to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
+</div>
+<div class="section" id="normrand">
+<h3>normrand<a class="headerlink" href="#normrand" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">normrand([scale])</span></code> function returns a random <span class="green">Number</span> using a
+fast, non-cryptographic random number generator and based on
+a normal distribution centered at zero (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>) and clamped between <code class="docutils literal notranslate"><span class="pre">-scale</span></code>
+and <code class="docutils literal notranslate"><span class="pre">scale</span></code>.</p>
+<p>Similar to the <a class="reference internal" href="#gaussrand">gaussrand</a> above.  It is equivelant to:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">nrand</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">*</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">gaussrand</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="mf">5.0</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">nrand</span><span class="o">&gt;</span><span class="nx">scale</span><span class="p">)</span>
+    <span class="nx">nrand</span><span class="o">=</span><span class="nx">scale</span><span class="p">;</span>
+<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">nrand</span> <span class="o">&lt;</span> <span class="o">-</span><span class="nx">scale</span><span class="p">)</span>
+    <span class="nx">nrand</span> <span class="o">=</span> <span class="o">-</span><span class="nx">scale</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>With a <code class="docutils literal notranslate"><span class="pre">scale</span></code> of <code class="docutils literal notranslate"><span class="pre">1.0</span></code> (the default), the distribution of numbers has a
+standard deviation of <code class="docutils literal notranslate"><span class="pre">0.2</span></code>.</p>
 </div>
 <div class="section" id="srand">
 <h3>srand<a class="headerlink" href="#srand" title="Permalink to this headline">¶</a></h3>

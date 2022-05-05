@@ -1620,13 +1620,85 @@ Usage:
    var rn = rampart.utils.rand(max);
 
 Where ``min`` is the floor and ``max``
-is the ceiling of the range of the random number to produce.
-
+is the ceiling (EXCLUSIVE) of the range of the random number to produce.
+If not provided, ``min`` and ``max`` default to ``0.0`` and
+``1.0`` respectively.
+ 
 Return Value:
    A :green:`Number` - the generated random number.
 
 Note that if srand has not been called before use, the random number generator
 will be automatically seeded.
+
+irand
+'''''
+
+Generate a random integer using a fast, non-cryptographic random number generator.
+
+Usage:
+
+.. code-block:: javascript
+
+   var rn = rampart.utils.irand([min, max]);
+
+      /* or */
+
+   var rn = rampart.utils.rand(max);
+
+      /* or */
+
+   var rn = rampart.utils.rand([max[min,max]],callback);
+
+Where ``min`` is the floor and ``max``
+is the ceiling (INCLUSIVE) of the range of the random integeers to produce.
+If not provided, ``min`` and ``max`` default to ``0`` and
+``99`` respectively.
+
+If provided, ``callback`` is a :green:`Function` ``callback(r,i)`` where
+``r`` is the random integer and i is the loop count. The :green:`Function` 
+will be called repeatedly until it returns ``false``.
+
+Return Value:
+   A :green:`Number` - the generated random integer as a number. If
+   a function is provided, returns ``undefined``.
+
+Note that if srand has not been called before use, the random number generator
+will be automatically seeded.
+
+Note also because of JavaScript :green:`Number` precision, the maximum and
+minimum ``max`` or ``min`` that may be provided is ``9007199254740991`` and
+``-9007199254740991`` respectively.
+
+gaussrand
+'''''''''
+
+The ``gaussrand([sigma])`` function returns a random :green:`Number` using a
+fast, non-cryptographic random number generator and based on
+a normal distribution centered at zero (``0.0``), where ``sigma`` is one
+standard deviation.  ``sigma`` is optional, defaulting to ``1.0``.
+
+normrand
+''''''''
+
+The ``normrand([scale])`` function returns a random :green:`Number` using a
+fast, non-cryptographic random number generator and based on
+a normal distribution centered at zero (``0.0``) and clamped between ``-scale``
+and ``scale``.
+
+Similar to the `gaussrand`_ above.  It is equivelant to:
+
+.. code-block:: javascript
+
+    var nrand = scale * rampart.utils.gaussrand(1.0)/5.0;
+
+    if(nrand>scale)
+        nrand=scale;
+    else if (nrand < -scale)
+        nrand = -scale;   
+
+
+With a ``scale`` of ``1.0`` (the default), the distribution of numbers has a
+standard deviation of ``0.2``.
 
 
 srand
