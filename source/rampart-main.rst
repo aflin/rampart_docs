@@ -611,9 +611,16 @@ from the path of the rampart executable, removing '/bin' from the end of the
 path if exists.  Example: if ``/usr/local/bin/rampart`` is run (and is the
 actual location of the executable and not a symlink), ``process.installPath``
 will be ``/usr/local``.  However if the executable is in a path that does
-not end in ``bin/`` (e.g. ``~/mytestfiles/rampart``), ``process.installPath`` will be the location of the
-executable.  ``process.installPath`` is used internally to locate modules
+not end in ``bin/`` (e.g. ``~/mytestfiles/rampart``), ``process.installPath`` 
+will be the location of the executable (and the same as ``installPathBin`` 
+below).  ``process.installPath`` is used internally to locate modules
 and other files used by rampart. See `Module Search Path`_ below.
+
+installPathBin
+""""""""""""""
+
+The value of ``process.installPathBin`` is a :green:`String` containing the
+canonical path of the directory containing the rampart executable.
 
 scriptPath
 """"""""""
@@ -846,6 +853,8 @@ Modules are searched for in the following order:
    ``$RAMPART_PATH`` + ``/modules``.
 
 #. In :ref:`process.installPath <rampart-main:installPath>`\ .
+
+#. In :ref:`process.installPathBin <rampart-main:installPathBin>`\ .
 
 #. In the ``/lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
 
