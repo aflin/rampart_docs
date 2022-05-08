@@ -5,8 +5,7 @@ along with a webserver/search and typeahead/suggestion demo.  It also uses
 ``rampart-html`` to edit the html documents in order setup the search.
 
 The documentation is built with
-[Sphinx](https://www.sphinx-doc.org/en/master/) and included in the 
-``build/html/`` directory.
+[Sphinx](https://www.sphinx-doc.org/en/master/) and we extend our gratitude.
 
 The ``web_server/`` directory includes a script to build the search
 (on the first run) and start the web server.  Simply run:
