@@ -16,7 +16,7 @@ License
 
 The rampart-crypto module is released under the MIT license. 
 The `OpenSSL <https://www.openssl.org/>`_ library is released under the
-`Apache 2.0 License <https://github.com/openssl/openssl/blob/master/LICENSE.txt>`_\ .
+`OpenSSL License <https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/LICENSE>`_\ .
 
 What does it do?
 ~~~~~~~~~~~~~~~~
