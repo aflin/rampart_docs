@@ -1100,6 +1100,234 @@ even after calling ``sql.close()``, using the ``sql.*`` :green:`Functions`
 will re-open handles to the database and continue to operate as expected and
 in the same manner as when the "connection" was first opened.
 
+Database Indexing
+-----------------
+
+Regular Indexes
+~~~~~~~~~~~~~~~
+
+A Regular Index is an index on a column or columns of a table which aids the
+lookup of a matching row.  In general, an index can greatly improve the
+performance when ``SELECT``\ ing rows predicated on a "WHERE" clause.
+
+If a table has many millions of rows, and an application will need to
+look up rows by a particular column, placing an index on that column will
+allow the matching row or rows to be found without having to a full, linear
+scan of every entry.  In this way, an index is much like an index found in
+the back of a reference manual or encyclopedia.
+
+In Rampart, Regular Indexes, once created, are automatically maintained.
+There are several versions and variations of Regular Indexes, as listed 
+below.
+
+Non-Unique Index
+""""""""""""""""
+
+A non unique index is an index which may be used on any column or columns
+of a table in order to speed up lookup.
+
+The syntax for creating an index is as follows:
+
+.. code-block:: sql
+
+    CREATE INDEX index-name
+    ON table-name (column-name [DESC] [, column-name [DESC]] ...)
+    [WITH option-name [value] [option-name [value] ...]] 
+ 
+Where:
+
+* ``index-name`` is an arbitrary name for the index.
+* ``table-name`` is the name of the table being indexed.
+* ``column-name`` is a column in the current table.
+* ``DESC`` is an optional flag in wich to order the index.  This speeds
+  up SQL queries with the ``ORDER BY`` phrase where the order is decending. 
+* ``option-name`` is an optional option. See 
+  `Texis Documentation <https://docs.thunderstone.com/site/texisman/available_options.html>`_
+  for more information.
+
+Thus if you have a table created with:
+
+.. code-block:: sql
+
+   create table employees (Classification varchar(8), 
+   Name varchar(16), Age int, Salary int, Title varchar(16),
+   Start_date date, Bio varchar(128);
+
+An index that would allow efficient lookup by name when executing 
+``select * from employees where Name = 'Rusty Grump'`` could be achieved
+by creating an index with the following command:
+
+.. code-block:: sql
+
+    create index employees_Name_x on employees(Name); 
+
+If the employees table is large, the progress of index creation can be
+monitored with the ``option-name`` ``indexmeter`` as such:
+
+.. code-block:: sql
+
+    create index employees_Name_x on employees(Name) with indexmeter 'on'; 
+   
+This will print a progress meter to ``stdout`` as the index is being
+created.
+
+Unique Index
+""""""""""""
+
+A Unique Index indexes a column just as above, except that duplicate entries
+cannot be inserted into the table.
+
+The syntax for creating a unique index is as follows:
+
+.. code-block:: sql
+
+    CREATE UNIQUE INDEX index-name
+    ON table-name (column-name [DESC] [, column-name [DESC]] ...)
+    [WITH option-name [value] [option-name [value] ...]] 
+
+The following example illustrates the properties of a unique index:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+
+    var sql = new Sql.init("./testdb", true);
+
+    sql.exec("create table people (Name varchar(16), Age int);");
+
+    sql.exec("create unique index people_Name_ux on people(Name)");
+
+    var ret = sql.exec("insert into people values ('John Doe', 32);");
+
+    console.log("First insert:", ret);
+    console.log("Error Msg:", sql.errMsg);
+
+    // try to insert duplicate
+    ret = sql.exec("insert into people values ('John Doe', 54);");
+
+    console.log("Second Insert:", ret);
+    console.log("Error Msg:", sql.errMsg);
+
+    /* output:
+
+       First insert: {rows:[],rowCount:1}
+       Error Msg: 
+       Second Insert: {rows:[],rowCount:0}
+       Error Msg: 178 Trying to insert duplicate value (John Doe) in index /home/rampart/testdb/people_Name_ux.btr
+    */
+
+Fulltext Indexes
+~~~~~~~~~~~~~~~~
+
+Fulltext indexes are indexes on text fields which speed up full text searches
+using the ``WHERE column-name likep 'keyword keyword'`` syntax.
+
+A Fulltext index is also known as a "Metamorph Inverted" index.
+More information can be found 
+`here <https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html>`_
+and 
+`here <https://docs.thunderstone.com/site/vortexman/create_index_with_options.html>`_\ .
+
+Unlike Regular Indexes, Fulltext indexes do not automatically update upon
+insertion of new rows.  Though the ``likep`` search will still function as
+normal, newly inserted rows will be linearly scanned in order to find
+matches.  A Fulltext index may be updated at any time as described in
+`Updating A Fulltext Index`_ below.
+
+Creating A Fulltext Index
+"""""""""""""""""""""""""
+
+The syntax for creating a Fulltext index is as follows:
+
+.. code-block:: sql
+
+    CREATE FULLTEXT INDEX index-name
+    ON table-name (column-name [DESC] [, column-name [DESC]] ...)
+    [WITH option-name [value] [option-name [value] ...]] 
+
+
+Assuming the field ``Bio`` in the employees table example above
+contains plain English text, the following will create a Fulltext
+index on that field.
+
+.. code-block:: sql
+
+    create fulltext index employees_Bio_text on employees(Bio);
+
+If there are several columns which need to be treated as a single
+virtual column for Fulltext indexing, the following may be used:
+
+.. code-block:: sql
+
+    create fulltext index employees_NameBio_text on employees(Name\Bio);
+
+Not that in Rampart Javascript, the ``\`` needs to be escaped:
+
+.. code-block:: javascript
+
+    sql.exec("create fulltext index employees_NameBio_text on employees(Name\\Bio);");
+
+Updating A Fulltext Index
+"""""""""""""""""""""""""
+
+After a Fulltext Index is created, and more rows are inserted, the index may
+be updated by using the exact same command used to create the index above:
+
+.. code-block:: sql
+
+    create fulltext index employees_Bio_text on employees(Bio);
+
+Alternatively, ``ALTER INDEX`` syntax may be used as well.
+
+.. code-block:: sql
+
+    alter index employees_Bio_text OPTIMIZE;
+
+
+Automatic Maintenance
+"""""""""""""""""""""
+
+If a Fulltext index is large, the time and CPU resources it takes to update
+the index may be more than is desirable during active use of the database.
+If many rows are being added and deleted in an application, choosing an
+appropriate time to do the update, and limiting the update to a threshold
+of changed rows is appropriate.
+
+Depending the size of the table, it may be more efficient to linearly scan
+new rows rather than update the index.  A script (named, e.g.,
+``update-index.js``) like the following would only execute an update if more
+than 1000 rows have been changed.
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+
+    var sql = new Sql.init("/path/to/employee_db", true);
+
+    sql.exec("alter index employees_NameBio_text optimize optimize having COUNT(NewRows) > 1000;");
+
+Then adding a crontab entry like the following would execute the script at 2 am every night:
+
+.. code-block:: bash
+
+    00 02 * * * /usr/local/bin/rampart /path/to/update-index.js
+
+Removing Indexes
+~~~~~~~~~~~~~~~~
+
+If an index is no longer needed, it may be removed using the following syntax:
+
+.. code-block:: sql
+
+    DROP INDEX index-name;
+
+Further Reading
+~~~~~~~~~~~~~~~
+
+Detailed information about indexing and options can be found on the 
+`Thunderstone Texis Documentation Website <https://docs.thunderstone.com/site/texisman/indexing_for_increased.html>`_\ .
+
+
 String Functions
 ----------------
 As Texis is adept at handling text information, it includes several

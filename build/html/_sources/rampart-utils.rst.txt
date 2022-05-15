@@ -1532,7 +1532,7 @@ Usage:
 
 .. code-block:: javascript
 
-    var nbytes = rampart.utils.fwrite([handle|file], data [, max_bytes [, append]]);
+    var nbytes = rampart.utils.fwrite([handle|file], data [, max_bytes][, append]);
 
 +------------+-----------------+---------------------------------------------------+
 |Argument    |Type             |Description                                        |
@@ -1650,7 +1650,7 @@ Usage:
    var rn = rampart.utils.rand([max[min,max]],callback);
 
 Where ``min`` is the floor and ``max``
-is the ceiling (INCLUSIVE) of the range of the random integeers to produce.
+is the ceiling (INCLUSIVE) of the range of the random integers to produce.
 If not provided, ``min`` and ``max`` default to ``0`` and
 ``99`` respectively.
 

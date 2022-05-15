@@ -111,6 +111,22 @@
 <li class="toctree-l3"><a class="reference internal" href="#close">close()</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#database-indexing">Database Indexing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#regular-indexes">Regular Indexes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#non-unique-index">Non-Unique Index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#unique-index">Unique Index</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#fulltext-indexes">Fulltext Indexes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-fulltext-index">Creating A Fulltext Index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext Index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-maintenance">Automatic Maintenance</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#removing-indexes">Removing Indexes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Further Reading</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#string-functions">String Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#stringformat">stringFormat()</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#escape-sequences">Escape Sequences</a></li>
@@ -1252,6 +1268,190 @@ longer needed, <code class="docutils literal notranslate"><span class="pre">clos
 even after calling <code class="docutils literal notranslate"><span class="pre">sql.close()</span></code>, using the <code class="docutils literal notranslate"><span class="pre">sql.*</span></code> <span class="green">Functions</span>
 will re-open handles to the database and continue to operate as expected and
 in the same manner as when the “connection” was first opened.</p>
+</div>
+</div>
+<div class="section" id="database-indexing">
+<h1>Database Indexing<a class="headerlink" href="#database-indexing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="regular-indexes">
+<h2>Regular Indexes<a class="headerlink" href="#regular-indexes" title="Permalink to this headline">¶</a></h2>
+<p>A Regular Index is an index on a column or columns of a table which aids the
+lookup of a matching row.  In general, an index can greatly improve the
+performance when <code class="docutils literal notranslate"><span class="pre">SELECT</span></code>ing rows predicated on a “WHERE” clause.</p>
+<p>If a table has many millions of rows, and an application will need to
+look up rows by a particular column, placing an index on that column will
+allow the matching row or rows to be found without having to a full, linear
+scan of every entry.  In this way, an index is much like an index found in
+the back of a reference manual or encyclopedia.</p>
+<p>In Rampart, Regular Indexes, once created, are automatically maintained.
+There are several versions and variations of Regular Indexes, as listed
+below.</p>
+<div class="section" id="non-unique-index">
+<h3>Non-Unique Index<a class="headerlink" href="#non-unique-index" title="Permalink to this headline">¶</a></h3>
+<p>A non unique index is an index which may be used on any column or columns
+of a table in order to speed up lookup.</p>
+<p>The syntax for creating an index is as follows:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">INDEX</span> <span class="k">index</span><span class="o">-</span><span class="n">name</span>
+<span class="k">ON</span> <span class="k">table</span><span class="o">-</span><span class="n">name</span> <span class="p">(</span><span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="k">DESC</span><span class="p">]</span> <span class="p">[,</span> <span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="k">DESC</span><span class="p">]]</span> <span class="p">...)</span>
+<span class="p">[</span><span class="k">WITH</span> <span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">[</span><span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">...]]</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index-name</span></code> is an arbitrary name for the index.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">table-name</span></code> is the name of the table being indexed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column-name</span></code> is a column in the current table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DESC</span></code> is an optional flag in wich to order the index.  This speeds
+up SQL queries with the <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> phrase where the order is decending.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">option-name</span></code> is an optional option. See
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/available_options.html">Texis Documentation</a>
+for more information.</p></li>
+</ul>
+<p>Thus if you have a table created with:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="k">table</span> <span class="n">employees</span> <span class="p">(</span><span class="n">Classification</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+<span class="n">Name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">Age</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Salary</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Title</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+<span class="n">Start_date</span> <span class="nb">date</span><span class="p">,</span> <span class="n">Bio</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>An index that would allow efficient lookup by name when executing
+<code class="docutils literal notranslate"><span class="pre">select</span> <span class="pre">*</span> <span class="pre">from</span> <span class="pre">employees</span> <span class="pre">where</span> <span class="pre">Name</span> <span class="pre">=</span> <span class="pre">'Rusty</span> <span class="pre">Grump'</span></code> could be achieved
+by creating an index with the following command:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="k">index</span> <span class="n">employees_Name_x</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="n">Name</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If the employees table is large, the progress of index creation can be
+monitored with the <code class="docutils literal notranslate"><span class="pre">option-name</span></code> <code class="docutils literal notranslate"><span class="pre">indexmeter</span></code> as such:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="k">index</span> <span class="n">employees_Name_x</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="n">Name</span><span class="p">)</span> <span class="k">with</span> <span class="n">indexmeter</span> <span class="s1">&#39;on&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This will print a progress meter to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> as the index is being
+created.</p>
+</div>
+<div class="section" id="unique-index">
+<h3>Unique Index<a class="headerlink" href="#unique-index" title="Permalink to this headline">¶</a></h3>
+<p>A Unique Index indexes a column just as above, except that duplicate entries
+cannot be inserted into the table.</p>
+<p>The syntax for creating a unique index is as follows:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">UNIQUE</span> <span class="k">INDEX</span> <span class="k">index</span><span class="o">-</span><span class="n">name</span>
+<span class="k">ON</span> <span class="k">table</span><span class="o">-</span><span class="n">name</span> <span class="p">(</span><span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="k">DESC</span><span class="p">]</span> <span class="p">[,</span> <span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="k">DESC</span><span class="p">]]</span> <span class="p">...)</span>
+<span class="p">[</span><span class="k">WITH</span> <span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">[</span><span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">...]]</span>
+</pre></div>
+</div>
+<p>The following example illustrates the properties of a unique index:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./testdb&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table people (Name varchar(16), Age int);&quot;</span><span class="p">);</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create unique index people_Name_ux on people(Name)&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into people values (&#39;John Doe&#39;, 32);&quot;</span><span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;First insert:&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Error Msg:&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="c1">// try to insert duplicate</span>
+<span class="nx">ret</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into people values (&#39;John Doe&#39;, 54);&quot;</span><span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Second Insert:&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Error Msg:&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* output:</span>
+
+<span class="cm">   First insert: {rows:[],rowCount:1}</span>
+<span class="cm">   Error Msg:</span>
+<span class="cm">   Second Insert: {rows:[],rowCount:0}</span>
+<span class="cm">   Error Msg: 178 Trying to insert duplicate value (John Doe) in index /home/rampart/testdb/people_Name_ux.btr</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="fulltext-indexes">
+<h2>Fulltext Indexes<a class="headerlink" href="#fulltext-indexes" title="Permalink to this headline">¶</a></h2>
+<p>Fulltext indexes are indexes on text fields which speed up full text searches
+using the <code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">column-name</span> <span class="pre">likep</span> <span class="pre">'keyword</span> <span class="pre">keyword'</span></code> syntax.</p>
+<p>A Fulltext index is also known as a “Metamorph Inverted” index.
+More information can be found
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html">here</a>
+and
+<a class="reference external" href="https://docs.thunderstone.com/site/vortexman/create_index_with_options.html">here</a>.</p>
+<p>Unlike Regular Indexes, Fulltext indexes do not automatically update upon
+insertion of new rows.  Though the <code class="docutils literal notranslate"><span class="pre">likep</span></code> search will still function as
+normal, newly inserted rows will be linearly scanned in order to find
+matches.  A Fulltext index may be updated at any time as described in
+<a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext Index</a> below.</p>
+<div class="section" id="creating-a-fulltext-index">
+<h3>Creating A Fulltext Index<a class="headerlink" href="#creating-a-fulltext-index" title="Permalink to this headline">¶</a></h3>
+<p>The syntax for creating a Fulltext index is as follows:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">FULLTEXT</span> <span class="k">INDEX</span> <span class="k">index</span><span class="o">-</span><span class="n">name</span>
+<span class="k">ON</span> <span class="k">table</span><span class="o">-</span><span class="n">name</span> <span class="p">(</span><span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="k">DESC</span><span class="p">]</span> <span class="p">[,</span> <span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="k">DESC</span><span class="p">]]</span> <span class="p">...)</span>
+<span class="p">[</span><span class="k">WITH</span> <span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">[</span><span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">...]]</span>
+</pre></div>
+</div>
+<p>Assuming the field <code class="docutils literal notranslate"><span class="pre">Bio</span></code> in the employees table example above
+contains plain English text, the following will create a Fulltext
+index on that field.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="n">fulltext</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="n">Bio</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If there are several columns which need to be treated as a single
+virtual column for Fulltext indexing, the following may be used:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>create fulltext index employees_NameBio_text on employees(Name\Bio);
+</pre></div>
+</div>
+<p>Not that in Rampart Javascript, the <code class="docutils literal notranslate"><span class="pre">\</span></code> needs to be escaped:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index employees_NameBio_text on employees(Name\\Bio);&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="updating-a-fulltext-index">
+<h3>Updating A Fulltext Index<a class="headerlink" href="#updating-a-fulltext-index" title="Permalink to this headline">¶</a></h3>
+<p>After a Fulltext Index is created, and more rows are inserted, the index may
+be updated by using the exact same command used to create the index above:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="n">fulltext</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="n">Bio</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span></code> syntax may be used as well.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">alter</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="n">OPTIMIZE</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="automatic-maintenance">
+<h3>Automatic Maintenance<a class="headerlink" href="#automatic-maintenance" title="Permalink to this headline">¶</a></h3>
+<p>If a Fulltext index is large, the time and CPU resources it takes to update
+the index may be more than is desirable during active use of the database.
+If many rows are being added and deleted in an application, choosing an
+appropriate time to do the update, and limiting the update to a threshold
+of changed rows is appropriate.</p>
+<p>Depending the size of the table, it may be more efficient to linearly scan
+new rows rather than update the index.  A script (named, e.g.,
+<code class="docutils literal notranslate"><span class="pre">update-index.js</span></code>) like the following would only execute an update if more
+than 1000 rows have been changed.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/to/employee_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;alter index employees_NameBio_text optimize optimize having COUNT(NewRows) &gt; 1000;&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Then adding a crontab entry like the following would execute the script at 2 am every night:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">00</span> <span class="m">02</span> * * * /usr/local/bin/rampart /path/to/update-index.js
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="removing-indexes">
+<h2>Removing Indexes<a class="headerlink" href="#removing-indexes" title="Permalink to this headline">¶</a></h2>
+<p>If an index is no longer needed, it may be removed using the following syntax:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">DROP</span> <span class="k">INDEX</span> <span class="k">index</span><span class="o">-</span><span class="n">name</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id9">
+<h2>Further Reading<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<p>Detailed information about indexing and options can be found on the
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/indexing_for_increased.html">Thunderstone Texis Documentation Website</a>.</p>
 </div>
 </div>
 <div class="section" id="string-functions">
