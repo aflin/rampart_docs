@@ -1112,7 +1112,7 @@ performance when ``SELECT``\ ing rows predicated on a "WHERE" clause.
 
 If a table has many millions of rows, and an application will need to
 look up rows by a particular column, placing an index on that column will
-allow the matching row or rows to be found without having to a full, linear
+allow the matching row or rows to be found without having to do a full, linear
 scan of every entry.  In this way, an index is much like an index found in
 the back of a reference manual or encyclopedia.
 
@@ -1216,23 +1216,34 @@ The following example illustrates the properties of a unique index:
        Error Msg: 178 Trying to insert duplicate value (John Doe) in index /home/rampart/testdb/people_Name_ux.btr
     */
 
+Inverted Index
+""""""""""""""
+
+An Inverted Index may be used on ``UNSIGNED INT`` or ``DATE`` fields to speed up
+``ORDER BY`` operations.  See 
+`this section <https://docs.thunderstone.com/site/texisman/creating_an_inverted_index.html>`_
+of the `Texis Manual <https://docs.thunderstone.com/site/texisman/>`_ for more information.
+
 Fulltext Indexes
 ~~~~~~~~~~~~~~~~
 
 Fulltext indexes are indexes on text fields which speed up full text searches
 using the ``WHERE column-name likep 'keyword keyword'`` syntax.
 
-A Fulltext index is also known as a "Metamorph Inverted" index.
+A Fulltext index is also known as a "Metamorph Inverted Index".
 More information can be found 
 `here <https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html>`_
 and 
 `here <https://docs.thunderstone.com/site/vortexman/create_index_with_options.html>`_\ .
 
-Unlike Regular Indexes, Fulltext indexes do not automatically update upon
-insertion of new rows.  Though the ``likep`` search will still function as
-normal, newly inserted rows will be linearly scanned in order to find
-matches.  A Fulltext index may be updated at any time as described in
-`Updating A Fulltext Index`_ below.
+Unlike Regular Indexes, Fulltext indexes do not automatically update when
+inserting, deleting or updating rows.  Though the ``likep`` search will
+still function as normal, new and updated rows will be linearly scanned in
+order to find matches.  
+
+A Fulltext index may be manually updated at any time
+and while the database and index is in use.  See `Updating A Fulltext
+Index`_ below.
 
 Creating A Fulltext Index
 """""""""""""""""""""""""
@@ -1261,7 +1272,7 @@ virtual column for Fulltext indexing, the following may be used:
 
     create fulltext index employees_NameBio_text on employees(Name\Bio);
 
-Not that in Rampart Javascript, the ``\`` needs to be escaped:
+Note that in Rampart Javascript, the ``\`` needs to be escaped:
 
 .. code-block:: javascript
 
@@ -1271,7 +1282,7 @@ Updating A Fulltext Index
 """""""""""""""""""""""""
 
 After a Fulltext Index is created, and more rows are inserted, the index may
-be updated by using the exact same command used to create the index above:
+be updated by using the *exact* same command used to create the index above:
 
 .. code-block:: sql
 
@@ -1282,6 +1293,68 @@ Alternatively, ``ALTER INDEX`` syntax may be used as well.
 .. code-block:: sql
 
     alter index employees_Bio_text OPTIMIZE;
+
+Word Expressions
+""""""""""""""""
+
+A Fulltext index is created by matching the definition of a "word"
+using `rex()`_ regular expressions.  As used above, with no extra
+settings, the default regular expression is ``\alnum{2,99}``.
+This will separate words in text much like the following JavaScript
+splits words into an array:
+
+.. code-block:: javascript
+
+    var text = "Remember, wherever you go, there you are"
+    var words = text.match(/[a-zA-Z0-9]{2,99}/g);
+    console.log(words);
+    /* ["Remember","wherever","you","go","there","you","are"] */
+
+The default expression is sufficient for English Text.  However often it
+will be necessary to alter the word expression list in order to match the
+full UTF-8 character set. The list of word expressions can be
+altered using ``sql.set()`` and the :ref:`lstexp <sql-set:lstexp>`,
+:ref:`addexp <sql-set:addexp>` and :ref:`delexp <sql-set:delexp>` settings.
+
+Alternatively, the expression list can also be set for a single SQL statement using
+the ``CREATE INDEX`` and the ``WITH`` syntax:
+
+.. code-block:: sql
+
+    CREATE FULLTEXT employees_Bio_text ON employees(Bio)
+    WITH WORDEXPRESSIONS ('[\alnum\x80-\xFF]{2,99}');
+
+The above will match all UTF-8 encoded words.  It will exclude white space
+and punctuation.
+
+There may also be datasets where the matching of a limited amount of punctuation
+might be desirable.
+
+Consider the following small snippit of a C Program that might be cataloged in
+a full text searchable database:
+
+::
+
+   /* a pthread mutex needed for multi-threading */
+   pthread_mutex_t mylock;
+
+In order to distinguish between the separate strings "pthread" and "mutex",
+using the default word expression would be sufficient.
+
+However to have a "pthread_mutex_t" entry in the index, the ``_`` character needs
+to be added to the expression.  Further, for maximum flexibility, the index can
+contain both versions to index all desired permutations (i.e., "pthread", "mutex" 
+and "pthread_mutex_t") by using two expressions:
+
+.. code-block:: sql
+
+    CREATE FULLTEXT cprogs_Snippits_text ON cprogs(Snippits)
+    WITH WORDEXPRESSIONS ( '[\alnum\x80-\xFF]{2,99}', '[_\alnum\x80-\xFF]{2,99}' );
+
+NOTE:
+   Word expressions must be specified when the index is created.  New expressions
+   cannot be added upon optimizing the Fultext index with a ``CREATE``
+   statement.
 
 
 Automatic Maintenance
@@ -1304,13 +1377,34 @@ than 1000 rows have been changed.
 
     var sql = new Sql.init("/path/to/employee_db", true);
 
-    sql.exec("alter index employees_NameBio_text optimize optimize having COUNT(NewRows) > 1000;");
+    sql.exec("alter index employees_NameBio_text optimize having COUNT(NewRows) > 1000;");
 
 Then adding a crontab entry like the following would execute the script at 2 am every night:
 
 .. code-block:: bash
 
     00 02 * * * /usr/local/bin/rampart /path/to/update-index.js
+
+Compound Indexes
+~~~~~~~~~~~~~~~~
+
+As noted in the syntax above, an index may be made on multiple fields.  If a
+search will always be performed by matching more than one column, it may be
+advantageous to create a compound index.
+
+Given this query:
+
+.. code-block:: sql
+
+    SELECT * from employees where Name\Bio likep 'Debbie skydive' and
+    Start_date BETWEEN '1999-01-01' and '2005-12-31';
+
+The following could be used to create a Compound Index on the appropriate fields:
+
+.. code-blocl:: sql
+
+    CREATE FULLTEXT INDEX employees_NameBio_Start_date_cx ON
+    employees(Name\Bio, Start_date); 
 
 Removing Indexes
 ~~~~~~~~~~~~~~~~
@@ -1325,7 +1419,7 @@ Further Reading
 ~~~~~~~~~~~~~~~
 
 Detailed information about indexing and options can be found on the 
-`Thunderstone Texis Documentation Website <https://docs.thunderstone.com/site/texisman/indexing_for_increased.html>`_\ .
+`Texis Documentation Website <https://docs.thunderstone.com/site/texisman/indexing_for_increased.html>`_\ .
 
 
 String Functions
@@ -1343,6 +1437,7 @@ arguments.
 
 .. code-block:: javascript
 
+    var Sql = require("rampart-sql");
     var output = Sql.stringFormat(format [,args, ...]);
 
 +--------+------------------+---------------------------------------------------+
@@ -2163,6 +2258,7 @@ The abstract function generates an abstract of a given portion of text.
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
    var options=
       {
          max: max,
@@ -2175,6 +2271,7 @@ The abstract function generates an abstract of a given portion of text.
 
 .. code-block:: javascript
 
+    var Sql = require("rampart-sql");
     var abstract = Sql.abstract(text [,max [,style [,query [,markup]]]]);
 
 
@@ -2302,6 +2399,8 @@ replacement :green:`Strings` for the extra search values.
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
+
    var dataOut = Sql.sandr(expr, replace, data);
 
    /* or */
@@ -2395,6 +2494,7 @@ substrings in text.
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
    var ret = Sql.rex(expr, data [, callback] [, options]);
 
 
@@ -2859,6 +2959,7 @@ is returned (empty :green:`Array`).  See `rex()`_ above.
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
    var ret = Sql.re2(re2_expr, data [, callback] [, options]);
 
 rexFile()
@@ -2870,6 +2971,7 @@ See `rex()`_ above.
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
    var ret = Sql.rexFile(expr, filename [, callback] [, options]);
 
 In addition to the ``options`` available in `rex()`_, (``exclude`` and
@@ -2892,19 +2994,21 @@ is returned (empty :green:`Array`). See `rexFile()`_ above.
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
    var ret = Sql.re2File(re2_expr, filename [, callback] [, options]);
 
 
 searchFile()
 ~~~~~~~~~~~~
 
-The ``searchFile`` function performs a Metamorph keyword search on a file
+The ``searchFile`` function performs a Fulltext keyword search on a file
 and returns the matching portions of that file.
 
 Usage:
 
 .. code-block:: javascript
 
+   var Sql = require("rampart-sql");
    var res = Sql.searchFile(query, filename [, options]);
 
 Where:

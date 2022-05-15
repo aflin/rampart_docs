@@ -115,16 +115,19 @@
 <li class="toctree-l3"><a class="reference internal" href="#regular-indexes">Regular Indexes</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#non-unique-index">Non-Unique Index</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unique-index">Unique Index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#inverted-index">Inverted Index</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#fulltext-indexes">Fulltext Indexes</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#creating-a-fulltext-index">Creating A Fulltext Index</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext Index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#word-expressions">Word Expressions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#automatic-maintenance">Automatic Maintenance</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#compound-indexes">Compound Indexes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#removing-indexes">Removing Indexes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id9">Further Reading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Further Reading</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#string-functions">String Functions</a><ul>
@@ -1279,7 +1282,7 @@ lookup of a matching row.  In general, an index can greatly improve the
 performance when <code class="docutils literal notranslate"><span class="pre">SELECT</span></code>ing rows predicated on a “WHERE” clause.</p>
 <p>If a table has many millions of rows, and an application will need to
 look up rows by a particular column, placing an index on that column will
-allow the matching row or rows to be found without having to a full, linear
+allow the matching row or rows to be found without having to do a full, linear
 scan of every entry.  In this way, an index is much like an index found in
 the back of a reference manual or encyclopedia.</p>
 <p>In Rampart, Regular Indexes, once created, are automatically maintained.
@@ -1366,21 +1369,30 @@ cannot be inserted into the table.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="inverted-index">
+<h3>Inverted Index<a class="headerlink" href="#inverted-index" title="Permalink to this headline">¶</a></h3>
+<p>An Inverted Index may be used on <code class="docutils literal notranslate"><span class="pre">UNSIGNED</span> <span class="pre">INT</span></code> or <code class="docutils literal notranslate"><span class="pre">DATE</span></code> fields to speed up
+<code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> operations.  See
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/creating_an_inverted_index.html">this section</a>
+of the <a class="reference external" href="https://docs.thunderstone.com/site/texisman/">Texis Manual</a> for more information.</p>
+</div>
 </div>
 <div class="section" id="fulltext-indexes">
 <h2>Fulltext Indexes<a class="headerlink" href="#fulltext-indexes" title="Permalink to this headline">¶</a></h2>
 <p>Fulltext indexes are indexes on text fields which speed up full text searches
 using the <code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">column-name</span> <span class="pre">likep</span> <span class="pre">'keyword</span> <span class="pre">keyword'</span></code> syntax.</p>
-<p>A Fulltext index is also known as a “Metamorph Inverted” index.
+<p>A Fulltext index is also known as a “Metamorph Inverted Index”.
 More information can be found
 <a class="reference external" href="https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html">here</a>
 and
 <a class="reference external" href="https://docs.thunderstone.com/site/vortexman/create_index_with_options.html">here</a>.</p>
-<p>Unlike Regular Indexes, Fulltext indexes do not automatically update upon
-insertion of new rows.  Though the <code class="docutils literal notranslate"><span class="pre">likep</span></code> search will still function as
-normal, newly inserted rows will be linearly scanned in order to find
-matches.  A Fulltext index may be updated at any time as described in
-<a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext Index</a> below.</p>
+<p>Unlike Regular Indexes, Fulltext indexes do not automatically update when
+inserting, deleting or updating rows.  Though the <code class="docutils literal notranslate"><span class="pre">likep</span></code> search will
+still function as normal, new and updated rows will be linearly scanned in
+order to find matches.</p>
+<p>A Fulltext index may be manually updated at any time
+and while the database and index is in use.  See <a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext
+Index</a> below.</p>
 <div class="section" id="creating-a-fulltext-index">
 <h3>Creating A Fulltext Index<a class="headerlink" href="#creating-a-fulltext-index" title="Permalink to this headline">¶</a></h3>
 <p>The syntax for creating a Fulltext index is as follows:</p>
@@ -1400,7 +1412,7 @@ virtual column for Fulltext indexing, the following may be used:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>create fulltext index employees_NameBio_text on employees(Name\Bio);
 </pre></div>
 </div>
-<p>Not that in Rampart Javascript, the <code class="docutils literal notranslate"><span class="pre">\</span></code> needs to be escaped:</p>
+<p>Note that in Rampart Javascript, the <code class="docutils literal notranslate"><span class="pre">\</span></code> needs to be escaped:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index employees_NameBio_text on employees(Name\\Bio);&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -1408,7 +1420,7 @@ virtual column for Fulltext indexing, the following may be used:</p>
 <div class="section" id="updating-a-fulltext-index">
 <h3>Updating A Fulltext Index<a class="headerlink" href="#updating-a-fulltext-index" title="Permalink to this headline">¶</a></h3>
 <p>After a Fulltext Index is created, and more rows are inserted, the index may
-be updated by using the exact same command used to create the index above:</p>
+be updated by using the <em>exact</em> same command used to create the index above:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="n">fulltext</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="n">Bio</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -1416,6 +1428,57 @@ be updated by using the exact same command used to create the index above:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">alter</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="n">OPTIMIZE</span><span class="p">;</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="word-expressions">
+<h3>Word Expressions<a class="headerlink" href="#word-expressions" title="Permalink to this headline">¶</a></h3>
+<p>A Fulltext index is created by matching the definition of a “word”
+using <a class="reference internal" href="#rex">rex()</a> regular expressions.  As used above, with no extra
+settings, the default regular expression is <code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>.
+This will separate words in text much like the following JavaScript
+splits words into an array:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Remember, wherever you go, there you are&quot;</span>
+<span class="kd">var</span> <span class="nx">words</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/[a-zA-Z0-9]{2,99}/g</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">words</span><span class="p">);</span>
+<span class="cm">/* [&quot;Remember&quot;,&quot;wherever&quot;,&quot;you&quot;,&quot;go&quot;,&quot;there&quot;,&quot;you&quot;,&quot;are&quot;] */</span>
+</pre></div>
+</div>
+<p>The default expression is sufficient for English Text.  However often it
+will be necessary to alter the word expression list in order to match the
+full UTF-8 character set. The list of word expressions can be
+altered using <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> and the <a class="reference internal" href="sql-set.html#lstexp"><span class="std std-ref">lstexp</span></a>,
+<a class="reference internal" href="sql-set.html#addexp"><span class="std std-ref">addexp</span></a> and <a class="reference internal" href="sql-set.html#delexp"><span class="std std-ref">delexp</span></a> settings.</p>
+<p>Alternatively, the expression list can also be set for a single SQL statement using
+the <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">INDEX</span></code> and the <code class="docutils literal notranslate"><span class="pre">WITH</span></code> syntax:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">FULLTEXT</span> <span class="n">employees_Bio_text</span> <span class="k">ON</span> <span class="n">employees</span><span class="p">(</span><span class="n">Bio</span><span class="p">)</span>
+<span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span><span class="s1">&#39;[\alnum\x80-\xFF]{2,99}&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The above will match all UTF-8 encoded words.  It will exclude white space
+and punctuation.</p>
+<p>There may also be datasets where the matching of a limited amount of punctuation
+might be desirable.</p>
+<p>Consider the following small snippit of a C Program that might be cataloged in
+a full text searchable database:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">a</span> <span class="n">pthread</span> <span class="n">mutex</span> <span class="n">needed</span> <span class="k">for</span> <span class="n">multi</span><span class="o">-</span><span class="n">threading</span> <span class="o">*/</span>
+<span class="n">pthread_mutex_t</span> <span class="n">mylock</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>In order to distinguish between the separate strings “pthread” and “mutex”,
+using the default word expression would be sufficient.</p>
+<p>However to have a “pthread_mutex_t” entry in the index, the <code class="docutils literal notranslate"><span class="pre">_</span></code> character needs
+to be added to the expression.  Further, for maximum flexibility, the index can
+contain both versions to index all desired permutations (i.e., “pthread”, “mutex”
+and “pthread_mutex_t”) by using two expressions:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">FULLTEXT</span> <span class="n">cprogs_Snippits_text</span> <span class="k">ON</span> <span class="n">cprogs</span><span class="p">(</span><span class="n">Snippits</span><span class="p">)</span>
+<span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span> <span class="s1">&#39;[\alnum\x80-\xFF]{2,99}&#39;</span><span class="p">,</span> <span class="s1">&#39;[_\alnum\x80-\xFF]{2,99}&#39;</span> <span class="p">);</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>NOTE:</dt><dd><p>Word expressions must be specified when the index is created.  New expressions
+cannot be added upon optimizing the Fultext index with a <code class="docutils literal notranslate"><span class="pre">CREATE</span></code>
+statement.</p>
+</dd>
+</dl>
 </div>
 <div class="section" id="automatic-maintenance">
 <h3>Automatic Maintenance<a class="headerlink" href="#automatic-maintenance" title="Permalink to this headline">¶</a></h3>
@@ -1432,7 +1495,7 @@ than 1000 rows have been changed.</p>
 
 <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/to/employee_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;alter index employees_NameBio_text optimize optimize having COUNT(NewRows) &gt; 1000;&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;alter index employees_NameBio_text optimize having COUNT(NewRows) &gt; 1000;&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Then adding a crontab entry like the following would execute the script at 2 am every night:</p>
@@ -1441,6 +1504,18 @@ than 1000 rows have been changed.</p>
 </div>
 </div>
 </div>
+<div class="section" id="compound-indexes">
+<h2>Compound Indexes<a class="headerlink" href="#compound-indexes" title="Permalink to this headline">¶</a></h2>
+<p>As noted in the syntax above, an index may be made on multiple fields.  If a
+search will always be performed by matching more than one column, it may be
+advantageous to create a compound index.</p>
+<p>Given this query:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT * from employees where Name\Bio likep &#39;Debbie skydive&#39; and
+Start_date BETWEEN &#39;1999-01-01&#39; and &#39;2005-12-31&#39;;
+</pre></div>
+</div>
+<p>The following could be used to create a Compound Index on the appropriate fields:</p>
+</div>
 <div class="section" id="removing-indexes">
 <h2>Removing Indexes<a class="headerlink" href="#removing-indexes" title="Permalink to this headline">¶</a></h2>
 <p>If an index is no longer needed, it may be removed using the following syntax:</p>
@@ -1448,10 +1523,10 @@ than 1000 rows have been changed.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id9">
-<h2>Further Reading<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h2>Further Reading<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
 <p>Detailed information about indexing and options can be found on the
-<a class="reference external" href="https://docs.thunderstone.com/site/texisman/indexing_for_increased.html">Thunderstone Texis Documentation Website</a>.</p>
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/indexing_for_increased.html">Texis Documentation Website</a>.</p>
 </div>
 </div>
 <div class="section" id="string-functions">
@@ -1464,7 +1539,8 @@ text handling <span class="green">Functions</span> which Rampart exposes for use
 <a class="reference internal" href="sql-server-funcs.html#server-functions"><span class="std std-ref">server function</span></a>
 <a class="reference internal" href="sql-server-funcs.html#stringformat"><span class="std std-ref">stringformat</span></a>, except that it is not limited to five
 arguments.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">stringFormat</span><span class="p">(</span><span class="nx">format</span> <span class="p">[,</span><span class="nx">args</span><span class="p">,</span> <span class="p">...]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">stringFormat</span><span class="p">(</span><span class="nx">format</span> <span class="p">[,</span><span class="nx">args</span><span class="p">,</span> <span class="p">...]);</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -2080,7 +2156,7 @@ to be HTML-safe, use:</p>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-<p id="inlineprops"><a class="reference internal" href="sql-set.html#server-properties"><span class="std std-ref">Server Properties</span></a> may be given inline.  For example, in the
+<p><a class="reference internal" href="sql-set.html#server-properties"><span class="std std-ref">Server Properties</span></a> may be given inline.  For example, in the
 above example, if you did not want to match “formatting” from the query term
 “format” but still wanted to highlight “javascript” where “format” is not
 present (<code class="docutils literal notranslate"><span class="pre">&#64;0</span></code> for zero intersections; see
@@ -2176,7 +2252,8 @@ color-coded differently, and the <code class="docutils literal notranslate"><spa
 <div class="section" id="abstract">
 <h2>abstract()<a class="headerlink" href="#abstract" title="Permalink to this headline">¶</a></h2>
 <p>The abstract function generates an abstract of a given portion of text.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">options</span><span class="o">=</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">options</span><span class="o">=</span>
    <span class="p">{</span>
       <span class="nx">max</span><span class="o">:</span> <span class="nx">max</span><span class="p">,</span>
       <span class="nx">style</span><span class="o">:</span> <span class="nx">style</span><span class="p">,</span>
@@ -2186,7 +2263,8 @@ color-coded differently, and the <code class="docutils literal notranslate"><spa
 </pre></div>
 </div>
 <p><strong>or</strong></p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="kr">abstract</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="kr">abstract</span><span class="p">(</span><span class="nx">text</span> <span class="p">[,</span><span class="nx">max</span> <span class="p">[,</span><span class="nx">style</span> <span class="p">[,</span><span class="nx">query</span> <span class="p">[,</span><span class="nx">markup</span><span class="p">]]]]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="kr">abstract</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="kr">abstract</span><span class="p">(</span><span class="nx">text</span> <span class="p">[,</span><span class="nx">max</span> <span class="p">[,</span><span class="nx">style</span> <span class="p">[,</span><span class="nx">query</span> <span class="p">[,</span><span class="nx">markup</span><span class="p">]]]]);</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -2323,7 +2401,9 @@ modes, so that it more closely reflects an index-obtained hit.</p>
 returns <code class="docutils literal notranslate"><span class="pre">dataOut</span></code>, a <span class="green">String</span> or <span class="green">Array</span> of <span class="green">Strings</span> with any replacements.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">replace</span></code> has fewer values than <code class="docutils literal notranslate"><span class="pre">expr</span></code>, it is “padded” with empty
 replacement <span class="green">Strings</span> for the extra search values.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">dataOut</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">sandr</span><span class="p">(</span><span class="nx">expr</span><span class="p">,</span> <span class="nx">replace</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">dataOut</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">sandr</span><span class="p">(</span><span class="nx">expr</span><span class="p">,</span> <span class="nx">replace</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
@@ -2421,7 +2501,8 @@ exception that it uses <a class="reference internal" href="#re2">re2()</a> regul
 <h2>rex()<a class="headerlink" href="#rex" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">rex</span></code> function uses special (non-perlre) regular expressions to search for
 substrings in text.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">rex</span><span class="p">(</span><span class="nx">expr</span><span class="p">,</span> <span class="nx">data</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">rex</span><span class="p">(</span><span class="nx">expr</span><span class="p">,</span> <span class="nx">data</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
@@ -2835,7 +2916,8 @@ as follows:</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">re2</span></code> function operates identically to the <code class="docutils literal notranslate"><span class="pre">rex</span></code> function
 except that it uses Perl Regular Expressions and no submatch information
 is returned (empty <span class="green">Array</span>).  See <a class="reference internal" href="#rex">rex()</a> above.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">re2</span><span class="p">(</span><span class="nx">re2_expr</span><span class="p">,</span> <span class="nx">data</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">re2</span><span class="p">(</span><span class="nx">re2_expr</span><span class="p">,</span> <span class="nx">data</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 </div>
@@ -2844,7 +2926,8 @@ is returned (empty <span class="green">Array</span>).  See <a class="reference i
 <p>The <code class="docutils literal notranslate"><span class="pre">rexFile</span></code> function operates identically to the <code class="docutils literal notranslate"><span class="pre">rex</span></code> function
 except that it takes a file name for the text to search.
 See <a class="reference internal" href="#rex">rex()</a> above.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">rexFile</span><span class="p">(</span><span class="nx">expr</span><span class="p">,</span> <span class="nx">filename</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">rexFile</span><span class="p">(</span><span class="nx">expr</span><span class="p">,</span> <span class="nx">filename</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>In addition to the <code class="docutils literal notranslate"><span class="pre">options</span></code> available in <a class="reference internal" href="#rex">rex()</a>, (<code class="docutils literal notranslate"><span class="pre">exclude</span></code> and
@@ -2864,16 +2947,18 @@ would otherwise cross the internal read buffer boundry.</p></li>
 <p>The <code class="docutils literal notranslate"><span class="pre">re2File</span></code> function operates identically to the <code class="docutils literal notranslate"><span class="pre">rexFile</span></code> function
 except that it uses Perl Regular Expressions and no submatch information
 is returned (empty <span class="green">Array</span>). See <a class="reference internal" href="#rexfile">rexFile()</a> above.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">re2File</span><span class="p">(</span><span class="nx">re2_expr</span><span class="p">,</span> <span class="nx">filename</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">re2File</span><span class="p">(</span><span class="nx">re2_expr</span><span class="p">,</span> <span class="nx">filename</span> <span class="p">[,</span> <span class="nx">callback</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="searchfile">
 <h2>searchFile()<a class="headerlink" href="#searchfile" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">searchFile</span></code> function performs a Metamorph keyword search on a file
+<p>The <code class="docutils literal notranslate"><span class="pre">searchFile</span></code> function performs a Fulltext keyword search on a file
 and returns the matching portions of that file.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">searchFile</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">filename</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">searchFile</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">filename</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
