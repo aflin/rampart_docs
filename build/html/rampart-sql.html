@@ -120,6 +120,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#fulltext-indexes">Fulltext Indexes</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#creating-a-fulltext-index">Creating A Fulltext Index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#variations-of-fulltext-indexes">Variations of Fulltext Indexes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext Index</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#word-expressions">Word Expressions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#automatic-maintenance">Automatic Maintenance</a></li>
@@ -1312,7 +1313,7 @@ for more information.</p></li>
 <p>Thus if you have a table created with:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="k">table</span> <span class="n">employees</span> <span class="p">(</span><span class="n">Classification</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
 <span class="n">Name</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">Age</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Salary</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Title</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
-<span class="n">Start_date</span> <span class="nb">date</span><span class="p">,</span> <span class="n">Bio</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">);</span>
+<span class="n">Start_date</span> <span class="nb">date</span><span class="p">,</span> <span class="n">Bio</span> <span class="nb">varchar</span><span class="p">(</span><span class="mi">128</span><span class="p">));</span>
 </pre></div>
 </div>
 <p>An index that would allow efficient lookup by name when executing
@@ -1412,10 +1413,37 @@ virtual column for Fulltext indexing, the following may be used:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>create fulltext index employees_NameBio_text on employees(Name\Bio);
 </pre></div>
 </div>
-<p>Note that in Rampart Javascript, the <code class="docutils literal notranslate"><span class="pre">\</span></code> needs to be escaped:</p>
+<p>Note that in Rampart Javascript, the backslash (<code class="docutils literal notranslate"><span class="pre">\</span></code>) needs to be escaped:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index employees_NameBio_text on employees(Name\\Bio);&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="variations-of-fulltext-indexes">
+<h3>Variations of Fulltext Indexes<a class="headerlink" href="#variations-of-fulltext-indexes" title="Permalink to this headline">¶</a></h3>
+<p>Though a <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> search on a <code class="docutils literal notranslate"><span class="pre">FULLTEXT</span></code> index (created as described above)
+is the most common and most capable version, there are several other versions
+of text indexes and
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/search_condition_using_like.html">LIKE</a>
+searches which are available.  These include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">METAMORPH</span> <span class="pre">INVERTED</span> <span class="pre">INDEX</span></code> - same as <code class="docutils literal notranslate"><span class="pre">FULLTEXT</span></code>, or simply <code class="docutils literal notranslate"><span class="pre">METAMORPH</span></code>- best used with
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html">LIKEP</a> -
+see <a class="reference external" href="https://docs.thunderstone.com/site/texisman/inverted.html">Texis Documentation for Metamorph Inverted Indexes</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">METAMORPH</span> <span class="pre">COMPACT</span> <span class="pre">INDEX</span></code> - best used with
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html">LIKER</a> and
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html">LIKE3</a>-
+see <a class="reference external" href="https://docs.thunderstone.com/site/texisman/compact.html">Texis Documentation for Metamorph Compact Indexes</a> .</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">METAMORPH</span> <span class="pre">COUNTER</span> <span class="pre">INDEX</span></code> - best used with
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html">LIKEIN</a> -
+see <a class="reference external" href="https://docs.thunderstone.com/site/texisman/counter.html">Texis Documentation for Metamorph Counter Indexes</a> .</p></li>
+</ul>
+<p>The syntax for creating Text indexes using the <code class="docutils literal notranslate"><span class="pre">METAMORPH</span></code> keyword is as follows:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">METAMORPH</span> <span class="p">[</span><span class="n">INVERTED</span><span class="o">|</span><span class="n">COMPACT</span><span class="o">|</span><span class="n">COUNTER</span><span class="p">]</span> <span class="k">INDEX</span> <span class="k">index</span><span class="o">-</span><span class="n">name</span>
+     <span class="k">ON</span> <span class="k">table</span><span class="o">-</span><span class="n">name</span> <span class="p">(</span><span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[,</span> <span class="k">column</span><span class="o">-</span><span class="n">name</span><span class="p">...])</span>
+     <span class="p">[</span><span class="k">WITH</span> <span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">[</span><span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">...]]</span> <span class="p">;</span>
+</pre></div>
+</div>
+<p>Note that the default type, if not specified, is <code class="docutils literal notranslate"><span class="pre">INVERTED</span></code>.</p>
 </div>
 <div class="section" id="updating-a-fulltext-index">
 <h3>Updating A Fulltext Index<a class="headerlink" href="#updating-a-fulltext-index" title="Permalink to this headline">¶</a></h3>
@@ -1442,7 +1470,7 @@ splits words into an array:</p>
 <span class="cm">/* [&quot;Remember&quot;,&quot;wherever&quot;,&quot;you&quot;,&quot;go&quot;,&quot;there&quot;,&quot;you&quot;,&quot;are&quot;] */</span>
 </pre></div>
 </div>
-<p>The default expression is sufficient for English Text.  However often it
+<p>The default expression is sufficient for English text.  However often it
 will be necessary to alter the word expression list in order to match the
 full UTF-8 character set. The list of word expressions can be
 altered using <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> and the <a class="reference internal" href="sql-set.html#lstexp"><span class="std std-ref">lstexp</span></a>,
@@ -1515,6 +1543,10 @@ Start_date BETWEEN &#39;1999-01-01&#39; and &#39;2005-12-31&#39;;
 </pre></div>
 </div>
 <p>The following could be used to create a Compound Index on the appropriate fields:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE FULLTEXT INDEX employees_NameBio_Start_date_cx ON
+employees(Name\Bio, Start_date);
+</pre></div>
+</div>
 </div>
 <div class="section" id="removing-indexes">
 <h2>Removing Indexes<a class="headerlink" href="#removing-indexes" title="Permalink to this headline">¶</a></h2>

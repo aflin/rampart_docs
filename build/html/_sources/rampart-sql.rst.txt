@@ -1151,7 +1151,7 @@ Thus if you have a table created with:
 
    create table employees (Classification varchar(8), 
    Name varchar(16), Age int, Salary int, Title varchar(16),
-   Start_date date, Bio varchar(128);
+   Start_date date, Bio varchar(128));
 
 An index that would allow efficient lookup by name when executing 
 ``select * from employees where Name = 'Rusty Grump'`` could be achieved
@@ -1272,11 +1272,44 @@ virtual column for Fulltext indexing, the following may be used:
 
     create fulltext index employees_NameBio_text on employees(Name\Bio);
 
-Note that in Rampart Javascript, the ``\`` needs to be escaped:
+Note that in Rampart Javascript, the backslash (``\``) needs to be escaped:
 
 .. code-block:: javascript
 
     sql.exec("create fulltext index employees_NameBio_text on employees(Name\\Bio);");
+
+Variations of Fulltext Indexes
+""""""""""""""""""""""""""""""
+
+Though a ``LIKEP`` search on a ``FULLTEXT`` index (created as described above) 
+is the most common and most capable version, there are several other versions 
+of text indexes and 
+`LIKE <https://docs.thunderstone.com/site/texisman/search_condition_using_like.html>`_
+searches which are available.  These include:
+
+* ``METAMORPH INVERTED INDEX`` - same as ``FULLTEXT``, or simply ``METAMORPH``- best used with 
+  `LIKEP <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ - 
+  see `Texis Documentation for Metamorph Inverted Indexes <https://docs.thunderstone.com/site/texisman/inverted.html>`_\ .
+
+* ``METAMORPH COMPACT INDEX`` - best used with 
+  `LIKER <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ and
+  `LIKE3 <https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html>`_\ - 
+  see `Texis Documentation for Metamorph Compact Indexes <https://docs.thunderstone.com/site/texisman/compact.html>`_ \.
+
+* ``METAMORPH COUNTER INDEX`` - best used with
+  `LIKEIN <https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html>`_ - 
+  see `Texis Documentation for Metamorph Counter Indexes <https://docs.thunderstone.com/site/texisman/counter.html>`_ \.
+
+
+The syntax for creating Text indexes using the ``METAMORPH`` keyword is as follows:
+
+.. code-block:: sql
+
+    CREATE METAMORPH [INVERTED|COMPACT|COUNTER] INDEX index-name
+         ON table-name (column-name [, column-name...])
+         [WITH option-name [value] [option-name [value] ...]] ;
+
+Note that the default type, if not specified, is ``INVERTED``.
 
 Updating A Fulltext Index
 """""""""""""""""""""""""
@@ -1310,7 +1343,7 @@ splits words into an array:
     console.log(words);
     /* ["Remember","wherever","you","go","there","you","are"] */
 
-The default expression is sufficient for English Text.  However often it
+The default expression is sufficient for English text.  However often it
 will be necessary to alter the word expression list in order to match the
 full UTF-8 character set. The list of word expressions can be
 altered using ``sql.set()`` and the :ref:`lstexp <sql-set:lstexp>`,
@@ -1401,7 +1434,7 @@ Given this query:
 
 The following could be used to create a Compound Index on the appropriate fields:
 
-.. code-blocl:: sql
+.. code-block:: sql
 
     CREATE FULLTEXT INDEX employees_NameBio_Start_date_cx ON
     employees(Name\Bio, Start_date); 
