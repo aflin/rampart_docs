@@ -113,6 +113,9 @@ function parse_html_file(file, tofile){
     /* check if we already altered this file */
     var acscript = body.findAttr("id=rampart-search");
 
+    /* remove source link */
+    hres.findClass('wy-breadcrumbs-aside').delete();
+
     if(!acscript.length) {
         /* some alterations: jquery-autocomplete and the client-side search functions */
         body.append('<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>');
@@ -128,10 +131,15 @@ function parse_html_file(file, tofile){
             .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
             .autocomplete-group { padding: 2px 5px; }
             .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; border: 1px dotted gray; position: relative;}
-            .expand {cursor:pointer;    background-color: #eee; padding: 3px;border: 1px gray dotted; font-family:monospace}
+            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
             .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .fader {position: absolute;bottom: 0px;height: 1em; left:-5px; right:0px; background-color: #fcfcfc;}
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
+            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
+            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .expandBottom { bottom: 18px }
+            .expandTop { top: 3px }
+            .expanded .fader { bottom : -15px }
+            .expanded .expandBottom { bottom: 38px; }
             .wy-nav-content {max-width: 1600px;}
             </style>`        
         );
@@ -206,7 +214,7 @@ function copy_files(path, docpath, destpath){
     var q = params.get("q");
 
     if(q) {
-        window.history.replaceState({}, "", window.location.href.replace(/\\?.*/,''));
+        window.history.pushState({}, "", window.location.href.replace(/\\?.*/,''));
         $('#rtd-search-form').find('input[type=text]').val(q);
         dosearch(q);
     }
@@ -217,7 +225,7 @@ function copy_files(path, docpath, destpath){
         $("div[itemprop=articleBody]").after('<div id="searchres">');
         $("div[itemprop=articleBody],.rst-footer-buttons").hide();
         var sdiv = $('#searchres');
-        sdiv.html('<div style="cursor: pointer; float:right; border: 1px gray solid; border-radius:10px;width: 20px;height: 20px;position: relative;padding-left: 0.17em;" id="sclose">X</div>');
+        sdiv.html('<div style="cursor: pointer; float:right; border: 1px gray solid; border-radius:4px; position: relative;padding-left: 0.17em;" id="sclose">Close Search Results</div>');
         $.getJSON(
             "/apps/docs/rsearch/results.json",
             {q:q},
@@ -227,33 +235,44 @@ function copy_files(path, docpath, destpath){
                 sdiv.append("<h3>Search Results:</h3><p><p>");
                 for (var i=0;i<r.length;i++)
                 {
-                    sdiv.append('<p><span class="linked"><a class="linked" href="/docs/' +r[i].plink+ '">' + r[i].plink.replace(/\.html#.*/,'') + ' : ' +r[i].full+ '</a></span>');
                     sdiv.append(
-                        '<div data-base="'+ r[i].plink.replace(/\#.*/,'')  +'" class="searchsect">'+
-                        //'<span class="expand" style="position: absolute;top: 6px;right: 6px;">&nbsp;CLICK TO EXPAND&nbsp;</span>'+
-                        r[i].html+
-                        '<div class="fader"><div class="cont" style="bottom:3px; left:15px; position: relative;">...</div><div class="expand" style="bottom: 3px; right:15px; position: absolute;">Show More</div></div>');
+                        '<div data-base="'+ r[i].plink.replace(/#.*/,'')  +'" class="searchsect">'+
+                          r[i].html+
+                          '<div class="expand expandTop">show less</div>' +
+                          '<div class="fader">' +
+                            '<div class="cont" style="bottom:3px; left:15px; position: relative;">...</div>' +
+                            '<hr style="margin: 2px 0;">'+
+                            '<div class="expand expandBottom">show more</div>' +
+                          '</div>' +
+                         '</div>');
                 }
+                $('.expandTop').hide();
                 if(r.length==0)
                 {
                     sdiv.append('<p>No Results for "'+q+'"</p>');
                 }
                 else
                 {
-                    var links = sdiv.find("a.linked");
                     var hlinks = sdiv.find("a.headerlink");
                     var i=0;
-                    for (;i<links.length;i++) {
+                    for (;i<hlinks.length;i++) {
                         var hx = hlinks.eq(i).parent();
                         hlinks.eq(i).remove();
                         var txt = hx.text();
-                        hx.html('<a class="linked" href="' + links.eq(i).attr("href")+'">' + txt + '</a>');
+                        hx.empty().append('<span>');
+                        var hspan = hx.find('span');
+                        hspan.unwrap();
+                        hspan.html('<a class="linked mlink" href="/docs/' + r[i].plink +'">' + txt + '</a>'+
+                                    '<br><span><a class="linked slink" href="/docs/' +
+                                 r[i].plink+ '">' + r[i].plink.replace(/.html#.*/,'') + ' : ' +
+                                 r[i].full+ '</a>');
+
                     }
                     $(".searchsect").each(function(){
                         var t=$(this);
-                        if(t.height() < 248)
+                        if(t.height() < 233)
                         {
-                            t.find(".fader").hide();
+                            t.find(".fader").replaceWith('<hr style="margin: 2px 0;">');
                         }
                     });
                 }
@@ -264,12 +283,13 @@ function copy_files(path, docpath, destpath){
                 });
 
                 $('.expand').click(function(e){
-                    var t = $(this);
-                    var sect = t.closest(".searchsect");
-                    
+                    var sect = $(this).closest(".searchsect");
+                    t = sect.find('.expand');
+
                     if (sect.hasClass('expanded'))
                     {
                         t.html("show more");
+                        sect.find('.expandTop').hide();
                         sect.css('max-height','250px');
                         var o = sect.offset();
                         if($(window).scrollTop() > o.top-40)
@@ -280,6 +300,7 @@ function copy_files(path, docpath, destpath){
                     {
                         t.text("show less");
                         sect.css("max-height","initial");
+                        sect.find('.expandTop').show();
                         sect.find('.cont').hide();
                     }
                     sect.toggleClass('expanded');
