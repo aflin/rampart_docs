@@ -1421,38 +1421,33 @@ virtual column for Fulltext indexing, the following may be used:</p>
 <div class="section" id="variations-of-fulltext-indexes">
 <h3>Variations of Fulltext Indexes<a class="headerlink" href="#variations-of-fulltext-indexes" title="Permalink to this headline">¶</a></h3>
 <p>Though a <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> search on a <code class="docutils literal notranslate"><span class="pre">FULLTEXT</span></code> index (created as described above)
-is the most common and most capable version, there are several other versions
+is the most common and most capable version, there are two other versions
 of text indexes and
 <a class="reference external" href="https://docs.thunderstone.com/site/texisman/search_condition_using_like.html">LIKE</a>
-searches which are available.  These include:</p>
+searches which are available:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">METAMORPH</span> <span class="pre">INVERTED</span> <span class="pre">INDEX</span></code> - same as <code class="docutils literal notranslate"><span class="pre">FULLTEXT</span></code>, or simply <code class="docutils literal notranslate"><span class="pre">METAMORPH</span></code>- best used with
+<li><p>Fulltext Index: - Default <code class="docutils literal notranslate"><span class="pre">FULLTEXT</span></code> or <code class="docutils literal notranslate"><span class="pre">METAMORPH</span></code> index - best used with
 <a class="reference external" href="https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html">LIKEP</a> -
 see <a class="reference external" href="https://docs.thunderstone.com/site/texisman/inverted.html">Texis Documentation for Metamorph Inverted Indexes</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">METAMORPH</span> <span class="pre">COMPACT</span> <span class="pre">INDEX</span></code> - best used with
+<li><p>Compact Index - best used with
 <a class="reference external" href="https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html">LIKER</a> and
-<a class="reference external" href="https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html">LIKE3</a>-
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html">LIKE3</a>.
+Created with <code class="docutils literal notranslate"><span class="pre">create</span> <span class="pre">fulltext</span> <span class="pre">index</span> <span class="pre">...</span> <span class="pre">WITH</span> <span class="pre">WORDPOSITIONS</span> <span class="pre">'off';</span></code>.
 see <a class="reference external" href="https://docs.thunderstone.com/site/texisman/compact.html">Texis Documentation for Metamorph Compact Indexes</a> .</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">METAMORPH</span> <span class="pre">COUNTER</span> <span class="pre">INDEX</span></code> - best used with
-<a class="reference external" href="https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html">LIKEIN</a> -
+<li><p>Counter Index - best used with
+<a class="reference external" href="https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html">LIKEIN</a> .
+Created with <code class="docutils literal notranslate"><span class="pre">create</span> <span class="pre">fulltext</span> <span class="pre">index</span> <span class="pre">...</span> <span class="pre">WITH</span> <span class="pre">COUNTS</span> <span class="pre">'on';</span></code>.
 see <a class="reference external" href="https://docs.thunderstone.com/site/texisman/counter.html">Texis Documentation for Metamorph Counter Indexes</a> .</p></li>
 </ul>
-<p>The syntax for creating Text indexes using the <code class="docutils literal notranslate"><span class="pre">METAMORPH</span></code> keyword is as follows:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">METAMORPH</span> <span class="p">[</span><span class="n">INVERTED</span><span class="o">|</span><span class="n">COMPACT</span><span class="o">|</span><span class="n">COUNTER</span><span class="p">]</span> <span class="k">INDEX</span> <span class="k">index</span><span class="o">-</span><span class="n">name</span>
-     <span class="k">ON</span> <span class="k">table</span><span class="o">-</span><span class="n">name</span> <span class="p">(</span><span class="k">column</span><span class="o">-</span><span class="n">name</span> <span class="p">[,</span> <span class="k">column</span><span class="o">-</span><span class="n">name</span><span class="p">...])</span>
-     <span class="p">[</span><span class="k">WITH</span> <span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">[</span><span class="k">option</span><span class="o">-</span><span class="n">name</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="p">...]]</span> <span class="p">;</span>
-</pre></div>
-</div>
-<p>Note that the default type, if not specified, is <code class="docutils literal notranslate"><span class="pre">INVERTED</span></code>.</p>
 </div>
 <div class="section" id="updating-a-fulltext-index">
 <h3>Updating A Fulltext Index<a class="headerlink" href="#updating-a-fulltext-index" title="Permalink to this headline">¶</a></h3>
 <p>After a Fulltext Index is created, and more rows are inserted, the index may
-be updated by using the <em>exact</em> same command used to create the index above:</p>
+be optimized by using the <em>exact</em> same command used to create the index above:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">create</span> <span class="n">fulltext</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="k">on</span> <span class="n">employees</span><span class="p">(</span><span class="n">Bio</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span></code> syntax may be used as well.</p>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span></code> syntax may be used.</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">alter</span> <span class="k">index</span> <span class="n">employees_Bio_text</span> <span class="n">OPTIMIZE</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -1470,8 +1465,8 @@ splits words into an array:</p>
 <span class="cm">/* [&quot;Remember&quot;,&quot;wherever&quot;,&quot;you&quot;,&quot;go&quot;,&quot;there&quot;,&quot;you&quot;,&quot;are&quot;] */</span>
 </pre></div>
 </div>
-<p>The default expression is sufficient for English text.  However often it
-will be necessary to alter the word expression list in order to match the
+<p>The default expression is sufficient for English text.  However,
+the word expression list must be altered in order to match the
 full UTF-8 character set. The list of word expressions can be
 altered using <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> and the <a class="reference internal" href="sql-set.html#lstexp"><span class="std std-ref">lstexp</span></a>,
 <a class="reference internal" href="sql-set.html#addexp"><span class="std std-ref">addexp</span></a> and <a class="reference internal" href="sql-set.html#delexp"><span class="std std-ref">delexp</span></a> settings.</p>
@@ -1481,10 +1476,10 @@ the <code class="docutils literal notranslate"><span class="pre">CREATE</span> <
 <span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span><span class="s1">&#39;[\alnum\x80-\xFF]{2,99}&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The above will match all UTF-8 encoded words.  It will exclude white space
+<p>The above will match all UTF-8 encoded words.  It will exclude ASCII white space
 and punctuation.</p>
-<p>There may also be datasets where the matching of a limited amount of punctuation
-might be desirable.</p>
+<p>In some cases, there may be datasets where the matching of a limited amount
+of punctuation is desirable.</p>
 <p>Consider the following small snippit of a C Program that might be cataloged in
 a full text searchable database:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">a</span> <span class="n">pthread</span> <span class="n">mutex</span> <span class="n">needed</span> <span class="k">for</span> <span class="n">multi</span><span class="o">-</span><span class="n">threading</span> <span class="o">*/</span>
@@ -1503,7 +1498,7 @@ and “pthread_mutex_t”) by using two expressions:</p>
 </div>
 <dl class="simple">
 <dt>NOTE:</dt><dd><p>Word expressions must be specified when the index is created.  New expressions
-cannot be added upon optimizing the Fultext index with a <code class="docutils literal notranslate"><span class="pre">CREATE</span></code>
+cannot be added upon optimizing the Fulltext index with a <code class="docutils literal notranslate"><span class="pre">CREATE</span></code>
 statement.</p>
 </dd>
 </dl>

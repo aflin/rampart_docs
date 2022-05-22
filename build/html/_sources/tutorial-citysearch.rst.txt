@@ -11,7 +11,7 @@ lists the nearest cities to the selected city.
 
 You can download the complete project from our 
 `Tutorial Repository <https://github.com/aflin/rampart_tutorials>`_
-in the `geonames directory <https://github.com/aflin/rampart_tutorials/tree/main/geonames>`_\ .
+in the `citysearch directory <https://github.com/aflin/rampart_tutorials/tree/main/citysearch>`_\ .
 
 License
 ~~~~~~~
@@ -44,18 +44,60 @@ Getting Started
 In order to search by name and by location, we need to create a database
 that contains both place names and latitude/longitude information. 
 Fortunately, the good folks at `GeoNames.org <http://www.geonames.org/>`_
-have provided us a CSV formatted file that accomplishes that and which is
+and `OpenDataSoft <https://public.opendatasoft.com/>`_
+have available a CSV formatted file that accomplishes that and which is
 licensed under a 
 `Creative Commons License <https://creativecommons.org/licenses/by/4.0/>`_\ .
 
-You can navigate to `<http://download.geonames.org/export/zip/>`_ and choose
-the file that suits your needs.  In this tutorial, we will use the world
-database titled `AllCountries.zip
-<http://download.geonames.org/export/zip/allCountries.zip>`_\ .
+You can navigate to 
+`<https://public.opendatasoft.com/explore/dataset/geonames-all-cities-with-a-population-1000/export/>`_
+and choose the CSV file.  
 
-Your first task will be to download your file of choice and unzip it in a
-working directory (here we use ``~/geonames/``).  We will assume your
-working directory contains the ``allCountries.txt`` file.
+Your first task will be to create a directory structure for this project.
+
+Web Server Layout
+~~~~~~~~~~~~~~~~~
+
+In the Rampart binary distribution is a sample web server tree.  For our
+purposes here, we assume you have downloaded and unzipped the Rampart binary
+distribution into a directory named ``~/downloads/rampart``. We will use
+that for this project.  
+:ref:`The rampart-server HTTP module <rampart-server:The rampart-server HTTP module>`
+is configured and loaded from the included ``web_server/web_server_conf.js``
+script.  It defines ``web_server/html`` as the default directory for static
+html, ``web_server/apps`` as the default directory for scripts and
+``web_server/data`` as a standard location for databases.
+
+To get started, copy the ``web_server`` directory to a convenient place for
+this project. Also, for our purposes, we do not need
+anything in the ``web_server/apps/test_modules`` or
+``web_server/apps/wsapps`` directories, so you can delete the copy of those
+files. We will also add an empty file for our import script and web interface at 
+``web_server/apps/citysearch.js``.
+
+::
+
+    user@localhost:~$ mkdir citysearch
+    user@localhost:~$ cd citysearch
+    user@localhost:~/citysearch$ cp -a ~/downloads/rampart/web_server ./
+    user@localhost:~/citysearch$ cd web_server/
+    user@localhost:~/citysearch/web_server$ rm -rf apps/test_modules wsapps/* html/index.html
+    user@localhost:~/citysearch/web_server$ touch ./apps/citysearch.js
+    user@localhost:~/citysearch/web_server$ find .
+    user@localhost:~/citysearch/web_server$ curl -o data/geonames-all-cities-with-a-population-1000.csv \
+       'https://public.opendatasoft.com/explore/dataset/geonames-all-cities-with-a-population-1000/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B'
+    ./web_server
+    ./web_server/apps
+    ./web_server/apps/citysearch.js
+    ./web_server/html
+    ./web_server/html/images
+    ./web_server/html/images/inigo-not-found.jpg
+    ./web_server/data
+    ./web_server/data/geonames-all-cities-with-a-population-1000.csv
+    ./web_server/logs
+    ./web_server/start_web_server.sh
+    ./web_server/wsapps
+    ./web_server/web_server_conf.js
 
 Importing the Data
 ------------------
@@ -70,97 +112,65 @@ know a few thing such as (but not limited to):
 *  Does every column contain the same type?
 *  Are text columns quoted?
 *  Are single quotes present inside unquoted text fields?
-*  Are records separated by ``,`` or by ``\t``?
+*  Are records separated by ``,`` or by something else?
 *  Is there a header row as the first line in the file?
 
-Let's examine the first few rows of ``allCountries.txt``:
+Let's examine some rows of ``geonames-all-cities-with-a-population-1000.csv``:
 
 ::
 
-    $ head ./allCountries.txt
-    AD      AD100   Canillo Canillo 02                                      42.5833 1.6667  6
-    AD      AD200   Encamp  Encamp  03                                      42.5333 1.6333  6
-    AD      AD400   La Massana      La Massana      04                                      42.5667 1.4833  6
-    AD      AD300   Ordino  Ordino  05                                      42.6    1.55    6
-    AD      AD600   Sant Julià de Lòria     Sant Julià de Lòria     06                                      42.4667 1.5     6
-    AD      AD500   Andorra la Vella        Andorra la Vella        07                                      42.5    1.5     6
-    AD      AD700   Escaldes-Engordany      Escaldes-Engordany      08                                      42.5    1.5667  6
-    AR      3636    POZO CERCADO (EL CHORRO (F), DPTO. RIVADAVIA (S))       Salta   A                                       -23.4933        -61.9267        3
-    AR      4123    LAS SALADAS     Salta   A                                       -25.7833        -64.5   4
-    AR      4126    TALA    Salta   A                                       -26.1167        -65.2833        4
+    $ head -n 5 geonames-all-cities-with-a-population-1000.csv
+    Geoname ID;Name;ASCII Name;Alternate Names;Feature Class;Feature Code;Country Code;Country name EN;Country Code 2;Admin1 Code;Admin2 Code;Admin3 Code;Admin4 Code;Population;Elevation;DIgital Elevation Model;Timezone;Modification date;LABEL EN;Coordinates
+    8396129;Sanjiang;Sanjiang;Sanjiang,Sanjiang Jiedao,Sanjiang Qu,san jiang,san jiang jie dao,san jiang qu,三江,三江区,三江街道;P;PPLA3;CN;China;;01;3402;;;0;;14;Asia/Shanghai;2021-09-19;China;31.34813,118.36132
+    8405692;Xinmin;Xinmin;Xinmin,Xinmin Zhen,xin min,xin min zhen,新民,新民镇;P;PPLA4;CN;China;;33;8739734;;;28033;;402;Asia/Shanghai;2022-04-12;China;30.39759,107.3895
+    8416824;Jindaoxia;Jindaoxia;Jindaoxia,Jindaoxia Zhen,jin dao xia,jin dao xia zhen,金刀峡,金刀峡镇;P;PPLA4;CN;China;;33;8739734;;;13752;;323;Asia/Shanghai;2022-04-01;China;30.00528,106.65187
+    8420197;Jianlong;Jianlong;Jianlong,Jianlong Xiang,jian long,jian long xiang,健龙,健龙乡;P;PPLA4;CN;China;;33;8739734;;;18151;;276;Asia/Shanghai;2022-04-01;China;29.3586,106.18522
 
-Immediately we can see that records are separated by tabs (``\t``), that the second column (postal codes)
-has both number and text types and that text fields are not quoted.  Also the first row appears to be data, and not
-column names.
+    $ grep "United States" geonames-all-cities-with-a-population-1000.csv | head -n 5
+    5095312;Atlantic Highlands;Atlantic Highlands;Atlantic Highlands,Atlantik Khajlands,Portland Point,Portland Poynt,atlantyk haylndz  nywjrsy,Атлантик Хайландс,Атлантик Хајландс,آتلانتیک هایلندز، نیوجرسی;P;PPL;US;United States;;NJ;025;02110;;4311;11;14;America/New_York;2017-05-23;United States;40.40789,-74.03431
+    5095335;Avon-by-the-Sea;Avon-by-the-Sea;Avon,Avon-by-the-Sea,Ehvan-baj-zeh-Si,Key East,aywn-bay-d-sy  nywjrsy,Эван-бай-зэ-Си,ایون-بای-د-سی، نیوجرسی;P;PPL;US;United States;;NJ;025;02440;;1794;4;6;America/New_York;2017-05-23;United States;40.19234,-74.01597
+    5095561;Belmar;Belmar;BLM,Behlmar,Belmar,Ocean Beach,blmar  nywjrsy,Белмар,Бэлмар,بلمار، نیوجرسی;P;PPL;US;United States;;NJ;025;04930;;5712;4;6;America/New_York;2017-05-23;United States;40.17845,-74.0218
+    5096289;Carlstadt;Carlstadt;Carlstadt,Karlshtad,Karlstadt,Tailor Town,karlastadt  nywjrsy,Карлстадт,Карлштад,کارلاستادت، نیوجرسی;P;PPL;US;United States;;NJ;003;10480;;6279;55;55;America/New_York;2017-05-23;United States;40.84038,-74.0907
+    5097627;Elmwood Park;Elmwood Park;Dundee Lake,East Paterson,Ehlmvud Park,Elmvud Park,Elmwood Park,almwwd park  nywjrsy,Елмвуд Парк,Элмвуд Парк,الموود پارک، نیوجرسی;P;PPL;US;United States;;NJ;003;21300;;20279;14;14;America/New_York;2017-05-23;United States;40.90399,-74.11848
+
+
+Immediately we can see that records are separated by semi-colons (``;``), that the
+"Admin1" column has both number and text types and that text fields are not quoted.  
+Also the first row appears to be column names, and not data.
 
 Next let's check if there are embedded single quotes in text fields:
 
 ::
 
-    grep "'" ./allCountries.txt | head
-    AR      6646    GENERAL O'BRIEN Buenos Aires    B                                       -34.9   -60.75  4
-    AR      6748    O'HIGGINS       Buenos Aires    B                                       -34.5833        -60.7   4
-    AR      7541    D'ORBIGNY       Buenos Aires    B                                       -37.6833        -61.7167        4
-    AR      8514    VICEALMIRANTE EDUARDO O'CONNOR (ESTACION FCGR)  Rio Negro       R                                       -40.7722        -63.9889        3
-    AR      2117    COLONIA O'FARRELL       Santa Fe        S                                       -33.3278        -60.8694        1
-    AR      3050    LUCIO D'ABREU   Santa Fe        S                                       -29.9   -60.3   3
-    AR      3358    COLONIA LIEBIG'S        Corrientes      W                                       -27.9   -55.8583        3
-    AR      2645    CAPITAN GENERAL BERNARDO O'HIGGINS      Cordoba X                                       -33.25  -62.2833        4
-    AR      2645    PIEDRAS ANCHAS (CAP.GRAL.B.O'HIGGINS, DPTO.MARCOS JUAREZ)       Cordoba X                                       -33.2708        -62.2375     3
-    AU      2602    O'Connor        Australian Capital Territory    ACT     CANBERRA                                -35.2584        149.1202        4
+    $ grep "'" geonames-all-cities-with-a-population-1000.csv | head -n 2
+    8992324;Nu’erbage;Nu'erbage;Hetian Shi,Nu'erbage,Nu'erbage Jiedao,Nu’erbage,Nu’erbage Jiedao,he tian shi,nu er ba ge,nu er ba ge jie dao,努尔巴格,努尔巴格街道,和田市;P;PPLA3;CN;China;;13;6532;;;0;;1379;Asia/Urumqi;2021-09-20;China;37.1134,79.91034
+    12450872;Yingye'er;Yingye'er;;P;PPLA4;CN;China;;13;6532;;;11485;;1315;Asia/Urumqi;2022-03-31;China;37.37312,79.77745
 
-And indeed there are single quotes in place names.
+And indeed there are single quotes in city names.
 
 So to answer our earlier questions:
 
 *  Does every column contain the same type? -- :red:`NO`
 *  Are text columns quoted?  -- :red:`NO`
 *  Are single quotes present inside unquoted text fields? -- :green:`YES`
-*  Are records separated by ``,`` or by ``\t``?  -- :green:`Uses tabs`
-*  Is there a header row as the first line in the file? :red:`NO`
+*  Are records separated by ``,``?  -- :red:`NO`, :green:`Uses semicolons`
+*  Is there a header row as the first line in the file? :green:`YES`
 
-Note that although the file is separated by tabs, we will continue to use the term
+Note that although the file is separated by semi-colons, we will continue to use the term
 ``CSV``.
-
-Next lets find out which field is which.  According to GeoNames.org:
-
-::
-
-    The data format is tab-delimited text in utf8 encoding, with the following fields :
-
-    country code      : iso country code, 2 characters
-    postal code       : varchar(20)
-    place name        : varchar(180)
-    admin name1       : 1. order subdivision (state) varchar(100)
-    admin code1       : 1. order subdivision (state) varchar(20)
-    admin name2       : 2. order subdivision (county/province) varchar(100)
-    admin code2       : 2. order subdivision (county/province) varchar(20)
-    admin name3       : 3. order subdivision (community) varchar(100)
-    admin code3       : 3. order subdivision (community) varchar(20)
-    latitude          : estimated latitude (wgs84)
-    longitude         : estimated longitude (wgs84)
-    accuracy          : accuracy of lat/lng from 1=estimated, 4=geonameid, 6=centroid of addresses or shape
-
-From this we can see that except for ``latitude``, ``longitude`` and ``accuracy``, every one of our fields
-is text.  While the ``country code`` is always 2 characters, the rest of the fields are of variable length.
 
 Armed with this knowledge, we are ready to create a script that imports our data.
 
 Creating the table
 ~~~~~~~~~~~~~~~~~~
 
-In our SQL table, we will create a column for each column of the CSV file. 
-In addition we will add two more columns.
+The data will need to be imported in two stages.  Stage one will be as-is from the
+CSV into a temporary table.  Stage two will combine City, Admin1 and Country
+names into one field, separate and convert "Latitude,Longitute" to Numbers
+and compute a geocode we will use later for a bounded area search.
 
-The first will be a Texis ``counter`` type.  This will be used to create
-a unique identifier for each row (similar to a primary key, but automatically
-generated).
-
-The second requires a bit of knowledge of how a bounded geographic search works.  
-We will get to that later.  For now, trust that you need another field that is
-typed as ``long``.  We will call it ``geocode``.
-
-So let's create a script that will make our table.
+So let's create a script that will make our table by opening 
+``~/citysearch/web_server/apps/citysearch.js`` in your text editor.
 
 To begin, we need to load the SQL module and open a database;
 
@@ -168,13 +178,13 @@ To begin, we need to load the SQL module and open a database;
 
    var Sql = require("rampart-sql");
 
-   var sql = new Sql.init("~/geonames/geonames_db", true);
+   var sql = new Sql.init("~/citysearch/web_server/data/cities", true);
 
 
 In the above code, the ``var Sql = require("rampart-sql");`` line
 loads the SQL module that is distributed with Rampart as 
 ``rampart-sql.so``.  The second line, 
-``var sql = new Sql.init("~geonames/geonames_db", true);`` opens the database.
+``var sql = new Sql.init("~/citysearch/web_server/data/cities", true);`` opens the database.
 
 Note the ``true`` in ``Sql.init()``.  It signifies that if the database
 does not exist, create the directory and the metadata files necessary
@@ -186,45 +196,40 @@ When creating a new database, be sure that:
    it exists and does not contain the metadata files, the opening
    of the database will fail.
 
-*  The parent directory (in this case ``./``) does exist, and that
-   you have read/write permissions.
+*  The parent directory (in this case ``~/citysearch/web_server/data/``) 
+   **does** exist, and that you have read/write permissions.
 
 So now that we have the code to open, and optionally create our
 database, let's make our table.
 
 .. code-block:: javascript
 
-   var Sql = require("rampart-sql");
-
-    // use process.scriptPath to make sure we have the
-    // correct path if running from another working directory
-    var sql = new Sql.init(process.scriptPath + "/geonames_db", true);
-
-    // put the create statement into its own function
-    // since we are doing this in stages
-
-    function create_table() {
-
-        sql.exec("create table geonames (" +
-            "id           counter, "       +
-            "country_code char(2), "       +
-            "postal_code  varchar(8), "    +
-            "place_name   varchar(16), "   +
-            "admin_name1  varchar(16), "   +
-            "admin_code1  varchar(8), "    +
-            "admin_name2  varchar(16), "   +
-            "admin_code2  varchar(8), "    +
-            "admin_name3  varchar(16), "   +
-            "admin_code3  varchar(8), "    +
-            "latitude     double, "        +
-            "longitude    double, "        +
-            "geocode      long, "          +
-            "accuracy     int           );"
-        );
-
+    function create_tmp_table() {
+        sql.exec("create table cities_tmp (" +
+                "Geoname_ID              varchar(8), " +
+                "Name                    varchar(8), " +
+                "ASCII_Name              varchar(8), " +
+                "Alternate_Names         varchar(8), " +
+                "Feature_Class           varchar(8), " +
+                "Feature_Code            varchar(8), " +
+                "Country_Code            varchar(8), " +
+                "Country_name_EN         varchar(8), " +
+                "Country_Code_2          varchar(8), " +
+                "Admin1_Code             varchar(8), " +
+                "Admin2_Code             varchar(8), " +
+                "Admin3_Code             varchar(8), " +
+                "Admin4_Code             varchar(8), " +
+                "Population              int, "        +
+                "Elevation               int, "        +
+                "Digital_Elevation_Model int, "        +
+                "Timezone                varchar(8), " +
+                "Modification_date       varchar(8), " +
+                "LABEL_EN                varchar(8), " +
+                "Coordinates             varchar(8)"   +
+                ");"  ); 
     }
 
-    create_table();
+    create_tmp_table();
 
 This should all be self expanatory.  If not, please brush up on
 your `SQL <https://www.w3schools.com/sql/sql_create_table.asp>`_\ .
@@ -254,54 +259,25 @@ can make our ``importCsvFile()`` call look like this:
 
 .. code-block:: javascript
 
-    var total = sql.importCsvFile(
-        "allCountries.txt",  //file to import
-        {
-            normalize:       false,
-            singleQuoteNest: false,
-            delimiter:       '\t',
-            hasHeaderRow:    false,
-            tableName:       "geonames",
-        },
-        /* numbers are column-in positions (-1 means leave blank, or add counter if field type is 'counter')
-           position in array is column-out positions  */
-        [-1,0,1,2,3,4,5,6,7,8,9,10,-1,11]
-    );
+    var csvFile = "../data/geonames-all-cities-with-a-population-1000.csv";
+
+    function import_csv() {
+        total = sql.importCsvFile(
+            csvFile,  //file to import
+            {
+                tableName:       'cities_tmp',
+                singleQuoteNest: false,
+                hasHeaderRow:    true,
+                delimiter:       ';',
+                normalize:       false,
+            }
+        );
+        printf('\n%d rows in total.\n',total);
+    }
 
 So the :green:`Object` of settings passed to ``importCsvFile()`` addresses the answers to all our
 questions above (``singleQuoteNest: false`` is because there are single quotes present AND they
 are not quoted in double quotes -- one setting for those two questions).
-
-We also pass an array (``[-1,0,1,2,3,4,5,6,7,8,9,10,-1,11]``).
-
-Column numbers start at ``0`` and end at ``n-1`` columns.
-
-The array is like the layout of a SQL table row.  The numbers in the array
-correspond to columns in the CSV.  As such, the array lets the import
-function know which columns from the CSV file go to which columns in the SQL
-table.  
-
-In this case, column 0 in the SQL database is a ``counter`` type. 
-We want this to be created automatically.  So the first member of this array
-(``-1``) tells the import function to fill the first column in the SQL
-database with the default value.
-
-For default values using ``-1``, the actual value depends on the column
-type.  For ``varchar`` it is a blank string.  For ``int`` it is ``0``.  And
-for ``counter`` it is a unique number based on a time stamp and a counter
-value.
-
-Moving on, the second number in the array is ``0`` ("[-1,\ :red:`0`\
-,1,...]").  Since it is in the ``array[1]`` position, it refers to column 1
-(the second column) of SQL table.  Since it is ``0``, the data from column 0
-of the CSV will be used to populate column 1 of the SQL table.
-
-The rest follow suit with column 1 of the CSV populating column 2 of the 
-SQL table and so on.
-
-We want to insert zeros into the `geocode` field since it will be calculated
-later.  Hence there is the ``-1`` in the ``array[12]`` position (again,
-starting at 0; "[-1,0,1,2,3,4,5,6,7,8,9,10,\ :red:`-1`\ ,11]).
 
 We are ready to import the data.  But before we do, we know this will take a bit of time.
 Let's set up a function to monitor the progress so we aren't staring at a blank screen
@@ -333,128 +309,8 @@ at either of or both of the major stages.
     // cuz no one likes writing out 'rampart.utils.printf()'
     rampart.globalize(rampart.utils);
 
+    var total=-1; //we won't know the total until we finish the first pass of importCsvFile
     var step = 100; //set in importCsvFile(), only report every 100th row
-    var total = -1; //we won't know the total until we finish the first pass
-
-    function monitor_import(count, stg) {
-        var stage = "Import";
-
-        if(count==0)
-            printf("\n");
-
-        if(stg!==undefined) { // progressfunc
-            stage=stg;
-        }
-
-        if(stg === 0) //differentiate between 0 and undefined
-        {
-            total=count; //update our total in the first stage.
-            printf("Stage: %s, Count: %d       \r", stage, count);
-        } else {
-            printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
-        }
-        fflush(stdout);
-
-    }
-
-
-Putting it Together
-^^^^^^^^^^^^^^^^^^^
-
-Putting this all together, and using the ``callbackStep`` and ``progressStep``
-settings, we end up with this:
-
-.. code-block:: javascript
-
-    // cuz no one likes writing out 'rampart.utils.printf()'
-    rampart.globalize(rampart.utils);
-
-    var step = 100; //set in importCsvFile(), only report every 100th row
-    var total = -1; //we won't know the total until we finish the first pass
-
-    function monitor_import(count, stg) {
-        var stage = "Import";
-
-        if(count==0)
-            printf("\n");
-
-        if(stg!==undefined) { // progressfunc
-            stage=stg;
-        }
-
-        if(stg === 0) //differentiate between 0 and undefined
-        {
-            total=count; //update our total in the first stage.
-            printf("Stage: %s, Count: %d       \r", stage, count);
-        } else {
-            printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
-        }
-        fflush(stdout);
-
-    }
-
-    total = sql.importCsvFile(
-        "allCountries.txt",  //file to import
-        {
-            normalize:       false,
-            singleQuoteNest: false,
-            delimiter:       '\t',
-            hasHeaderRow:    false,
-            tableName:       "geonames",
-            callbackStep:    step, //callback run every 100th row
-            progressStep:    step, //progressfunc run every 100th row for each stage
-            progressFunc:    monitor_import //progress function while processing csv 
-        },
-        /* numbers are column-in positions (-1 means leave blank, or add counter if field type is 'counter')
-           position in array is column-out positions  */
-        [-1,0,1,2,3,4,5,6,7,8,9,10,-1,11],
-        monitor_import //callback function upon actual import
-    );
-    printf('\n');//end with a newline
-
-The Script Thus Far
-^^^^^^^^^^^^^^^^^^^
-
-We can wrap the import into its own function and add it to our script from above: 
-
-.. code-block:: javascript
-
-    var Sql = require("rampart-sql");
-
-    // use process.scriptPath to make sure we have the
-    // correct path if running from another working directory
-    var sql = new Sql.init(process.scriptPath + "/geonames_db", true);
-
-    // cuz no one likes writing out 'rampart.utils.printf()'
-    rampart.globalize(rampart.utils);
-
-    // put the create statement into its own function
-    // since we are doing this in stages
-
-    function create_table() {
-
-        sql.exec("create table geonames (" +
-            "id           counter, "       +
-            "country_code char(2), "       +
-            "postal_code  varchar(8), "    +
-            "place_name   varchar(16), "   +
-            "admin_name1  varchar(16), "   +
-            "admin_code1  varchar(8), "    +
-            "admin_name2  varchar(16), "   +
-            "admin_code2  varchar(8), "    +
-            "admin_name3  varchar(16), "   +
-            "admin_code3  varchar(8), "    +
-            "latitude     double, "        +
-            "longitude    double, "        +
-            "geocode      long, "          +
-            "accuracy     int           );"
-        );
-
-    }
-
-
-    var step = 100; //set in importCsvFile(), only report every 100th row
-    var total = -1; //we won't know the total until we finish the first pass
 
     /* a single function to monitor the import for both pre-processing (progressFunc)
        and import (callback function supplied to sql.importCsvFile as a paramater)   */
@@ -464,9 +320,8 @@ We can wrap the import into its own function and add it to our script from above
         if(count==0)
             printf("\n");
 
-        if(stg!==undefined) { // progressfunc
+        if(stg!==undefined) // progressfunc
             stage=stg;
-        }
 
         if(stg === 0) //differentiate between 0 and undefined
         {
@@ -476,41 +331,83 @@ We can wrap the import into its own function and add it to our script from above
             printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
         }
         fflush(stdout);
-
     }
 
-    function import_data() {
-        total = sql.importCsvFile(
-            "allCountries.txt",  //file to import
-            {
-                normalize:       false,
-                singleQuoteNest: false,
-                delimiter:       '\t',
-                hasHeaderRow:    false,
-                tableName:       "geonames",
-                callbackStep:    step, //callback run every 100th row
-                progressStep:    step, //progressfunc run every 100th row for each stage
-                progressFunc:    monitor_import //progress function while processing csv 
+Transforming the Data
+^^^^^^^^^^^^^^^^^^^^^
+
+At this point we can import the data into the temporary table.  Now
+it needs to be transformed into its final form and put in the final
+table.
+
+So we will use the following to create the table and transform
+the data.
+
+.. code-block:: javascript
+
+    function create_final_table() {
+        sql.exec("create table cities (" +
+                "id                      counter, "    +
+                "place                   varchar(8), " +
+                "alt_names               varchar(8), " +
+                "population              int, "        +
+                "latitude                double, "     +
+                "longitude           double, "     +
+                "geocode             long, "       +
+                "timezone                varchar(8), " +
+                "country                 varchar(8) "  +
+                ");"  ); 
+    }
+
+    function makerow(o) {
+        var ret={}, tmp;
+
+        ret.place = sprintf('%s, %s %s(%s)', o.Name, o.Admin1_Code, o.Country_name_EN, o.Country_Code);
+        ret.altNames = o.Alternate_Names;
+        ret.population = o.Population;
+        tmp = o.Coordinates.split(',');
+        ret.lat = parseFloat(tmp[0]);
+        ret.lon = parseFloat(tmp[1]);
+        ret.tz = o.Timezone;
+        ret.country = o.Country_name_EN;
+        return ret;
+    }
+
+    function build_final_table() {
+        printf("sorting rows\n");
+        sql.exec("select * from cities_tmp order by Population DESC",
+            function(res,i) {
+
+                if(!i) printf("done\nCreating Final Table\n");
+
+                var vals = makerow(res);
+                sql.exec("insert into cities values( " +
+                    "counter, ?place, ?altNames, ?population, ?lat, ?lon, latlon2geocode(?lat, ?lon), ?tz, ?country );",
+                    vals );
+                if (! (i % 100) ) {
+                    printf("%d of %d\r", i, total);
+                    fflush(stdout);
+                }
             },
-            /* numbers are column-in positions (-1 means leave blank, or add counter if field type is 'counter')
-               position in array is column-out positions  */
-            [-1,0,1,2,3,4,5,6,7,8,9,10,-1,11],
-            monitor_import //callback function upon actual import
+            {maxRows:-1}
         );
-        printf('\n');//end with a newline
+        printf('\n');
     }
 
-    create_table();
-    import_data();
+    create_final_table();
+    build_final_table();
 
-Computing Geocodes
-~~~~~~~~~~~~~~~~~~
+The ``create_final_table()`` function is easily understood.  
 
-Now we have all the data from the CSV imported into the SQL table.  But
-remember the ``geocode`` field?  They have all been set to ``0``.  So what
-is this field for?  We will use it to store a "geocode" that allows us to
-search bounded regions.  The function ``latlon2geocode`` will compute it for
-us using the latitude and longitude already in each row of the table.
+In the ``makerow()`` function, we take a single row from the temporary table
+and create the placename, separate the coordinates and convert them to
+numbers and add the other columns we want to keep.
+
+In the ``build_final_table()`` function, we select one row at a time,
+transform the row by passing it to ``makerow()`` and insert it into
+our final table.  In addition, we will calculate the geocode necessary
+to do bounded geographical searches and insert it into the ``geocode``
+column. 
 
 According to the :ref:`documentation <sql-server-funcs:latlon2geocode, latlon2geocodearea>`:
 
@@ -523,77 +420,136 @@ According to the :ref:`documentation <sql-server-funcs:latlon2geocode, latlon2ge
 
 That is exactly what we need to efficiently search for other places close to a given one.
 
-So lets compute that field.  Fortunately it can be done in a single sql statement:
 
-.. code-block:: sql
+Putting it Together
+^^^^^^^^^^^^^^^^^^^
 
-    update geonames set geocode = latlon2geocode(latitude, longitude);
-
-Once again, let's wrap that in a function and put it in our script:
+Putting this all together, and using the ``callbackStep`` and ``progressStep``
+settings, we end up with this:
 
 .. code-block:: javascript
 
-    function make_geocode() {
-        printf("Computing geocode column:\n");
-
-        sql.exec("update geonames set geocode = latlon2geocode(latitude, longitude);",
-                 //monitor our progress with a callback
-                 function(row,i) {
-                     if(! (i%100) ) {
-                         printf("%d of %d    \r", i, total);
-                         fflush(stdout);
-                     }
-                 }
-        );
-        printf('\n');//end with a newline
+    function create_tmp_table() {
+        sql.exec("create table cities_tmp (" +
+                "Geoname_ID              varchar(8), " +
+                "Name                    varchar(8), " +
+                "ASCII_Name              varchar(8), " +
+                "Alternate_Names         varchar(8), " +
+                "Feature_Class           varchar(8), " +
+                "Feature_Code            varchar(8), " +
+                "Country_Code            varchar(8), " +
+                "Country_name_EN         varchar(8), " +
+                "Country_Code_2          varchar(8), " +
+                "Admin1_Code             varchar(8), " +
+                "Admin2_Code             varchar(8), " +
+                "Admin3_Code             varchar(8), " +
+                "Admin4_Code             varchar(8), " +
+                "Population              int, "        +
+                "Elevation               int, "        +
+                "Digital_Elevation_Model int, "        +
+                "Timezone                varchar(8), " +
+                "Modification_date       varchar(8), " +
+                "LABEL_EN                varchar(8), " +
+                "Coordinates             varchar(8)"   +
+                ");"  ); 
     }
 
-Like magic, we now have everything we need to do a geographic bounded search.
 
-Lets prove it.  After computing the ``geocode`` column, lets find zip codes
-in Oakland, CA and surrounding cities.  From the command line, we will use
-the ``tsql`` utility to try this out.
+    var total=-1; //we won't know the total until we finish the first pass of importCsvFile
+    var step = 100; //set in importCsvFile(), only report every 100th row
 
-::
+    /* a single function to monitor the import for both pre-processing (progressFunc)
+       and import (callback function supplied to sql.importCsvFile as a paramater)   */
+    function monitor_import(count, stg) {
+        var stage = "Import";
 
-    $ tsql -l 30 -d geonames_db/ "select place_name, postal_code,  
-      distlatlon(37.8, -122.3, latitude, longitude) MilesAway
-      from geonames where geocode between (select latlon2geocodearea(37.8, -122.3, 0.2)) order by 3 asc"
+        if(count==0)
+            printf("\n");
 
-     place_name  postal_code   MilesAway  
-    ------------+------------+------------+
-    Oakland      94615            0.463117
-    Oakland      94607            0.949234
-    Oakland      94604             1.62171
-    Oakland      94623             1.62171
-    Oakland      94624             1.62171
-    Oakland      94649             1.62171
-    Oakland      94659             1.62171
-    Oakland      94660             1.62171
-    Oakland      94661             1.62171
-    Oakland      94666             1.62171
-    Oakland      94617              1.6351
-    Oakland      94612             1.90388
-    Emeryville   94662             2.30697
-    Emeryville   94608             2.73752
-    Alameda      94501             2.79463
-    Oakland      94606             3.12938
-    Oakland      94610             3.16062
-    Oakland      94609              3.1832
-    Oakland      94622             3.61777
-    Piedmont     94620             4.09376
-    San Francisco 94130             4.10287
-    Berkeley     94701             4.18801
-    Oakland      94618             4.41511
-    Berkeley     94703             4.56013
-    Berkeley     94702             4.60167
-    Oakland      94601             4.74365
-    Berkeley     94705             4.79358
-    Berkeley     94710             4.81075
-    Oakland      94602             4.88881
-    San Francisco 94105             4.95664
+        if(stg!==undefined) // progressfunc
+            stage=stg;
 
-Yes, that worked.  But why was it so slow?
+        if(stg === 0) //differentiate between 0 and undefined
+        {
+            total=count; //update our total in the first stage.
+            printf("Stage: %s, Count: %d       \r", stage, count);
+        } else {
+            printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
+        }
+        fflush(stdout);
+    }
+
+    function import_csv() {
+        total = sql.importCsvFile(
+            csvFile,  //file to import
+            {
+                tableName:       'cities_tmp',
+                singleQuoteNest: false,
+                hasHeaderRow:    true,
+                delimiter:       ';',
+                normalize:       false,
+                callbackStep:    step, //callback run every 100th row
+                progressStep:    step, //progressfunc run every 100th row for each stage
+                progressFunc:    monitor_import //progress function while processing csv 
+            },
+            monitor_import //callback function upon actual import
+        );
+        printf('\n%d rows in total.\n',total);
+    }
+
+    function create_final_table() {
+        sql.exec("create table cities (" +
+                "id                      counter, "    +
+                "place                   varchar(8), " +
+                "alt_names               varchar(8), " +
+                "population              int, "        +
+                "latitude                double, "     +
+                "longitude           double, "     +
+                "geocode             long, "       +
+                "timezone                varchar(8), " +
+                "country                 varchar(8) "  +
+                ");"  ); 
+    }
+
+    function makerow(o) {
+        var ret={}, tmp;
+
+        ret.place = sprintf('%s, %s %s(%s)', o.Name, o.Admin1_Code, o.Country_name_EN, o.Country_Code);
+        ret.altNames = o.Alternate_Names;
+        ret.population = o.Population;
+        tmp = o.Coordinates.split(',');
+        ret.lat = parseFloat(tmp[0]);
+        ret.lon = parseFloat(tmp[1]);
+        ret.tz = o.Timezone;
+        ret.country = o.Country_name_EN;
+        return ret;
+    }
+
+    function build_final_table() {
+        printf("sorting rows\n");
+        sql.exec("select * from cities_tmp order by Population DESC",
+            function(res,i) {
+
+                if(!i) printf("done\nCreating Final Table\n");
+
+                var vals = makerow(res);
+                sql.exec("insert into cities values( " +
+                    "counter, ?place, ?altNames, ?population, ?lat, ?lon, latlon2geocode(?lat, ?lon), ?tz, ?country );",
+                    vals );
+                if (! (i % 100) ) {
+                    printf("%d of %d\r", i, total);
+                    fflush(stdout);
+                }
+            },
+            {maxRows:-1}
+        );
+        printf('\n');
+    }
+
+    create_tmp_table();
+    import_csv();
+    create_final_table();
+    build_final_table();
 
 Building Indexes
 ~~~~~~~~~~~~~~~~
@@ -601,7 +557,8 @@ Building Indexes
 The geocode index
 ^^^^^^^^^^^^^^^^^
 
-We need to create an index to speed up the bounded "geocode" search above. 
+We need to create an index to speed up the bounded "geocode" search we will
+use in our web application. 
 And we should do that in our script.  And once again, we are going to wrap
 it in a function.
 
@@ -609,15 +566,15 @@ it in a function.
 
     function make_geocode_index() {
         printf("creating index on geocode\n");
-        sql.exec("create index geonames_geocode_x on geonames(geocode) WITH INDEXMETER 'on';");
+        sql.exec("create index cities_geocode_x on cities(geocode) WITH INDEXMETER 'on';");
     }
 
 A couple of things to note:
 
 First -- when this index is made, it will backed by a
-file named ``geonames_geocode_x.btr``.  It is so named because it will be
+file named ``cities_geocode_x.btr``.  It is so named because it will be
 easy to find using ``ls -l`` (it will come right before the table, named
-``geonames.tbl``, and it lets you know the field indexed (``_geocode``) and
+``cities.tbl``, and it lets you know the field indexed (``_geocode``) and
 the type of index (``_x`` for plain index, i.e.  - not Fulltext or unique). 
 Your methodology for naming indexes is not as important as making sure you
 are consistent, can read it and know what the index is for without having to
@@ -628,29 +585,26 @@ Catalog:
 
 ::
 
-    # tsql -d geonames_db/ "select * from SYSINDEX where NAME='geonames_geocode_x'"
+    $ tsql -d ../data/cities/ "select * from SYSINDEX where NAME='cities_geocode_x'"
 
-        NAME        TBNAME       FNAME       COLLSEQ        TYPE      NON_UNIQUE     FIELDS       PARAMS   
+        NAME        TBNAME       FNAME       COLLSEQ        TYPE      NON_UNIQUE     FIELDS       PARAMS
     ------------+------------+------------+------------+------------+------------+------------+------------+
-    geonames_geocode_x geonames     geonames_geocode_x A            B                      01 geocode      stringcomparemode=unicodemulti,respectcase;
-
+    cities_geocode_x cities       cities_geocode_x A            B                      01 geocode      stringcomparemode=unicodemulti,respectcase;
 
 Second --  note the ``WITH INDEXMETER 'on'`` in the SQL statement.  This will tell
 Texis to print a pretty meter to let you know the progress of your index creation.
 
-When you have built your index, try the ``tsql`` query above again.  It should be much, much faster.
-
 The id index
 ^^^^^^^^^^^^
 
-Eventually, when we write our client-side script, we will want to look up records based on the
+Eventually, when we write our web application script, we will want to look up records based on the
 ``id counter`` field.  So we will make a function to make an index on that as well.  
 
 .. code-block:: javascript
 
     function make_id_index(){
         printf("creating index on id\n");
-        sql.exec("create index geonames_id_x on geonames(id) WITH INDEXMETER 'on';");
+        sql.exec("create index cities_id_x on cities(id) WITH INDEXMETER 'on';");
     }
 
 
@@ -678,7 +632,7 @@ Now we also have a database that does not contain normal text.  It is worth
 thinking about where this might bite us when we perform a search.  Let's
 look at the :ref:`list of noise words <sql-set:noiseList>`.  The excluded
 ``us``, ``to`` and ``in`` look suspect.  They are the same as some of our
-country codes.  And ``or`` is an ``admin_code1`` abbreviation for Oregon.
+country codes.  And ``or`` is an ``Admin1`` abbreviation for Oregon.
 
 Normally when searching normal English text, removing all the noise words
 would hurt performance.  However, in this very specific circumstance, noise
@@ -691,280 +645,268 @@ have adverse consequences on performance and quality of results.  However,
 this time we do have a good reason.
 
 Now - what exactly do we want to index?  Naturally we want to be able to
-look up a place based upon any of the text fields.  So we will create one
-"virtual" field made up of all our text fields.  To do that, in the SQL
-statement we separate all the fields using a ``\``; But since it is
-JavaScript, we will need to escape the backslash with another backslash.  We
-should end up with this:
+look up a place based upon the ``place`` column.  So we will create one
+index on it.  However we also have alternate names, which we will want
+to search if there are no matches from ``place``.  Thus we will
+create a separate index on ``alt_names`` as well.
 
-::
-
-    place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3
-
-Ordering is important.  The queries we will do later, that have matches at
-the beginning of our virtual field will match higher than those at the end.
-(This, along with other ranking knobs can be adjusted -- see 
-:ref:`Rank Knobs <sql-set:Rank knobs>`).
-
-So, let's see our SQL statement, within a ``sql.exec()``, in its own function:
+So, let's see our SQL statements to create the Fulltext indexes in its own function:
 
 .. code-block:: javascript
     
-    function make_text_index(){
-        printf("creating indexes on location names\n");
+    function make_text_indexes() {
+        printf("creating indexes on place names\n");
 
         // noiselist as detailed at https://rampart.dev/docs/sql-set.html#noiselist
         // This is not English text and some geographic abbreviations like OR IN DO TO SO and US
-        // are also on the noise words list.
+        // are also on the noise words list.  Setting to empty will allow such words in the index.
         sql.set({ noiseList:[]});
 
-        sql.exec("create fulltext index geonames_textcols_ftx on geonames"+
-            "(place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3)"+
-            " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on';");
+        // make compact index.  Sorting by population, not by likep rank.  See like3 search below.
+        sql.exec("create fulltext index cities_place_ftx on cities(place)"+
+            " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+
+        sql.exec("create fulltext index cities_altNames_ftx on cities(alt_names)"+
+            " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
     }
+
+Note that we also have ``WORDPOSITIONS 'off'``.  This omits the position of
+the indexed words and creates a smaller index.  Normally we would want this
+information in order to rank by relevance, taking into account word
+proximity, order and placement in the document.  However in our web
+application we will be ordering by population, so this information is not
+needed.
+
+See :ref:`the documentation <rampart-sql:Fulltext Indexes>` for more information.
 
 The Final Import Script
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-We put it all together and it looks something like this:
+We put it all together, wrap it in a function, and it looks something like this:
 
 .. code-block:: javascript
 
-    var Sql = require("rampart-sql");
-
-    // use process.scriptPath to make sure we have the
-    // correct path if running from another working directory
-    var sql = new Sql.init(process.scriptPath + "/geonames_db", true);
-
     // cuz no one likes writing out 'rampart.utils.printf()'
     rampart.globalize(rampart.utils);
+    
+    var Sql = require("rampart-sql");
 
-    // put the create statement into its own function
-    // since we are doing this in stages
+    var sql = new Sql.init("~/citysearch/web_server/data/cities", true);
 
-    function create_table() {
+    var csvFile = "../data/geonames-all-cities-with-a-population-1000.csv";
 
-        sql.exec("create table geonames (" +
-            "id           counter, "       +
-            "country_code char(2), "       +
-            "postal_code  varchar(8), "    +
-            "place_name   varchar(16), "   +
-            "admin_name1  varchar(16), "   +
-            "admin_code1  varchar(8), "    +
-            "admin_name2  varchar(16), "   +
-            "admin_code2  varchar(8), "    +
-            "admin_name3  varchar(16), "   +
-            "admin_code3  varchar(8), "    +
-            "latitude     double, "        +
-            "longitude    double, "        +
-            "geocode      long, "          +
-            "accuracy     int           );"
-        );
-
-    }
-
-
-    var step = 100; //set in importCsvFile(), only report every 100th row
-    var total = -1; //we won't know the total until we finish the first pass
-
-    /* a single function to monitor the import for both pre-processing (progressFunc)
-       and import (callback function supplied to sql.importCsvFile as a paramater)   */
-    function monitor_import(count, stg) {
-        var stage = "Import";
-
-        if(count==0)
-            printf("\n");
-
-        if(stg!==undefined) { // progressfunc
-            stage=stg;
+    function import_data(){
+        function create_tmp_table() {
+            sql.exec("create table cities_tmp (" +
+                    "Geoname_ID              varchar(8), " +
+                    "Name                    varchar(8), " +
+                    "ASCII_Name              varchar(8), " +
+                    "Alternate_Names         varchar(8), " +
+                    "Feature_Class           varchar(8), " +
+                    "Feature_Code            varchar(8), " +
+                    "Country_Code            varchar(8), " +
+                    "Country_name_EN         varchar(8), " +
+                    "Country_Code_2          varchar(8), " +
+                    "Admin1_Code             varchar(8), " +
+                    "Admin2_Code             varchar(8), " +
+                    "Admin3_Code             varchar(8), " +
+                    "Admin4_Code             varchar(8), " +
+                    "Population              int, "        +
+                    "Elevation               int, "        +
+                    "Digital_Elevation_Model int, "        +
+                    "Timezone                varchar(8), " +
+                    "Modification_date       varchar(8), " +
+                    "LABEL_EN                varchar(8), " +
+                    "Coordinates             varchar(8)"   +
+                    ");"  ); 
         }
 
-        if(stg === 0) //differentiate between 0 and undefined
-        {
-            total=count; //update our total in the first stage.
-            printf("Stage: %s, Count: %d       \r", stage, count);
-        } else {
-            printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
-        }
-        fflush(stdout);
 
-    }
+        var total=-1; //we won't know the total until we finish the first pass of importCsvFile
+        var step = 100; //set in importCsvFile(), only report every 100th row
 
-    function import_data() {
-        total = sql.importCsvFile(
-            "allCountries.txt",  //file to import
+        /* a single function to monitor the import for both pre-processing (progressFunc)
+           and import (callback function supplied to sql.importCsvFile as a paramater)   */
+        function monitor_import(count, stg) {
+            var stage = "Import";
+
+            if(count==0)
+                printf("\n");
+
+            if(stg!==undefined) // progressfunc
+                stage=stg;
+
+            if(stg === 0) //differentiate between 0 and undefined
             {
-                normalize:       false,
-                singleQuoteNest: false,
-                delimiter:       '\t',
-                hasHeaderRow:    false,
-                tableName:       "geonames",
-                callbackStep:    step, //callback run every 100th row
-                progressStep:    step, //progressfunc run every 100th row for each stage
-                progressFunc:    monitor_import //progress function while processing csv 
-            },
-            /* numbers are column-in positions (-1 means leave blank, or add counter if field type is 'counter')
-               position in array is column-out positions  */
-            [-1,0,1,2,3,4,5,6,7,8,9,10,-1,11],
-            monitor_import //callback function upon actual import
-        );
-        printf('\n');//end with a newline
+                total=count; //update our total in the first stage.
+                printf("Stage: %s, Count: %d       \r", stage, count);
+            } else {
+                printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
+            }
+            fflush(stdout);
+        }
+
+        function import_csv() {
+            total = sql.importCsvFile(
+                csvFile,  //file to import
+                {
+                    tableName:       'cities_tmp',
+                    singleQuoteNest: false,
+                    hasHeaderRow:    true,
+                    delimiter:       ';',
+                    normalize:       false,
+                    callbackStep:    step, //callback run every 100th row
+                    progressStep:    step, //progressfunc run every 100th row for each stage
+                    progressFunc:    monitor_import //progress function while processing csv 
+                },
+                monitor_import //callback function upon actual import
+            );
+            printf('\n%d rows in total.\n',total);
+        }
+
+        function create_final_table() {
+            sql.exec("create table cities (" +
+                    "id                      counter, "    +
+                    "place                   varchar(8), " +
+                    "alt_names               varchar(8), " +
+                    "population              int, "        +
+                    "latitude                double, "     +
+                    "longitude           double, "     +
+                    "geocode             long, "       +
+                    "timezone                varchar(8), " +
+                    "country                 varchar(8) "  +
+                    ");"  ); 
+        }
+
+        function makerow(o) {
+            var ret={}, tmp;
+
+            ret.place = sprintf('%s, %s %s(%s)', o.Name, o.Admin1_Code, o.Country_name_EN, o.Country_Code);
+            ret.altNames = o.Alternate_Names;
+            ret.population = o.Population;
+            tmp = o.Coordinates.split(',');
+            ret.lat = parseFloat(tmp[0]);
+            ret.lon = parseFloat(tmp[1]);
+            ret.tz = o.Timezone;
+            ret.country = o.Country_name_EN;
+            return ret;
+        }
+
+        function build_final_table() {
+            printf("sorting rows\n");
+            sql.exec("select * from cities_tmp order by Population DESC",
+                function(res,i) {
+
+                    if(!i) printf("done\nCreating Final Table\n");
+
+                    var vals = makerow(res);
+                    sql.exec("insert into cities values( " +
+                        "counter, ?place, ?altNames, ?population, ?lat, ?lon, latlon2geocode(?lat, ?lon), ?tz, ?country );",
+                        vals );
+                    if (! (i % 100) ) {
+                        printf("%d of %d\r", i, total);
+                        fflush(stdout);
+                    }
+                },
+                {maxRows:-1}
+            );
+            printf('\n');
+        }
+
+        function make_geocode_index() {
+            printf("creating index on geocode\n");
+            sql.exec("create index cities_geocode_x on cities(geocode) WITH INDEXMETER 'on';");
+        }
+
+        function make_id_index(){
+            printf("creating index on id\n");
+            sql.exec("create index cities_id_x on cities(id) WITH INDEXMETER 'on';");
+        }
+
+        function make_text_indexes() {
+            printf("creating indexes on place names\n");
+
+            // noiselist as detailed at https://rampart.dev/docs/sql-set.html#noiselist
+            // This is not English text and some geographic abbreviations like OR IN DO TO SO and US
+            // are also on the noise words list.  Setting to empty will allow such words in the index.
+            sql.set({ noiseList:[]});
+
+            // make compact index.  Sorting by population, not by likep rank.  See like3 search below.
+            sql.exec("create fulltext index cities_place_ftx on cities(place)"+
+                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+
+            sql.exec("create fulltext index cities_altNames_ftx on cities(alt_names)"+
+                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+        }
+
+        function drop_tmp_table() {
+            sql.exec("drop table cities_tmp");
+        }
+
+        create_tmp_table();
+        import_csv();
+        create_final_table();
+        build_final_table();
+        make_geocode_index();
+        make_id_index();
+        make_text_indexes();
+        drop_tmp_table();
+
     }
 
-    function make_geocode() {
-        printf("Computing geocode column:\n");
-
-        sql.exec("update geonames set geocode = latlon2geocode(latitude, longitude);",
-                 //monitor our progress with a callback
-                 function(row,i) {
-                     if(! (i%100) ) {
-                         printf("%d of %d    \r", i, total);
-                         fflush(stdout);
-                     }
-                 }
-        );
-        printf('\n');//end with a newline
-    }
-
-    function make_geocode_index() {
-        printf("creating index on geocode\n");
-        sql.exec("create index geonames_geocode_x on geonames(geocode) WITH INDEXMETER 'on';");
-    }
-
-    function make_id_index(){
-        printf("creating index on id\n");
-        sql.exec("create index geonames_id_x on geonames(id) WITH INDEXMETER 'on';");
-    }
-
-    function make_text_index() {
-        printf("creating indexes on location names\n");
-
-        // noiselist as detailed at https://rampart.dev/docs/sql-set.html#noiselist
-        // This is not English text and some geographic abbreviations like OR IN DO TO SO and US
-        // are also on the noise words list.
-        sql.set({ noiseList:[]});
-
-        sql.exec("create fulltext index geonames_textcols_ftx on geonames"+
-            "(place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3)"+
-            " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on';");
-    }
-
-    create_table();
     import_data();
-    make_geocode();
-    make_geocode_index();
-    make_id_index();
-    make_text_index();
 
-    printf("All Done\n");
 
 Web Server Script
 -----------------
 
-Web Server Layout
-~~~~~~~~~~~~~~~~~
-
-In the Rampart binary distribution is a sample web server tree.  For our
-purposes here, we assume you have downloaded and unzipped the Rampart binary
-distribution into a directory named ``~/downloads/rampart``. We will use
-that for this project.  
-The :ref:`The rampart-server HTTP module <rampart-server:The rampart-server HTTP module>`
-is configured and loaded from the included ``web_server/web_server_conf.js``
-script.  It defines ``web_server/html`` as the default directory for static
-html, ``web_server/apps`` as the default directory for scripts and
-``web_server/data`` as a standard location for databases.
-
-To get started, copy the ``web_server`` directory to a convenient place for
-this project, then copy the ``geonames_db`` folder to
-``web_server/data/geonames_db``.  Also, for our purposes, we do not need
-anything in the ``web_server/apps/test_modules`` or
-``web_server/apps/wsapps`` directories, so you can delete the copy of those
-files. We will also add an empty file for our web interface at 
-``web_server/apps/citysearch.js``.
-
-::
-
-    user@localhost:~$ mkdir citysearch_demo
-    user@localhost:~$ cd citysearch_demo
-    user@localhost:~/citysearch_demo$ cp -a ~/downloads/rampart/web_server ./
-    user@localhost:~/citysearch_demo$ cd web_server/
-    user@localhost:~/citysearch_demo/web_server$ cp -a ~/geonames/geonames_db data/
-    user@localhost:~/citysearch_demo/web_server$ sudo chown -R nobody data/geonames_db/
-    user@localhost:~/citysearch_demo/web_server$ rm -rf apps/test_modules wsapps/* html/index.html
-    user@localhost:~/citysearch_demo/web_server$ touch ./apps/citysearch.js
-    user@localhost:~/citysearch_demo/web_server$ find .
-    .
-    ./start_server.sh
-    ./stop_server.sh
-    ./web_server_conf.js
-    ./apps
-    ./apps/citysearch.js
-    ./html
-    ./html/images
-    ./html/images/inigo-not-fount.jpg
-    ./logs
-    ./data
-    ./data/geonames_db
-    ./data/geonames_db/SYSUSERS.tbl
-    ./data/geonames_db/geonames.tbl
-    ./data/geonames_db/geonames_textcols_ftx_P.tbl
-    ./data/geonames_db/geonames_textcols_ftx.tok
-    ./data/geonames_db/geonames_textcols_ftx_D.btr
-    ./data/geonames_db/geonames_geocode_x.btr
-    ./data/geonames_db/geonames_textcols_ftx_T.btr
-    ./data/geonames_db/SYSPERMS.tbl
-    ./data/geonames_db/SYSINDEX.tbl
-    ./data/geonames_db/geonames_textcols_ftx.btr
-    ./data/geonames_db/SYSSTATS.tbl
-    ./data/geonames_db/SYSCOLUMNS.tbl
-    ./data/geonames_db/SYSTABLES.tbl
-    ./data/geonames_db/geonames_textcols_ftx.dat
-    ./data/geonames_db/SYSMETAINDEX.tbl
-    ./data/geonames_db/geonames_id_x.btr
-    ./data/geonames_db/SYSTRIG.tbl
-    ./wsapps
-
 Web Server Script Mapping
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We will start by editing the ``apps/citysearch.js`` file in order to map 
-functions to urls.
-
-With your preferred editor, open the ``apps/citysearch.js`` file and
-use this stub script as our starting point:
+We will start by adding to the ``apps/citysearch.js`` file in order to map 
+functions to urls for use with :ref:`Server module <rampart-server:The rampart-server HTTP module>`.  
+So we add the following stub script to what we have above to get started:
 
 .. code-block:: javascript
 
-    // Load the sql module
-    var Sql=require("rampart-sql");
+    ...
 
-    // serverConf is defined in web_server/web_server_conf.js
-    var sql=new Sql.init(serverConf.dataRoot + '/geonames_db');
+    // var to hold the client-side javascript
+    var client_script;
+
+    // var to hold a format string containing the top of the page
+    // html and a place for the query string.
+    var pageTopFmt;
+
+    // the bottom of our html page
+    var pageBottom;
 
     // function stubs
     function htmlpage(req) {
-    }
-
-    function ajaxres(req) {
     }
 
     function autocomp(req) {
     }
 
 
-    // url to function mapping
-    module.exports= {
-        "/":               htmlpage,  //http://localhost:8088/apps/citysearch/
-        "/index.html":     htmlpage,  //http://localhost:8088/apps/citysearch/index.html
-        "/autocomp.json":  autocomp,  //http://localhost:8088/apps/citysearch/autocomp.json
-        "/ajaxres.json":   ajaxres    //http://localhost:8088/apps/citysearch/ajaxres.json
+    // module and module.exports are set when called from the webserver
+    if(module && module.exports) {
+        // url to function mapping
+        module.exports= {
+            "/":               htmlpage,  //http://localhost:8088/apps/citysearch/
+            "/index.html":     htmlpage,  //http://localhost:8088/apps/citysearch/index.html
+            "/autocomp.json":  autocomp,  //http://localhost:8088/apps/citysearch/autocomp.json
+        }
+    } else {
+        // called from the command line.  Build the database.
+        import_data();
     }
 
 
 Notice that ``module.exports`` is set to an :green:`Object`.  This allows a
 single module script to serve pages at multiple URLs.  Here ``/`` and
-``/index.html`` will be used to return html and ``/autocomp.json`` and
-``/ajaxres.json`` will be used for AJAX requests and will return JSON.
+``/index.html`` will be used to return html and ``/autocomp.json``
+will be used for AJAX requests and will return JSON.
 
 Delivering Static Content
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -973,375 +915,59 @@ Looking at the stub script above, there are two distinct times that the code
 therein will be run: 1) once upon module load and 2) upon each request from
 a client as mapped in the ``module.exports`` :green:`Object`.  For security
 purposes, it is important to keep this in mind as you write scripts. 
-Variables set in the module outside of the ``htmlpage()``, ``ajaxres()`` and
+Variables set in the module outside of the ``htmlpage()``, and
 ``autocomp()`` functions are long lived and span multiple requests.
 
-That being said, we can set a single variable in the script to deliver
-static content.  It only needs to be loaded once as it contains the
-html and client side javascript that will be delivered to every client, and
-does not change.
+That being said, we can set a few variables in the script to deliver
+the static content.  They only need to be loaded once as they contains the
+HTML and client side JavaScript that will be delivered to every client, and
+they do not change.
 
 .. code-block:: javascript
 
-    // Load the sql module
-    var Sql=require("rampart-sql");
-
-    // serverConf is defined in web_server/web_server_conf.js
-    var sql=new Sql.init(serverConf.dataRoot + '/geonames_db');
-
+    // the autocomplete plugin from  https://github.com/devbridge/jQuery-Autocomplete
+    // jquery and plugin included from cloudflare in <script src="xyz"> tags below in pageTopFmt.
     var client_script = `
-        // client-side javascript goes here
-    `;
-
-
-    // page is defined once upon script load here rather than upon each request in 
-    // htmlpage() below.
-    var page=`<!DOCTYPE HTML>
-    <html>
-        <head><meta charset="utf-8">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>
-        <style>
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            .autocomplete-suggestions { 
-                border: 1px solid #999; 
-                background: #FFF; 
-                overflow: auto; 
-                width: auto !important; 
-                padding-right:5px;
-            }
-            .autocomplete-suggestion { 
-                padding: 2px 5px; 
-                white-space: nowrap; 
-                overflow: hidden; 
-            }
-            .autocomplete-suggestions strong { 
-                font-weight: normal; 
-                color: #3399FF; 
-            }
-            .autocomplete-group strong { 
-                display: block; 
-                border-bottom: 1px solid #000; 
-            }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-group { padding: 2px 5px; }
-            .zip { display: inline-block; width:140px;}
-            #main {
-                background-color: white;
-                margin: auto;
-                min-height: 300px;
-                width: 600px;
-            }
-            #idiv {
-                width:500px;
-                height:39px;
-                border-bottom: lightGray 1px solid;
-                padding:15px 0px 15px 0px;
-            }
-            #cstextbox {
-                min-width:150px;
-                width:100%;
-                height:30px;
-                font:normal 18px arial,sans-serif;
-                padding: 1px 3px;
-                border: 2px solid #ccc;
-                box-sizing: border-box;
-            }
-        </style>
-        <title>City Search Tutorial</title>
-        </head>
-        <body>
-        <div id="main">
-          <form id="mf">
-              <div id="idiv">
-                  <input type="text" id="cstextbox" name="q" value="" placeholder="Search for a city">
-              </div>
-          </form>
-          <div id="res"></div>
-          </body>
-          <script>
-              ${client_script}
-          </script>
-    </html>`;
-
-    function htmlpage(req) {
-        // just return the html.
-        return {html:page};
-    }
-
-    function ajaxres(req) {
-    }
-
-    function autocomp(req) {
-    }
-
-
-    // url to function mapping
-    module.exports= {
-        "/":               htmlpage,  //http://localhost:8088/apps/citysearch/
-        "/index.html":     htmlpage,  //http://localhost:8088/apps/citysearch/index.html
-        "/autocomp.json":  autocomp,  //http://localhost:8088/apps/citysearch/autocomp.json
-        "/ajaxres.json":   ajaxres    //http://localhost:8088/apps/citysearch/ajaxres.json
-    }
- 
-
-The variable ``page`` is set to a basic web page with a form and text box for
-searching, as well as loading some external JavaScript.  We will use the
-variable ``client_script`` for our inline client-side scripting.
-
-We will use the text input in the form to search for cities and load the
-nearest cities, displaying the results in the ``<div id="res"></div>`` div
-at the bottom of the page.
-
-Note that the ``page`` variable is returned in an :green:`Object` at
-the end of the ``htmlpage()`` function (``return {html:page};``).  The
-property ``html`` sets the mime-type of the returned page to ``text/html``
-and the value is set to the ``page`` variable to set the content to
-be returned to the client. 
-
-Client-Side Scripting
-~~~~~~~~~~~~~~~~~~~~~
-
-In order to make the AJAX autocomplete search, we will use 
-`jQuery <https://jquery.com/>`_ and 
-`jQuery-Autocomplete <https://github.com/devbridge/jQuery-Autocomplete>`_\ ,
-both of which are included at the top of the script.  Please see the
-`jQuery-Autocomplete page <https://github.com/devbridge/jQuery-Autocomplete>`_
-for more information on how it works.
-
-Below is our script so far, with the client-side JavaScript added.
-
-.. code-block:: javascript
-
-    // Load the sql module
-    var Sql=require("rampart-sql");
-
-    // serverConf is defined in web_server/web_server_conf.js
-    var sql=new Sql.init(serverConf.dataRoot + '/geonames_db');
-
-    var useKilometers=true;
-
-    var distvar = "mi";
-
-    if(useKilometers)
-        distvar = "km";
-
-    var client_script = `
-    // function to get query parameters from url
-    function getparams() {
-        if (window.location.search.length==0)
-            return {};
-
-        var qstr  = window.location.search.substring(1);
-        var pairs = qstr.split('&');
-        var ret = {}, i=0;
-
-        for (i = 0; i < pairs.length; i++) {
-            var kv = pairs[i].split('=');
-            ret[kv[0]]=kv[1];
-        }
-        return ret;
-    };
-
     $(document).ready(function(){
-
-        var curzip, curid;
-        var params = getparams();
-
-        // format the results, stick them in the div below the search form
-        // update url to match state if curid is set
-        function format_res(res_cities) {
-            var resdiv = $('#res');
-            var places = Object.keys(res_cities);
-            var reshtml="<h2>Closest places to " + $('#cstextbox').val() +'</h2>';;
-            resdiv.html('');
-
-            for (var i=0;i<places.length;i++) {
-                var j=0, place=places[i];
-                var placeObj = res_cities[place];
-                var zkeys = Object.keys(placeObj);
-                var ziphtml='';
-                var is_self=false; //flag if we are processing zip codes in the current city          
-
-                for(j=0;j<zkeys.length;j++) {
-                    var zip=zkeys[j];
-                    if(zip == 'avgdist')
-                        continue;
-                    if(zip == curzip ) {
-                        is_self=true;
-                        continue;
-                    }
-                    var zipObj = placeObj[zip];
-                    //console.log(zipObj);
-                    ziphtml+='<a class="zip" href="#" data-zip="' + zip + '" data-lat="' + zipObj.lat + '" data-lon="' +
-                             zipObj.lon + '" data-id="' + zipObj.id + '">' + zip + '(' + zipObj.dist.toFixed(1) +
-                             '&nbsp;' + zipObj.heading + ')</a> ';
-                }
-                if(ziphtml) {// skip self if only one zip.
-                    if(is_self)
-                        reshtml += '<span><h3>Other zip codes in <span class="place">' + place + '</span></h3>'  
-                                + ziphtml + "</span>";
-                    else
-                        reshtml += '<span><h3><span class="place">' + place + '</span> (' +
-                                    parseFloat(placeObj.avgdist).toFixed(1)  +' ${distvar}.)</h3>' +
-                                    ziphtml + "</span>";
-                }
-            }
-            resdiv.html(reshtml);
-
-            if(curid){
-                var nurl = window.location.origin + window.location.pathname + '?id=' + curid;
-                window.history.pushState({},'',nurl);
-            }
-        }
-
-        // Use 'body' and filter with class 'zip' so the event will pick up not-yet-written content
-        $('body').on('click','.zip',function(e) {
-            //perform a new search on the zip code that was clicked.
-            var t = $(this);
-            var lat = t.attr('data-lat'), 
-                lon=t.attr('data-lon'),
-                zip=t.attr('data-zip');
-            var place = t.closest('span').find('.place').text();
-
-            //curid is for the change of url in order to save the state.
-            curid = t.attr('data-id');
-
-            // recreate the place name with the zip code in it
-            place = place.substring(0, place.length-2) +zip + ', ' + place.substring(place.length-2, place.length);
-            // put it in the search box
-            $('#cstextbox').val(place);
-
-            // fetch new list of closest cities and display
-            $.getJSON(
-                "/apps/citysearch/ajaxres.json",
-                {lat:lat, lon: lon},
-                function(res) {
-                    curzip=zip;
-                    format_res(res.cities);
-                }
-            );
-            return false; //don't actually go to the href in the clicked <a>
-        });
-
-        // the autocomplete plugin from  https://github.com/devbridge/jQuery-Autocomplete
-        // jquery and plugin included from cloudflare in <script src="xyz"> tags above.
         $('#cstextbox').autocomplete(
             {
                 serviceUrl: '/apps/citysearch/autocomp.json',
                 minChars: 2,
                 autoSelectFirst: true,
                 showNoSuggestionNotice: true,
-                onSelect: function(sel)
-                {
-                    $.getJSON(
-                        "/apps/citysearch/ajaxres.json",
-                        {lat:sel.latitude, lon: sel.longitude},
-                        function(res) {
-                            curzip = sel.zip;
-                            curid = sel.id;
-                            format_res(res.cities);
-                        }
-                    );
-                }
+                triggerSelectOnValidInput: false,
+                onSelect: function(sel) { window.location.assign("./?id="+sel.id); }
             }
         );
 
-        // prevent form submission - all results are already in the autocomplete
         $('#cstextbox').on('keypress', function(e){
             var key = e.charCode || e.keyCode || 0;
-            if (key == 13) {
+            if (key == 13) {       // on <return> don't submit form
                 e.preventDefault();
                 return false;
             }
         });
-
-        function refresh(id) {
-            $.getJSON(
-                "/apps/citysearch/ajaxres.json",
-                {id:params.id},
-                function(res) {
-                    curzip = res.zip;
-                    $('#cstextbox').val(res.place);
-                    //no curid necessary here
-                    format_res(res.cities);
-                }
-            );
-        }
-        // if we refresh the page, then reload the content
-        if(params.id) {
-            refresh(params.id);
-        }
-        
-        window.onpopstate = function(event) {
-            // url has changed, but page was not reloaded
-            params = getparams();
-            curid=false;
-            if(params.id)
-                refresh(params.id);
-            else {
-                $('#cstextbox').val('');
-                $('#res').html('');
-            }
-        };
-
     });
     `;
 
-
-    // page is defined once upon script load here rather than upon each request in 
-    // htmlpage() below.
-    var page=`<!DOCTYPE HTML>
+    // pageTopFmt is defined once upon script load here rather than upon each request in 
+    // htmlpage() below. format code %w removes leading white space.
+    var pageTopFmt=sprintf('%w',`<!DOCTYPE HTML>
     <html>
         <head><meta charset="utf-8">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>
         <style>
             body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            .autocomplete-suggestions { 
-                border: 1px solid #999; 
-                background: #FFF; 
-                overflow: auto; 
-                width: auto !important; 
-                padding-right:5px;
-            }
-            .autocomplete-suggestion { 
-                padding: 2px 5px; 
-                white-space: nowrap; 
-                overflow: hidden; 
-            }
-            .autocomplete-suggestions strong { 
-                font-weight: normal; 
-                color: #3399FF; 
-            }
-            .autocomplete-group strong { 
-                display: block; 
-                border-bottom: 1px solid #000; 
-            }
+            .autocomplete-suggestions {border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
+            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
+            .autocomplete-suggestions strong {font-weight: normal; color: #3399FF; }
+            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
             .autocomplete-selected { background: #F0F0F0; }
             .autocomplete-group { padding: 2px 5px; }
-            .zip { display: inline-block; width:140px;}
-            #main {
-                background-color: white;
-                margin: auto;
-                min-height: 300px;
-                width: 600px;
-            }
-            #idiv {
-                width:500px;
-                height:39px;
-                border-bottom: lightGray 1px solid;
-                padding:15px 0px 15px 0px;
-            }
-            #cstextbox {
-                min-width:150px;
-                width:100%;
-                height:30px;
-                font:normal 18px arial,sans-serif;
-                padding: 1px 3px;
-                border: 2px solid #ccc;
-                box-sizing: border-box;
-            }
+            #main {background-color: white;margin: auto;min-height: 300px;width: 600px;}
+            #idiv { width:500px;height:39px;border-bottom: lightGray 1px solid;padding:15px 0px 15px 0px;}
+            #cstextbox {min-width:150px;width:100%%;height:30px;font:normal 18px arial,sans-serif;padding: 1px 3px;border: 2px solid #ccc;box-sizing: bord
         </style>
         <title>City Search Tutorial</title>
         </head>
@@ -1349,262 +975,228 @@ Below is our script so far, with the client-side JavaScript added.
         <div id="main">
           <form id="mf">
               <div id="idiv">
-                  <input type="text" id="cstextbox" name="q" value="" placeholder="Search for a city">
+                  <input type="text" id="cstextbox" name="q" value="%s" placeholder="Search for a city">
               </div>
           </form>
-          <div id="res"></div>
-          </body>
-          <script>
-              ${client_script}
-          </script>
-    </html>`;
+          <div id="res">`);
 
+    var pageBottom = sprintf(`</div></body><script>
+    %w
+    </script></html>`, client_script);
+    
 
+The variable ``pageTopFmt`` is set to a basic web page with a form and text box for
+searching.  The format code ``"%s'`` in the input text box will be filled
+with the current query.  Note because this is a format string, all other
+literal percent signs (``%``) must be escaped as ``%%``.
 
-    function htmlpage(req) {
-        // just return the html.
-        return {html:page};
-    }
+In ``pageBottom, we will include our client-side JavaScript from the
+variable ``client_script``.
 
-    function ajaxres(req) {
-    }
+Note the use of the format code ``%w``.  This removes leading white space
+so that our source can be indented, but we don't send unneeded white space
+to the client.
 
-    function autocomp(req) {
-    }
+We will use the text input in the form to search for cities and load the
+nearest cities, displaying the results in the ``<div id="res"></div>`` div
+at the bottom of the page.
 
+Next we need to fill in our actual functions that deliver the HTML as well
+as JSON via AJAX for a type-ahead search.
 
-    // url to function mapping
-    module.exports= {
-        "/":               htmlpage,  //http://localhost:8088/apps/citysearch/
-        "/index.html":     htmlpage,  //http://localhost:8088/apps/citysearch/index.html
-        "/autocomp.json":  autocomp,  //http://localhost:8088/apps/citysearch/autocomp.json
-        "/ajaxres.json":   ajaxres    //http://localhost:8088/apps/citysearch/ajaxres.json
-    }
- 
-As mentioned before, we are going to concentrate on the server side
-functionality, so explaining the client-side JavaScript functionality
-is beyond the scope of this tutorial.  Instead, know that the script expects
-the following:
+The Nearest City Results
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: javascript
+The main page is delivered via normal HTTP request and returns results
+formatted as HTML.  It will display the nearest 30 cities to the one set in
+the query string parameter ``id``.
 
-    // autocomp() results must be formatted as such:
-    {
-        "suggestions": [
-            {
-                "value":"Vaulion, Canton de Vaud, 1325, CH",
-                "id":"6233eaf65bd",
-                "latitude":46.6848,
-                "longitude":6.3832,
-                "zip":"1325"
-            },
-            {
-                "value":"Vallorbe, Canton de Vaud, 1337, CH",
-                "id":"6233eaf65c6",
-                "latitude":46.7078,
-                "longitude":6.3714,
-                "zip":"1337"
-            },
-            {
-                "value":"Valeyres-sous-Rances, Canton de Vaud, 1358, CH",
-                "id":"6233eaf6608",
-                "latitude":46.7482,
-                "longitude":6.5354,
-                "zip":"1358"
-            },
-            {
-                "value":"Valeyres-sous-Ursins, Canton de Vaud, 1412, CH",
-                "id":"6233eaf663b",
-                "latitude":46.7453,
-                "longitude":6.6533,
-                "zip":"1412"
-            },
-            // ...
-        ]
-    }
-
-    // ajaxres() results must be formatted as such:
-    {
-        "cities": {
-            "Dixon, California, US": {
-                "95620":{
-                    "dist":0,
-                    "lon":-121.8088,
-                    "lat":38.4403,
-                    "id":"6233ef9f79d",
-                    "heading":"N"
-                },
-                "avgdist":0
-            },
-            "Davis, California, US":{
-                "95616":{
-                    "dist":13.892710766687838,
-                    "lon":-121.7418,
-                    "lat":38.5538,
-                    "id":"6233ef9fa43",
-                    "heading":"NNE"
-                },
-                "95617":{
-                    "dist":14.13145261199491,
-                    "lon":-121.7253,
-                    "lat":38.5494,
-                    "id":"6233ef9fa46",
-                    "heading":"NNE"
-                },
-                "95618":{
-                    "dist":13.052788618796216,
-                    "lon":-121.7405,
-                    "lat":38.5449,
-                    "id":"6233ef9fa49",
-                    "heading":"NNE"
-                },
-                "avgdist":13.692317332492989
-            },
-            // ...
-        }
-        // included if lookup by id:
-        "place": "Dixon, California, 95620, US",
-        "zip": "95620"
-    }
-
-
-Also added is the variable ``useKilometers``, which will be used both
-client-side and for formatting the JSON results.
-
-Formatting Auto-Complete Results
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-First step will be to construct our SQL statement and query in order
-to get a list of cities that are closest to a city or lat/lon requested.
-
-When we made our Fulltext index on our table, we used the virtual field
-``place_name\postal_code\admin_name1\admin_code1\country_code\admin_name2\admin_code2\admin_name3\admin_code3``
-in order to concatenate all the text we might want to use to look up a city.
-
-So to find a city, let's construct a SQL statement which will return cities
-that match a query
+To do so, we need to construct an appropriate SQL statement that
+looks up our city by ``id``.
 
 .. code-block:: sql
 
-    SELECT 
-    place_name +', ' + admin_name1 + ', ' + postal_code + ', ' + country_code value,
-    id, latitude, longitude, postal_code zip
-    FROM geonames WHERE
-    place_name\postal_code\admin_name1\admin_code1\country_code\admin_name2\admin_code2\admin_name3\admin_code3
-    LIKEP ?; 
+    SELECT place, latitude, longitude
+    FROM cities WHERE 
+    id=?;
+
+After retrieving the latitude and longitude of the current city,
+we will need another SQL statement to find the closest cities to
+it.  Here, ``?lat``/``?lon`` correspond to the latitude and longitude
+retrieved from the above SQL statement, while ``latitude``/``longitude``
+correspond to the latitude and longitude in the currently selected
+row.
+
+.. code-block:: sql
+
+    SELECT
+    place, id, latitude, longitude, population,
+    DISTLATLON(?lat, ?lon, latitude, longitude) dist,
+    AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
+    FROM cities WHERE 
+    geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
+    ORDER BY 6 ASC;
 
 Taking it line by line:
 
 ``SELECT`` - We are looking up and returning rows in the table.
 
-``place_name +', ' + admin_name1 + ', ' + postal_code + ', ' + country_code value,``
-- We are formatting several column so it will return, e.g., 
-``San Francisco, CA, 94143, US`` and naming the string ``value``.
+``place`` - Our preformatted place name.
 
-``id, latitude, longitude, postal_code zip`` - Other columns we need.
+``id, latitude, longitude, population`` - Other columns we need.
 
-``FROM geonames WHERE`` - The name of the table, and ``WHERE`` for the
+``DISTLATLON(?lat, ?lon, latitude, longitude) dist`` - The distance from our
+current city to the one in this row.
+
+``AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading``
+-- The heading (direction) from our current city to the one in this row.
+
+``FROM cities WHERE`` - The name of the table, and ``WHERE`` for the
 search on the next line.
 
-``place_name\...\admin_name3\admin_code3``
-- Specifying the virtual field upon which the Fulltext index is build.
+``geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))`` - select
+only rows within a certain dist from ``lat``/``lon`` (one degree).
 
-``LIKEP ?`` - ``likep`` signifies a Fulltext search where word positions are
-significant.  This will be your most used type of ``like`` search for normal
-Fulltext queries.  The ``?`` corresponds to a variable we will give
-``sql.exec()``, as explained below.
+``ORDER BY 6 ASC`` -- order by the 6th selected field in the SQL statement. In
+this case that is ``dist``.
 
-So lets start writing our ``autocomp()`` function, using this query:
-
-.. code-block:: javascript
-
-    /* autocomp() results must be formatted as such:
-    {
-        "suggestions": [
-            {"value":"Vaulion, Canton de Vaud, 1325, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832,"zip":"1325"},
-            {"value":"Vallorbe, Canton de Vaud, 1337, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714,"zip":"1337"},
-            {"value":"Valeyres-sous-Rances, Canton de Vaud, 1358, CH","id":"6233eaf6608","latitude":46.7482,"longitude":6.5354,"zip":"1358"},
-            {"value":"Valeyres-sous-Ursins, Canton de Vaud, 1412, CH","id":"6233eaf663b","latitude":46.7453,"longitude":6.6533,"zip":"1412"},
-            ...
-        ]
-    }
-    */
-    function autocomp(req) {
-        var res;
-        var q = req.query.query;
-
-        res = sql.exec(`SELECT 
-            place_name +', ' + admin_name1 + ', ' + postal_code + ', ' + country_code value,
-            id, latitude, longitude, postal_code zip
-            FROM geonames WHERE
-            place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3
-            LIKEP ?;`,
-            [q] // corresponding to the "?" in "LIKEP ?"
-        );
-        return {json: { "suggestions": res.rows}};
-    }
-
-
-Indeed this will return JSON formatted results in the format needed by the
-client-side JavaScript.  Unfortunately, it will not match cities unless the 
-query contains full words.  Further, if jquery.autocomplete doesn't get
-results for, e.g., ``ber``, it will not look for ``berk``, making our search pretty
-much non-functional.
-
-We would like a query like ``ber`` to match ``Berkeley`` and all other
-results that have words beginning with ``ber``.  So lets add a ``*`` to the
-last word in our search.  However, note that we only want to do that if the
-last partial word is at least two characters long, since looking up every
-city starting with ``b*`` would produce too many results to be meaningful.
+With that, we can write the function to find the closest cities to
+``?id=<cityid>`` and format the results in HTML.
 
 .. code-block:: javascript
 
-    /* autocomp() results must be formatted as such:
-    {
-        "suggestions": [
-            {"value":"Vaulion, Canton de Vaud, 1325, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832,"zip":"1325"},
-            {"value":"Vallorbe, Canton de Vaud, 1337, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714,"zip":"1337"},
-            {"value":"Valeyres-sous-Rances, Canton de Vaud, 1358, CH","id":"6233eaf6608","latitude":46.7482,"longitude":6.5354,"zip":"1358"},
-            {"value":"Valeyres-sous-Ursins, Canton de Vaud, 1412, CH","id":"6233eaf663b","latitude":46.7453,"longitude":6.6533,"zip":"1412"},
-            ...
-        ]
+    var useKilometers = true;
+
+    var distconv = 1;
+    var distvar = "miles";
+
+    if(useKilometers) {
+        distconv=1.60934;
+        distvar = "kilometers";
     }
-    */
-    function autocomp(req) {
-        var res;
-        var q = req.query.query;
 
-        // ignore one character partial words
+    function htmlpage(req) {
+        var id = req.params.id, lat, lon;
 
-        // remove any spaces at the beginning of q
-        q = q.replace(/^\s+/, '');
+        // check if we already have a place id.
+        if(id){
+            id_res= sql.one("SELECT place, latitude, longitude " + 
+                "FROM cities WHERE id=?;",
+                [req.params.id]
+            );
+            // yes, then set lat,lon vars
+            if(id_res) {
+                lon=id_res.longitude;
+                lat=id_res.latitude;
+            }
+        } else {
+            // no, just print the blank search form
+            req.printf(pageTopFmt,'');  // add top of page to return buffer without a query.
+            return({html:pageBottom});  // add bottom of page, return with 'content-type:text/html'
+        } 
 
-        // if query is only one char, return an empty set
-        //   (even though client-side autocomplete is set to 2 char min)
-        if(q.length<2)
-            return {json: { "suggestions": []}}
+        // what to do if the query_string id is not found in the db
+        if(!lon || !lat) {
+            req.printf(pageTopFmt,'');
+            req.printf('No entry for id "%s".', id);
+            return({html:pageBottom});
+        }
 
-        // we will need at least two chars in our last word
-        // since it will get a '*' wildcard added to it
-        q = q.replace(/ \S$/, ' ');
-        
+        /* here we select rows based on their distance from the place specified by 'id',
+           calculate the distance and direction between id and the selected city,
+           then sort by the distance from 'id' (field 6 in our sql statement) */
+        res = sql.exec(`SELECT
+            place, id, latitude, longitude, population,
+            DISTLATLON(?lat, ?lon, latitude, longitude) dist,
+            AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
+            FROM cities WHERE geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
+            ORDER BY 6 ASC;`,
+            {lat:lat, lon:lon},
+            {maxRows: 31}, // first row is same city
+            function(res, i) { // foreach city retrieved:
+                if(!i) {
+                    // this is our 'id' city, as it is closest to itself.
+                    req.printf(pageTopFmt,res.place);
+                    req.printf('<h3 style="margin-bottom:0px">%s</h3><ul style="margin-top:0px">',res.place);
+                } else {
+                    // all other nearby cities we will print the direction and distance:
+                    req.printf('<a href="?id=%s">%s</a><br><ul>' +
+                        '<li>Direction:  %.2f %s to the %s</li>',
+                        res.id, res.place, res.dist * distconv, distvar, res.heading);
+                }
+                // some useful information to go along with the city name
+                req.printf("<li>Population: %s</li>" +
+                    '<li>Location: <a target="_blank" href="https://maps.google.com/maps?z=11&q=%U&ll=%f,%f">' +
+                    'google maps (%.4f,%.4f)</a></li></ul>',
+                    Sql.stringFormat('%ki', res.population), res.place, res.latitude, res.longitude , res.latitude, res.longitude);
 
-        // if last character is not a space, add wildcard
-        if(q.charAt(q.length-1) != ' ')
-            q += '*';
-
-        // perform a text search on the words or partial words we have, and return a list of best matching locations
-        res = sql.exec(`SELECT 
-            place_name +', ' + admin_name1 + ', ' + postal_code + ', ' + country_code value,
-            id, latitude, longitude, postal_code zip
-            FROM geonames WHERE
-            place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3
-            LIKEP ?;`,
-            [q] 
+                if(!i) req.put('<hr><h3>Closest Cities:</h3>');
+            }
         );
-        return {json: { "suggestions": res.rows}};
+        return {html:pageBottom}; //pageBottom is added to same buffer as is used with req.printf()
     }
 
+Also added is the variable ``useKilometers``, which will
+flag the conversion of miles to kilometers.
+
+
+The Auto-Complete Results
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ajax portion of the script allows for suggestions/type-ahead
+to be displayed in the HTML text box, making it easier to find
+a city name.  This is done over an AJAX request, returning JSON to the
+``jQuery-Autocomplete`` script included in the HTML from CloudFlare.
+
+First step will be to construct our SQL statement and query in order
+to get a list of cities that are closest to a city or lat/lon requested.
+
+When we made our Fulltext indexes on our table, we used the field ``place``
+for the primary search and ``alt_names`` for a follow-up search, if
+necessary.
+
+Our first search uses the following SQL
+
+.. code-block:: sql
+
+    SELECT place value, id, latitude, longitude, population 
+    FROM cities WHERE
+    place LIKE3 ? 
+    order by population DESC;
+
+Taking it line by line:
+
+``SELECT`` - We are looking up and returning rows in the table.
+
+``place`` - Our preformatted place name.
+
+``id, latitude, longitude, population`` - Other columns we need.
+
+``FROM cities WHERE`` - The name of the table, and ``WHERE`` for the
+search on the next line.
+
+``place``
+- Specifying the field upon which the Fulltext index is build.
+
+``LIKE3`` - This signifies a Fulltext search where word positions are
+**not** significant.  Usually ``LIKEP`` will be your most used type of
+``like`` search for normal Fulltext queries.  However, here we made an index
+without word positions and are sorting by population.  Thus ``LIKE3`` is
+appropriate.  See :ref:`The documentation <rampart-sql:Fulltext Indexes>`
+for more information.
+
+The ``?`` corresponds to a variable we will give ``sql.exec()``, as explained below.
+
+``order by population DESC`` - sort all possible matches with the cities
+with the greatest population first.
+
+The second SQL statement will be similar except it searches against the ``alt_names`` 
+column should no match be found in the first query.
+
+Finally the results are formatted as required by ``jQuery-Autocomplete``
+and returned to the client as JSON.
+
+We will also format the incoming query to allow for a partial string match. 
 Using the example of ``be`` as a search, our script will add a ``*`` to it
 and pass it to ``sql.exec()``.
  
@@ -1615,52 +1207,50 @@ the default limits.
 
 .. code-block:: javascript
 
-        sql.set({
-            'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
-            'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
-                                    // and https://rampart.dev/docs/sql-set.html#qmaxwords .
-        });
+    sql.set({
+        'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
+        'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
+                                // and https://rampart.dev/docs/sql-set.html#qmaxwords .
+    });
 
  
-
-For our next tweak -- normally we want to return the best results for a given
-query, even if every word in the query is not match in any single document. 
-However, in this case, we want to handle things a bit differently.  Our
-objective is to narrow down our list of possible matches as we type.  So we
-want to make sure that we do not return rows unless they match every term
-given.  So we will set ``likepAllmatch`` to ``true``.
- 
+We also want to continue to ignore noise words.
 
 .. code-block:: javascript
 
-        sql.set({
-            'likepAllmatch': true,  // match every word or partial word
-            'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
-            'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
-                                    // and https://rampart.dev/docs/sql-set.html#qmaxwords .
-        });
+    sql.set({
+        noiseList      : [],    // allow search for 'the', 'us', 'or', etc.
+        'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
+        'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
+                                // and https://rampart.dev/docs/sql-set.html#qmaxwords .
+    });
 
 
-Our completed function now looks like this:
+Our completed AJAX function now looks like this:
 
 .. code-block:: javascript
+
+    // For autocomp. This needs to be set only once
+    sql.set({
+        noiseList      : [],    // allow search for 'the', 'us', 'or', etc.
+        'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
+        'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
+                                // and https://rampart.dev/docs/sql-set.html#qmaxwords .
+    });
 
     /* autocomp() results must be formatted as such:
     {
         "suggestions": [
-            {"value":"Vaulion, Canton de Vaud, 1325, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832,"zip":"1325"},
-            {"value":"Vallorbe, Canton de Vaud, 1337, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714,"zip":"1337"},
-            {"value":"Valeyres-sous-Rances, Canton de Vaud, 1358, CH","id":"6233eaf6608","latitude":46.7482,"longitude":6.5354,"zip":"1358"},
-            {"value":"Valeyres-sous-Ursins, Canton de Vaud, 1412, CH","id":"6233eaf663b","latitude":46.7453,"longitude":6.6533,"zip":"1412"},
+            {"value":"Vaulion, Canton de Vaud, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832, ...},
+            {"value":"Vallorbe, Canton de Vaud, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714, ...},
             ...
         ]
     }
     */
+
     function autocomp(req) {
         var res;
         var q = req.query.query;
-
-        // ignore one character partial words
 
         // remove any spaces at the beginning of q
         q = q.replace(/^\s+/, '');
@@ -1670,541 +1260,409 @@ Our completed function now looks like this:
         if(q.length<2)
             return {json: { "suggestions": []}}
 
-        // we will need at least two chars in our last word
-        // since it will get a '*' wildcard added to it
+        // we will need at least two chars in our last word since it will get a '*' wildcard added to it
         q = q.replace(/ \S$/, ' ');
-        
 
         // if last character is not a space, add wildcard
         if(q.charAt(q.length-1) != ' ')
             q += '*';
 
-        sql.set({
-            'likepAllmatch': true,  // match every word or partial word
-            'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
-            'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
-                                    // and https://rampart.dev/docs/sql-set.html#qmaxwords .
-        });
-        
-        // perform a text search on the words or partial words we have, and return a list of best matching locations
-        res = sql.exec(`SELECT 
-            place_name +', ' + admin_name1 + ', ' + postal_code + ', ' + country_code value,
-            id, latitude, longitude, postal_code zip
-            FROM geonames WHERE
-            place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3
-            LIKEP ?;`,
-            [q] 
-        );
+        // perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations
+        res = sql.exec("SELECT place value, id, latitude, longitude, population FROM cities WHERE "+
+                        "place LIKE3 ? order by population DESC;", [q] );
+
+        //if no results, try again using alt_names
+        if(res.rowCount == 0) {
+            res = sql.exec("SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE " +
+                            "alt_names LIKE3 ? order by population DESC;", [q] );
+            // add alt name to "value" for type ahead display
+            for (var i=0; i<res.rows.length;i++) {
+                var row = res.rows[i];
+                var ql = req.query.query.toLowerCase();
+                var anames = row.alt_names.split(',');
+                for (var j=0; j<anames.length;j++) {
+                    var aname = anames[j].toLowerCase();
+                    if(aname.indexOf(ql) > -1) {
+                        row.value += ' (aka: ' +  aname + ')';
+                        break;
+                    }
+                }
+            }
+        }
         return {json: { "suggestions": res.rows}};
-    }
-
-Finding and Formatting Nearest Cities
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In the ``ajaxres()`` function, we will return a set of results
-corresponding to the closest cities to a given city or lat/lon query.
-
-To do so, we will use Texis' built-in SQL server function
-:ref:`latlon2geocodearea <sql-server-funcs:latlon2geocode, latlon2geocodearea>`.
-We also want to retrieve how far away the location is from the given
-lat/lon (using :ref:`distlatlon <sql-server-funcs:distlatlon>` function), as
-well as which compass direction the location is from the given lat/lon
-(using the :ref:`azimuthlatlon <sql-server-funcs:azimuthlatlon>` and
-:ref:`azimuth2compass <sql-server-funcs:azimuth2compass>` functions).
-
-.. code-block:: sql
-
-    SELECT
-    place_name +', ' + admin_name1 + ', ' + country_code place,
-    id, postal_code, latitude, longitude, 
-    DISTLATLON(?lat, ?lon, latitude, longitude) dist,
-    AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
-    FROM geonames WHERE 
-    geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
-    ORDER BY 6 ASC;
-
-``SELECT`` - We are looking up and returning rows in the table.
-
-``place_name +', ' + admin_name1 + ', ' + country_code place,``
-- We are formatting several column so it will return, e.g., 
-``San Francisco, CA, US`` and naming the string ``place``.
-
-``id, postal_code, latitude, longitude`` - Other columns we need.
-
-``DISTLATLON(?lat, ?lon, latitude, longitude) dist,`` - Calculate the
-distance between the given lat/lon and the ``latitude`` and ``longitude``
-columns of the selected row.  Name the result ``dist``.
-
-``AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading`` - 
-First calculate the compass direction (azimuth) from lat/lon to the row's
-``latitude`` and ``longitude`` columns.  Then convert that to a more friendly 2 or 3
-letter direction abbreviation (i.e. - ``SE``, ``NW``, ``ENE``).
-
-``FROM geonames WHERE`` - The name of the table, and ``WHERE`` for the
-search on the next line.
-
-``geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))`` - We use
-our computed ``geocode`` field to limit returned rows to those that are
-within one (``1.0``) degrees of our given lat/lon (see
-:ref:`latlon2geocodearea <sql-server-funcs:latlon2geocode, latlon2geocodearea>` 
-for precise definition of bounding box search).  This will give us a search
-radius (box center to side) of about 69 miles (111 km) at the equator,
-decreasing in width as we approach the poles.
-
-``ORDER BY 6 ASC`` - we will order by the sixth selected column (in this
-case -- ``dist``).
-
-So lets start writing our ``ajaxres()`` function, using this query:
-
-.. code-block:: javascript
-
-    function ajaxres(req) {
-        var res;
-        var lon = req.params.lon, lat=req.params.lat;
-
-        if(!lon || !lat)
-            return {json:{}};
-
-        res = sql.exec(`SELECT
-            place_name +', ' + admin_name1 + ', ' + country_code place,
-            id, postal_code, latitude, longitude, 
-            DISTLATLON(?lat, ?lon, latitude, longitude) dist,
-            AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
-            FROM geonames WHERE 
-            geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
-            ORDER BY 6 ASC;`,
-            {lat:lat, lon:lon},
-            {maxRows: 100 }
-        );
-
-
-Here we use the :green:`Object` ``{lat:lat, lon:lon}`` to fill in the ``?lat`` and
-``?lon`` in the SQL query.  In this case it is easier than the using ``?,?``
-style and providing an :green:`Array` since the same lat/lon values are
-being use multiple times.
-
-We also provide the :green:`Object` ``{maxRows: 100}`` to override the default of ten
-rows.
-
-This will return something similar to:
-
-.. code-block:: javascript
-
-    res = {
-        "columns":["place","id","postal_code","latitude","longitude","dist","heading"],
-        "rows":[
-            {
-                "place":"Dixon, California, US",
-                "id":"6233ef9f79d",
-                "postal_code":"95620",
-                "latitude":38.4403,
-                "longitude":-121.8088,
-                "dist":0,
-                "heading":"N"
-            },
-            {
-                "place":"Davis, California, US",
-                "id":"6233ef9fa49",
-                "postal_code":"95618",
-                "latitude":38.5449,
-                "longitude":-121.7405,
-                "dist":8.110646984972856,
-                "heading":"NNE"
-            },
-            // ...
-        ],
-        "rowCount":100}
-    }
-
-That's nice, but not in the format that we need.  We need to group results by
-``place`` and format the result as needed by the client-side JavaScript.
-
-So let's write a function to do that:
-
-.. code-block:: javascript
-
-    var distconv = 1;
-
-    if(useKilometers)
-        distconv=1.60934
-
-    // reorganize our data for easy handling client side.
-    function reorg_places(places) {
-        var i=0, j=0, ret={};
-        /* group by city, with entries for distance for each zip code */
-        for (; i<places.length;i++) {
-            var p = places[i];
-            if(!ret[p.place])
-                ret[p.place]={};
-            ret[p.place][p.postal_code] = {
-                dist: p.dist * distconv,
-                lon: p.longitude,
-                lat: p.latitude,
-                id: p.id,
-                heading: p.heading
-            };
-        } 
-        // calc average distance
-        var keys = Object.keys(ret);
-        for (i=0;i<keys.length;i++) {
-            var placeName = keys[i];
-            var placeObj = ret[placeName];
-            var zkeys = Object.keys(placeObj);
-            var cnt=0, avg=0;
-            for (j=0;j<zkeys.length;j++) {
-                var zkey = zkeys[j];
-                avg += placeObj[zkey].dist;
-                cnt++;
-            }
-            avg /= cnt;
-            placeObj.avgdist=avg;
-        }
-
-    /* ret will be something like:
-    {
-        "Rocklin, California, US":
-        {
-            "95677":{"dist":0,"lon":-121.2366,"lat":38.7877,"id":"6232be7e18b","heading":"N"},
-            "95765":{"dist":3.9415328848914677,"lon":-121.2677,"lat":38.8136,"id":"6232be7e1b2","heading":"NW"},
-            "avgdist":1.9707664424457338
-        },
-        "Roseville, California, US":{
-            "95661":{"dist":5.904624610176184,"lon":-121.234,"lat":38.7346,"id":"6232be7e185","heading":"S"},
-            "95678":{"dist":5.2635315744972475,"lon":-121.2867,"lat":38.7609,"id":"6232be7e18e","heading":"SW"},
-            "95747":{"dist":8.926222554334897,"lon":-121.3372,"lat":38.7703,"id":"6232be7e1af","heading":"WSW"},
-            "avgdist":6.698126246336109
-        },
-        ...
-    }
-    */
-        return ret;
-    }
-
-This function groups each ``place`` (city) name and adds the rows indexed by
-the property ``postal_code`` (AKA zip code in the US).  It also calculates
-an average distance for each ``postal_code`` and adds that as the property
-``avgdist``.
-
-Using that function, we can update our ``ajaxres()`` function to look like
-this:
-
-.. code-block:: javascript
-
-    function ajaxres(req) {
-        var res;
-        var lon = req.params.lon, lat=req.params.lat;
-
-        if(!lon || !lat)
-            return {json:{}};
-
-        res = sql.exec(`SELECT
-            place_name +', ' + admin_name1 + ', ' + country_code place,
-            id, postal_code, latitude, longitude, 
-            DISTLATLON(?lat, ?lon, latitude, longitude) dist,
-            AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
-            FROM geonames WHERE 
-            geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
-            ORDER BY 6 ASC;`,
-            {lat:lat, lon:lon},
-            {maxRows: 100 }
-        );
-
-        var ret = {cities: reorg_places(res.rows)};
-
-        return {json:ret}
-    }
-
-This is looking good so far.  However the client-side JavaScript
-also needs to look up by the location ``id`` column.  and when it
-does so, it will also need to provide the name and postal code of 
-that location. So we will add a bit more functionality to 
-``ajaxres()`` for our final version:
-
-.. code-block:: javascript
-
-    function ajaxres(req) {
-        var res, id_res;
-        var lon = req.params.lon, lat=req.params.lat;
-
-        // if we are given an id, look up the lat/lon
-        if(req.params.id)
-        {
-            id_res= sql.one("SELECT " +
-                "place_name +', ' + admin_name1 + ', ' + postal_code + ', ' +country_code place, "  +
-                "postal_code zip, latitude lat, longitude lon " + 
-                "FROM geonames WHERE id=?;",
-                [req.params.id]
-            );
-            if(id_res) {
-                lon=id_res.lon;
-                lat=id_res.lat;
-            }
-        }
-
-        if(!lon || !lat)
-            return {json:{}};
-
-        res = sql.exec(`SELECT
-            place_name +', ' + admin_name1 + ', ' + country_code place,
-            id, postal_code, latitude, longitude, 
-            DISTLATLON(?lat, ?lon, latitude, longitude) dist,
-            AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
-            FROM geonames WHERE 
-            geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
-            ORDER BY 6 ASC;`,
-            {lat:lat, lon:lon},
-            {maxRows: 100 }
-        );
-        var ret = {cities: reorg_places(res.rows)};
-
-        // if look up by id, add name and zip for display
-        if(req.params.id)
-        {
-            ret.place = id_res.place;
-            ret.zip = id_res.zip;
-        }
-
-        return {json:ret}
     }
 
 The Complete Server-Side Script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. code-block:: javascript
+
+    ...
+
+    var useKilometers = true;
+
+    var distconv = 1;
+    var distvar = "miles";
+
+    if(useKilometers) {
+        distconv=1.60934;
+        distvar = "kilometers";
+    }
+
+    function htmlpage(req) {
+        var id = req.params.id, lat, lon;
+
+        // check if we already have a place id.
+        if(id){
+            id_res= sql.one("SELECT place, latitude, longitude " + 
+                "FROM cities WHERE id=?;",
+                [req.params.id]
+            );
+            // yes, then set lat,lon vars
+            if(id_res) {
+                lon=id_res.longitude;
+                lat=id_res.latitude;
+            }
+        } else {
+            // no, just print the blank search form
+            req.printf(pageTopFmt,'');  // add top of page to return buffer without a query.
+            return({html:pageBottom});  // add bottom of page, return with 'content-type:text/html'
+        } 
+
+        // what to do if the query_string id is not found in the db
+        if(!lon || !lat) {
+            req.printf(pageTopFmt,'');
+            req.printf('No entry for id "%s".', id);
+            return({html:pageBottom});
+        }
+
+        /* here we select rows based on their distance from the place specified by 'id',
+           calculate the distance and direction between id and the selected city,
+           then sort by the distance from 'id' (field 6 in our sql statement) */
+        res = sql.exec(`SELECT
+            place, id, latitude, longitude, population,
+            DISTLATLON(?lat, ?lon, latitude, longitude) dist,
+            AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
+            FROM cities WHERE geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
+            ORDER BY 6 ASC;`,
+            {lat:lat, lon:lon},
+            {maxRows: 31}, // first row is same city
+            function(res, i) { // foreach city retrieved:
+                if(!i) {
+                    // this is our 'id' city, as it is closest to itself.
+                    req.printf(pageTopFmt,res.place);
+                    req.printf('<h3 style="margin-bottom:0px">%s</h3><ul style="margin-top:0px">',res.place);
+                } else {
+                    // all other nearby cities we will print the direction and distance:
+                    req.printf('<a href="?id=%s">%s</a><br><ul>' +
+                        '<li>Direction:  %.2f %s to the %s</li>',
+                        res.id, res.place, res.dist * distconv, distvar, res.heading);
+                }
+                // some useful information to go along with the city name
+                req.printf("<li>Population: %s</li>" +
+                    '<li>Location: <a target="_blank" href="https://maps.google.com/maps?z=11&q=%U&ll=%f,%f">' +
+                    'google maps (%.4f,%.4f)</a></li></ul>',
+                    Sql.stringFormat('%ki', res.population), res.place, res.latitude, res.longitude , res.latitude, res.longitude);
+
+                if(!i) req.put('<hr><h3>Closest Cities:</h3>');
+            }
+        );
+        return {html:pageBottom}; //pageBottom is added to same buffer as is used with req.printf()
+    }
+
+    // For autocomp. This needs to be set only once
+    sql.set({
+        noiseList      : [],    // allow search for 'the', 'us', 'or', etc.
+        'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
+        'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
+                                // and https://rampart.dev/docs/sql-set.html#qmaxwords .
+    });
+
+    /* autocomp() results must be formatted as such:
+    {
+        "suggestions": [
+            {"value":"Vaulion, Canton de Vaud, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832, ...},
+            {"value":"Vallorbe, Canton de Vaud, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714, ...},
+            ...
+        ]
+    }
+    */
+
+    function autocomp(req) {
+        var res;
+        var q = req.query.query;
+
+        // remove any spaces at the beginning of q
+        q = q.replace(/^\s+/, '');
+
+        // if query is only one char, return an empty set
+        //   (even though client-side autocomplete is set to 2 char min)
+        if(q.length<2)
+            return {json: { "suggestions": []}}
+
+        // we will need at least two chars in our last word since it will get a '*' wildcard added to it
+        q = q.replace(/ \S$/, ' ');
+
+        // if last character is not a space, add wildcard
+        if(q.charAt(q.length-1) != ' ')
+            q += '*';
+
+        // perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations
+        res = sql.exec("SELECT place value, id, latitude, longitude, population FROM cities WHERE "+
+                        "place LIKE3 ? order by population DESC;", [q] );
+
+        //if no results, try again using alt_names
+        if(res.rowCount == 0) {
+            res = sql.exec("SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE " +
+                            "alt_names LIKE3 ? order by population DESC;", [q] );
+            // add alt name to "value" for type ahead display
+            for (var i=0; i<res.rows.length;i++) {
+                var row = res.rows[i];
+                var ql = req.query.query.toLowerCase();
+                var anames = row.alt_names.split(',');
+                for (var j=0; j<anames.length;j++) {
+                    var aname = anames[j].toLowerCase();
+                    if(aname.indexOf(ql) > -1) {
+                        row.value += ' (aka: ' +  aname + ')';
+                        break;
+                    }
+                }
+            }
+        }
+        return {json: { "suggestions": res.rows}};
+    }
+
+The Complete Script
+-------------------
+
 We now have all we need to perform the autocomplete search and nearest
 city search.  This is the final script which, as layed out may be accessed
-at ``http://localhost:8088/apps/citysearch/``.
+at ``http://localhost:8088/apps/citysearch/``.  It will also build the
+database when run from the command line as ``rampart citysearch.js``.
 
 .. code-block:: javascript
 
-    // Load the sql module
-    var Sql=require("rampart-sql");
+    // cuz no one likes writing out 'rampart.utils.printf()'
+    rampart.globalize(rampart.utils);
+    
+    var Sql = require("rampart-sql");
 
-    // serverConf is defined in web_server/web_server_conf.js
-    var sql=new Sql.init(serverConf.dataRoot + '/geonames_db');
+    var sql = new Sql.init("~/citysearch/web_server/data/cities", true);
 
-    var useKilometers=true;
+    var csvFile = "../data/geonames-all-cities-with-a-population-1000.csv";
 
-    var distvar = "mi";
-
-    if(useKilometers)
-        distvar = "km";
-
-    var client_script = `
-    // function to get query parameters from url
-    function getparams() {
-        if (window.location.search.length==0)
-            return {};
-
-        var qstr  = window.location.search.substring(1);
-        var pairs = qstr.split('&');
-        var ret = {}, i=0;
-
-        for (i = 0; i < pairs.length; i++) {
-            var kv = pairs[i].split('=');
-            ret[kv[0]]=kv[1];
-        }
-        return ret;
-    };
-
-    $(document).ready(function(){
-
-        var curzip, curid;
-        var params = getparams();
-
-        // format the results, stick them in the div below the search form
-        // update url to match state if curid is set
-        function format_res(res_cities) {
-            var resdiv = $('#res');
-            var places = Object.keys(res_cities);
-            var reshtml="<h2>Closest places to " + $('#cstextbox').val() +'</h2>';;
-            resdiv.html('');
-
-            for (var i=0;i<places.length;i++) {
-                var j=0, place=places[i];
-                var placeObj = res_cities[place];
-                var zkeys = Object.keys(placeObj);
-                var ziphtml='';
-                var is_self=false; //flag if we are processing zip codes in the current city          
-
-                for(j=0;j<zkeys.length;j++) {
-                    var zip=zkeys[j];
-                    if(zip == 'avgdist')
-                        continue;
-                    if(zip == curzip ) {
-                        is_self=true;
-                        continue;
-                    }
-                    var zipObj = placeObj[zip];
-                    //console.log(zipObj);
-                    ziphtml+='<a class="zip" href="#" data-zip="' + zip + '" data-lat="' + zipObj.lat + '" data-lon="' +
-                             zipObj.lon + '" data-id="' + zipObj.id + '">' + zip + '(' + zipObj.dist.toFixed(1) +
-                             '&nbsp;' + zipObj.heading + ')</a> ';
-                }
-                if(ziphtml) {// skip self if only one zip.
-                    if(is_self)
-                        reshtml += '<span><h3>Other zip codes in <span class="place">' + place + '</span></h3>'  
-                                + ziphtml + "</span>";
-                    else
-                        reshtml += '<span><h3><span class="place">' + place + '</span> (' +
-                                    parseFloat(placeObj.avgdist).toFixed(1)  +' ${distvar}.)</h3>' +
-                                    ziphtml + "</span>";
-                }
-            }
-            resdiv.html(reshtml);
-
-            if(curid){
-                var nurl = window.location.origin + window.location.pathname + '?id=' + curid;
-                window.history.pushState({},'',nurl);
-            }
+    function import_data(){
+        function create_tmp_table() {
+            sql.exec("create table cities_tmp (" +
+                    "Geoname_ID              varchar(8), " +
+                    "Name                    varchar(8), " +
+                    "ASCII_Name              varchar(8), " +
+                    "Alternate_Names         varchar(8), " +
+                    "Feature_Class           varchar(8), " +
+                    "Feature_Code            varchar(8), " +
+                    "Country_Code            varchar(8), " +
+                    "Country_name_EN         varchar(8), " +
+                    "Country_Code_2          varchar(8), " +
+                    "Admin1_Code             varchar(8), " +
+                    "Admin2_Code             varchar(8), " +
+                    "Admin3_Code             varchar(8), " +
+                    "Admin4_Code             varchar(8), " +
+                    "Population              int, "        +
+                    "Elevation               int, "        +
+                    "Digital_Elevation_Model int, "        +
+                    "Timezone                varchar(8), " +
+                    "Modification_date       varchar(8), " +
+                    "LABEL_EN                varchar(8), " +
+                    "Coordinates             varchar(8)"   +
+                    ");"  ); 
         }
 
-        // Use 'body' and filter with class 'zip' so the event will pick up not-yet-written content
-        $('body').on('click','.zip',function(e) {
-            //perform a new search on the zip code that was clicked.
-            var t = $(this);
-            var lat = t.attr('data-lat'), 
-                lon=t.attr('data-lon'),
-                zip=t.attr('data-zip');
-            var place = t.closest('span').find('.place').text();
 
-            //curid is for the change of url in order to save the state.
-            curid = t.attr('data-id');
+        var total=-1; //we won't know the total until we finish the first pass of importCsvFile
+        var step = 100; //set in importCsvFile(), only report every 100th row
 
-            // recreate the place name with the zip code in it
-            place = place.substring(0, place.length-2) +zip + ', ' + place.substring(place.length-2, place.length);
-            // put it in the search box
-            $('#cstextbox').val(place);
+        /* a single function to monitor the import for both pre-processing (progressFunc)
+           and import (callback function supplied to sql.importCsvFile as a paramater)   */
+        function monitor_import(count, stg) {
+            var stage = "Import";
 
-            // fetch new list of closest cities and display
-            $.getJSON(
-                "/apps/citysearch/ajaxres.json",
-                {lat:lat, lon: lon},
-                function(res) {
-                    curzip=zip;
-                    format_res(res.cities);
-                }
+            if(count==0)
+                printf("\n");
+
+            if(stg!==undefined) // progressfunc
+                stage=stg;
+
+            if(stg === 0) //differentiate between 0 and undefined
+            {
+                total=count; //update our total in the first stage.
+                printf("Stage: %s, Count: %d       \r", stage, count);
+            } else {
+                printf("Stage: %s, Count: %d of %d      \r", stage, count, total);
+            }
+            fflush(stdout);
+        }
+
+        function import_csv() {
+            total = sql.importCsvFile(
+                csvFile,  //file to import
+                {
+                    tableName:       'cities_tmp',
+                    singleQuoteNest: false,
+                    hasHeaderRow:    true,
+                    delimiter:       ';',
+                    normalize:       false,
+                    callbackStep:    step, //callback run every 100th row
+                    progressStep:    step, //progressfunc run every 100th row for each stage
+                    progressFunc:    monitor_import //progress function while processing csv 
+                },
+                monitor_import //callback function upon actual import
             );
-            return false; //don't actually go to the href in the clicked <a>
-        });
+            printf('\n%d rows in total.\n',total);
+        }
 
-        // the autocomplete plugin from  https://github.com/devbridge/jQuery-Autocomplete
-        // jquery and plugin included from cloudflare in <script src="xyz"> tags above.
+        function create_final_table() {
+            sql.exec("create table cities (" +
+                    "id                      counter, "    +
+                    "place                   varchar(8), " +
+                    "alt_names               varchar(8), " +
+                    "population              int, "        +
+                    "latitude                double, "     +
+                    "longitude           double, "     +
+                    "geocode             long, "       +
+                    "timezone                varchar(8), " +
+                    "country                 varchar(8) "  +
+                    ");"  ); 
+        }
+
+        function makerow(o) {
+            var ret={}, tmp;
+
+            ret.place = sprintf('%s, %s %s(%s)', o.Name, o.Admin1_Code, o.Country_name_EN, o.Country_Code);
+            ret.altNames = o.Alternate_Names;
+            ret.population = o.Population;
+            tmp = o.Coordinates.split(',');
+            ret.lat = parseFloat(tmp[0]);
+            ret.lon = parseFloat(tmp[1]);
+            ret.tz = o.Timezone;
+            ret.country = o.Country_name_EN;
+            return ret;
+        }
+
+        function build_final_table() {
+            printf("sorting rows\n");
+            sql.exec("select * from cities_tmp order by Population DESC",
+                function(res,i) {
+
+                    if(!i) printf("done\nCreating Final Table\n");
+
+                    var vals = makerow(res);
+                    sql.exec("insert into cities values( " +
+                        "counter, ?place, ?altNames, ?population, ?lat, ?lon, latlon2geocode(?lat, ?lon), ?tz, ?country );",
+                        vals );
+                    if (! (i % 100) ) {
+                        printf("%d of %d\r", i, total);
+                        fflush(stdout);
+                    }
+                },
+                {maxRows:-1}
+            );
+            printf('\n');
+        }
+
+        function make_geocode_index() {
+            printf("creating index on geocode\n");
+            sql.exec("create index cities_geocode_x on cities(geocode) WITH INDEXMETER 'on';");
+        }
+
+        function make_id_index(){
+            printf("creating index on id\n");
+            sql.exec("create index cities_id_x on cities(id) WITH INDEXMETER 'on';");
+        }
+
+        function make_text_indexes() {
+            printf("creating indexes on place names\n");
+
+            // noiselist as detailed at https://rampart.dev/docs/sql-set.html#noiselist
+            // This is not English text and some geographic abbreviations like OR IN DO TO SO and US
+            // are also on the noise words list.  Setting to empty will allow such words in the index.
+            sql.set({ noiseList:[]});
+
+            // make compact index.  Sorting by population, not by likep rank.  See like3 search below.
+            sql.exec("create fulltext index cities_place_ftx on cities(place)"+
+                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+
+            sql.exec("create fulltext index cities_altNames_ftx on cities(alt_names)"+
+                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+        }
+
+        function drop_tmp_table() {
+            sql.exec("drop table cities_tmp");
+        }
+
+        create_tmp_table();
+        import_csv();
+        create_final_table();
+        build_final_table();
+        make_geocode_index();
+        make_id_index();
+        make_text_indexes();
+        drop_tmp_table();
+
+    }
+
+    var useKilometers = true;
+
+    var distconv = 1;
+    var distvar = "miles";
+
+    if(useKilometers) {
+        distconv=1.60934;
+        distvar = "kilometers";
+    }
+
+    // the autocomplete plugin from  https://github.com/devbridge/jQuery-Autocomplete
+    // jquery and plugin included from cloudflare in <script src="xyz"> tags below in pageTopFmt.
+    var client_script = `
+    $(document).ready(function(){
         $('#cstextbox').autocomplete(
             {
                 serviceUrl: '/apps/citysearch/autocomp.json',
                 minChars: 2,
                 autoSelectFirst: true,
                 showNoSuggestionNotice: true,
-                onSelect: function(sel)
-                {
-                    $.getJSON(
-                        "/apps/citysearch/ajaxres.json",
-                        {lat:sel.latitude, lon: sel.longitude},
-                        function(res) {
-                            curzip = sel.zip;
-                            curid = sel.id;
-                            format_res(res.cities);
-                        }
-                    );
-                }
+                triggerSelectOnValidInput: false,
+                onSelect: function(sel) { window.location.assign("./?id="+sel.id); }
             }
         );
 
-        // prevent form submission - all results are already in the autocomplete
         $('#cstextbox').on('keypress', function(e){
             var key = e.charCode || e.keyCode || 0;
-            if (key == 13) {
+            if (key == 13) {       // on <return> don't submit form
                 e.preventDefault();
                 return false;
             }
         });
-
-        function refresh(id) {
-            $.getJSON(
-                "/apps/citysearch/ajaxres.json",
-                {id:params.id},
-                function(res) {
-                    curzip = res.zip;
-                    $('#cstextbox').val(res.place);
-                    //no curid necessary here
-                    format_res(res.cities);
-                }
-            );
-        }
-        // if we refresh the page, then reload the content
-        if(params.id) {
-            refresh(params.id);
-        }
-        
-        window.onpopstate = function(event) {
-            // url has changed, but page was not reloaded
-            params = getparams();
-            curid=false;
-            if(params.id)
-                refresh(params.id);
-            else {
-                $('#cstextbox').val('');
-                $('#res').html('');
-            }
-        };
-
     });
     `;
 
-
-    // page is defined once upon script load here rather than upon each request in 
-    // htmlpage() below.
-    var page=`<!DOCTYPE HTML>
+    // pageTopFmt is defined once upon script load here rather than upon each request in 
+    // htmlpage() below. format code %w removes leading white space.
+    var pageTopFmt=sprintf('%w',`<!DOCTYPE HTML>
     <html>
         <head><meta charset="utf-8">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>
         <style>
             body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            .autocomplete-suggestions { 
-                border: 1px solid #999; 
-                background: #FFF; 
-                overflow: auto; 
-                width: auto !important; 
-                padding-right:5px;
-            }
-            .autocomplete-suggestion { 
-                padding: 2px 5px; 
-                white-space: nowrap; 
-                overflow: hidden; 
-            }
-            .autocomplete-suggestions strong { 
-                font-weight: normal; 
-                color: #3399FF; 
-            }
-            .autocomplete-group strong { 
-                display: block; 
-                border-bottom: 1px solid #000; 
-            }
+            .autocomplete-suggestions {border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
+            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
+            .autocomplete-suggestions strong {font-weight: normal; color: #3399FF; }
+            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
             .autocomplete-selected { background: #F0F0F0; }
             .autocomplete-group { padding: 2px 5px; }
-            .zip { display: inline-block; width:140px;}
-            #main {
-                background-color: white;
-                margin: auto;
-                min-height: 300px;
-                width: 600px;
-            }
-            #idiv {
-                width:500px;
-                height:39px;
-                border-bottom: lightGray 1px solid;
-                padding:15px 0px 15px 0px;
-            }
-            #cstextbox {
-                min-width:150px;
-                width:100%;
-                height:30px;
-                font:normal 18px arial,sans-serif;
-                padding: 1px 3px;
-                border: 2px solid #ccc;
-                box-sizing: border-box;
-            }
+            #main {background-color: white;margin: auto;min-height: 300px;width: 600px;}
+            #idiv { width:500px;height:39px;border-bottom: lightGray 1px solid;padding:15px 0px 15px 0px;}
+            #cstextbox {min-width:150px;width:100%%;height:30px;font:normal 18px arial,sans-serif;padding: 1px 3px;border: 2px solid #ccc;box-sizing: bord
         </style>
         <title>City Search Tutorial</title>
         </head>
@@ -2212,143 +1670,96 @@ at ``http://localhost:8088/apps/citysearch/``.
         <div id="main">
           <form id="mf">
               <div id="idiv">
-                  <input type="text" id="cstextbox" name="q" value="" placeholder="Search for a city">
+                  <input type="text" id="cstextbox" name="q" value="%s" placeholder="Search for a city">
               </div>
           </form>
-          <div id="res"></div>
-          </body>
-          <script>
-              ${client_script}
-          </script>
-    </html>`;
+          <div id="res">`);
 
-
-
+    var pageBottom = sprintf(`</div></body><script>
+    %w
+    </script></html>`, client_script);
     function htmlpage(req) {
-        // just return the html.
-        return {html:page};
-    }
+        var id = req.params.id, lat, lon;
 
-
-    var distconv = 1;
-
-    if(useKilometers)
-        distconv=1.60934
-
-    // reorganize our data for easy handling client side.
-    function reorg_places(places) {
-        var i=0, j=0, ret={};
-        /* group by city, with entries for distance for each zip code */
-        for (; i<places.length;i++) {
-            var p = places[i];
-            if(!ret[p.place])
-                ret[p.place]={};
-            ret[p.place][p.postal_code] = {
-                dist: p.dist * distconv,
-                lon: p.longitude,
-                lat: p.latitude,
-                id: p.id,
-                heading: p.heading
-            };
-        } 
-        // calc average distance
-        var keys = Object.keys(ret);
-        for (i=0;i<keys.length;i++) {
-            var placeName = keys[i];
-            var placeObj = ret[placeName];
-            var zkeys = Object.keys(placeObj);
-            var cnt=0, avg=0;
-            for (j=0;j<zkeys.length;j++) {
-                var zkey = zkeys[j];
-                avg += placeObj[zkey].dist;
-                cnt++;
-            }
-            avg /= cnt;
-            placeObj.avgdist=avg;
-        }
-
-    /* ret will be something like:
-    {
-        "Rocklin, California, US":
-        {
-            "95677":{"dist":0,"lon":-121.2366,"lat":38.7877,"id":"6232be7e18b","heading":"N"},
-            "95765":{"dist":3.9415328848914677,"lon":-121.2677,"lat":38.8136,"id":"6232be7e1b2","heading":"NW"},
-            "avgdist":1.9707664424457338
-        },
-        "Roseville, California, US":{
-            "95661":{"dist":5.904624610176184,"lon":-121.234,"lat":38.7346,"id":"6232be7e185","heading":"S"},
-            "95678":{"dist":5.2635315744972475,"lon":-121.2867,"lat":38.7609,"id":"6232be7e18e","heading":"SW"},
-            "95747":{"dist":8.926222554334897,"lon":-121.3372,"lat":38.7703,"id":"6232be7e1af","heading":"WSW"},
-            "avgdist":6.698126246336109
-        },
-        ...
-    }
-    */
-        return ret;
-    }
-
-    function ajaxres(req) {
-        var res, id_res;
-        var lon = req.params.lon, lat=req.params.lat;
-
-        // if we are given an id, look up the lat/lon
-        if(req.params.id)
-        {
-            id_res= sql.one("SELECT " +
-                "place_name +', ' + admin_name1 + ', ' + postal_code + ', ' +country_code place, "  +
-                "postal_code zip, latitude lat, longitude lon " + 
-                "FROM geonames WHERE id=?;",
+        // check if we already have a place id.
+        if(id){
+            id_res= sql.one("SELECT place, latitude, longitude " + 
+                "FROM cities WHERE id=?;",
                 [req.params.id]
             );
+            // yes, then set lat,lon vars
             if(id_res) {
-                lon=id_res.lon;
-                lat=id_res.lat;
+                lon=id_res.longitude;
+                lat=id_res.latitude;
             }
+        } else {
+            // no, just print the blank search form
+            req.printf(pageTopFmt,'');  // add top of page to return buffer without a query.
+            return({html:pageBottom});  // add bottom of page, return with 'content-type:text/html'
+        } 
+
+        // what to do if the query_string id is not found in the db
+        if(!lon || !lat) {
+            req.printf(pageTopFmt,'');
+            req.printf('No entry for id "%s".', id);
+            return({html:pageBottom});
         }
 
-        if(!lon || !lat)
-            return {json:{}};
-
+        /* here we select rows based on their distance from the place specified by 'id',
+           calculate the distance and direction between id and the selected city,
+           then sort by the distance from 'id' (field 6 in our sql statement) */
         res = sql.exec(`SELECT
-            place_name +', ' + admin_name1 + ', ' + country_code place,
-            id, postal_code, latitude, longitude, 
+            place, id, latitude, longitude, population,
             DISTLATLON(?lat, ?lon, latitude, longitude) dist,
             AZIMUTH2COMPASS( AZIMUTHLATLON(?lat, ?lon, latitude, longitude), 3 ) heading
-            FROM geonames WHERE 
-            geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
+            FROM cities WHERE geocode BETWEEN (SELECT LATLON2GEOCODEAREA(?lat, ?lon, 1.0))
             ORDER BY 6 ASC;`,
             {lat:lat, lon:lon},
-            {maxRows: 100 }
+            {maxRows: 31}, // first row is same city
+            function(res, i) { // foreach city retrieved:
+                if(!i) {
+                    // this is our 'id' city, as it is closest to itself.
+                    req.printf(pageTopFmt,res.place);
+                    req.printf('<h3 style="margin-bottom:0px">%s</h3><ul style="margin-top:0px">',res.place);
+                } else {
+                    // all other nearby cities we will print the direction and distance:
+                    req.printf('<a href="?id=%s">%s</a><br><ul>' +
+                        '<li>Direction:  %.2f %s to the %s</li>',
+                        res.id, res.place, res.dist * distconv, distvar, res.heading);
+                }
+                // some useful information to go along with the city name
+                req.printf("<li>Population: %s</li>" +
+                    '<li>Location: <a target="_blank" href="https://maps.google.com/maps?z=11&q=%U&ll=%f,%f">' +
+                    'google maps (%.4f,%.4f)</a></li></ul>',
+                    Sql.stringFormat('%ki', res.population), res.place, res.latitude, res.longitude , res.latitude, res.longitude);
+
+                if(!i) req.put('<hr><h3>Closest Cities:</h3>');
+            }
         );
-
-        var ret = {cities: reorg_places(res.rows)};
-
-        // if look up by id, add name and zip for display
-        if(req.params.id)
-        {
-            ret.place = id_res.place;
-            ret.zip = id_res.zip;
-        }
-
-        return {json:ret}
+        return {html:pageBottom}; //pageBottom is added to same buffer as is used with req.printf()
     }
+
+    // For autocomp. This needs to be set only once
+    sql.set({
+        noiseList      : [],    // allow search for 'the', 'us', 'or', etc.
+        'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
+        'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
+                                // and https://rampart.dev/docs/sql-set.html#qmaxwords .
+    });
 
     /* autocomp() results must be formatted as such:
     {
         "suggestions": [
-            {"value":"Vaulion, Canton de Vaud, 1325, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832,"zip":"1325"},
-            {"value":"Vallorbe, Canton de Vaud, 1337, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714,"zip":"1337"},
-            {"value":"Valeyres-sous-Rances, Canton de Vaud, 1358, CH","id":"6233eaf6608","latitude":46.7482,"longitude":6.5354,"zip":"1358"},
-            {"value":"Valeyres-sous-Ursins, Canton de Vaud, 1412, CH","id":"6233eaf663b","latitude":46.7453,"longitude":6.6533,"zip":"1412"},
+            {"value":"Vaulion, Canton de Vaud, CH","id":"6233eaf65bd","latitude":46.6848,"longitude":6.3832, ...},
+            {"value":"Vallorbe, Canton de Vaud, CH","id":"6233eaf65c6","latitude":46.7078,"longitude":6.3714, ...},
             ...
         ]
     }
     */
+
     function autocomp(req) {
         var res;
         var q = req.query.query;
-
-        // ignore one character partial words
 
         // remove any spaces at the beginning of q
         q = q.replace(/^\s+/, '');
@@ -2358,41 +1769,49 @@ at ``http://localhost:8088/apps/citysearch/``.
         if(q.length<2)
             return {json: { "suggestions": []}}
 
-        // we will need at least two chars in our last word
-        // since it will get a '*' wildcard added to it
+        // we will need at least two chars in our last word since it will get a '*' wildcard added to it
         q = q.replace(/ \S$/, ' ');
-        
 
         // if last character is not a space, add wildcard
         if(q.charAt(q.length-1) != ' ')
             q += '*';
 
-        sql.set({
-            'likepAllmatch': true,  // match every word or partial word
-            'qMaxWords'    : 5000,  // allow query and sets to be larger than normal for '*' wildcard searches
-            'qMaxSetWords' : 5000   // see https://rampart.dev/docs/sql-set.html#qmaxsetwords 
-                                    // and https://rampart.dev/docs/sql-set.html#qmaxwords .
-        });
-        
-        // perform a text search on the words or partial words we have, and return a list of best matching locations
-        res = sql.exec(`SELECT 
-            place_name +', ' + admin_name1 + ', ' + postal_code + ', ' + country_code value,
-            id, latitude, longitude, postal_code zip
-            FROM geonames WHERE
-            place_name\\postal_code\\admin_name1\\admin_code1\\country_code\\admin_name2\\admin_code2\\admin_name3\\admin_code3
-            LIKEP ?;`,
-            [q] 
-        );
+        // perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations
+        res = sql.exec("SELECT place value, id, latitude, longitude, population FROM cities WHERE "+
+                        "place LIKE3 ? order by population DESC;", [q] );
+
+        //if no results, try again using alt_names
+        if(res.rowCount == 0) {
+            res = sql.exec("SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE " +
+                            "alt_names LIKE3 ? order by population DESC;", [q] );
+            // add alt name to "value" for type ahead display
+            for (var i=0; i<res.rows.length;i++) {
+                var row = res.rows[i];
+                var ql = req.query.query.toLowerCase();
+                var anames = row.alt_names.split(',');
+                for (var j=0; j<anames.length;j++) {
+                    var aname = anames[j].toLowerCase();
+                    if(aname.indexOf(ql) > -1) {
+                        row.value += ' (aka: ' +  aname + ')';
+                        break;
+                    }
+                }
+            }
+        }
         return {json: { "suggestions": res.rows}};
     }
 
-    // url to function mapping
-    module.exports= {
-        "/":               htmlpage,  //http://localhost:8088/apps/citysearch/
-        "/index.html":     htmlpage,  //http://localhost:8088/apps/citysearch/index.html
-        "/autocomp.json":  autocomp,  //http://localhost:8088/apps/citysearch/autocomp.json
-        "/ajaxres.json":   ajaxres    //http://localhost:8088/apps/citysearch/ajaxres.json
+    // module and module.exports are set when called from the webserver
+    if(module && module.exports) {
+        // url to function mapping
+        module.exports= {
+            "/":               htmlpage,  //http://localhost:8088/apps/citysearch/
+            "/index.html":     htmlpage,  //http://localhost:8088/apps/citysearch/index.html
+            "/autocomp.json":  autocomp,  //http://localhost:8088/apps/citysearch/autocomp.json
+        }
+    } else {
+        // called from the command line.  Build the database.
+        import_data();
     }
-
 
 Enjoy.

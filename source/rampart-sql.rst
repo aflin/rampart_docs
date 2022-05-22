@@ -1282,46 +1282,37 @@ Variations of Fulltext Indexes
 """"""""""""""""""""""""""""""
 
 Though a ``LIKEP`` search on a ``FULLTEXT`` index (created as described above) 
-is the most common and most capable version, there are several other versions 
+is the most common and most capable version, there are two other versions 
 of text indexes and 
 `LIKE <https://docs.thunderstone.com/site/texisman/search_condition_using_like.html>`_
-searches which are available.  These include:
+searches which are available:
 
-* ``METAMORPH INVERTED INDEX`` - same as ``FULLTEXT``, or simply ``METAMORPH``- best used with 
+* Fulltext Index: - Default ``FULLTEXT`` or ``METAMORPH`` index - best used with 
   `LIKEP <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ - 
   see `Texis Documentation for Metamorph Inverted Indexes <https://docs.thunderstone.com/site/texisman/inverted.html>`_\ .
 
-* ``METAMORPH COMPACT INDEX`` - best used with 
+* Compact Index - best used with 
   `LIKER <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ and
-  `LIKE3 <https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html>`_\ - 
+  `LIKE3 <https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html>`_\ .
+  Created with ``create fulltext index ... WITH WORDPOSITIONS 'off';``. 
   see `Texis Documentation for Metamorph Compact Indexes <https://docs.thunderstone.com/site/texisman/compact.html>`_ \.
 
-* ``METAMORPH COUNTER INDEX`` - best used with
-  `LIKEIN <https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html>`_ - 
+* Counter Index - best used with
+  `LIKEIN <https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html>`_ .
+  Created with ``create fulltext index ... WITH COUNTS 'on';``.  
   see `Texis Documentation for Metamorph Counter Indexes <https://docs.thunderstone.com/site/texisman/counter.html>`_ \.
-
-
-The syntax for creating Text indexes using the ``METAMORPH`` keyword is as follows:
-
-.. code-block:: sql
-
-    CREATE METAMORPH [INVERTED|COMPACT|COUNTER] INDEX index-name
-         ON table-name (column-name [, column-name...])
-         [WITH option-name [value] [option-name [value] ...]] ;
-
-Note that the default type, if not specified, is ``INVERTED``.
 
 Updating A Fulltext Index
 """""""""""""""""""""""""
 
 After a Fulltext Index is created, and more rows are inserted, the index may
-be updated by using the *exact* same command used to create the index above:
+be optimized by using the *exact* same command used to create the index above:
 
 .. code-block:: sql
 
     create fulltext index employees_Bio_text on employees(Bio);
 
-Alternatively, ``ALTER INDEX`` syntax may be used as well.
+Alternatively, ``ALTER INDEX`` syntax may be used.
 
 .. code-block:: sql
 
@@ -1343,8 +1334,8 @@ splits words into an array:
     console.log(words);
     /* ["Remember","wherever","you","go","there","you","are"] */
 
-The default expression is sufficient for English text.  However often it
-will be necessary to alter the word expression list in order to match the
+The default expression is sufficient for English text.  However,
+the word expression list must be altered in order to match the
 full UTF-8 character set. The list of word expressions can be
 altered using ``sql.set()`` and the :ref:`lstexp <sql-set:lstexp>`,
 :ref:`addexp <sql-set:addexp>` and :ref:`delexp <sql-set:delexp>` settings.
@@ -1357,11 +1348,11 @@ the ``CREATE INDEX`` and the ``WITH`` syntax:
     CREATE FULLTEXT employees_Bio_text ON employees(Bio)
     WITH WORDEXPRESSIONS ('[\alnum\x80-\xFF]{2,99}');
 
-The above will match all UTF-8 encoded words.  It will exclude white space
+The above will match all UTF-8 encoded words.  It will exclude ASCII white space
 and punctuation.
 
-There may also be datasets where the matching of a limited amount of punctuation
-might be desirable.
+In some cases, there may be datasets where the matching of a limited amount
+of punctuation is desirable.
 
 Consider the following small snippit of a C Program that might be cataloged in
 a full text searchable database:
@@ -1386,7 +1377,7 @@ and "pthread_mutex_t") by using two expressions:
 
 NOTE:
    Word expressions must be specified when the index is created.  New expressions
-   cannot be added upon optimizing the Fultext index with a ``CREATE``
+   cannot be added upon optimizing the Fulltext index with a ``CREATE``
    statement.
 
 
@@ -1486,6 +1477,7 @@ Return Value:
 
 Escape Sequences
 """"""""""""""""
+
 The following escape sequences are recognized in the format :green:`String`:
 
 *   ``\n`` Newline (ASCII 10)
