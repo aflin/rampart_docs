@@ -549,8 +549,10 @@ the data.</p>
 and create the placename, separate the coordinates and convert them to
 numbers and add the other columns we want to keep.</p>
 <p>In the <code class="docutils literal notranslate"><span class="pre">build_final_table()</span></code> function, we select one row at a time,
-transform the row by passing it to <code class="docutils literal notranslate"><span class="pre">makerow()</span></code> and insert it into
-our final table.  In addition, we will calculate the geocode necessary
+transform the row by passing it to <code class="docutils literal notranslate"><span class="pre">makerow()</span></code> and insert it into our
+final table.  Rows are returned from the <code class="docutils literal notranslate"><span class="pre">cities_tmp</span></code> table ordered by
+population so that we do not need to sort them in the web application.</p>
+<p>In addition, we will calculate the geocode necessary
 to do bounded geographical searches and insert it into the <code class="docutils literal notranslate"><span class="pre">geocode</span></code>
 column.</p>
 <p>According to the <a class="reference internal" href="sql-server-funcs.html#latlon2geocode-latlon2geocodearea"><span class="std std-ref">documentation</span></a>:</p>
@@ -1237,8 +1239,7 @@ necessary.</p>
 <p>Our first search uses the following SQL</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">place</span> <span class="n">value</span><span class="p">,</span> <span class="n">id</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">population</span>
 <span class="k">FROM</span> <span class="n">cities</span> <span class="k">WHERE</span>
-<span class="n">place</span> <span class="n">LIKE3</span> <span class="o">?</span>
-<span class="k">order</span> <span class="k">by</span> <span class="n">population</span> <span class="k">DESC</span><span class="p">;</span>
+<span class="n">place</span> <span class="n">LIKE3</span> <span class="o">?</span> <span class="p">;</span>
 </pre></div>
 </div>
 <p>Taking it line by line:</p>
@@ -1252,12 +1253,10 @@ search on the next line.</p>
 <p><code class="docutils literal notranslate"><span class="pre">LIKE3</span></code> - This signifies a Fulltext search where word positions are
 <strong>not</strong> significant.  Usually <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> will be your most used type of
 <code class="docutils literal notranslate"><span class="pre">like</span></code> search for normal Fulltext queries.  However, here we made an index
-without word positions and are sorting by population.  Thus <code class="docutils literal notranslate"><span class="pre">LIKE3</span></code> is
+without word positions and are pre-sort by population.  Thus <code class="docutils literal notranslate"><span class="pre">LIKE3</span></code> is
 appropriate.  See <a class="reference internal" href="rampart-sql.html#fulltext-indexes"><span class="std std-ref">The documentation</span></a>
 for more information.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">?</span></code> corresponds to a variable we will give <code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code>, as explained below.</p>
-<p><code class="docutils literal notranslate"><span class="pre">order</span> <span class="pre">by</span> <span class="pre">population</span> <span class="pre">DESC</span></code> - sort all possible matches with the cities
-with the greatest population first.</p>
 <p>The second SQL statement will be similar except it searches against the <code class="docutils literal notranslate"><span class="pre">alt_names</span></code>
 column should no match be found in the first query.</p>
 <p>Finally the results are formatted as required by <code class="docutils literal notranslate"><span class="pre">jQuery-Autocomplete</span></code>
@@ -1323,14 +1322,14 @@ the default limits.</p>
     <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
         <span class="nx">q</span> <span class="o">+=</span> <span class="s1">&#39;*&#39;</span><span class="p">;</span>
 
-    <span class="c1">// perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations</span>
+    <span class="c1">// perform a like3 (no rank) pre-sorted by pop text search, and return a list of best matching locations</span>
     <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT place value, id, latitude, longitude, population FROM cities WHERE &quot;</span><span class="o">+</span>
-                    <span class="s2">&quot;place LIKE3 ? order by population DESC;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
+                    <span class="s2">&quot;place LIKE3 ? ;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
 
     <span class="c1">//if no results, try again using alt_names</span>
     <span class="k">if</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rowCount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE &quot;</span> <span class="o">+</span>
-                        <span class="s2">&quot;alt_names LIKE3 ? order by population DESC;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
+                        <span class="s2">&quot;alt_names LIKE3 ? ;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
         <span class="c1">// add alt name to &quot;value&quot; for type ahead display</span>
         <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
             <span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
@@ -1462,14 +1461,14 @@ the default limits.</p>
     <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
         <span class="nx">q</span> <span class="o">+=</span> <span class="s1">&#39;*&#39;</span><span class="p">;</span>
 
-    <span class="c1">// perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations</span>
+    <span class="c1">// perform a like3 (no rank) pre-sorted by pop text search, and return a list of best matching locations</span>
     <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT place value, id, latitude, longitude, population FROM cities WHERE &quot;</span><span class="o">+</span>
-                    <span class="s2">&quot;place LIKE3 ? order by population DESC;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
+                    <span class="s2">&quot;place LIKE3 ? ;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
 
     <span class="c1">//if no results, try again using alt_names</span>
     <span class="k">if</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rowCount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE &quot;</span> <span class="o">+</span>
-                        <span class="s2">&quot;alt_names LIKE3 ? order by population DESC;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
+                        <span class="s2">&quot;alt_names LIKE3 ? ;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
         <span class="c1">// add alt name to &quot;value&quot; for type ahead display</span>
         <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
             <span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
@@ -1830,14 +1829,14 @@ database when run from the command line as <code class="docutils literal notrans
     <span class="k">if</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
         <span class="nx">q</span> <span class="o">+=</span> <span class="s1">&#39;*&#39;</span><span class="p">;</span>
 
-    <span class="c1">// perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations</span>
+    <span class="c1">// perform a like3 (no rank) pre-sorted by pop text search, and return a list of best matching locations</span>
     <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT place value, id, latitude, longitude, population FROM cities WHERE &quot;</span><span class="o">+</span>
-                    <span class="s2">&quot;place LIKE3 ? order by population DESC;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
+                    <span class="s2">&quot;place LIKE3 ? ;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
 
     <span class="c1">//if no results, try again using alt_names</span>
     <span class="k">if</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">rowCount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE &quot;</span> <span class="o">+</span>
-                        <span class="s2">&quot;alt_names LIKE3 ? order by population DESC;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
+                        <span class="s2">&quot;alt_names LIKE3 ? ;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">q</span><span class="p">]</span> <span class="p">);</span>
         <span class="c1">// add alt name to &quot;value&quot; for type ahead display</span>
         <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
             <span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>

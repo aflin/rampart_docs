@@ -404,8 +404,11 @@ and create the placename, separate the coordinates and convert them to
 numbers and add the other columns we want to keep.
 
 In the ``build_final_table()`` function, we select one row at a time,
-transform the row by passing it to ``makerow()`` and insert it into
-our final table.  In addition, we will calculate the geocode necessary
+transform the row by passing it to ``makerow()`` and insert it into our
+final table.  Rows are returned from the ``cities_tmp`` table ordered by
+population so that we do not need to sort them in the web application.
+
+In addition, we will calculate the geocode necessary
 to do bounded geographical searches and insert it into the ``geocode``
 column. 
 
@@ -419,7 +422,6 @@ According to the :ref:`documentation <sql-server-funcs:latlon2geocode, latlon2ge
    bounded-area searches of a geographical region.  
 
 That is exactly what we need to efficiently search for other places close to a given one.
-
 
 Putting it Together
 ^^^^^^^^^^^^^^^^^^^
@@ -1161,8 +1163,7 @@ Our first search uses the following SQL
 
     SELECT place value, id, latitude, longitude, population 
     FROM cities WHERE
-    place LIKE3 ? 
-    order by population DESC;
+    place LIKE3 ? ; 
 
 Taking it line by line:
 
@@ -1181,14 +1182,11 @@ search on the next line.
 ``LIKE3`` - This signifies a Fulltext search where word positions are
 **not** significant.  Usually ``LIKEP`` will be your most used type of
 ``like`` search for normal Fulltext queries.  However, here we made an index
-without word positions and are sorting by population.  Thus ``LIKE3`` is
+without word positions and are pre-sort by population.  Thus ``LIKE3`` is
 appropriate.  See :ref:`The documentation <rampart-sql:Fulltext Indexes>`
 for more information.
 
 The ``?`` corresponds to a variable we will give ``sql.exec()``, as explained below.
-
-``order by population DESC`` - sort all possible matches with the cities
-with the greatest population first.
 
 The second SQL statement will be similar except it searches against the ``alt_names`` 
 column should no match be found in the first query.
@@ -1267,14 +1265,14 @@ Our completed AJAX function now looks like this:
         if(q.charAt(q.length-1) != ' ')
             q += '*';
 
-        // perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations
+        // perform a like3 (no rank) pre-sorted by pop text search, and return a list of best matching locations
         res = sql.exec("SELECT place value, id, latitude, longitude, population FROM cities WHERE "+
-                        "place LIKE3 ? order by population DESC;", [q] );
+                        "place LIKE3 ? ;", [q] );
 
         //if no results, try again using alt_names
         if(res.rowCount == 0) {
             res = sql.exec("SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE " +
-                            "alt_names LIKE3 ? order by population DESC;", [q] );
+                            "alt_names LIKE3 ? ;", [q] );
             // add alt name to "value" for type ahead display
             for (var i=0; i<res.rows.length;i++) {
                 var row = res.rows[i];
@@ -1407,14 +1405,14 @@ The Complete Server-Side Script
         if(q.charAt(q.length-1) != ' ')
             q += '*';
 
-        // perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations
+        // perform a like3 (no rank) pre-sorted by pop text search, and return a list of best matching locations
         res = sql.exec("SELECT place value, id, latitude, longitude, population FROM cities WHERE "+
-                        "place LIKE3 ? order by population DESC;", [q] );
+                        "place LIKE3 ? ;", [q] );
 
         //if no results, try again using alt_names
         if(res.rowCount == 0) {
             res = sql.exec("SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE " +
-                            "alt_names LIKE3 ? order by population DESC;", [q] );
+                            "alt_names LIKE3 ? ;", [q] );
             // add alt name to "value" for type ahead display
             for (var i=0; i<res.rows.length;i++) {
                 var row = res.rows[i];
@@ -1776,14 +1774,14 @@ database when run from the command line as ``rampart citysearch.js``.
         if(q.charAt(q.length-1) != ' ')
             q += '*';
 
-        // perform a like3 (no rank) sorted by pop text search, and return a list of best matching locations
+        // perform a like3 (no rank) pre-sorted by pop text search, and return a list of best matching locations
         res = sql.exec("SELECT place value, id, latitude, longitude, population FROM cities WHERE "+
-                        "place LIKE3 ? order by population DESC;", [q] );
+                        "place LIKE3 ? ;", [q] );
 
         //if no results, try again using alt_names
         if(res.rowCount == 0) {
             res = sql.exec("SELECT place value, alt_names,id, latitude, longitude, population FROM cities WHERE " +
-                            "alt_names LIKE3 ? order by population DESC;", [q] );
+                            "alt_names LIKE3 ? ;", [q] );
             // add alt name to "value" for type ahead display
             for (var i=0; i<res.rows.length;i++) {
                 var row = res.rows[i];
