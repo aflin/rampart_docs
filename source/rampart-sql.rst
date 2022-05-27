@@ -2999,16 +2999,7 @@ See `rex()`_ above.
    var Sql = require("rampart-sql");
    var ret = Sql.rexFile(expr, filename [, callback] [, options]);
 
-In addition to the ``options`` available in `rex()`_, (``exclude`` and
-``submatches``), there is also the option to specify a read buffer
-``delimiter``:
-
-*  ``delimiter`` - pattern to match at the end of the read buffer.  Default
-   is ``$`` (end of line).  If your pattern crosses lines (includes a
-   ``\n`` character), this may be used to specify a delimiter which will not
-   be included in the pattern to be matched.  As such, this provides the
-   guarantee that matching of the desired pattern will occur even if a match
-   would otherwise cross the internal read buffer boundry.
+It includes ths same ``options`` as available in `rex()`_\ .
 
 re2File()
 ~~~~~~~~~
