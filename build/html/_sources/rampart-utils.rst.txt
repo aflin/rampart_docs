@@ -1599,7 +1599,7 @@ Example:
 Rand, Hash and HyperLogLog
 """"""""""""""""""""""""""
 
-Included in rampart.utils are three non-cryptographic functions which have been optimized for speed and ease of use.
+Included in rampart.utils are several non-cryptographic functions which have been optimized for speed and ease of use.
 
 Note that the `rand`_\ () and `hash`_\ () functions are not of cryptographic quality.  For cryptographic quality hashes
 and random numbers, see :ref:`The Rampart-Crypto Module <rampart-crypto:preface>`.
