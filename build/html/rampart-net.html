@@ -1,0 +1,1373 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The rampart-net module &mdash; Rampart 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
+        <link rel="next" title="The rampart-html module" href="rampart-html.html"/>
+        <link rel="prev" title="The rampart-server HTTP module" href="rampart-server.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The rampart-net module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-does-it-do">What does it do?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading">Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#socket-functions">Socket Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-net-socket">new net.Socket()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-connect">socket.connect()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-write">socket.write()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-on">socket.on()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-off">socket.off()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-once">socket.once()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-destroy">socket.destroy()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-settimeout">socket.setTimeout()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-setkeepalive">socket.setKeepAlive()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-byteswritten">socket.bytesWritten</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-bytesread">socket.bytesRead</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-socket-properties">Other socket properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-full-example">Socket Full Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#server-functions">Server Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-net-server">new net.Server()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-listen">server.listen()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-on">server.on()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-off">server.off()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-once">server.once()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-connectioncount">server.connectionCount()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-maxconnections">server.maxConnections()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-server-properties">Other server properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-full-example">Server Full Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#resolve-functions">Resolve functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-net-resolve">new net.Resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resover-resolve">resover.resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resolver-on">resolver.on</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-autoresolver">net.autoResolver()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-resolve">net.resolve()</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#shortcut-functions">Shortcut Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#net-createconnection">net.createConnection()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-createserver">net.createServer()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-resolve-async">net.resolve_async</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The rampart-net module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rampart-net.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-rampart-net-module">
+<h1>The rampart-net module<a class="headerlink" href="#the-rampart-net-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-cmark module makes extensive use of the
+<a class="reference external" href="https://libevent.org/">libevent2</a> library embedded in
+the main rampart executable as well as the
+<a class="reference external" href="https://www.openssl.org/">OpenSSL</a> library, imported from
+<a class="reference internal" href="rampart-crypto.html#the-rampart-crypto-module"><span class="std std-ref">the rampart-crypto module</span></a>.</p>
+</div>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-net module is released under the MIT license.</p>
+</div>
+<div class="section" id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-net module allows the creation of network connections and
+servers in a manner similar to (but with significant differences from)
+<a class="reference external" href="https://nodejs.org/api/net.html">the node.js net module</a>.</p>
+<p>All of the callback functions in rampart-net are asynchronously executed in
+rampart’s event loop unless stated otherwise.</p>
+<p>All functions return their parent object, for chainability, unless otherwise
+stated.</p>
+</div>
+</div>
+<div class="section" id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="socket-functions">
+<h2>Socket Functions<a class="headerlink" href="#socket-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-net-socket">
+<h3>new net.Socket()<a class="headerlink" href="#new-net-socket" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>In order to make a tcp connection to a server, a new Socket object must
+be created.  The <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Socket()</span></code> statement returns functions to
+connect and communicate over tcp, with or without ssl/tls.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Return Value:</dt><dd><p>An object with the below listed function.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="socket-connect">
+<h3>socket.connect()<a class="headerlink" href="#socket-connect" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Make a new tcp connection.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">options</span><span class="p">[,</span> <span class="nx">connect_callback</span><span class="p">]);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">port</span><span class="p">[,</span> <span class="nx">host</span><span class="p">][,</span> <span class="nx">connect_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> - Required. The port of the server to which a connection
+will be attempted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code> - The hostname or ip address of the server.  Default is
+<code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connect_callback</span></code> is a callback <span class="green">Function`</span> which is run
+after a connection is established and the “connect” event is emitted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> with the following optional
+properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> - Required.  A <span class="green">Number</span>.  The port of the server
+to which a connection will be attempted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - How long in milliseconds before a connection is
+terminated for inactivity (both read and write).  Default is
+forever.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">family</span></code> - A <span class="green">Number</span>. Must be <code class="docutils literal notranslate"><span class="pre">0</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">4</span></code>
+or <code class="docutils literal notranslate"><span class="pre">6</span></code> to specify any ip family, ipv4 only or ipv6 only
+respectively.  May be used if <code class="docutils literal notranslate"><span class="pre">host</span></code> above resolves to both
+ipv4 and ipv6 addresses to force the use of a particular one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepalive</span></code> - A <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code> set tcp keepalive
+on the connection.  Packets will be transparently sent to the
+server to aid in keeping the connection alive (should it be
+necessary).  See
+<a class="reference external" href="https://tldp.org/HOWTO/TCP-Keepalive-HOWTO/overview.html">this document</a>
+for more information.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepAliveInitialDelay</span></code> - A <span class="green">Number</span>. How many seconds to
+wait before sending the first keepalive packet.  Has no effect
+unless <code class="docutils literal notranslate"><span class="pre">keepalive</span></code> above is <code class="docutils literal notranslate"><span class="pre">true</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepAliveInterval</span></code> - A <span class="green">Number</span>. How many seconds
+between sending keepalive packets. Has no effect
+unless <code class="docutils literal notranslate"><span class="pre">keepalive</span></code> above is <code class="docutils literal notranslate"><span class="pre">true</span></code>.  Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">keepAliveCount</span></code> - A <span class="green">Number</span>. How many keepalive packets
+should be sent with no reply before disconnecting.  Has no effect
+unless <code class="docutils literal notranslate"><span class="pre">keepalive</span></code> above is <code class="docutils literal notranslate"><span class="pre">true</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tls</span></code> - A <span class="green">Boolean</span>.  Whether to use SSL/TLS for the
+connection.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ssl</span></code> - Same as <code class="docutils literal notranslate"><span class="pre">tls</span></code>.  If both set, <code class="docutils literal notranslate"><span class="pre">ssl</span></code> is ignored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">insecure</span></code> - A <span class="green">Boolean</span>.  Whether to skip verification
+of the server’s credentials when making a connection over
+SSL/TLS.  The default is <code class="docutils literal notranslate"><span class="pre">false</span></code> (i.e. check credentials and
+fail the connection if the server’s credentials are not
+verified).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cacert</span></code> - A <span class="green">String</span>. The path to the CA certificate
+store file, required to verify the server when using SSL/TLS.  The
+default is system dependent (usually <code class="docutils literal notranslate"><span class="pre">/etc/ssl/cert.pem</span></code> on
+MacOS or <code class="docutils literal notranslate"><span class="pre">/etc/ssl/certs/ca-certificates.crt</span></code> on Linux).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">capath</span></code> - A <span class="green">String</span>.  The path to the CA directory.  CA
+certificates need to be stored as individual PEM files in this
+directory.  No Default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hostname</span></code> - A <span class="green">String</span>. Name to use to verify the server
+if different than provided in <code class="docutils literal notranslate"><span class="pre">host</span></code> above or if <code class="docutils literal notranslate"><span class="pre">host</span></code> is a
+numeric ip address.  No Default.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="socket-write">
+<h3>socket.write()<a class="headerlink" href="#socket-write" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Write data to the server.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="kd">function</span> <span class="nx">mycallback</span><span class="p">(){</span>
+    <span class="c1">// now connected, so we can write to server</span>
+    <span class="nx">socket</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;connect&quot;</span><span class="p">,</span> <span class="nx">mycallback</span><span class="p">);</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">port</span><span class="p">,</span> <span class="nx">host</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="socket-on">
+<h3>socket.on()<a class="headerlink" href="#socket-on" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Register a callback <span class="green">Function</span> to be run when an event on
+<code class="docutils literal notranslate"><span class="pre">socket</span></code> is emitted.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">event</span></code> is one of the following possible events for a socket:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">connect</span></code> - emitted after a connection has been established.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> - emitted after data has been received on the socket.
+The provided function takes one argument, the data received
+in a <span class="green">Buffer</span>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ready</span></code> - For compatibility. Emitted immediately after
+“connect”.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drain</span></code> - emitted when data has been written.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end</span></code> - emitted when disconnected by the server. Note: “close”
+below will also be emitted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - emitted if the connection exceeds the provided
+timeout interval.  Note: “close” below will also be emitted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">close</span></code> - emitted whenever a connection is terminated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">error</span></code>  - emitted upon error. Note: if no error callback is registered for a socket,
+rampart will throw an error instead.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a function.  If <code class="docutils literal notranslate"><span class="pre">error</span></code>, function will have its
+first parameter be the error object/message.  If <code class="docutils literal notranslate"><span class="pre">data</span></code>, function
+will have its first parameter be the received data in a <span class="green">Buffer</span>.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="socket-off">
+<h3>socket.off()<a class="headerlink" href="#socket-off" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Unregister a callback <span class="green">Function</span> previously registered with
+<code class="docutils literal notranslate"><span class="pre">socket.on</span></code>.  Function must be a named function.</p>
+<p>Usage example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="kd">function</span> <span class="nx">mycallback</span><span class="p">(){</span>
+    <span class="p">...</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">finishcb</span><span class="p">(){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">off</span><span class="p">(</span><span class="s2">&quot;connect&quot;</span><span class="p">,</span> <span class="nx">mycallback</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">off</span><span class="p">(</span><span class="s2">&quot;close&quot;</span><span class="p">,</span>   <span class="nx">finishcb</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;connect&quot;</span><span class="p">,</span> <span class="nx">mycallback</span><span class="p">);</span>
+
+<span class="p">...</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="nx">finishcb</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="socket-once">
+<h3>socket.once()<a class="headerlink" href="#socket-once" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Same as <code class="docutils literal notranslate"><span class="pre">socket.on</span></code>, except the event will be removed after being
+called once.  This is equivalent to calling off at the beginning of a
+callback, except with once, the function may be anonymous (unnamed).</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="cm">/*</span>
+<span class="cm">    with on()</span>
+
+<span class="cm">function mycallback(){</span>
+<span class="cm">    // &#39;socket&#39; and &#39;this&#39; are the same</span>
+<span class="cm">    socket.off(&quot;connect&quot;, mycallback);</span>
+<span class="cm">    ...</span>
+<span class="cm">}</span>
+
+<span class="cm">socket.on(&quot;connect&quot;, mycallback);</span>
+
+<span class="cm">*/</span>
+
+<span class="cm">/* with once */</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s2">&quot;connect&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="p">...</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="socket-destroy">
+<h3>socket.destroy()<a class="headerlink" href="#socket-destroy" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Close the connection to server.  The “close” event is emitted upon
+the actual disconnect.</p>
+</div></blockquote>
+</div>
+<div class="section" id="socket-settimeout">
+<h3>socket.setTimeout()<a class="headerlink" href="#socket-settimeout" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Set a timeout and optional timeout event callback.  This is a shortcut
+for setting timeout value (in milliseconds) in <code class="docutils literal notranslate"><span class="pre">socket.connect</span></code> and a
+callback using <code class="docutils literal notranslate"><span class="pre">socket.on(&quot;timeout&quot;,</span> <span class="pre">mytimeoutfunc)</span></code>.</p>
+<p>Usage example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="kd">function</span> <span class="nx">timedout</span><span class="p">(){</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;connection timed out&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="nx">timedout</span><span class="p">);</span> <span class="c1">// five seconds</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="socket-setkeepalive">
+<h3>socket.setKeepAlive()<a class="headerlink" href="#socket-setkeepalive" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Set keepalive on or off, or adjust settings at any point while the
+socket is connected.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">socket</span><span class="p">.</span><span class="nx">setKeepAlive</span><span class="p">(</span><span class="nx">enable</span><span class="p">[,</span> <span class="nx">initialDelay</span><span class="p">[,</span> <span class="nx">interval</span><span class="p">[,</span> <span class="nx">count</span><span class="p">]]]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">enable</span></code> is a <span class="green">Boolean</span> and the optional parameters are
+the same as in <a class="reference internal" href="#socket-connect">socket.connect()</a>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="socket-byteswritten">
+<h3>socket.bytesWritten<a class="headerlink" href="#socket-byteswritten" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>A <span class="green">Number</span> - the number of bytes written to the server for the
+current connection.</p>
+</div></blockquote>
+</div>
+<div class="section" id="socket-bytesread">
+<h3>socket.bytesRead<a class="headerlink" href="#socket-bytesread" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>A <span class="green">Number</span> - the number of bytes read from the server for the
+current connection.</p>
+</div></blockquote>
+</div>
+<div class="section" id="other-socket-properties">
+<h3>Other socket properties<a class="headerlink" href="#other-socket-properties" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">socket</span></code> <span class="green">Object</span> may include these possible status properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">connecting</span></code> - <span class="green">Boolean</span>. Whether the connection has been
+initiated, but not yet established.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connected</span></code> - <span class="green">Boolean</span>. Whether the connection has been
+established.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tsl</span></code> - <span class="green">Boolean</span>. Whether this is a secure connection.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">destroyed</span></code> - <span class="green">Boolean</span>. Whether this connection has been
+closed or destroyed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pending</span></code> - <span class="green">Boolean</span>. Whether a connection has not yet been
+attempted.  <code class="docutils literal notranslate"><span class="pre">true</span></code> before <code class="docutils literal notranslate"><span class="pre">connect</span></code> is called and after
+<code class="docutils literal notranslate"><span class="pre">close</span></code> and/or <code class="docutils literal notranslate"><span class="pre">end</span></code> event. <code class="docutils literal notranslate"><span class="pre">false</span></code> after connection
+is established.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">readyState</span></code> - <span class="green">String</span>.  “open” when connected, “opening”
+after <code class="docutils literal notranslate"><span class="pre">socket.connect()</span></code> is called and <code class="docutils literal notranslate"><span class="pre">undefined</span></code> after close or
+before <code class="docutils literal notranslate"><span class="pre">socket.connect()</span></code> is called.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_events</span></code> - <span class="green">Object</span>. Registered callbacks for events.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - <span class="green">Number</span>. Timeout value, if set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remoteAddress</span></code> - <span class="green">String</span>.  IP address of the connected remote peer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remotePort</span></code> - <span class="green">Number</span>.  Port of the connected remote peer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">remoteFamily</span></code> - <span class="green">String</span>.  IP version used for connection
+(<code class="docutils literal notranslate"><span class="pre">ipv4</span></code> or <code class="docutils literal notranslate"><span class="pre">ipv6</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> - <span class="green">Number</span>. Same as <code class="docutils literal notranslate"><span class="pre">remotePort</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Object</span>. Host address used for this connection
+returned from a call to <a href="#id4"><span class="problematic" id="id5">`net.Resolve`_</span></a> by <a class="reference internal" href="#socket-connect">socket.connect()</a> internally.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sslCipher</span></code> - <span class="green">String</span>.  If <code class="docutils literal notranslate"><span class="pre">tls</span></code> is true, the name of the
+openssl cipher being used for this connection.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="socket-full-example">
+<h3>Socket Full Example<a class="headerlink" href="#socket-full-example" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* simulate a https request to google.com */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-net&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;connect&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;CONNECTED&quot;</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s2">&quot;GET / HTTP/1.0\r\nHost: google.com\r\n\r\n&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;ready&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;READY&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// http 1.0, server should disconnect us.</span>
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;END EVENT&quot;</span><span class="p">);;</span>
+<span class="p">});</span>
+
+<span class="cm">/* just to demonstrate multiple callbacks */</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\nlength=%d\n&quot;</span><span class="p">,</span><span class="nx">data</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\ncontent:\n%s\n&quot;</span><span class="p">,</span><span class="nx">data</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Close - written: %s, read: %s\n&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">bytesWritten</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">bytesRead</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;ERROR:&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;TIMEOUT&quot;</span><span class="p">)</span>
+<span class="p">});</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+
+<span class="c1">// now actually connect</span>
+<span class="nx">socket</span><span class="p">.</span><span class="nx">connect</span><span class="p">({</span>
+    <span class="nx">host</span><span class="o">:</span> <span class="s2">&quot;google.com&quot;</span><span class="p">,</span>
+    <span class="nx">port</span><span class="o">:</span> <span class="mi">443</span><span class="p">,</span>
+    <span class="nx">tls</span><span class="o">:</span> <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="cm">/* end of script, event loop started, connection made, callbacks executed */</span>
+
+<span class="cm">/*</span>
+<span class="cm">    Expected results:</span>
+<span class="cm">        CONNECTED</span>
+<span class="cm">        READY</span>
+
+<span class="cm">        length=703</span>
+
+<span class="cm">        content:</span>
+<span class="cm">        HTTP/1.0 301 Moved Permanently</span>
+<span class="cm">        Location: https://www.google.com/</span>
+<span class="cm">        Content-Type: text/html; charset=UTF-8</span>
+<span class="cm">        Date: Thu, 07 Jul 2022 06:19:02 GMT</span>
+<span class="cm">        Expires: Sat, 06 Aug 2022 06:19:02 GMT</span>
+<span class="cm">        Cache-Control: public, max-age=2592000</span>
+<span class="cm">        Server: gws</span>
+<span class="cm">        Content-Length: 220</span>
+<span class="cm">        X-XSS-Protection: 0</span>
+<span class="cm">        X-Frame-Options: SAMEORIGIN</span>
+<span class="cm">        Alt-Svc: h3=&quot;:443&quot;; ma=2592000,h3-29=&quot;:443&quot;; ma=2592000,h3-Q050=&quot;:443&quot;; ma=2592000,h3-Q046=&quot;:443&quot;; ma=2592000,h3-Q043=&quot;:443&quot;; ma=2592000,quic=&quot;:443&quot;; ma=2592000; v=&quot;46,43&quot;</span>
+
+<span class="cm">        &lt;HTML&gt;&lt;HEAD&gt;&lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html;charset=utf-8&quot;&gt;</span>
+<span class="cm">        &lt;TITLE&gt;301 Moved&lt;/TITLE&gt;&lt;/HEAD&gt;&lt;BODY&gt;</span>
+<span class="cm">        &lt;H1&gt;301 Moved&lt;/H1&gt;</span>
+<span class="cm">        The document has moved</span>
+<span class="cm">        &lt;A HREF=&quot;https://www.google.com/&quot;&gt;here&lt;/A&gt;.</span>
+<span class="cm">        &lt;/BODY&gt;&lt;/HTML&gt;</span>
+
+<span class="cm">        END EVENT</span>
+<span class="cm">        Close - written: 36, read: 703</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="server-functions">
+<h2>Server Functions<a class="headerlink" href="#server-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-net-server">
+<h3>new net.Server()<a class="headerlink" href="#new-net-server" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>In order to listen for tcp connections from clients, a new Server object
+must be created.  The <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Server()</span></code> statement returns functions
+to listen and create sockets to communicate over tcp, with or without ssl/tls.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Server</span><span class="p">([</span><span class="nx">options</span> <span class="p">][,</span><span class="nx">connection_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> of options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tls</span></code> - AKA <code class="docutils literal notranslate"><span class="pre">secure</span></code> - a <span class="green">Boolean</span> - Whether to serve
+using ssl/tls. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the
+<code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> and <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> parameters must also be set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code>: A <span class="green">String</span>, the location of the ssl key file for
+serving  over ssl/tls.  An example, if using
+<a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> for “example.com” might be
+<code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/privkey.pem&quot;</span></code>.  This setting has
+no effect unless <code class="docutils literal notranslate"><span class="pre">tls</span></code> or <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code>: A <span class="green">String</span>, the location of the ssl cert file for
+serving over ssl/tls.  An example, if using
+<a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> for “example.com” might be
+<code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;</span></code>.  This setting has
+no effect unless <code class="docutils literal notranslate"><span class="pre">tls</span></code> or <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sslMinVersion</span></code>:  A <span class="green">String</span>, the minimum SSL/TLS version to use.
+Possible values are <code class="docutils literal notranslate"><span class="pre">ssl3</span></code>, <code class="docutils literal notranslate"><span class="pre">tls1</span></code>, <code class="docutils literal notranslate"><span class="pre">tls1.1</span></code> or <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>.  The
+default is <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>. This setting has no effect unless <code class="docutils literal notranslate"><span class="pre">tls</span></code>
+or <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connection_callback</span></code> - a <span class="green">Function</span> - a callback executed when
+the <code class="docutils literal notranslate"><span class="pre">connection</span></code> event is emitted (when the server accepts a new
+connection).  The “connection” event calls registered functions with
+a single parameter (the <code class="docutils literal notranslate"><span class="pre">socket</span></code> object, representing the socket
+connection to the client).</p></li>
+</ul>
+<dl class="simple">
+<dt>Return Value:</dt><dd><p>An object with the below listed function.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="server-listen">
+<h3>server.listen()<a class="headerlink" href="#server-listen" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Set server to listen on the given port, and optionally ip addresses.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Server</span><span class="p">([</span> <span class="p">[</span><span class="nx">options</span> <span class="p">][,</span><span class="nx">connection_callback</span><span class="p">]]);</span>
+
+ <span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">[,</span> <span class="nx">host</span><span class="p">[,</span> <span class="nx">backlog</span><span class="p">]][,</span> <span class="nx">listen_callback</span><span class="p">]);</span>
+
+ <span class="cm">/* or */</span>
+
+ <span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">options</span><span class="p">[,</span> <span class="nx">listen_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> - A <span class="green">Number</span>. The port upon which to listen. Required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code> - A <span class="green">String</span> or <span class="green">Array</span> of <span class="green">Strings</span>.
+Hosts and/or IP addresses to bind. Default is <code class="docutils literal notranslate"><span class="pre">&quot;any&quot;</span></code>
+If unset or set to <code class="docutils literal notranslate"><span class="pre">&quot;any&quot;</span></code>, it will bind all available IPV4 and IPV6 addresses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backlog</span></code> - A <span class="green">Number</span>. The maximum length of the queue of pending connections.
+Default is <code class="docutils literal notranslate"><span class="pre">511</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">listen_callback</span></code> - A <span class="green">Function</span>. A function to be executed
+when the “listening” event is emitted (when server starts listening).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> - An <span class="green">Object</span> with the following properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> - Same as above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code> - Same as above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backlog</span></code> - Same as above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> - Same as <a class="reference internal" href="#server-maxconnections">server.maxConnections()</a> below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">family</span></code> - A <span class="green">Number</span>. Must be <code class="docutils literal notranslate"><span class="pre">0</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">4</span></code>
+or <code class="docutils literal notranslate"><span class="pre">6</span></code> to specify any ip family, ipv4 only or ipv6 only
+respectively.  May be used if <code class="docutils literal notranslate"><span class="pre">host</span></code> above resolves to both
+ipv4 and ipv6 addresses to force the use of a particular one.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="server-on">
+<h3>server.on()<a class="headerlink" href="#server-on" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Register a callback <span class="green">Function</span> to be run when an event on
+<code class="docutils literal notranslate"><span class="pre">server</span></code> is emitted.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Server</span><span class="p">();</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">event</span></code> is one of the following possible events for a socket:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">connection</span></code> - emitted after a new connection has been established.
+The callback is provided a <code class="docutils literal notranslate"><span class="pre">socket</span></code> object, connected to the
+client.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">listening</span></code> - emitted after server has binds to the given port
+and is ready to accept connection.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">close</span></code> - emitted when the server is terminated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">error</span></code>  - emitted upon error. Note: if no error callback is registered for
+the server, rampart will throw an error instead.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a function.  If <code class="docutils literal notranslate"><span class="pre">error</span></code>, function will have its
+first parameter be the error object/message.  If <code class="docutils literal notranslate"><span class="pre">data</span></code>, function
+will have its first parameter be the received data in a <span class="green">Buffer</span>.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="server-off">
+<h3>server.off()<a class="headerlink" href="#server-off" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Unregister a callback <span class="green">Function</span> previously registered with
+<code class="docutils literal notranslate"><span class="pre">server.on</span></code>.  Function must be a named function.</p>
+</div></blockquote>
+</div>
+<div class="section" id="server-once">
+<h3>server.once()<a class="headerlink" href="#server-once" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Same as <code class="docutils literal notranslate"><span class="pre">server.on</span></code>, except the event will be removed after being called once.
+This is equivalent to calling off at the beginning of the callback,
+except with <code class="docutils literal notranslate"><span class="pre">once</span></code>, the function may be anonymous (unnamed).  See example for
+<a class="reference internal" href="#socket-once">socket.once()</a>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="server-connectioncount">
+<h3>server.connectionCount()<a class="headerlink" href="#server-connectioncount" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Get the number of connected clients.</p>
+<dl class="simple">
+<dt>Return Value:</dt><dd><p>A <span class="green">Number</span>, the number of connected clients.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="server-maxconnections">
+<h3>server.maxConnections()<a class="headerlink" href="#server-maxconnections" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Set the maximum number of connections concurrently connected.  The
+server will drop new connections if this number is reached.
+This function can be called at any time to set or adjust the
+connection limit.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Server</span><span class="p">();</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">maxConnections</span><span class="p">([</span><span class="nx">max</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">max</span></code> is a <span class="green">Number</span>, the maximum allowed connections.
+Default is <code class="docutils literal notranslate"><span class="pre">0</span></code> (meaning no max) if no value is provided.  Setting to a
+number greater than 4,294,967,295 or less than 0 is equivalent to
+setting <code class="docutils literal notranslate"><span class="pre">0</span></code>.  Actual system maximum number of connections varies by
+platform and settings.</p>
+</div></blockquote>
+</div>
+<div class="section" id="other-server-properties">
+<h3>Other server properties<a class="headerlink" href="#other-server-properties" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">server</span></code> <span class="green">Object</span> may include these possible status properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">listening</span></code> - <span class="green">Boolean</span>. Whether the connection has been
+initiated, but not yet established.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_events</span></code> - <span class="green">Object</span>. Registered callbacks for events.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tsl</span></code> - <span class="green">Boolean</span>. Whether server accepts secure connections.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> - <span class="green">String</span>.  The SSL/TLS key file, if provided</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sslCertFil</span></code> - <span class="green">String</span>.  The SSL/TLS cert file, if provided.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> - <span class="green">Number</span>. <code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> value, if set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Array</span> of <span class="green">Objects</span>.  Host address
+that the server is listening on as returned from a call to
+<a href="#id6"><span class="problematic" id="id7">`net.Resolve`_</span></a>  by <a class="reference internal" href="#server-listen">server.listen()</a> internally.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> - <span class="green">Number</span>.  The port used by the server.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backlog</span></code> - <span class="green">Number</span>. <code class="docutils literal notranslate"><span class="pre">backlog</span></code> value, if set, or the
+default of <code class="docutils literal notranslate"><span class="pre">511</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="server-full-example">
+<h3>Server Full Example<a class="headerlink" href="#server-full-example" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Simulate an https server, return request headers as text */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-net&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">cert</span> <span class="o">=</span> <span class="s2">&quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span>  <span class="s2">&quot;/etc/letsencrypt/live/example.com/privkey.pem&quot;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">nc</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Server</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;secure&quot;</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span>
+        <span class="nx">sslKeyFile</span><span class="o">:</span><span class="nx">key</span><span class="p">,</span>
+        <span class="nx">sslCertFile</span><span class="o">:</span><span class="nx">cert</span>
+    <span class="p">},</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;CONNECTED&quot;</span><span class="p">);</span>
+
+        <span class="cm">/* assuming all request data will be provided in a single callback */</span>
+        <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+            <span class="kd">var</span> <span class="nx">ind</span> <span class="o">=</span> <span class="nx">bufferToString</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;connection %s, open connections %s\n&quot;</span><span class="p">,</span> <span class="o">++</span><span class="nx">nc</span><span class="p">,</span> <span class="nx">server</span><span class="p">.</span><span class="nx">connectionCount</span><span class="p">());</span>
+            <span class="nx">socket</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span>
+                <span class="s2">&quot;HTTP/1.0 200 OK\r\n&quot;</span> <span class="o">+</span>
+                <span class="s2">&quot;Content-type: text/plain\r\n&quot;</span> <span class="o">+</span>
+                <span class="s2">&quot;Content-Length: &quot;</span> <span class="o">+</span> <span class="nx">ind</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="s2">&quot;\r\n\r\n&quot;</span>
+            <span class="p">);</span>
+            <span class="nx">socket</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">ind</span><span class="p">);</span>
+            <span class="nx">socket</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+        <span class="p">})</span>
+
+        <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;peer ended connection &quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">remoteAddress</span><span class="p">);</span>
+        <span class="p">})</span>
+
+        <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span>
+        <span class="p">)</span>
+
+        <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;closed connection to &quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">remoteAddress</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">maxConnections</span><span class="p">(</span><span class="mi">1200</span><span class="p">);</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;server err:&quot;</span><span class="p">,</span><span class="nx">err</span><span class="p">);</span>
+<span class="p">})</span>
+
+<span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;server closed&quot;</span><span class="p">);</span>
+<span class="p">})</span>
+
+<span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;listening&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;LISTENING. server properties:\n%3J\n&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+<span class="p">})</span>
+
+<span class="p">.</span><span class="nx">listen</span><span class="p">({</span>
+    <span class="nx">port</span><span class="o">:</span> <span class="mi">8888</span><span class="p">,</span>
+    <span class="nx">maxConnections</span><span class="o">:</span> <span class="mi">1200</span>
+<span class="p">});</span>
+
+<span class="cm">/*</span>
+<span class="cm">Output upon Start:</span>
+<span class="cm">    LISTENING. server properties:</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;listening&quot;: true,</span>
+<span class="cm">       &quot;_events&quot;: {</span>
+<span class="cm">          &quot;connection&quot;: {},</span>
+<span class="cm">          &quot;error&quot;: {},</span>
+<span class="cm">          &quot;close&quot;: {},</span>
+<span class="cm">          &quot;listening&quot;: {}</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;sslKeyFile&quot;: &quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;,</span>
+<span class="cm">       &quot;sslCertFile&quot;: &quot;/etc/letsencrypt/live/example.com/privkey.pem&quot;,</span>
+<span class="cm">       &quot;tls&quot;: true,</span>
+<span class="cm">       &quot;maxConnections&quot;: 1200,</span>
+<span class="cm">       &quot;_hostAddrs&quot;: [</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;host&quot;: &quot;0.0.0.0&quot;,</span>
+<span class="cm">             &quot;ip4addrs&quot;: [</span>
+<span class="cm">                &quot;0.0.0.0&quot;</span>
+<span class="cm">             ],</span>
+<span class="cm">             &quot;ip6addrs&quot;: [],</span>
+<span class="cm">             &quot;ipaddrs&quot;: [</span>
+<span class="cm">                &quot;0.0.0.0&quot;</span>
+<span class="cm">             ],</span>
+<span class="cm">             &quot;canonName&quot;: &quot;0.0.0.0&quot;,</span>
+<span class="cm">             &quot;ip&quot;: &quot;0.0.0.0&quot;,</span>
+<span class="cm">             &quot;ipv4&quot;: &quot;0.0.0.0&quot;</span>
+<span class="cm">          },</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;host&quot;: &quot;::&quot;,</span>
+<span class="cm">             &quot;ip4addrs&quot;: [],</span>
+<span class="cm">             &quot;ip6addrs&quot;: [</span>
+<span class="cm">                &quot;::&quot;</span>
+<span class="cm">             ],</span>
+<span class="cm">             &quot;ipaddrs&quot;: [</span>
+<span class="cm">                &quot;::&quot;</span>
+<span class="cm">             ],</span>
+<span class="cm">             &quot;canonName&quot;: &quot;::&quot;,</span>
+<span class="cm">             &quot;ip&quot;: &quot;::&quot;,</span>
+<span class="cm">             &quot;ipv6&quot;: &quot;::&quot;</span>
+<span class="cm">          }</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;_hostPort&quot;: 8888,</span>
+<span class="cm">       &quot;backlog&quot;: 511</span>
+<span class="cm">    }</span>
+
+<span class="cm">Request:</span>
+<span class="cm">    curl https://example.com:8888/</span>
+
+<span class="cm">    GET / HTTP/1.1</span>
+<span class="cm">    Host: example.com:8888</span>
+<span class="cm">    User-Agent: curl/7.58.0</span>
+<span class="cm">    Accept: * /*</span>
+
+<span class="cm">Output after request:</span>
+<span class="cm">    CONNECTED</span>
+<span class="cm">    connection 1, open connections 1</span>
+<span class="cm">    closed connection to  2001:db8::1</span>
+
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="resolve-functions">
+<h2>Resolve functions<a class="headerlink" href="#resolve-functions" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The following functions are used to resolve a host name to one or more
+ip addresses.</p>
+</div></blockquote>
+<div class="section" id="new-net-resolve">
+<h3>new net.Resolve<a class="headerlink" href="#new-net-resolve" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Create a new resolve object.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="resover-resolve">
+<h3>resover.resolve<a class="headerlink" href="#resover-resolve" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Resolve a host name to ip address.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">host</span><span class="p">[,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code> is a <span class="green">String</span> - the host name to be resolved.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lookup_callback</span></code> is a <span class="green">Function</span> - an optional “lookup”
+event callback.</p></li>
+</ul>
+<dl>
+<dt>NOTE:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">resolver.resolve()</span></code> may be called multiple times at any time, however
+each time an <strong>anonymous</strong> function is provided as the
+<code class="docutils literal notranslate"><span class="pre">lookup_callback</span></code>, that additional callback will be run for each
+“lookup” event.  However, duplicate <strong>named</strong> functions are only run
+once per event.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+
+<span class="cm">/* console.log is run once per lookup */</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;google.com&quot;</span><span class="p">,</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">);</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;rampart.dev&quot;</span><span class="p">,</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In contrast:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+
+<span class="cm">/* console.log is run TWICE per lookup since two different</span>
+<span class="cm"> * functions call it.                                       */</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;google.com&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hobj</span><span class="p">){</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">hobj</span><span class="p">);});</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;rampart.dev&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hobj</span><span class="p">){</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">hobj</span><span class="p">);});</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="resolver-on">
+<h3>resolver.on<a class="headerlink" href="#resolver-on" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Register a callback function for a resolver event.  Currently, the only
+event is <code class="docutils literal notranslate"><span class="pre">lookup</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+
+<span class="cm">/* console.log is run TWICE per lookup since two different</span>
+<span class="cm"> * functions call it.                                       */</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;lookup&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hobj</span><span class="p">){</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">hobj</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;rampart.dev&quot;</span><span class="p">);</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;google.com&quot;</span><span class="p">);</span>
+
+<span class="cm">/* probable output:</span>
+
+<span class="cm">    {</span>
+<span class="cm">       &quot;host&quot;: &quot;google.com&quot;,</span>
+<span class="cm">       &quot;ip4addrs&quot;: [</span>
+<span class="cm">          &quot;142.251.214.142&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ip6addrs&quot;: [</span>
+<span class="cm">          &quot;2607:f8b0:4005:80f::200e&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ipaddrs&quot;: [</span>
+<span class="cm">          &quot;142.251.214.142&quot;,</span>
+<span class="cm">          &quot;2607:f8b0:4005:80f::200e&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ip&quot;: &quot;142.251.214.142&quot;,</span>
+<span class="cm">       &quot;ipv4&quot;: &quot;142.251.214.142&quot;,</span>
+<span class="cm">       &quot;ipv6&quot;: &quot;2607:f8b0:4005:80f::200e&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;host&quot;: &quot;rampart.dev&quot;,</span>
+<span class="cm">       &quot;ip4addrs&quot;: [</span>
+<span class="cm">          &quot;184.105.177.37&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ip6addrs&quot;: [</span>
+<span class="cm">          &quot;2001:470:1:393::37&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ipaddrs&quot;: [</span>
+<span class="cm">          &quot;184.105.177.37&quot;,</span>
+<span class="cm">          &quot;2001:470:1:393::37&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ip&quot;: &quot;184.105.177.37&quot;,</span>
+<span class="cm">       &quot;ipv4&quot;: &quot;184.105.177.37&quot;,</span>
+<span class="cm">       &quot;ipv6&quot;: &quot;2001:470:1:393::37&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="net-autoresolver">
+<h3>net.autoResolver()<a class="headerlink" href="#net-autoresolver" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Turn on or off caching of the resolver.</p>
+<p>Normally when there is a new request to resolve a host name, a new
+event (which acts as a dns server) is inserted into the event loop, a
+host name is resolved, then the dns server/event is removed.  Setting
+this to <code class="docutils literal notranslate"><span class="pre">true</span></code> will keep the dns server running in the event loop for
+reuse until it is called again with <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p>Since the resolver is used for the <code class="docutils literal notranslate"><span class="pre">Server</span></code> and <code class="docutils literal notranslate"><span class="pre">Socket</span></code> functions
+above, if there will be numerous lookups, setting <code class="docutils literal notranslate"><span class="pre">autoResolve(true)</span></code>
+is more efficient.</p>
+<dl class="simple">
+<dt>Caveat:</dt><dd><p>The event loop may not exit until <code class="docutils literal notranslate"><span class="pre">net.autoResolver(false)</span></code> is
+called, even if there are no other events in the event loop.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="net-resolve">
+<h3>net.resolve()<a class="headerlink" href="#net-resolve" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Resolve a host name.  <strong>This function is not asynchronous</strong>.  The lookup
+will occur immediately, potentially before the event loop starts,
+and wait for an answer.</p>
+<p>Usage example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">hostobj</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;yahoo.com&quot;</span><span class="p">);</span>
+
+<span class="cm">/* hostobj =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;host&quot;: &quot;yahoo.com&quot;,</span>
+<span class="cm">       &quot;ip4addrs&quot;: [</span>
+<span class="cm">          &quot;74.6.231.21&quot;,</span>
+<span class="cm">          &quot;98.137.11.164&quot;,</span>
+<span class="cm">          &quot;98.137.11.163&quot;,</span>
+<span class="cm">          &quot;74.6.143.26&quot;,</span>
+<span class="cm">          &quot;74.6.231.20&quot;,</span>
+<span class="cm">          &quot;74.6.143.25&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ip6addrs&quot;: [</span>
+<span class="cm">          &quot;2001:4998:24:120d::1:0&quot;,</span>
+<span class="cm">          &quot;2001:4998:44:3507::8000&quot;,</span>
+<span class="cm">          &quot;2001:4998:44:3507::8001&quot;,</span>
+<span class="cm">          &quot;2001:4998:124:1507::f000&quot;,</span>
+<span class="cm">          &quot;2001:4998:24:120d::1:1&quot;,</span>
+<span class="cm">          &quot;2001:4998:124:1507::f001&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ipaddrs&quot;: [</span>
+<span class="cm">          &quot;2001:4998:24:120d::1:0&quot;,</span>
+<span class="cm">          &quot;2001:4998:44:3507::8000&quot;,</span>
+<span class="cm">          &quot;2001:4998:44:3507::8001&quot;,</span>
+<span class="cm">          &quot;2001:4998:124:1507::f000&quot;,</span>
+<span class="cm">          &quot;2001:4998:24:120d::1:1&quot;,</span>
+<span class="cm">          &quot;2001:4998:124:1507::f001&quot;,</span>
+<span class="cm">          &quot;74.6.231.21&quot;,</span>
+<span class="cm">          &quot;98.137.11.164&quot;,</span>
+<span class="cm">          &quot;98.137.11.163&quot;,</span>
+<span class="cm">          &quot;74.6.143.26&quot;,</span>
+<span class="cm">          &quot;74.6.231.20&quot;,</span>
+<span class="cm">          &quot;74.6.143.25&quot;</span>
+<span class="cm">       ],</span>
+<span class="cm">       &quot;ip&quot;: &quot;2001:4998:24:120d::1:0&quot;,</span>
+<span class="cm">       &quot;ipv6&quot;: &quot;2001:4998:24:120d::1:0&quot;,</span>
+<span class="cm">       &quot;ipv4&quot;: &quot;74.6.231.21&quot;</span>
+<span class="cm">    }</span>
+
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="shortcut-functions">
+<h2>Shortcut Functions<a class="headerlink" href="#shortcut-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="net-createconnection">
+<h3>net.createConnection()<a class="headerlink" href="#net-createconnection" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Socket()</span></code> and <code class="docutils literal notranslate"><span class="pre">socket.connect()</span></code>.  AKA -
+<code class="docutils literal notranslate"><span class="pre">net.connect()</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">createConnection</span><span class="p">(</span><span class="nx">options</span><span class="p">[,</span> <span class="nx">connect_callback</span><span class="p">]);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">options</span><span class="p">[,</span> <span class="nx">connect_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> of options, the same as found in
+<a class="reference internal" href="#new-net-socket">new net.Socket()</a> and <a class="reference internal" href="#socket-connect">socket.connect()</a> above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connect_callback</span></code> is a <span class="green">Function</span>, the connect callback
+function.</p></li>
+</ul>
+<p>This is equivalent to the following:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">netconnect</span><span class="p">(</span><span class="nx">opt</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">(</span><span class="nx">opt</span><span class="p">);</span>
+    <span class="nx">socket</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">opt</span><span class="p">,</span> <span class="nx">cb</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">socket</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">netconnect</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">connect_callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Alternate usage with <code class="docutils literal notranslate"><span class="pre">port</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">createConnection</span><span class="p">(</span><span class="nx">port</span><span class="p">[,</span> <span class="nx">host</span><span class="p">][,</span> <span class="nx">connect_callback</span><span class="p">]);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">port</span><span class="p">[,</span> <span class="nx">host</span><span class="p">][,</span> <span class="nx">connect_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="net-createserver">
+<h3>net.createServer()<a class="headerlink" href="#net-createserver" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Server()</span></code> and <code class="docutils literal notranslate"><span class="pre">server.listen()</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">connection_callback</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">port</span><span class="p">[,</span> <span class="nx">host</span><span class="p">[,</span> <span class="nx">backlog</span><span class="p">]][,</span> <span class="nx">connection_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> of options, the same as found in
+<a href="#id2"><span class="problematic" id="id3">``</span></a><a class="reference internal" href="#new-net-server">new net.Server()</a> and <a class="reference internal" href="#server-listen">server.listen()</a> above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connection_callback</span></code> is a <span class="green">Function</span>, the connection callback
+function.</p></li>
+</ul>
+<p>This is roughly equivalent to the following (when using <code class="docutils literal notranslate"><span class="pre">options</span></code>
+above):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">makeserver</span><span class="p">(</span><span class="nx">opt</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Server</span><span class="p">(</span><span class="nx">opt</span><span class="p">,</span> <span class="nx">cb</span><span class="p">);</span>
+    <span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">opt</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">server</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">makeserver</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">connect_callback</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="net-resolve-async">
+<h3>net.resolve_async<a class="headerlink" href="#net-resolve-async" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolve()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.resolve()</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve_async</span><span class="p">(</span><span class="nx">host</span><span class="p">,</span> <span class="nx">lookup_callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code> is a <span class="green">String</span> - the host name to be resolved.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lookup_calback</span></code> is a <span class="green">Function</span> - the “lookup” event
+function.</p></li>
+</ul>
+<p>This is equivalent to the following:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">resolve_async</span><span class="p">(</span><span class="nx">hn</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
+    <span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">hn</span><span class="p">,</span> <span class="nx">cb</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">resolver</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">resolve_async</span><span class="p">(</span><span class="nx">host</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rampart-html.html" class="btn btn-neutral float-right" title="The rampart-html module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rampart-server.html" class="btn btn-neutral" title="The rampart-server HTTP module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

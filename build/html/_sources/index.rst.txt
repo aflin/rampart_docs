@@ -11,6 +11,7 @@ Welcome to Rampart's documentation.
    Rampart Utility Functions <rampart-utils>
    The rampart-sql module <sqltoc>
    The rampart-server module <rampart-server>
+   The rampart-net module <rampart-net>
    The rampart-html module <rampart-html>
    The rampart-crypto module <rampart-crypto>
    The rampart-curl module <rampart-curl>
