@@ -128,17 +128,16 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-functions">Resolve functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#new-net-resolve">new net.Resolve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#resover-resolve">resover.resolve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#resolver-on">resolver.on</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#net-autoresolver">net.autoResolver()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#new-net-resolve">new net.Resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resolver-resolve">resolver.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resolver-on">resolver.on()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-resolve">net.resolve()</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#shortcut-functions">Shortcut Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#net-createconnection">net.createConnection()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-createserver">net.createServer()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#net-resolve-async">net.resolve_async</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-resolve-async">net.resolve_async()</a></li>
 </ul>
 </li>
 </ul>
@@ -836,9 +835,9 @@ initiated, but not yet established.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> - <span class="green">String</span>.  The SSL/TLS key file, if provided</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sslCertFil</span></code> - <span class="green">String</span>.  The SSL/TLS cert file, if provided.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> - <span class="green">Number</span>. <code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> value, if set.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Array</span> of <span class="green">Objects</span>.  Host address
+<li><p><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Array</span> of <span class="green">Objects</span>.  Host addresses
 that the server is listening on as returned from a call to
-<a href="#id6"><span class="problematic" id="id7">`net.Resolve`_</span></a>  by <a class="reference internal" href="#server-listen">server.listen()</a> internally.</p></li>
+<a class="reference internal" href="#resolver-resolve">resolver.resolve()</a>  by <a class="reference internal" href="#server-listen">server.listen()</a> internally.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> - <span class="green">Number</span>.  The port used by the server.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">backlog</span></code> - <span class="green">Number</span>. <code class="docutils literal notranslate"><span class="pre">backlog</span></code> value, if set, or the
 default of <code class="docutils literal notranslate"><span class="pre">511</span></code>.</p></li>
@@ -986,7 +985,7 @@ default of <code class="docutils literal notranslate"><span class="pre">511</spa
 ip addresses.</p>
 </div></blockquote>
 <div class="section" id="new-net-resolve">
-<h3>new net.Resolve<a class="headerlink" href="#new-net-resolve" title="Permalink to this headline">¶</a></h3>
+<h3>new net.Resolve()<a class="headerlink" href="#new-net-resolve" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Create a new resolve object.</p>
 <p>Usage:</p>
@@ -997,8 +996,8 @@ ip addresses.</p>
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="resover-resolve">
-<h3>resover.resolve<a class="headerlink" href="#resover-resolve" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="resolver-resolve">
+<h3>resolver.resolve()<a class="headerlink" href="#resolver-resolve" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Resolve a host name to ip address.</p>
 <p>Usage:</p>
@@ -1050,16 +1049,14 @@ once per event.</p>
 </div></blockquote>
 </div>
 <div class="section" id="resolver-on">
-<h3>resolver.on<a class="headerlink" href="#resolver-on" title="Permalink to this headline">¶</a></h3>
+<h3>resolver.on()<a class="headerlink" href="#resolver-on" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Register a callback function for a resolver event.  Currently, the only
 event is <code class="docutils literal notranslate"><span class="pre">lookup</span></code>.</p>
+<p>Usage example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
-
-<span class="cm">/* console.log is run TWICE per lookup since two different</span>
-<span class="cm"> * functions call it.                                       */</span>
 
 <span class="nx">resolver</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;lookup&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hobj</span><span class="p">){</span>
     <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">hobj</span><span class="p">);</span>
@@ -1106,25 +1103,6 @@ event is <code class="docutils literal notranslate"><span class="pre">lookup</sp
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div></blockquote>
-</div>
-<div class="section" id="net-autoresolver">
-<h3>net.autoResolver()<a class="headerlink" href="#net-autoresolver" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><p>Turn on or off caching of the resolver.</p>
-<p>Normally when there is a new request to resolve a host name, a new
-event (which acts as a dns server) is inserted into the event loop, a
-host name is resolved, then the dns server/event is removed.  Setting
-this to <code class="docutils literal notranslate"><span class="pre">true</span></code> will keep the dns server running in the event loop for
-reuse until it is called again with <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-<p>Since the resolver is used for the <code class="docutils literal notranslate"><span class="pre">Server</span></code> and <code class="docutils literal notranslate"><span class="pre">Socket</span></code> functions
-above, if there will be numerous lookups, setting <code class="docutils literal notranslate"><span class="pre">autoResolve(true)</span></code>
-is more efficient.</p>
-<dl class="simple">
-<dt>Caveat:</dt><dd><p>The event loop may not exit until <code class="docutils literal notranslate"><span class="pre">net.autoResolver(false)</span></code> is
-called, even if there are no other events in the event loop.</p>
-</dd>
-</dl>
 </div></blockquote>
 </div>
 <div class="section" id="net-resolve">
@@ -1267,7 +1245,7 @@ above):</p>
 </div></blockquote>
 </div>
 <div class="section" id="net-resolve-async">
-<h3>net.resolve_async<a class="headerlink" href="#net-resolve-async" title="Permalink to this headline">¶</a></h3>
+<h3>net.resolve_async()<a class="headerlink" href="#net-resolve-async" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolve()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.resolve()</span></code>.</p>
 <p>Usage:</p>

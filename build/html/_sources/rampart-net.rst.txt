@@ -673,9 +673,9 @@ Other server properties
 
     * ``maxConnections`` - :green:`Number`. ``maxConnections`` value, if set.
 
-    * ``_hostAddrs`` - :green:`Array` of :green:`Objects`.  Host address
+    * ``_hostAddrs`` - :green:`Array` of :green:`Objects`.  Host addresses
       that the server is listening on as returned from a call to 
-      `net.Resolve`_  by `server.listen()`_ internally.
+      `resolver.resolve()`_  by `server.listen()`_ internally.
 
     * ``_hostPort`` - :green:`Number`.  The port used by the server.
 
@@ -821,8 +821,8 @@ Resolve functions
     The following functions are used to resolve a host name to one or more
     ip addresses.
 
-new net.Resolve
-~~~~~~~~~~~~~~~
+new net.Resolve()
+~~~~~~~~~~~~~~~~~
 
     Create a new resolve object.
 
@@ -834,11 +834,10 @@ new net.Resolve
 
         var resolver = new net.Resolve();
 
-resover.resolve
-~~~~~~~~~~~~~~~
+resolver.resolve()
+~~~~~~~~~~~~~~~~~~
 
     Resolve a host name to ip address.        
-
 
     Usage:
 
@@ -891,11 +890,13 @@ resover.resolve
 
             resolver.resolve("rampart.dev", function(hobj){console.log(hobj);});
 
-resolver.on
-~~~~~~~~~~~
+resolver.on()
+~~~~~~~~~~~~~
 
     Register a callback function for a resolver event.  Currently, the only
     event is ``lookup``.
+
+    Usage example:
 
     .. code-block:: javascript
 
@@ -903,9 +904,6 @@ resolver.on
 
         var resolver = new net.Resolve();
 
-        /* console.log is run TWICE per lookup since two different
-         * functions call it.                                       */
-        
         resolver.on("lookup", function(hobj){
             printf("%3J\n", hobj);
         });
@@ -949,25 +947,6 @@ resolver.on
                "ipv6": "2001:470:1:393::37"
             }
         */
-
-net.autoResolver()
-~~~~~~~~~~~~~~~~~~
-
-    Turn on or off caching of the resolver.  
-    
-    Normally when there is a new request to resolve a host name, a new
-    event (which acts as a dns server) is inserted into the event loop, a
-    host name is resolved, then the dns server/event is removed.  Setting
-    this to ``true`` will keep the dns server running in the event loop for
-    reuse until it is called again with ``false``.
-
-    Since the resolver is used for the ``Server`` and ``Socket`` functions
-    above, if there will be numerous lookups, setting ``autoResolve(true)``
-    is more efficient.
-    
-    Caveat:
-        The event loop may not exit until ``net.autoResolver(false)`` is
-        called, even if there are no other events in the event loop.
 
 net.resolve()
 ~~~~~~~~~~~~~
@@ -1121,8 +1100,8 @@ net.createServer()
 
         var server = makeserver(options, connect_callback);
 
-net.resolve_async
-~~~~~~~~~~~~~~~~~
+net.resolve_async()
+~~~~~~~~~~~~~~~~~~~
 
     Short cut for ``new net.Resolve()`` and ``resolver.resolve()``.
 
