@@ -91,6 +91,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#printf">printf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sprintf">sprintf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bprintf">bprintf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#abprintf">abprintf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hexify">hexify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dehexify">dehexify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stringtobuffer">stringToBuffer</a></li>
@@ -389,6 +390,32 @@ Remove all leading white space from each line and don’t wrap lines.</p></li>
 <p>Same as <code class="docutils literal notranslate"><span class="pre">sprintf()</span></code> except a <span class="green">Buffer</span> is returned.</p>
 <dl class="simple">
 <dt>Return Value:</dt><dd><p><span class="green">Buffer</span>.  The formatted string as a <span class="green">Buffer</span>.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="abprintf">
+<h3>abprintf<a class="headerlink" href="#abprintf" title="Permalink to this headline">¶</a></h3>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">bprintf()</span></code> except a provided <span class="green">Buffer</span> is resized and appended.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">newBuf</span> <span class="o">=</span> <span class="nx">abprintf</span><span class="p">(</span><span class="nx">oldbuf</span><span class="p">[,</span> <span class="nx">start</span><span class="p">],</span> <span class="nx">fmt</span><span class="p">,</span> <span class="p">...);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> is a <span class="green">Buffer</span> - the <span class="green">Buffer</span> to be appended.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> is an optional <span class="green">Number</span>, where in <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> to start
+writing data.  Default is the end of <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code>.  May be a negative
+number, signifying how many bytes from the end of the string to start.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fmt,</span> <span class="pre">...</span></code> - A format <span class="green">String</span> and optional format
+parameters.</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Return Value:</dt><dd><p><span class="green">Buffer</span>.  The formatted string appended to <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> as a dynamic <span class="green">Buffer</span>.</p>
+</dd>
+<dt>Note:</dt><dd><p>The <span class="green">Buffer</span> <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> will be altered if it is a dynamic
+buffer.  Otherwise, it will be copied and <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> remains unaltered.</p>
 </dd>
 </dl>
 </div>

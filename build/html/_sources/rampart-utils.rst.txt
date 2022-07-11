@@ -181,6 +181,35 @@ Same as ``sprintf()`` except a :green:`Buffer` is returned.
 Return Value:
    :green:`Buffer`.  The formatted string as a :green:`Buffer`.
 
+abprintf
+''''''''
+
+Same as ``bprintf()`` except a provided :green:`Buffer` is resized and appended.
+
+Usage:
+
+.. code-block:: javascript
+
+    var newBuf = abprintf(oldbuf[, start], fmt, ...);
+
+Where:
+
+    * ``oldbuf`` is a :green:`Buffer` - the :green:`Buffer` to be appended.
+
+    * ``start`` is an optional :green:`Number`, where in ``oldbuf`` to start
+      writing data.  Default is the end of ``oldbuf``.  May be a negative
+      number, signifying how many bytes from the end of the string to start.
+
+    * ``fmt, ...`` - A format :green:`String` and optional format
+      parameters.
+
+Return Value:
+   :green:`Buffer`.  The formatted string appended to ``oldbuf`` as a dynamic :green:`Buffer`.
+
+Note:
+    The :green:`Buffer` ``oldbuf`` will be altered if it is a dynamic
+    buffer.  Otherwise, it will be copied and ``oldbuf`` remains unaltered.
+
 hexify
 ''''''
 
