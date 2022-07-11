@@ -1052,7 +1052,29 @@ The Return Object
         compress: 5 // gzip compress output at medium level 
      }
 
+The Return Object with Defer
+""""""""""""""""""""""""""""
 
+    When data is not ready to be sent at the end of a mapped
+    :green:`Function`, the reply may be defered until later by returning an
+    :green:`Object` with ``defer`` set to ``true``.  Another asynchronous
+    :green:`Function` then will be able to use the ``req`` object with
+    ``req.reply()`` in order to send data to the client and close the
+    transaction.
+
+    Example:
+
+    .. code-block:: javascript
+
+        function defer_test(req){
+
+            // send reply after waiting 2 seconds
+            setTimeout(function(){
+                req.reply({text:"made ya wait!"});
+            }, 2000);
+
+            return {defer:true}; //don't send to client yet.
+        }
 
 Built-in Directory Function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
