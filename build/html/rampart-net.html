@@ -130,14 +130,17 @@
 <li class="toctree-l2"><a class="reference internal" href="#resolve-functions">Resolve functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#new-net-resolve">new net.Resolve()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-resolve">resolver.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resolver-reverse">resolver.reverse()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-on">resolver.on()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-resolve">net.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-reverse">net.reverse()</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#shortcut-functions">Shortcut Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#net-createconnection">net.createConnection()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-createserver">net.createServer()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-resolve-async">net.resolve_async()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-reverse-async">net.reverse_async()</a></li>
 </ul>
 </li>
 </ul>
@@ -1048,6 +1051,30 @@ once per event.</p>
 </dl>
 </div></blockquote>
 </div>
+<div class="section" id="resolver-reverse">
+<h3>resolver.reverse()<a class="headerlink" href="#resolver-reverse" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Resolve an ip address to host name.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">reverse</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">[,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ip_addr</span></code> is a <span class="green">String</span> - the ip address to look up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lookup_callback</span></code> is a <span class="green">Function</span> - an optional “lookup”
+event callback.</p></li>
+</ul>
+<dl class="simple">
+<dt>NOTE:</dt><dd><p>See above.  Note applies to <code class="docutils literal notranslate"><span class="pre">resolver.reverse()</span></code> as well.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
 <div class="section" id="resolver-on">
 <h3>resolver.on()<a class="headerlink" href="#resolver-on" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -1155,6 +1182,22 @@ and wait for an answer.</p>
 <span class="cm">    }</span>
 
 <span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="net-reverse">
+<h3>net.reverse()<a class="headerlink" href="#net-reverse" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Resolve an ip address to a hostname.  <strong>This function is not asynchronous</strong>.  The lookup
+will occur immediately, potentially before the event loop starts,
+and wait for an answer.</p>
+<p>Usage example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">hostname</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">reverse</span><span class="p">(</span><span class="s2">&quot;1.1.1.1&quot;</span><span class="p">);</span>
+
+<span class="c1">// hostname == &quot;one.one.one.one&quot;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -1270,6 +1313,36 @@ function.</p></li>
 <span class="p">}</span>
 
 <span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">resolve_async</span><span class="p">(</span><span class="nx">host</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="net-reverse-async">
+<h3>net.reverse_async()<a class="headerlink" href="#net-reverse-async" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolve()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.reverse()</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">reverse_async</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">,</span> <span class="nx">lookup_callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ip_addr</span></code> is a <span class="green">String</span> - the ip address to look up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lookup_calback</span></code> is a <span class="green">Function</span> - the “lookup” event
+function.</p></li>
+</ul>
+<p>This is equivalent to the following:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">reverse_async</span><span class="p">(</span><span class="nx">ip</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
+    <span class="nx">resolver</span><span class="p">.</span><span class="nx">reverse</span><span class="p">(</span><span class="nx">ip</span><span class="p">,</span> <span class="nx">cb</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">resolver</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">reverse_async</span><span class="p">(</span><span class="nx">ip</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
 </pre></div>
 </div>
 </div></blockquote>

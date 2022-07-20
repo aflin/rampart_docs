@@ -890,6 +890,32 @@ resolver.resolve()
 
             resolver.resolve("rampart.dev", function(hobj){console.log(hobj);});
 
+resolver.reverse()
+~~~~~~~~~~~~~~~~~~
+
+    Resolve an ip address to host name.        
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var resolver = new net.Resolve();
+
+        resolver.reverse(ip_addr[, lookup_callback]);
+
+    Where: 
+
+    * ``ip_addr`` is a :green:`String` - the ip address to look up.
+
+    * ``lookup_callback`` is a :green:`Function` - an optional "lookup"
+      event callback.
+
+    NOTE:
+        See above.  Note applies to ``resolver.reverse()`` as well.
+
+
 resolver.on()
 ~~~~~~~~~~~~~
 
@@ -1002,6 +1028,23 @@ net.resolve()
             }
 
         */
+
+net.reverse()
+~~~~~~~~~~~~~
+
+    Resolve an ip address to a hostname.  **This function is not asynchronous**.  The lookup
+    will occur immediately, potentially before the event loop starts,
+    and wait for an answer.
+
+    Usage example:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var hostname = net.reverse("1.1.1.1");
+
+        // hostname == "one.one.one.one"
 
 Shortcut Functions
 ------------------
@@ -1135,7 +1178,39 @@ net.resolve_async()
 
         var resolver = resolve_async(host, callback);
 
+net.reverse_async()
+~~~~~~~~~~~~~~~~~~~
+
+    Short cut for ``new net.Resolve()`` and ``resolver.reverse()``.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var resolver = net.reverse_async(ip_addr, lookup_callback);
+
+    Where:
+
+    * ``ip_addr`` is a :green:`String` - the ip address to look up.
+
+    * ``lookup_calback`` is a :green:`Function` - the "lookup" event
+      function.
 
 
+    This is equivalent to the following:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        function reverse_async(ip, cb) {
+            var resolver = new net.Resolver();
+            resolver.reverse(ip, cb);
+            return resolver;
+        }
+
+        var resolver = reverse_async(ip, callback);
 
 
