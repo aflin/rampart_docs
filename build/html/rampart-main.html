@@ -142,12 +142,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#template-literals">Template Literals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tagged-functions">Tagged Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rest-parameters">Rest Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#template-literals-and-sprintf">Template Literals and sprintf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#duktape-node-js-buffer-binding-extras">Duktape/Node.js Buffer Binding Extras</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#buffer-alloc">Buffer.alloc()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#buffer-from">Buffer.from()</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#template-literals-and-sprintf">Template Literals and sprintf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#settimeout">setTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cleartimeout">clearTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setinterval">setInterval()</a></li>
@@ -1078,37 +1078,6 @@ experimentally (unsupported) and is limited in scope.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="duktape-node-js-buffer-binding-extras">
-<h3>Duktape/Node.js Buffer Binding Extras<a class="headerlink" href="#duktape-node-js-buffer-binding-extras" title="Permalink to this headline">¶</a></h3>
-<p>The Duktape JavaScript engine provides basic
-<a class="reference external" href="https://wiki.duktape.org/howtobuffers2x#node.js-buffer-bindings">node.js Buffer</a>
-support.  Rampart adds the following:</p>
-<div class="section" id="buffer-alloc">
-<h4>Buffer.alloc()<a class="headerlink" href="#buffer-alloc" title="Permalink to this headline">¶</a></h4>
-<p>Allocate a new node.js style Buffer.</p>
-<p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">newBuf</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="nx">size</span><span class="p">[,</span> <span class="nx">fill</span><span class="p">]);</span>
-</pre></div>
-</div>
-<p>Where:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> is a <span class="green">Number</span> - The size of the Buffer to be created.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fill</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span> - If provided, buffer
-will be initialized with this data.  If smaller than buffer, data will
-repeat.  If not provided, the Buffer will be initialized with <code class="docutils literal notranslate"><span class="pre">0</span></code>;</p></li>
-</ul>
-</div>
-<div class="section" id="buffer-from">
-<h4>Buffer.from()<a class="headerlink" href="#buffer-from" title="Permalink to this headline">¶</a></h4>
-<p>Create a new node.js style Buffer from existing data.</p>
-<p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">newBuf</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">from</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">from</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span>, the data which will
-be copied into the new Buffer.</p>
-</div>
-</div>
 <div class="section" id="template-literals-and-sprintf">
 <h3>Template Literals and sprintf<a class="headerlink" href="#template-literals-and-sprintf" title="Permalink to this headline">¶</a></h3>
 <p>A <strong>non-standard</strong> (and unique to Rampart) shortcut syntax may be used in
@@ -1145,6 +1114,37 @@ template literals in place of <a class="reference internal" href="rampart-utils.
 <span class="cm">*/</span>
 </pre></div></div><p>Note that this non-standard syntax is not available when using
 <a class="reference internal" href="#babeljs"><span class="std std-ref">babel</span></a> below.</p>
+</div>
+<div class="section" id="duktape-node-js-buffer-binding-extras">
+<h3>Duktape/Node.js Buffer Binding Extras<a class="headerlink" href="#duktape-node-js-buffer-binding-extras" title="Permalink to this headline">¶</a></h3>
+<p>The Duktape JavaScript engine provides basic
+<a class="reference external" href="https://wiki.duktape.org/howtobuffers2x#node.js-buffer-bindings">node.js Buffer</a>
+support.  Rampart adds the following:</p>
+<div class="section" id="buffer-alloc">
+<h4>Buffer.alloc()<a class="headerlink" href="#buffer-alloc" title="Permalink to this headline">¶</a></h4>
+<p>Allocate a new node.js style Buffer.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">newBuf</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="nx">size</span><span class="p">[,</span> <span class="nx">fill</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> is a <span class="green">Number</span> - The size of the Buffer to be created.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fill</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span> - If provided, buffer
+will be initialized with this data.  If smaller than buffer, data will
+repeat.  If not provided, the Buffer will be initialized with <code class="docutils literal notranslate"><span class="pre">0</span></code>;</p></li>
+</ul>
+</div>
+<div class="section" id="buffer-from">
+<h4>Buffer.from()<a class="headerlink" href="#buffer-from" title="Permalink to this headline">¶</a></h4>
+<p>Create a new node.js style Buffer from existing data.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">newBuf</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">from</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">from</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span>, the data which will
+be copied into the new Buffer.</p>
+</div>
 </div>
 <div class="section" id="settimeout">
 <h3>setTimeout()<a class="headerlink" href="#settimeout" title="Permalink to this headline">¶</a></h3>

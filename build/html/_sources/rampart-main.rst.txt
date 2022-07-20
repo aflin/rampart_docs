@@ -953,46 +953,6 @@ Rest Parameter syntax may also be used for arguments to functions.
    */
 
 
-Duktape/Node.js Buffer Binding Extras
-"""""""""""""""""""""""""""""""""""""
-
-The Duktape JavaScript engine provides basic 
-`node.js Buffer <https://wiki.duktape.org/howtobuffers2x#node.js-buffer-bindings>`_
-support.  Rampart adds the following:
-
-Buffer.alloc()
-''''''''''''''
-
-Allocate a new node.js style Buffer.
-
-Usage:
-
-.. code-block:: javascript
-
-    var newBuf = Buffer.alloc(size[, fill]);
-
-Where:
-
-* ``size`` is a :green:`Number` - The size of the Buffer to be created.
-
-* ``fill`` is a :green:`String` or :green:`Buffer` - If provided, buffer
-  will be initialized with this data.  If smaller than buffer, data will
-  repeat.  If not provided, the Buffer will be initialized with ``0``;
-
-Buffer.from()
-'''''''''''''
-
-Create a new node.js style Buffer from existing data.
-
-Usage:
-
-.. code-block:: javascript
-
-    var newBuf = Buffer.from(data);
-
-Where ``from`` is a :green:`String` or :green:`Buffer`, the data which will
-be copied into the new Buffer.
-
 Template Literals and sprintf
 """""""""""""""""""""""""""""
 
@@ -1070,6 +1030,46 @@ Example:
 
 Note that this non-standard syntax is not available when using 
 :ref:`babel <babeljs>` below.
+
+Duktape/Node.js Buffer Binding Extras
+"""""""""""""""""""""""""""""""""""""
+
+The Duktape JavaScript engine provides basic 
+`node.js Buffer <https://wiki.duktape.org/howtobuffers2x#node.js-buffer-bindings>`_
+support.  Rampart adds the following:
+
+Buffer.alloc()
+''''''''''''''
+
+Allocate a new node.js style Buffer.
+
+Usage:
+
+.. code-block:: javascript
+
+    var newBuf = Buffer.alloc(size[, fill]);
+
+Where:
+
+* ``size`` is a :green:`Number` - The size of the Buffer to be created.
+
+* ``fill`` is a :green:`String` or :green:`Buffer` - If provided, buffer
+  will be initialized with this data.  If smaller than buffer, data will
+  repeat.  If not provided, the Buffer will be initialized with ``0``;
+
+Buffer.from()
+'''''''''''''
+
+Create a new node.js style Buffer from existing data.
+
+Usage:
+
+.. code-block:: javascript
+
+    var newBuf = Buffer.from(data);
+
+Where ``from`` is a :green:`String` or :green:`Buffer`, the data which will
+be copied into the new Buffer.
 
 setTimeout()
 """"""""""""
