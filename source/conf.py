@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Rampart'
-copyright = '2022, Moat Crossing Systems'
+copyright = '2023, Moat Crossing Systems'
 author = 'Moat Crossing Systems'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,6 +34,7 @@ master_doc = 'index'
 # ones.
 autosectionlabel_prefix_document = True
 extensions = [
+    "sphinxcontrib.jquery",
     'sphinx.ext.autosectionlabel'
 ]
 

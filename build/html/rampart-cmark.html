@@ -5,10 +5,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-cmark module &mdash; Rampart 0.1.0 documentation</title>
+  <title>The rampart-cmark module &mdash; Rampart 0.2.0 documentation</title>
   
 
   
@@ -37,7 +38,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.2.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-url module" href="rampart-url.html"/>
         <link rel="prev" title="The rampart-robots module" href="rampart-robots.html"/> 
 
@@ -82,10 +83,11 @@
           
             
             
-                <p class="caption"><span class="caption-text">Contents:</span></p>
+                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -179,59 +181,59 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-rampart-cmark-module">
-<h1>The rampart-cmark module<a class="headerlink" href="#the-rampart-cmark-module" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="preface">
-<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="acknowledgment">
-<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+  <section id="the-rampart-cmark-module">
+<h1>The rampart-cmark module<a class="headerlink" href="#the-rampart-cmark-module" title="Permalink to this heading">¶</a></h1>
+<section id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this heading">¶</a></h2>
+<section id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-cmark module uses
 <a class="reference external" href="https://github.com/commonmark/cmark">cmark library</a>
 The authors of Rampart extend our thanks to
 <a class="reference external" href="https://github.com/commonmark/cmark/graphs/contributors">the authors and contributors</a>
 to this library.</p>
-</div>
-<div class="section" id="license">
-<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h3>
 <p>The cmark library is licensed under a
 <a class="reference external" href="https://github.com/commonmark/cmark/blob/master/COPYING">2-clause BSD License</a>
 and includes other licenses therein.</p>
 <p>The rampart-cmark module is released under the MIT license.</p>
-</div>
-<div class="section" id="what-does-it-do">
-<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-cmark module processes
 <a class="reference external" href="https://commonmark.org/">CommonMark Markdown</a> and converts it to HTML.</p>
-</div>
-<div class="section" id="how-does-it-work">
-<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-cmark module exports a single function which takes as its input, a
 markdown document and options.  It returns the document formatted in HTML.</p>
-</div>
-</div>
-<div class="section" id="loading-and-using-the-module">
-<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="loading">
-<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this heading">¶</a></h2>
+<section id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this heading">¶</a></h3>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmark</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-cmark&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">cmark</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-cmark&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="main-function">
-<h2>Main Function<a class="headerlink" href="#main-function" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="main-function">
+<h2>Main Function<a class="headerlink" href="#main-function" title="Permalink to this heading">¶</a></h2>
 <p>The rampart-cmark module exports a single function, <code class="docutils literal notranslate"><span class="pre">toHtml()</span></code>.</p>
-<div class="section" id="tohtml">
-<h3>toHtml<a class="headerlink" href="#tohtml" title="Permalink to this headline">¶</a></h3>
+<section id="tohtml">
+<h3>toHtml<a class="headerlink" href="#tohtml" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>The <code class="docutils literal notranslate"><span class="pre">toHtml</span></code> function takes one or two arguments: The
 markdown document to be translated and optionally an <span class="green">Object</span>
 of options.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmark</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-cmark&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">cmark</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-cmark&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="nx">cmark</span><span class="p">.</span><span class="nx">toHtml</span><span class="p">(</span><span class="nx">markdown</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cmark</span><span class="p">.</span><span class="nx">toHtml</span><span class="p">(</span><span class="nx">markdown</span><span class="p">[,</span><span class="w"> </span><span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -265,13 +267,13 @@ source position information in tags as attributes named
 </dd>
 </dl>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmark</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-cmark&quot;</span><span class="p">);</span>
+</section>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">cmark</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-cmark&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class="nx">cmark</span><span class="p">.</span><span class="nx">toHtml</span><span class="p">(</span><span class="sb">`</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cmark</span><span class="p">.</span><span class="nx">toHtml</span><span class="p">(</span><span class="sb">`</span>
 <span class="sb">This is an H1</span>
 <span class="sb">=============</span>
 
@@ -285,11 +287,11 @@ source position information in tags as attributes named
 <span class="sb">&gt; Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse</span>
 <span class="sb">&gt; id -- sem &quot;consectetuer&quot; libero luctus adipiscing.</span>
 <span class="sb">`</span><span class="p">,</span>
-    <span class="p">{</span>
-        <span class="nx">sourcePos</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">hardBreaks</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">smart</span><span class="o">:</span> <span class="kc">true</span>
-    <span class="p">}</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">sourcePos</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">hardBreaks</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">smart</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">);</span>
 
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">out</span><span class="p">);</span>
@@ -309,8 +311,8 @@ source position information in tags as attributes named
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -331,7 +333,7 @@ source position information in tags as attributes named
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Moat Crossing Systems.
+        &copy; Copyright 2023, Moat Crossing Systems.
 
     </p>
   </div>
@@ -353,7 +355,7 @@ source position information in tags as attributes named
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -361,10 +363,10 @@ source position information in tags as attributes named
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script type="text/javascript" src="_static/documentation_options.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/sphinx_highlight.js"></script>
 
   
 

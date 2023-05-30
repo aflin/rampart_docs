@@ -704,8 +704,9 @@ metamorphStrlstMode
     for this setting, as it has a checkable error return.
 
 
-groupbymem
-""""""""""
+.. don't think this works
+	groupbymem
+	""""""""""
     When set ``true`` (the default), try to minimize memory usage
     during ``GROUP BY``/``DISTINCT`` operations (e.g. when using an
     index and sorting is not needed).
@@ -1105,8 +1106,9 @@ uEqPrefix
     AKA ``userEquivsFile`` when set from ``sql.set()``.  
     The name of the user equivalence file. Default is empty.
 
-withinProc
-""""""""""
+.. this causes an error
+   withinProc
+   """"""""""
    Whether to process the w/ operator in queries.  The default is ``true``.
 
 
@@ -2119,9 +2121,9 @@ paramChk
          */
 
 
-
-message,nomessage
-"""""""""""""""""
+.. causes segfault.  Maybe something to do with coopting putmsg filehandle?
+    message,nomessage
+    """""""""""""""""
     Enable or disable messages from the SQL engine. The argument should
     be a comma separated list of messages that you want to enable or
     disable. The known messages are:

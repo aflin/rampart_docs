@@ -31,7 +31,7 @@ $RP rsearch.js && {
 
     echo "Starting Web Server"
 
-    rampart ./web_server_conf.js
+    $RP ./web_server_conf.js
 } || {
     die "build of Documentation Database failed"
 }

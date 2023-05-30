@@ -154,6 +154,22 @@ Where:
       server thread pool.  The default, if ``useThreads`` is ``true`` or is
       unset, is the number of cpu cores on the current system.
 
+    * ``maxRead``: A :green:`Number`, the largest single read from a client 
+      allowed in the event loop.  If reading data larger than this, it will 
+      be done in multiple cycles of the event loop in order to allow the
+      servicing of other requests.  A high number can make receiving large 
+      requests unfairly slow down other clients, especially if the server is
+      not using multiple threads.  A low number will slow down the reading
+      of data over the specified size. Default is ``65536``.
+
+    * ``maxWrite``: A :green:`Number`, the largest single write to a client 
+      allowed in the event loop.  If writing data larger than this, it will 
+      be done in multiple cycles of the event loop in order to allow the
+      servicing of other requests.  A high number can make sending large 
+      replies unfairly slow down other clients, especially if the server is
+      not using multiple threads.  A low number will slow down the writing
+      of data over the specified size. Default is ``65536``.
+
     * ``secure``: A :green:`Boolean`, whether to use SSL/TLS layer for serving
       via the ``https`` protocol.  Default is ``false``.  If ``true``, the
       ``sslKeyFile`` and ``sslCertFile`` parameters must also be set.

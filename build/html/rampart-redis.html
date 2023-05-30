@@ -5,10 +5,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-redis module &mdash; Rampart 0.1.0 documentation</title>
+  <title>The rampart-redis module &mdash; Rampart 0.2.0 documentation</title>
   
 
   
@@ -37,7 +38,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.2.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-robots module" href="rampart-robots.html"/>
         <link rel="prev" title="The rampart-lmdb module" href="rampart-lmdb.html"/> 
 
@@ -82,10 +83,11 @@
           
             
             
-                <p class="caption"><span class="caption-text">Contents:</span></p>
+                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -199,21 +201,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-rampart-redis-module">
-<h1>The rampart-redis module<a class="headerlink" href="#the-rampart-redis-module" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="preface">
-<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="license">
-<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+  <section id="the-rampart-redis-module">
+<h1>The rampart-redis module<a class="headerlink" href="#the-rampart-redis-module" title="Permalink to this heading">¶</a></h1>
+<section id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this heading">¶</a></h2>
+<section id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-redis module is released under the MIT license.</p>
-</div>
-<div class="section" id="what-does-it-do">
-<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-redis module provides a client interface from Rampart to an
 existing Redis server.</p>
-</div>
-<div class="section" id="how-does-it-work">
-<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-redis module connects to an existing Redis server and allows
 commands to be sent, and responses to be retrieved from Redis.  For most
 operations, commands and replies are synchronous, meaning that the module
@@ -225,33 +227,33 @@ server handled in Rampart’s event loop.</p>
 connection is maintained for synchronous and asynchronous requests from a
 single handle.  However, only one asynchronous request can be active at a
 time per handle.</p>
-</div>
-</div>
-<div class="section" id="loading-and-using-the-module">
-<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="loading">
-<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this heading">¶</a></h2>
+<section id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this heading">¶</a></h3>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="main-function">
-<h2>Main Function<a class="headerlink" href="#main-function" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="main-function">
+<h2>Main Function<a class="headerlink" href="#main-function" title="Permalink to this heading">¶</a></h2>
 <p>The rampart-redis module exports a single constructor function <a class="reference internal" href="#init">init()</a>
 which may be used to establish a connection with a redis server.</p>
-<div class="section" id="init">
-<h3>init()<a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h3>
+<section id="init">
+<h3>init()<a class="headerlink" href="#init" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span> <span class="p">][</span><span class="nx">port</span><span class="p">,</span> <span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">port</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -272,24 +274,24 @@ server as well as containing the functions/redis commands listed below.</p>
 </dd>
 </dl>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="client-functions">
-<h2>Client Functions<a class="headerlink" href="#client-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="client-functions">
+<h2>Client Functions<a class="headerlink" href="#client-functions" title="Permalink to this heading">¶</a></h2>
 <p>The majority of the client functions provided by the <code class="docutils literal notranslate"><span class="pre">rampart-redis</span></code>
 module are one-to-one mappings of the <a class="reference external" href="https://redis.io/commands">Published Redis Commands</a>.
 There are also specialized and shortcut commands available.</p>
-<div class="section" id="client-commands">
-<h3>Client Commands<a class="headerlink" href="#client-commands" title="Permalink to this headline">¶</a></h3>
+<section id="client-commands">
+<h3>Client Commands<a class="headerlink" href="#client-commands" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>The set of standard client commands includes <a class="reference internal" href="#supported-commands">Supported Commands</a> and <a class="reference internal" href="#unsupported-commands">Unsupported Commands</a>
 as listed below.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span> <span class="p">][</span><span class="nx">port</span><span class="p">,</span> <span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">port</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
 
-<span class="nx">rcl</span><span class="p">.</span><span class="nx">command_name</span><span class="p">([</span><span class="nx">options</span> <span class="p">][,</span> <span class="nx">param1</span><span class="p">][,</span> <span class="nx">param2</span><span class="p">][,</span> <span class="p">...][,</span> <span class="nx">callback_function</span><span class="p">]);</span>
+<span class="nx">rcl</span><span class="p">.</span><span class="nx">command_name</span><span class="p">([</span><span class="nx">options</span><span class="w"> </span><span class="p">][,</span><span class="w"> </span><span class="nx">param1</span><span class="p">][,</span><span class="w"> </span><span class="nx">param2</span><span class="p">][,</span><span class="w"> </span><span class="p">...][,</span><span class="w"> </span><span class="nx">callback_function</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -330,32 +332,32 @@ asynchronous commands.</p>
 </dd>
 </dl>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="shortcut-commands">
-<h2>Shortcut Commands<a class="headerlink" href="#shortcut-commands" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="shortcut-commands">
+<h2>Shortcut Commands<a class="headerlink" href="#shortcut-commands" title="Permalink to this heading">¶</a></h2>
 <p>The following commands do not map one-to-one to the
 <a class="reference external" href="https://redis.io/commands">Published Redis Commands</a>.</p>
-<div class="section" id="async-commands">
-<h3>_async Commands<a class="headerlink" href="#async-commands" title="Permalink to this headline">¶</a></h3>
+<section id="async-commands">
+<h3>_async Commands<a class="headerlink" href="#async-commands" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">blmove_async</span></code>, <code class="docutils literal notranslate"><span class="pre">brpop_async</span></code>, <code class="docutils literal notranslate"><span class="pre">bzpopmax_async</span></code>,
 <code class="docutils literal notranslate"><span class="pre">bzpopmin_async</span></code> and <code class="docutils literal notranslate"><span class="pre">format_async</span></code> are equivalent to
 their non-async counterparts with the <code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> set to
 <code class="docutils literal notranslate"><span class="pre">{async:true}</span></code>.</p>
 </div></blockquote>
-</div>
-<div class="section" id="format">
-<h3>format<a class="headerlink" href="#format" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="format">
+<h3>format<a class="headerlink" href="#format" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>Send a formatted command.  Return value is not specially reformatted
 (returns the same as format <code class="docutils literal notranslate"><span class="pre">2</span></code> below).</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span> <span class="p">][</span><span class="nx">port</span><span class="p">,</span> <span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">port</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
 
-<span class="nx">rcl</span><span class="p">.</span><span class="nx">format</span><span class="p">([</span><span class="nx">options</span><span class="p">,]</span> <span class="nx">format_string</span> <span class="p">[,</span> <span class="nx">param2</span><span class="p">][,</span> <span class="p">...][,</span> <span class="nx">callback_function</span><span class="p">]);</span>
+<span class="nx">rcl</span><span class="p">.</span><span class="nx">format</span><span class="p">([</span><span class="nx">options</span><span class="p">,]</span><span class="w"> </span><span class="nx">format_string</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">param2</span><span class="p">][,</span><span class="w"> </span><span class="p">...][,</span><span class="w"> </span><span class="nx">callback_function</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -392,13 +394,13 @@ values returned from redis are each members of the <span class="green">Array</sp
 </dl>
 <p>Example:</p>
 <blockquote>
-<div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span> <span class="c1">//localhost and default port</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span><span class="w"> </span><span class="c1">//localhost and default port</span>
 
-<span class="nx">rcl</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="s2">&quot;HMSET %s %s %d %s %d&quot;</span><span class="p">,</span> <span class="s2">&quot;myset&quot;</span><span class="p">,</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;two&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+<span class="nx">rcl</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="s2">&quot;HMSET %s %s %d %s %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;myset&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="s2">&quot;HGETALL myset&quot;</span><span class="p">)</span> <span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="s2">&quot;HGETALL myset&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
 
 <span class="cm">/* expected output (generic array)</span>
 <span class="cm">    [</span>
@@ -409,7 +411,7 @@ values returned from redis are each members of the <span class="green">Array</sp
 <span class="cm">    ]</span>
 <span class="cm">*/</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">hgetall</span><span class="p">(</span><span class="s2">&quot;myset&quot;</span><span class="p">));</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">hgetall</span><span class="p">(</span><span class="s2">&quot;myset&quot;</span><span class="p">));</span>
 
 <span class="cm">/* expected output (formatted for the HGETALL command)</span>
 <span class="cm">    {</span>
@@ -421,15 +423,15 @@ values returned from redis are each members of the <span class="green">Array</sp
 </div>
 </div></blockquote>
 </div></blockquote>
-</div>
-<div class="section" id="xread-block-async">
-<h3>xread_block_async<a class="headerlink" href="#xread-block-async" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="xread-block-async">
+<h3>xread_block_async<a class="headerlink" href="#xread-block-async" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">xread({async:true},</span> <span class="pre">&quot;BLOCK&quot;,</span> <span class="pre">...)</span></code>.</p>
 </div></blockquote>
-</div>
-<div class="section" id="xread-auto-async">
-<h3>xread_auto_async<a class="headerlink" href="#xread-auto-async" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="xread-auto-async">
+<h3>xread_auto_async<a class="headerlink" href="#xread-auto-async" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">xread_block_async</span></code> above, except that the
 returned IDs are tracked and the <code class="docutils literal notranslate"><span class="pre">XREAD</span> <span class="pre">BLOCK</span></code> command is reissued
@@ -437,10 +439,10 @@ with the proper IDs each time a new Stream Message is received.  In this
 way it acts more like <code class="docutils literal notranslate"><span class="pre">subscribe</span></code> and continually accepts new streamed
 messages similar to a PUB/SUB model.</p>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="supported-commands">
-<h2>Supported Commands<a class="headerlink" href="#supported-commands" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="supported-commands">
+<h2>Supported Commands<a class="headerlink" href="#supported-commands" title="Permalink to this heading">¶</a></h2>
 <p>The following commands have been tested and return values formatted
 appropriately for the given command (number in parantheses is the format of
 the <a class="reference internal" href="#return-values-from-supported-commands"><span class="std std-ref">return value</span></a>):</p>
@@ -488,8 +490,8 @@ the <a class="reference internal" href="#return-values-from-supported-commands">
 <code class="docutils literal notranslate"><span class="pre">zrevrangebyscore</span></code>→(10), <code class="docutils literal notranslate"><span class="pre">zrevrank</span></code>→(1), <code class="docutils literal notranslate"><span class="pre">zscan</span></code>→(11),
 <code class="docutils literal notranslate"><span class="pre">zscore</span></code>→(1), <code class="docutils literal notranslate"><span class="pre">zunion</span></code>→(10), <code class="docutils literal notranslate"><span class="pre">zunionstore</span></code>→(10)</p>
 </div></blockquote>
-<div class="section" id="return-values-from-supported-commands">
-<h3>Return Values from Supported Commands<a class="headerlink" href="#return-values-from-supported-commands" title="Permalink to this headline">¶</a></h3>
+<section id="return-values-from-supported-commands">
+<h3>Return Values from Supported Commands<a class="headerlink" href="#return-values-from-supported-commands" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><ol class="arabic">
 <li><p>Single Value - return is a <span class="green">String</span>, <span class="green">Buffer</span>,
@@ -507,19 +509,19 @@ pairs.</p></li>
 follow:</p>
 <blockquote>
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;1620437646452-0&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span>
-         <span class="s2">&quot;key1&quot;</span><span class="o">:</span> <span class="s2">&quot;val1&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;key2&quot;</span><span class="o">:</span> <span class="s2">&quot;val2&quot;</span>
-      <span class="p">}</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;1620437646452-1&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span>
-         <span class="s2">&quot;key3&quot;</span><span class="o">:</span> <span class="s2">&quot;val3&quot;</span>
-      <span class="p">}</span>
-   <span class="p">}</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1620437646452-0&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">         </span><span class="s2">&quot;key1&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val1&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="s2">&quot;key2&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val2&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">   </span><span class="p">},</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="s2">&quot;1620437646452-1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">         </span><span class="s2">&quot;key3&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val3&quot;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">   </span><span class="p">}</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -529,12 +531,12 @@ follow:</p>
 <li><p>Associative - for <code class="docutils literal notranslate"><span class="pre">hscan</span></code> only.  Format is as follows:</p>
 <blockquote>
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;cursor&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
-   <span class="s2">&quot;values&quot;</span><span class="o">:</span> <span class="p">{</span>
-      <span class="s2">&quot;key1&quot;</span><span class="o">:</span> <span class="mi">99</span><span class="p">,</span>
-      <span class="s2">&quot;key2&quot;</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span>
-      <span class="s2">&quot;key3&quot;</span><span class="o">:</span> <span class="mi">101</span>
-   <span class="p">}</span>
+<span class="w">   </span><span class="s2">&quot;cursor&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">   </span><span class="s2">&quot;values&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;key1&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">99</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;key2&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;key3&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">101</span>
+<span class="w">   </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -547,13 +549,13 @@ function is called for each key:value pair in its own
 Format is as follows:</p>
 <blockquote>
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;cursor&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
-   <span class="s2">&quot;values&quot;</span><span class="o">:</span> <span class="p">[</span>
-      <span class="s2">&quot;one&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;three&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;four&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;two&quot;</span>
-   <span class="p">]</span>
+<span class="w">   </span><span class="s2">&quot;cursor&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">   </span><span class="s2">&quot;values&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;one&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;three&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;four&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;two&quot;</span>
+<span class="w">   </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -569,14 +571,14 @@ callback, a single <span class="green">Object</span> with value and score passed
 function.  Example:</p>
 <blockquote>
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;score&quot;</span><span class="o">:</span> <span class="mi">0</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;score&quot;</span><span class="o">:</span> <span class="mi">1</span>
-   <span class="p">},</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;score&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">   </span><span class="p">},</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;score&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">   </span><span class="p">},</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -588,17 +590,17 @@ above.</p>
 above. Example:</p>
 <blockquote>
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;cursor&quot;</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
-   <span class="s2">&quot;values&quot;</span><span class="o">:</span> <span class="p">[</span>
-      <span class="p">{</span>
-         <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;score&quot;</span><span class="o">:</span> <span class="mi">0</span>
-      <span class="p">},</span>
-      <span class="p">{</span>
-         <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;score&quot;</span><span class="o">:</span> <span class="mi">1</span>
-      <span class="p">}</span>
-   <span class="p">]</span>
+<span class="w">   </span><span class="s2">&quot;cursor&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">   </span><span class="s2">&quot;values&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">         </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="s2">&quot;score&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">         </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="s2">&quot;score&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">   </span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -607,36 +609,36 @@ above. Example:</p>
 <li><p>Associative - for <code class="docutils literal notranslate"><span class="pre">xread</span></code> commands only.  Format is as follows:</p>
 <blockquote>
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;stream&quot;</span><span class="o">:</span> <span class="s2">&quot;mystream1&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;data&quot;</span><span class="o">:</span> <span class="p">[</span>
-         <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;1620441129127-1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span>
-               <span class="s2">&quot;key1&quot;</span><span class="o">:</span> <span class="s2">&quot;val1&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;key2&quot;</span><span class="o">:</span> <span class="s2">&quot;val2&quot;</span>
-            <span class="p">}</span>
-         <span class="p">},</span>
-         <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;1620441129127-2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span>
-               <span class="s2">&quot;key3&quot;</span><span class="o">:</span> <span class="s2">&quot;val3&quot;</span>
-            <span class="p">}</span>
-         <span class="p">}</span>
-      <span class="p">]</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;stream&quot;</span><span class="o">:</span> <span class="s2">&quot;mystream2&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;data&quot;</span><span class="o">:</span> <span class="p">[</span>
-         <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="o">:</span> <span class="s2">&quot;1620441129127-0&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="p">{</span>
-               <span class="s2">&quot;key4&quot;</span><span class="o">:</span> <span class="s2">&quot;val4&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;key5&quot;</span><span class="o">:</span> <span class="s2">&quot;val5&quot;</span>
-            <span class="p">}</span>
-         <span class="p">}</span>
-      <span class="p">]</span>
-   <span class="p">}</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;stream&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;mystream1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">         </span><span class="p">{</span>
+<span class="w">            </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1620441129127-1&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">               </span><span class="s2">&quot;key1&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val1&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;key2&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val2&quot;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">         </span><span class="p">},</span>
+<span class="w">         </span><span class="p">{</span>
+<span class="w">            </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1620441129127-2&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">               </span><span class="s2">&quot;key3&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val3&quot;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">         </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">   </span><span class="p">},</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;stream&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;mystream2&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">         </span><span class="p">{</span>
+<span class="w">            </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1620441129127-0&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;value&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">               </span><span class="s2">&quot;key4&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val4&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;key5&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;val5&quot;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">         </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">   </span><span class="p">}</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -650,10 +652,10 @@ passed for each iteration of the callback.</p>
 with the addition of a score (e.g. <code class="docutils literal notranslate"><span class="pre">{key:&quot;mylist&quot;,value:&quot;three&quot;,score:1}</span></code>).</p></li>
 </ol>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="unsupported-commands">
-<h2>Unsupported Commands<a class="headerlink" href="#unsupported-commands" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="unsupported-commands">
+<h2>Unsupported Commands<a class="headerlink" href="#unsupported-commands" title="Permalink to this heading">¶</a></h2>
 <blockquote>
 <div><p>The following functions will send the appropriate commands.  However
 they have not (yet) been tested for the format of their return value:</p>
@@ -692,9 +694,9 @@ they have not (yet) been tested for the format of their return value:</p>
 <p>If any of the above commands returns values in an unsuitable format, the
 <a class="reference internal" href="#format">format</a> command above may be used to get a generic response.</p>
 </div></blockquote>
-</div>
-<div class="section" id="proxy-objects">
-<h2>Proxy Objects<a class="headerlink" href="#proxy-objects" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="proxy-objects">
+<h2>Proxy Objects<a class="headerlink" href="#proxy-objects" title="Permalink to this heading">¶</a></h2>
 <p>A Rampart Redis Proxy Object is an JavaScript <span class="green">Object</span> whose
 properties are backed by a <a class="reference external" href="https://redis.io/topics/data-types-intro#redis-hashes">Redis Hash</a>
 and for which operations on the <span class="green">Object</span> serves as a shortcut for the
@@ -702,90 +704,90 @@ and for which operations on the <span class="green">Object</span> serves as a sh
 a quick and easy storage system for occassionally used variables that are
 shared between scripts or threads.  They should not be used as a robust
 databasing solution.</p>
-<div class="section" id="creation">
-<h3>Creation<a class="headerlink" href="#creation" title="Permalink to this headline">¶</a></h3>
+<section id="creation">
+<h3>Creation<a class="headerlink" href="#creation" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>A proxy object is created as follows:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span> <span class="p">][</span><span class="nx">port</span><span class="p">,</span> <span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">([</span><span class="nx">ip</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">port</span><span class="p">,</span><span class="w"> </span><span class="p">][</span><span class="nx">timeout</span><span class="p">]);</span>
 
-<span class="kd">var</span> <span class="nx">myProxyObject</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">myProxyObject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">name</span></code> is the name of the Redis key that will store the Redis
 Hash.</p>
 </div></blockquote>
-</div>
-<div class="section" id="usage">
-<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><p>Setting and reading the property keys of the returned proxy object will automatically
 set and retrieve the keys in the specified Hash Key.  These values will then
 be available in any other thread or script which connects to the same Redis
 Server instance using the identical proxy object.</p>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> <span class="cm">/* script 1 - insert new data */</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="cm">/* script 1 - insert new data */</span>
 
- <span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
- <span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span> <span class="c1">//localhost and default port</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span><span class="w"> </span><span class="c1">//localhost and default port</span>
 
- <span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
 
 <span class="cm">/* populate variables for insertion */</span>
-<span class="kd">var</span> <span class="nx">cl</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;principal&quot;</span><span class="p">,</span> <span class="s2">&quot;principal&quot;</span><span class="p">,</span> <span class="s2">&quot;salary&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;salary&quot;</span><span class="p">,</span> <span class="s2">&quot;hourly&quot;</span><span class="p">,</span> <span class="s2">&quot;intern&quot;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">cl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;principal&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;principal&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;salary&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;salary&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;hourly&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;intern&quot;</span>
 <span class="p">];</span>
-<span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;Debbie Dreamer&quot;</span><span class="p">,</span> <span class="s2">&quot;Rusty Grump&quot;</span><span class="p">,</span><span class="s2">&quot;Georgia Geek&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Sydney Slacker&quot;</span><span class="p">,</span> <span class="s2">&quot;Pat Particular&quot;</span><span class="p">,</span> <span class="s2">&quot;Billie Barista&quot;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;Debbie Dreamer&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Rusty Grump&quot;</span><span class="p">,</span><span class="s2">&quot;Georgia Geek&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;Sydney Slacker&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Pat Particular&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Billie Barista&quot;</span>
 <span class="p">];</span>
-<span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;dd&quot;</span><span class="p">,</span> <span class="s2">&quot;rg&quot;</span><span class="p">,</span> <span class="s2">&quot;gg&quot;</span><span class="p">,</span> <span class="s2">&quot;ss&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">,</span> <span class="s2">&quot;bb&quot;</span> <span class="p">];</span>
-<span class="kd">var</span> <span class="nx">age</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">58</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">22</span> <span class="p">];</span>
-<span class="kd">var</span> <span class="nx">salary</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">250000</span><span class="p">,</span> <span class="mi">250000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">,</span> <span class="mi">80000</span><span class="p">,</span> <span class="mi">0</span> <span class="p">];</span>
-<span class="kd">var</span> <span class="nx">title</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;Chief Executive Officer&quot;</span><span class="p">,</span> <span class="s2">&quot;Chief Financial Officer&quot;</span><span class="p">,</span> <span class="s2">&quot;Lead Programmer&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;Programmer&quot;</span><span class="p">,</span> <span class="s2">&quot;Systems Administrator&quot;</span><span class="p">,</span> <span class="s2">&quot;Intern&quot;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;dd&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;rg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;gg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ss&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pp&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;bb&quot;</span><span class="w"> </span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mf">63</span><span class="p">,</span><span class="w"> </span><span class="mf">58</span><span class="p">,</span><span class="w"> </span><span class="mf">44</span><span class="p">,</span><span class="w"> </span><span class="mf">44</span><span class="p">,</span><span class="w"> </span><span class="mf">32</span><span class="p">,</span><span class="w"> </span><span class="mf">22</span><span class="w"> </span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">salary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mf">250000</span><span class="p">,</span><span class="w"> </span><span class="mf">250000</span><span class="p">,</span><span class="w"> </span><span class="mf">100000</span><span class="p">,</span><span class="w"> </span><span class="mf">100000</span><span class="p">,</span><span class="w"> </span><span class="mf">80000</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;Chief Executive Officer&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Chief Financial Officer&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Lead Programmer&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;Programmer&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Systems Administrator&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Intern&quot;</span>
 <span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">startDate</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;1999-12-31&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;1999-12-31&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;2001-3-15&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;2002-5-12&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;2003-7-14&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;2020-3-18&#39;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">startDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s1">&#39;1999-12-31&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;1999-12-31&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;2001-3-15&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;2002-5-12&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;2003-7-14&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;2020-3-18&#39;</span>
 <span class="p">];</span>
 
 <span class="cm">/* insert rows */</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mi">6</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">6</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
 <span class="p">{</span>
-     <span class="nx">users</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-         <span class="nx">employeeClass</span><span class="o">:</span> <span class="nx">cl</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
-         <span class="nx">name</span><span class="o">:</span> <span class="nx">name</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
-         <span class="nx">age</span><span class="o">:</span> <span class="nx">age</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
-         <span class="nx">salary</span><span class="o">:</span> <span class="nx">salary</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
-         <span class="nx">title</span><span class="o">:</span> <span class="nx">title</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
-         <span class="nx">startDate</span><span class="o">:</span> <span class="nx">startDate</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
-     <span class="p">}</span>
+<span class="w">     </span><span class="nx">users</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">         </span><span class="nx">employeeClass</span><span class="o">:</span><span class="w"> </span><span class="nx">cl</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
+<span class="w">         </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="nx">name</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
+<span class="w">         </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="nx">age</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
+<span class="w">         </span><span class="nx">salary</span><span class="o">:</span><span class="w"> </span><span class="nx">salary</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
+<span class="w">         </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="nx">title</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
+<span class="w">         </span><span class="nx">startDate</span><span class="o">:</span><span class="w"> </span><span class="nx">startDate</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+<span class="w">     </span><span class="p">}</span>
 <span class="p">}</span>
 <span class="cm">/* end script 1 */</span>
 
- <span class="cm">/* script 2 - access data */</span>
+<span class="w"> </span><span class="cm">/* script 2 - access data */</span>
 
- <span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">redis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
 
- <span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span> <span class="c1">//localhost and default port</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span><span class="w"> </span><span class="c1">//localhost and default port</span>
 
- <span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
 
- <span class="k">delete</span> <span class="nx">users</span><span class="p">.</span><span class="nx">bb</span><span class="p">;</span> <span class="c1">//Billie&#39;s internship is finished.</span>
+<span class="w"> </span><span class="ow">delete</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">bb</span><span class="p">;</span><span class="w"> </span><span class="c1">//Billie&#39;s internship is finished.</span>
 
- <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+<span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">users</span><span class="p">);</span>
 
- <span class="cm">/* expected output:</span>
+<span class="w"> </span><span class="cm">/* expected output:</span>
 <span class="cm">     {</span>
 <span class="cm">        &quot;rg&quot;: {</span>
 <span class="cm">           &quot;employeeClass&quot;: &quot;principal&quot;,</span>
@@ -832,9 +834,9 @@ Server instance using the identical proxy object.</p>
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="caveats">
-<h3>Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="caveats">
+<h3>Caveats<a class="headerlink" href="#caveats" title="Permalink to this heading">¶</a></h3>
 <blockquote>
 <div><ul>
 <li><p>JavaScript primitives and <span class="green">Objects</span> are stored and retrieved by converting
@@ -850,11 +852,11 @@ are preset:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">_destroy</span></code> - A <span class="green">Function</span> which when called, deletes the
 Redis Hash from the database. Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span> <span class="c1">//localhost and default port</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span><span class="w"> </span><span class="c1">//localhost and default port</span>
 
-<span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
 
-<span class="nx">users</span><span class="p">.</span><span class="nx">_destroy</span><span class="p">();</span> <span class="c1">// same as rcl.del(&quot;Users&quot;);</span>
+<span class="nx">users</span><span class="p">.</span><span class="nx">_destroy</span><span class="p">();</span><span class="w"> </span><span class="c1">// same as rcl.del(&quot;Users&quot;);</span>
 </pre></div>
 </div>
 </li>
@@ -865,23 +867,23 @@ In the above example, it would be set to <code class="docutils literal notransla
 <li><p>A Proxy Object is a shallow proxy - meaning that only key/value pairs
 of the <span class="green">Object</span> returned from <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rcl.proxyObj()</span></code> will be stored
 to the Redis database.  Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span> <span class="c1">//localhost and default port</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">rcl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span><span class="w"> </span><span class="c1">//localhost and default port</span>
 
-<span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rcl</span><span class="p">.</span><span class="nx">proxyObj</span><span class="p">(</span><span class="s2">&quot;Users&quot;</span><span class="p">);</span>
 
-<span class="nx">users</span><span class="p">.</span><span class="nx">myid</span> <span class="o">=</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span><span class="s2">&quot;Joe&quot;</span><span class="p">};</span> <span class="c1">//myid.name is stored in Redis</span>
+<span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="nx">name</span><span class="o">:</span><span class="s2">&quot;Joe&quot;</span><span class="p">};</span><span class="w"> </span><span class="c1">//myid.name is stored in Redis</span>
 
-<span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">.</span><span class="nx">age</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>       <span class="c1">// users.myid.age is not set;</span>
+<span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">.</span><span class="nx">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">42</span><span class="p">;</span><span class="w">       </span><span class="c1">// users.myid.age is not set;</span>
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">)</span>    <span class="c1">// {name:&quot;Joe&quot;}</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">)</span><span class="w">    </span><span class="c1">// {name:&quot;Joe&quot;}</span>
 
-<span class="kd">var</span> <span class="nx">myid</span> <span class="o">=</span> <span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">;</span>     <span class="c1">// var myid is created from the Redis Hash &quot;myid&quot;</span>
-                           <span class="c1">// which is CBOR decoded into a JavaScript Object</span>
-<span class="nx">myid</span><span class="p">.</span><span class="nx">age</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">myid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">;</span><span class="w">     </span><span class="c1">// var myid is created from the Redis Hash &quot;myid&quot;</span>
+<span class="w">                           </span><span class="c1">// which is CBOR decoded into a JavaScript Object</span>
+<span class="nx">myid</span><span class="p">.</span><span class="nx">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">42</span><span class="p">;</span>
 
-<span class="nx">users</span><span class="p">.</span><span class="nx">myid</span> <span class="o">=</span> <span class="nx">myid</span><span class="p">;</span>         <span class="c1">// myid.age and myid.name are now stored in Redis</span>
+<span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">myid</span><span class="p">;</span><span class="w">         </span><span class="c1">// myid.age and myid.name are now stored in Redis</span>
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">)</span>    <span class="c1">// {name:&quot;Joe&quot;, age: 42}</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">myid</span><span class="p">)</span><span class="w">    </span><span class="c1">// {name:&quot;Joe&quot;, age: 42}</span>
 </pre></div>
 </div>
 </li>
@@ -894,9 +896,9 @@ Thus, doing this simultaneously in several scripts or threads will
 not work as intended.</p></li>
 </ul>
 </div></blockquote>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
@@ -917,7 +919,7 @@ not work as intended.</p></li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Moat Crossing Systems.
+        &copy; Copyright 2023, Moat Crossing Systems.
 
     </p>
   </div>
@@ -939,7 +941,7 @@ not work as intended.</p></li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -947,10 +949,10 @@ not work as intended.</p></li>
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script type="text/javascript" src="_static/documentation_options.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/sphinx_highlight.js"></script>
 
   
 

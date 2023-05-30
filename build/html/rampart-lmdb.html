@@ -5,10 +5,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-lmdb module &mdash; Rampart 0.1.0 documentation</title>
+  <title>The rampart-lmdb module &mdash; Rampart 0.2.0 documentation</title>
   
 
   
@@ -37,7 +38,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.2.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-redis module" href="rampart-redis.html"/>
         <link rel="prev" title="The rampart-curl module" href="rampart-curl.html"/> 
 
@@ -82,10 +83,11 @@
           
             
             
-                <p class="caption"><span class="caption-text">Contents:</span></p>
+                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -206,63 +208,63 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-rampart-lmdb-module">
-<h1>The rampart-lmdb module<a class="headerlink" href="#the-rampart-lmdb-module" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="preface">
-<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="acknowledgment">
-<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+  <section id="the-rampart-lmdb-module">
+<h1>The rampart-lmdb module<a class="headerlink" href="#the-rampart-lmdb-module" title="Permalink to this heading">¶</a></h1>
+<section id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this heading">¶</a></h2>
+<section id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-lmdb module uses
 <a class="reference external" href="https://symas.com/lmdb/">Symas’ LMDB library</a>.
 The authors of Rampart extend our thanks to
 <a class="reference external" href="https://symas.com/">Symas</a>
 for this library.</p>
-</div>
-<div class="section" id="license">
-<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h3>
 <p>The LMDB library is licensed under the
 <a class="reference external" href="https://github.com/LMDB/lmdb/blob/mdb.master/libraries/liblmdb/LICENSE">OpenLdap Public License</a>,
 which is a BSD-like license.
 The rampart-lmdb module is released under the MIT license.</p>
-</div>
-<div class="section" id="what-does-it-do">
-<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-lmdb module provides a key/value store database using the LMDB
 library.  For background information, see
 <a class="reference external" href="https://symas.com/lmdb/">Symas’ description here</a>.</p>
-</div>
-<div class="section" id="how-does-it-work">
-<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-lmdb module exports a get and put function which allow a program
 to store data indexed by its key.  Data may be a <span class="green">String</span> or
 <span class="green">Buffer</span>, or optionally data can be converted to and from JSON
 automatically.</p>
-</div>
-</div>
-<div class="section" id="loading-and-using-the-module">
-<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="loading">
-<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this heading">¶</a></h2>
+<section id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this heading">¶</a></h3>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="terminology">
-<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this heading">¶</a></h2>
 <p>Within LMDB, a “database environment” is a single file which lives in its own
 directory, and has an accompanying lock file.  Within that file, data may be
 partitioned into “databases”.  Thus an LMDB “database environment” is
 organizationally similar to a SQL database and an LMDB “database” is similar
 to a SQL table.</p>
-</div>
-<div class="section" id="main-function-init">
-<h2>Main Function (init)<a class="headerlink" href="#main-function-init" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="main-function-init">
+<h2>Main Function (init)<a class="headerlink" href="#main-function-init" title="Permalink to this heading">¶</a></h2>
 <p>After loading, a new database environment can be opened (and optionally created) as
 follows:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -350,13 +352,13 @@ like wild pointer writes and other bad updates into the database.</p></li>
 <dt>Return Value:</dt><dd><p>A set of functions to operate on the database environment.  See below.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="lmdb-easy-functions">
-<h2>LMDB Easy Functions<a class="headerlink" href="#lmdb-easy-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="lmdb-easy-functions">
+<h2>LMDB Easy Functions<a class="headerlink" href="#lmdb-easy-functions" title="Permalink to this heading">¶</a></h2>
 <p>After a database environment is opened, the following functions and
 flags are available in the return object:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">create</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">,</span><span class="w"> </span><span class="nx">options</span><span class="p">);</span>
 <span class="cm">/* return value:</span>
 <span class="cm">    {</span>
 <span class="cm">        openDb:      {_func: true},</span>
@@ -371,14 +373,14 @@ flags are available in the return object:</p>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-<div class="section" id="opendb">
-<h3>openDb<a class="headerlink" href="#opendb" title="Permalink to this headline">¶</a></h3>
+<section id="opendb">
+<h3>openDb<a class="headerlink" href="#opendb" title="Permalink to this heading">¶</a></h3>
 <p>Open a database for use with the below functions.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">openDb</span><span class="p">([</span><span class="nx">dbase</span><span class="p">[,</span> <span class="nx">create</span><span class="p">]]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">openDb</span><span class="p">([</span><span class="nx">dbase</span><span class="p">[,</span><span class="w"> </span><span class="nx">create</span><span class="p">]]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -398,20 +400,20 @@ exist.</p>
 before any transaction is opened (before calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction()</span></code>).</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="get">
-<h3>get<a class="headerlink" href="#get" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="get">
+<h3>get<a class="headerlink" href="#get" title="Permalink to this heading">¶</a></h3>
 <p>Retrieve values from a database.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 
-<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span> <span class="nx">key</span><span class="p">[,</span> <span class="nx">nKeys</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">[,</span><span class="w"> </span><span class="nx">nKeys</span><span class="p">]);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span> <span class="nx">key</span><span class="p">[,</span> <span class="nx">endkey</span><span class="p">][,</span> <span class="nx">max</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">[,</span><span class="w"> </span><span class="nx">endkey</span><span class="p">][,</span><span class="w"> </span><span class="nx">max</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -449,20 +451,20 @@ key/value pairs is returned with each key set to the name of the
 retrieved key and each value set as described above.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="put">
-<h3>put<a class="headerlink" href="#put" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="put">
+<h3>put<a class="headerlink" href="#put" title="Permalink to this heading">¶</a></h3>
 <p>Put (store) values in a given <span class="green">Object</span> or in a given key:value pair
 into a given database, indexed by the key(s).</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span> <span class="nx">kvpairs</span><span class="p">);</span>
+<span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="nx">kvpairs</span><span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
+<span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -484,32 +486,32 @@ set to “JSON” or “CBOR”.</p></li>
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="del">
-<h3>del<a class="headerlink" href="#del" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="del">
+<h3>del<a class="headerlink" href="#del" title="Permalink to this heading">¶</a></h3>
 <p>Delete values in a database.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span> <span class="nx">key</span><span class="p">[,</span> <span class="nx">nKeys</span><span class="p">][,</span> <span class="nx">retValues</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">[,</span><span class="w"> </span><span class="nx">nKeys</span><span class="p">][,</span><span class="w"> </span><span class="nx">retValues</span><span class="p">]);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span> <span class="nx">key</span><span class="p">[,</span> <span class="nx">endkey</span><span class="p">][,</span> <span class="nx">max</span><span class="p">][,</span> <span class="nx">retValues</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">[,</span><span class="w"> </span><span class="nx">endkey</span><span class="p">][,</span><span class="w"> </span><span class="nx">max</span><span class="p">][,</span><span class="w"> </span><span class="nx">retValues</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where options are the same as in <a class="reference internal" href="#get">get</a> above, with the addition of
 <code class="docutils literal notranslate"><span class="pre">retValues</span></code> (which, if provided, is a <span class="green">Boolean</span>).  If <code class="docutils literal notranslate"><span class="pre">retValues</span></code>
 is set <code class="docutils literal notranslate"><span class="pre">true</span></code>, the deleted values are returned in the same manner as get.
 Otherwise <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is returned.</p>
-</div>
-<div class="section" id="drop">
-<h3>drop<a class="headerlink" href="#drop" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="drop">
+<h3>drop<a class="headerlink" href="#drop" title="Permalink to this heading">¶</a></h3>
 <p>Drop a database from the database environment removing all the
 items in the database along with the database itself.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="nx">lmdb</span><span class="p">.</span><span class="nx">drop</span><span class="p">(</span><span class="nx">dbase</span><span class="p">);</span>
 </pre></div>
@@ -536,14 +538,14 @@ however it will not be removed and the named database metadata
 will remain.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="sync">
-<h3>sync<a class="headerlink" href="#sync" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="sync">
+<h3>sync<a class="headerlink" href="#sync" title="Permalink to this heading">¶</a></h3>
 <p>Sync the database environment.  Useful if <code class="docutils literal notranslate"><span class="pre">mapAsync</span></code> or <code class="docutils literal notranslate"><span class="pre">noSync</span></code>
 is set in order to manually sync data to the disk.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="nx">lmdb</span><span class="p">.</span><span class="nx">sync</span><span class="p">();</span>
 </pre></div>
@@ -552,15 +554,15 @@ is set in order to manually sync data to the disk.</p>
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="getcount">
-<h3>getCount<a class="headerlink" href="#getcount" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="getcount">
+<h3>getCount<a class="headerlink" href="#getcount" title="Permalink to this heading">¶</a></h3>
 <p>Count the number of items in a database.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">getCount</span><span class="p">(</span><span class="nx">dbase</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">getCount</span><span class="p">(</span><span class="nx">dbase</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -573,15 +575,15 @@ database does not exist, an error will be thrown.</p>
 <dt>Return Value:</dt><dd><p>A <span class="green">Number</span>, the number of items in the database.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="listdbs">
-<h3>listDbs<a class="headerlink" href="#listdbs" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="listdbs">
+<h3>listDbs<a class="headerlink" href="#listdbs" title="Permalink to this heading">¶</a></h3>
 <p>List the named databases in a database environment.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">list</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">listDbs</span><span class="p">(</span><span class="nx">dbase</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">listDbs</span><span class="p">(</span><span class="nx">dbase</span><span class="p">);</span>
 </pre></div>
 </div>
 <dl class="simple">
@@ -594,15 +596,15 @@ When using named databases, the best practice is to not store data in
 the default database.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="close">
-<h3>close<a class="headerlink" href="#close" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="close">
+<h3>close<a class="headerlink" href="#close" title="Permalink to this heading">¶</a></h3>
 <p>Close the database envirnoment.  After closing, all transaction
 handles, database handles and all functions using the previously
 opened environment will throw errors if used again.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* do stuff */</span>
 
@@ -613,89 +615,89 @@ opened environment will throw errors if used again.</p>
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="easy-functions-full-example">
-<h3>Easy Functions Full Example<a class="headerlink" href="#easy-functions-full-example" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="easy-functions-full-example">
+<h3>Easy Functions Full Example<a class="headerlink" href="#easy-functions-full-example" title="Permalink to this heading">¶</a></h3>
 <p>The following creates random entries of names and addresses.  After the
 database is populated with the sample data, a selection that meet specific
 criteria is printed.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* make printf and sprintf easier to use */</span>
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;printf&quot;</span><span class="p">,</span><span class="s2">&quot;sprintf&quot;</span><span class="p">]);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;printf&quot;</span><span class="p">,</span><span class="s2">&quot;sprintf&quot;</span><span class="p">]);</span>
 
-<span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span>
-    <span class="s2">&quot;./lmdb-test&quot;</span><span class="p">,</span>
-    <span class="kc">true</span><span class="p">,</span> <span class="cm">/* create if does not exist */</span>
-    <span class="p">{</span>
-        <span class="nx">mapSize</span><span class="o">:</span> <span class="mi">1024</span><span class="p">,</span> <span class="c1">//one gigabyte</span>
-        <span class="nx">conversion</span><span class="o">:</span> <span class="s2">&quot;CBOR&quot;</span><span class="p">,</span>
-        <span class="nx">noMetaSync</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span>
-        <span class="nx">noSync</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="p">}</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span>
+<span class="w">    </span><span class="s2">&quot;./lmdb-test&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="cm">/* create if does not exist */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">mapSize</span><span class="o">:</span><span class="w"> </span><span class="mf">1024</span><span class="p">,</span><span class="w"> </span><span class="c1">//one gigabyte</span>
+<span class="w">        </span><span class="nx">conversion</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;CBOR&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">noMetaSync</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">noSync</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">dbi</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">openDb</span><span class="p">(</span><span class="s2">&quot;testdata&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">dbi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">openDb</span><span class="p">(</span><span class="s2">&quot;testdata&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 
 <span class="cm">/* create test data */</span>
 
-<span class="kd">var</span> <span class="nx">fnames</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;Mohamed&quot;</span><span class="p">,</span> <span class="s2">&quot;Imene&quot;</span><span class="p">,</span> <span class="s2">&quot;Santiago&quot;</span><span class="p">,</span> <span class="s2">&quot;Sofía&quot;</span><span class="p">,</span> <span class="s2">&quot;Wei&quot;</span><span class="p">,</span> <span class="s2">&quot;Jing&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Noel&quot;</span><span class="p">,</span> <span class="s2">&quot;Amelia&quot;</span><span class="p">,</span> <span class="s2">&quot;Oliver&quot;</span><span class="p">,</span> <span class="s2">&quot;Olivia&quot;</span> <span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fnames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;Mohamed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Imene&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Santiago&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Sofía&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Wei&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Jing&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;Noel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Amelia&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Oliver&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Olivia&quot;</span><span class="w"> </span><span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">lnames</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;Beridze&quot;</span><span class="p">,</span> <span class="s2">&quot;Cohen&quot;</span><span class="p">,</span> <span class="s2">&quot;Kovačević&quot;</span><span class="p">,</span> <span class="s2">&quot;Nielsen&quot;</span><span class="p">,</span> <span class="s2">&quot;Tremblay&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Hernández&quot;</span><span class="p">,</span> <span class="s2">&quot;Smith&quot;</span><span class="p">,</span> <span class="s2">&quot;Kumar&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabiala&quot;</span><span class="p">,</span> <span class="s2">&quot;Kimetto&quot;</span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lnames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;Beridze&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cohen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kovačević&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Nielsen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tremblay&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;Hernández&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Smith&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kumar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Mabiala&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kimetto&quot;</span><span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">initials</span> <span class="o">=</span> <span class="s2">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">initials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">streets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Main&quot;</span><span class="p">,</span> <span class="s2">&quot;Broadway&quot;</span><span class="p">,</span> <span class="s2">&quot;First&quot;</span><span class="p">,</span> <span class="s2">&quot;Second&quot;</span><span class="p">,</span> <span class="s2">&quot;Grove&quot;</span><span class="p">,</span> <span class="s2">&quot;College&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;University&quot;</span><span class="p">,</span> <span class="s2">&quot;Park&quot;</span><span class="p">,</span> <span class="s2">&quot;Oak&quot;</span><span class="p">,</span> <span class="s2">&quot;Pine&quot;</span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">streets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Main&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Broadway&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;First&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Second&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Grove&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;College&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;University&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Park&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Oak&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Pine&quot;</span><span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">stsuff</span>  <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Street&quot;</span><span class="p">,</span> <span class="s2">&quot;Drive&quot;</span><span class="p">,</span> <span class="s2">&quot;Avenue&quot;</span><span class="p">,</span> <span class="s2">&quot;Blvd&quot;</span><span class="p">,</span> <span class="s2">&quot;Court&quot;</span><span class="p">,</span> <span class="s2">&quot;Circle.&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Road&quot;</span><span class="p">,</span> <span class="s2">&quot;Lane&quot;</span><span class="p">,</span> <span class="s2">&quot;Way&quot;</span><span class="p">,</span> <span class="s2">&quot;Highway&quot;</span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">stsuff</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Street&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Drive&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Avenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Blvd&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Court&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Circle.&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;Road&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Lane&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Way&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Highway&quot;</span><span class="p">];</span>
 
-<span class="kd">function</span> <span class="nx">makeName</span><span class="p">(){</span>
-    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="nx">first</span><span class="o">:</span> <span class="nx">fnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)],</span>
-        <span class="nx">mi</span><span class="o">:</span>    <span class="nx">initials</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">26</span><span class="p">)),</span>
-        <span class="nx">last</span><span class="o">:</span>  <span class="nx">lnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)]</span>
-    <span class="p">}</span>
-    <span class="nx">ret</span><span class="p">.</span><span class="nx">full</span> <span class="o">=</span> <span class="nx">sprintf</span> <span class="p">(</span><span class="s2">&quot;%s %s. %s&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">first</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">mi</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">last</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">makeName</span><span class="p">(){</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">first</span><span class="o">:</span><span class="w"> </span><span class="nx">fnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)],</span>
+<span class="w">        </span><span class="nx">mi</span><span class="o">:</span><span class="w">    </span><span class="nx">initials</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">26</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">last</span><span class="o">:</span><span class="w">  </span><span class="nx">lnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">ret</span><span class="p">.</span><span class="nx">full</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sprintf</span><span class="w"> </span><span class="p">(</span><span class="s2">&quot;%s %s. %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span><span class="p">.</span><span class="nx">first</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span><span class="p">.</span><span class="nx">mi</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span><span class="p">.</span><span class="nx">last</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ret</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">function</span> <span class="nx">makeAddr</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
-    <span class="nx">obj</span><span class="p">.</span><span class="nx">streetno</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10000</span><span class="p">);</span>
-    <span class="nx">obj</span><span class="p">.</span><span class="nx">street</span> <span class="o">=</span> <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%s %s&quot;</span><span class="p">,</span>
-                    <span class="nx">streets</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)],</span>
-                    <span class="nx">stsuff</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)]</span>
-                 <span class="p">);</span>
-    <span class="nx">obj</span><span class="p">.</span><span class="nx">zip</span> <span class="o">=</span> <span class="mi">10000</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">90000</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">makeAddr</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+<span class="w">    </span><span class="nx">obj</span><span class="p">.</span><span class="nx">streetno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10000</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">obj</span><span class="p">.</span><span class="nx">street</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%s %s&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nx">streets</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)],</span>
+<span class="w">                    </span><span class="nx">stsuff</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)]</span>
+<span class="w">                 </span><span class="p">);</span>
+<span class="w">    </span><span class="nx">obj</span><span class="p">.</span><span class="nx">zip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">90000</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="cm">/* insert entries */</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mi">5000</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeName</span><span class="p">();</span>
-    <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">full</span> <span class="o">+</span> <span class="s2">&quot; from &quot;</span> <span class="o">+</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
-    <span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">entry</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">5000</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeName</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">full</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot; from &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="c1">// sync now, or sync will happen upon script exit.</span>
 <span class="c1">//lmdb.sync();</span>
 
 <span class="cm">/* get all the Sofías in the database */</span>
-<span class="kd">var</span> <span class="nx">entries</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="s2">&quot;Sofía&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">entries</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">getCount</span><span class="p">(</span><span class="nx">dbi</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Sofía&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;*&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">entries</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">getCount</span><span class="p">(</span><span class="nx">dbi</span><span class="p">);</span>
 
-<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;There are %d Sofías out of %d entries in the database.\n&quot;</span><span class="p">,</span> <span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;There are %d Sofías out of %d entries in the database.\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span><span class="w"> </span><span class="nx">total</span><span class="p">);</span>
 
-<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">keys</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
-    <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">entries</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span>
-    <span class="c1">// find the Sofías living on Main Street</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">street</span> <span class="o">==</span> <span class="s2">&quot;Main Street&quot;</span><span class="p">)</span>
-        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s lives at %d %s\n&quot;</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">streetno</span><span class="p">,</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">street</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">keys</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">entries</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span>
+<span class="w">    </span><span class="c1">// find the Sofías living on Main Street</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">street</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;Main Street&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s lives at %d %s\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">streetno</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">street</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="cm">/* possible output:</span>
@@ -716,30 +718,30 @@ it opens and closes a transaction for every record inserted.</p>
 <p>Though more memory intensive, it is far more efficient to use the following
 code in order to insert all of the records in a single transaction:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* create entries in an object*/</span>
-<span class="kd">var</span> <span class="nx">insertobj</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mi">5000</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeName</span><span class="p">();</span>
-    <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">full</span> <span class="o">+</span> <span class="s2">&quot; from &quot;</span> <span class="o">+</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
-    <span class="nx">insertobj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="o">=</span><span class="nx">entry</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">insertobj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">5000</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeName</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">full</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot; from &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">insertobj</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="o">=</span><span class="nx">entry</span><span class="p">;</span>
 <span class="p">}</span>
 <span class="cm">/* insert all at once */</span>
-<span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="nx">insertobj</span><span class="p">);</span>
+<span class="nx">lmdb</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="w"> </span><span class="nx">insertobj</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>In order to conserver memory and to insert in a single transaction, see the
 <a class="reference internal" href="#transaction-functions-full-example">Transaction Functions Full Example</a> below.</p>
-</div>
-</div>
-<div class="section" id="lmdb-transaction-functions">
-<h2>LMDB Transaction Functions<a class="headerlink" href="#lmdb-transaction-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="lmdb-transaction-functions">
+<h2>LMDB Transaction Functions<a class="headerlink" href="#lmdb-transaction-functions" title="Permalink to this heading">¶</a></h2>
 <p>Transactions provide lower level access to lmdb function.  In the above
 functions, transactions are automatically opened and closed without
 explicitly having to do so.  In order to have more flexibility and possibly
 see a performance gain, the transaction model outlined below provides
 the relevant functions.</p>
-<div class="section" id="lmdb-transaction">
-<h3>lmdb.transaction<a class="headerlink" href="#lmdb-transaction" title="Permalink to this headline">¶</a></h3>
+<section id="lmdb-transaction">
+<h3>lmdb.transaction<a class="headerlink" href="#lmdb-transaction" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">lmdb.transaction</span></code> function opens a new transaction and returns
 functions which may perform tasks within the open transaction.</p>
 <p>Note that the <a class="reference internal" href="#lmdb-easy-functions">LMDB Easy Functions</a> above that open an internal transaction
@@ -748,10 +750,10 @@ transaction below is open.</p>
 <p>These include <a class="reference internal" href="#put">put</a>, <a class="reference internal" href="#del">del</a>, <a class="reference internal" href="#drop">drop</a> and <a class="reference internal" href="#opendb">openDb</a>
 (only when a database is being created).</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">open_rw</span> <span class="p">[,</span> <span class="nx">commit_by_default</span><span class="p">]</span> <span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">open_rw</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">commit_by_default</span><span class="p">]</span><span class="w"> </span><span class="p">);</span>
 
 <span class="cm">/* return value:</span>
 <span class="cm">    {</span>
@@ -818,18 +820,18 @@ transactions should be closed as soon as all writes are finished.</p>
 <dt>Return Value:</dt><dd><p>An <span class="green">Object</span> of functions.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-get">
-<h3>txn.get<a class="headerlink" href="#txn-get" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-get">
+<h3>txn.get<a class="headerlink" href="#txn-get" title="Permalink to this heading">¶</a></h3>
 <p>Get a single value from a database.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">([</span><span class="nx">dbase</span> <span class="p">,]</span> <span class="nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">([</span><span class="nx">dbase</span><span class="w"> </span><span class="p">,]</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">return_string</span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -852,18 +854,18 @@ will be a <span class="green">Buffer</span>.</p></li>
 <span class="green">String</span>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-getref">
-<h3>txn.getRef<a class="headerlink" href="#txn-getref" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-getref">
+<h3>txn.getRef<a class="headerlink" href="#txn-getref" title="Permalink to this heading">¶</a></h3>
 <p>Get a single value from a database in a mmaped backed buffer.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">([</span><span class="nx">dbase</span> <span class="p">,]</span> <span class="nx">key</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">([</span><span class="nx">dbase</span><span class="w"> </span><span class="p">,]</span><span class="w"> </span><span class="nx">key</span><span class="p">);</span>
 
 <span class="cm">/* use res here */</span>
 
@@ -898,45 +900,45 @@ zero length.</p>
 </dd>
 </dl>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* callback function for the rampart-server module */</span>
-<span class="kd">function</span> <span class="nx">cb</span> <span class="p">(</span><span class="nx">req</span><span class="p">)</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">cb</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
-    <span class="cm">/* get a mmap backed reference to our data */</span>
-    <span class="kd">var</span> <span class="nx">refbuf</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">(</span><span class="s2">&quot;myjpg&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+<span class="w">    </span><span class="cm">/* get a mmap backed reference to our data */</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">refbuf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">(</span><span class="s2">&quot;myjpg&quot;</span><span class="p">);</span>
 
-    <span class="cm">/* close transaction after http request is served. *</span>
+<span class="w">    </span><span class="cm">/* close transaction after http request is served. *</span>
 <span class="cm">     * The setTimeout function is inserted into the    *</span>
 <span class="cm">     * event loop and will be run after the http reply *</span>
 <span class="cm">     * is sent to the client.                          */</span>
-    <span class="nx">setTimeout</span><span class="p">(</span>
-        <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
-        <span class="p">},</span>
-        <span class="mi">0</span>
-    <span class="p">);</span>
-    <span class="cm">/* serve data directly from disk */</span>
-    <span class="k">return</span><span class="p">({</span><span class="s2">&quot;jpg&quot;</span><span class="o">:</span><span class="nx">refbuf</span><span class="p">});</span>
+<span class="w">    </span><span class="nx">setTimeout</span><span class="p">(</span>
+<span class="w">        </span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="mf">0</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="w">    </span><span class="cm">/* serve data directly from disk */</span>
+<span class="w">    </span><span class="k">return</span><span class="p">({</span><span class="s2">&quot;jpg&quot;</span><span class="o">:</span><span class="nx">refbuf</span><span class="p">});</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="txn-put">
-<h3>txn.put<a class="headerlink" href="#txn-put" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-put">
+<h3>txn.put<a class="headerlink" href="#txn-put" title="Permalink to this heading">¶</a></h3>
 <p>Put (store) values in a given <span class="green">Object</span> into a given database, indexed
 by the <span class="green">Object’s</span> keys.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read write */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">kvpairs</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">kvpairs</span><span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -962,19 +964,19 @@ be automatically decoded.</p></li>
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-del">
-<h3>txn.del<a class="headerlink" href="#txn-del" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-del">
+<h3>txn.del<a class="headerlink" href="#txn-del" title="Permalink to this heading">¶</a></h3>
 <p>Delete an the item with the given key.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read write */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">key</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -993,28 +995,28 @@ database specified in <code class="docutils literal notranslate"><span class="pr
 there was no item with the given <code class="docutils literal notranslate"><span class="pre">key</span></code> found.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="using-cursors">
-<h3>Using Cursors<a class="headerlink" href="#using-cursors" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="using-cursors">
+<h3>Using Cursors<a class="headerlink" href="#using-cursors" title="Permalink to this heading">¶</a></h3>
 <p>When any of the below Cursor Functions is used, a cursor is automatically
 created for the database being accessed. The cursor keeps track of the
 position of the last operation and may be used for subsequent operations.</p>
 <p>Each database specified in the below functions has its own associated cursor.
 Each cursor is automatically destroyed when the transaction is committed or
 aborted.</p>
-</div>
-<div class="section" id="txn-cursorget">
-<h3>txn.cursorGet<a class="headerlink" href="#txn-cursorget" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-cursorget">
+<h3>txn.cursorGet<a class="headerlink" href="#txn-cursorget" title="Permalink to this heading">¶</a></h3>
 <p>Position the cursor using one of several possible “operation modes” and
 return the key and value of the item at the cursor’s new position.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span> <span class="p">,]</span> <span class="nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="w"> </span><span class="p">,]</span><span class="w"> </span><span class="nx">op</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">key</span><span class="p">]</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">key_is_string</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">val_is_string</span><span class="p">]</span><span class="w"> </span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1062,20 +1064,20 @@ key and value of the retrieved item (e.g.
 <code class="docutils literal notranslate"><span class="pre">{&quot;key&quot;:</span> <span class="pre">&quot;database_key&quot;,</span> <span class="pre">&quot;value&quot;:</span> <span class="pre">&quot;database_value&quot;}</span></code>).</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-cursorput">
-<h3>txn.cursorPut<a class="headerlink" href="#txn-cursorput" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-cursorput">
+<h3>txn.cursorPut<a class="headerlink" href="#txn-cursorput" title="Permalink to this heading">¶</a></h3>
 <p>Put (store) value in a given into a database, indexed
 by the the given key.  Move cursor to the items location.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read write */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1098,23 +1100,23 @@ be automatically decoded.</p></li>
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-cursordel">
-<h3>txn.cursorDel<a class="headerlink" href="#txn-cursordel" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-cursordel">
+<h3>txn.cursorDel<a class="headerlink" href="#txn-cursordel" title="Permalink to this heading">¶</a></h3>
 <p>Delete the item at the cursor’s position.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read write */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 
 <span class="cm">/* e.g. to position the cursor */</span>
-<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_set</span><span class="p">,</span> <span class="nx">key</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_set</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">);</span>
 
 <span class="cm">/* delete item at cursor position */</span>
-<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1131,20 +1133,20 @@ database specified in <code class="docutils literal notranslate"><span class="pr
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-cursornext">
-<h3>txn.cursorNext<a class="headerlink" href="#txn-cursornext" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-cursornext">
+<h3>txn.cursorNext<a class="headerlink" href="#txn-cursornext" title="Permalink to this heading">¶</a></h3>
 <p>Move cursor position to the next item and return the key:value pair.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at next item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="p">[</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="nx">key_is_string</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">val_is_string</span><span class="p">]</span><span class="w"> </span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1164,15 +1166,15 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 </ul>
 </div></blockquote>
 <p>This operates identical to:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at next item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1180,23 +1182,23 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <p>The exception is that if the cursor is already at the last item,
 <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is returned instead of an empty object.</p>
 <p>It allows the following:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="p">;</span>
 
 <span class="cm">/*</span>
 <span class="cm">    Get every item in the database.</span>
 <span class="cm">    If cursor has not been previously set cursorNext()</span>
 <span class="cm">      starts at the first item.</span>
 <span class="cm">*/</span>
-<span class="k">while</span><span class="p">(</span> <span class="p">(</span><span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">())</span> <span class="p">)</span>
+<span class="k">while</span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">())</span><span class="w"> </span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="cm">/* do something with res */</span>
+<span class="w">    </span><span class="cm">/* do something with res */</span>
 <span class="p">}</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
@@ -1207,20 +1209,20 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 is at the last item (in which case <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is returned).</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-cursorprev">
-<h3>txn.cursorPrev<a class="headerlink" href="#txn-cursorprev" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-cursorprev">
+<h3>txn.cursorPrev<a class="headerlink" href="#txn-cursorprev" title="Permalink to this heading">¶</a></h3>
 <p>Move cursor position to the previous item and return the key:value pair.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at previous item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="p">[</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="nx">key_is_string</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nx">val_is_string</span><span class="p">]</span><span class="w"> </span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1240,15 +1242,15 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 </ul>
 </div></blockquote>
 <p>This operates identical to:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at previous item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_prev</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_prev</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1256,23 +1258,23 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <p>The exception is that if the cursor is already at the first item,
 <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is returned instead of an empty object.</p>
 <p>It allows the following:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="p">;</span>
 
 <span class="cm">/*</span>
 <span class="cm">    Get every item in the database in reverse order.</span>
 <span class="cm">    If cursor has not been previously set cursorPrev()</span>
 <span class="cm">      it starts at the last item.</span>
 <span class="cm">*/</span>
-<span class="k">while</span><span class="p">(</span> <span class="p">(</span><span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">())</span> <span class="p">)</span>
+<span class="k">while</span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">())</span><span class="w"> </span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="cm">/* do something with res */</span>
+<span class="w">    </span><span class="cm">/* do something with res */</span>
 <span class="p">}</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
@@ -1283,17 +1285,17 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 is at the first item (in which case <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is returned).</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-commit">
-<h3>txn.commit<a class="headerlink" href="#txn-commit" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-commit">
+<h3>txn.commit<a class="headerlink" href="#txn-commit" title="Permalink to this heading">¶</a></h3>
 <p>Commit the current transaction.  If it is a read/write transactions, the
 associated mutex lock is released.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="nx">open_rw</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span><span class="w"> </span><span class="nx">open_rw</span><span class="p">);</span>
 
 <span class="cm">/* use tnx here */</span>
 
@@ -1304,96 +1306,96 @@ associated mutex lock is released.</p>
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code></p>
 </dd>
 </dl>
-</div>
-<div class="section" id="txn-abort">
-<h3>txn.abort<a class="headerlink" href="#txn-abort" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="txn-abort">
+<h3>txn.abort<a class="headerlink" href="#txn-abort" title="Permalink to this heading">¶</a></h3>
 <p>Abort the current transaction. All data written since starting the
 transaction will be discarded. If it is a read/write transactions, the
 associated mutex lock is released.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> <span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
- <span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
- <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="nx">open_rw</span><span class="p">);</span>
+<span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span><span class="w"> </span><span class="nx">open_rw</span><span class="p">);</span>
 
- <span class="cm">/* use tnx here */</span>
+<span class="w"> </span><span class="cm">/* use tnx here */</span>
 
 <span class="cm">/* discard any/all changes */</span>
- <span class="nx">tnx</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
+<span class="w"> </span><span class="nx">tnx</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
 </pre></div>
 </div>
 <dl class="simple">
 <dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code></p>
 </dd>
 </dl>
-</div>
-<div class="section" id="transaction-functions-full-example">
-<h3>Transaction Functions Full Example<a class="headerlink" href="#transaction-functions-full-example" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="transaction-functions-full-example">
+<h3>Transaction Functions Full Example<a class="headerlink" href="#transaction-functions-full-example" title="Permalink to this heading">¶</a></h3>
 <p>This example performs the same tasks as the <a class="reference internal" href="#easy-functions-full-example">Easy Functions Full Example</a>
 except that it uses transactions.  As a result, execution speed is
 significantly improved.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* make printf and sprintf easier to use */</span>
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;printf&quot;</span><span class="p">,</span><span class="s2">&quot;sprintf&quot;</span><span class="p">]);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;printf&quot;</span><span class="p">,</span><span class="s2">&quot;sprintf&quot;</span><span class="p">]);</span>
 
-<span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span>
-    <span class="s2">&quot;./lmdb-test&quot;</span><span class="p">,</span>
-    <span class="kc">true</span><span class="p">,</span>  <span class="cm">/* create if does not exist */</span>
-    <span class="p">{</span>
-        <span class="nx">mapSize</span><span class="o">:</span> <span class="mi">1024</span><span class="p">,</span> <span class="cm">/* one gigabyte */</span>
-        <span class="nx">conversion</span><span class="o">:</span> <span class="s2">&quot;CBOR&quot;</span><span class="p">,</span>
-        <span class="nx">noMetaSync</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span>
-        <span class="nx">noSync</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="p">}</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">Lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lmdb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span>
+<span class="w">    </span><span class="s2">&quot;./lmdb-test&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="kc">true</span><span class="p">,</span><span class="w">  </span><span class="cm">/* create if does not exist */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">mapSize</span><span class="o">:</span><span class="w"> </span><span class="mf">1024</span><span class="p">,</span><span class="w"> </span><span class="cm">/* one gigabyte */</span>
+<span class="w">        </span><span class="nx">conversion</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;CBOR&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">noMetaSync</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">noSync</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">dbi</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">openDb</span><span class="p">(</span><span class="s2">&quot;testdata&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">dbi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">openDb</span><span class="p">(</span><span class="s2">&quot;testdata&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 
 <span class="cm">/* create test data */</span>
 
-<span class="kd">var</span> <span class="nx">fnames</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;Mohamed&quot;</span><span class="p">,</span> <span class="s2">&quot;Imene&quot;</span><span class="p">,</span> <span class="s2">&quot;Santiago&quot;</span><span class="p">,</span> <span class="s2">&quot;Sofía&quot;</span><span class="p">,</span> <span class="s2">&quot;Wei&quot;</span><span class="p">,</span> <span class="s2">&quot;Jing&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Noel&quot;</span><span class="p">,</span> <span class="s2">&quot;Amelia&quot;</span><span class="p">,</span> <span class="s2">&quot;Oliver&quot;</span><span class="p">,</span> <span class="s2">&quot;Olivia&quot;</span> <span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">fnames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;Mohamed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Imene&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Santiago&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Sofía&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Wei&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Jing&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;Noel&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Amelia&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Oliver&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Olivia&quot;</span><span class="w"> </span><span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">lnames</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;Beridze&quot;</span><span class="p">,</span> <span class="s2">&quot;Cohen&quot;</span><span class="p">,</span> <span class="s2">&quot;Kovačević&quot;</span><span class="p">,</span> <span class="s2">&quot;Nielsen&quot;</span><span class="p">,</span> <span class="s2">&quot;Tremblay&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Hernández&quot;</span><span class="p">,</span> <span class="s2">&quot;Smith&quot;</span><span class="p">,</span> <span class="s2">&quot;Kumar&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabiala&quot;</span><span class="p">,</span> <span class="s2">&quot;Kimetto&quot;</span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">lnames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;Beridze&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cohen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kovačević&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Nielsen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tremblay&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;Hernández&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Smith&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kumar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Mabiala&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kimetto&quot;</span><span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">initials</span> <span class="o">=</span> <span class="s2">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">initials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">streets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Main&quot;</span><span class="p">,</span> <span class="s2">&quot;Broadway&quot;</span><span class="p">,</span> <span class="s2">&quot;First&quot;</span><span class="p">,</span> <span class="s2">&quot;Second&quot;</span><span class="p">,</span> <span class="s2">&quot;Grove&quot;</span><span class="p">,</span> <span class="s2">&quot;College&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;University&quot;</span><span class="p">,</span> <span class="s2">&quot;Park&quot;</span><span class="p">,</span> <span class="s2">&quot;Oak&quot;</span><span class="p">,</span> <span class="s2">&quot;Pine&quot;</span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">streets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Main&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Broadway&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;First&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Second&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Grove&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;College&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;University&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Park&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Oak&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Pine&quot;</span><span class="p">];</span>
 
-<span class="kd">var</span> <span class="nx">stsuff</span>  <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Street&quot;</span><span class="p">,</span> <span class="s2">&quot;Drive&quot;</span><span class="p">,</span> <span class="s2">&quot;Avenue&quot;</span><span class="p">,</span> <span class="s2">&quot;Blvd&quot;</span><span class="p">,</span> <span class="s2">&quot;Court&quot;</span><span class="p">,</span> <span class="s2">&quot;Circle.&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Road&quot;</span><span class="p">,</span> <span class="s2">&quot;Lane&quot;</span><span class="p">,</span> <span class="s2">&quot;Way&quot;</span><span class="p">,</span> <span class="s2">&quot;Highway&quot;</span><span class="p">];</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">stsuff</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Street&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Drive&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Avenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Blvd&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Court&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Circle.&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="s2">&quot;Road&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Lane&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Way&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Highway&quot;</span><span class="p">];</span>
 
-<span class="kd">function</span> <span class="nx">makeName</span><span class="p">(){</span>
-    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="nx">first</span><span class="o">:</span> <span class="nx">fnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)],</span>
-        <span class="nx">mi</span><span class="o">:</span>    <span class="nx">initials</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">26</span><span class="p">)),</span>
-        <span class="nx">last</span><span class="o">:</span>  <span class="nx">lnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)]</span>
-    <span class="p">}</span>
-    <span class="nx">ret</span><span class="p">.</span><span class="nx">full</span> <span class="o">=</span> <span class="nx">sprintf</span> <span class="p">(</span><span class="s2">&quot;%s %s. %s&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">first</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">mi</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">last</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">makeName</span><span class="p">(){</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">first</span><span class="o">:</span><span class="w"> </span><span class="nx">fnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)],</span>
+<span class="w">        </span><span class="nx">mi</span><span class="o">:</span><span class="w">    </span><span class="nx">initials</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">26</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">last</span><span class="o">:</span><span class="w">  </span><span class="nx">lnames</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">ret</span><span class="p">.</span><span class="nx">full</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sprintf</span><span class="w"> </span><span class="p">(</span><span class="s2">&quot;%s %s. %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span><span class="p">.</span><span class="nx">first</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span><span class="p">.</span><span class="nx">mi</span><span class="p">,</span><span class="w"> </span><span class="nx">ret</span><span class="p">.</span><span class="nx">last</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ret</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">function</span> <span class="nx">makeAddr</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
-    <span class="nx">obj</span><span class="p">.</span><span class="nx">streetno</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10000</span><span class="p">);</span>
-    <span class="nx">obj</span><span class="p">.</span><span class="nx">street</span> <span class="o">=</span> <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%s %s&quot;</span><span class="p">,</span>
-                    <span class="nx">streets</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)],</span>
-                    <span class="nx">stsuff</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">10</span><span class="p">)]</span>
-                 <span class="p">);</span>
-    <span class="nx">obj</span><span class="p">.</span><span class="nx">zip</span> <span class="o">=</span> <span class="mi">10000</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mi">90000</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">makeAddr</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+<span class="w">    </span><span class="nx">obj</span><span class="p">.</span><span class="nx">streetno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10000</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">obj</span><span class="p">.</span><span class="nx">street</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%s %s&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nx">streets</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)],</span>
+<span class="w">                    </span><span class="nx">stsuff</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">10</span><span class="p">)]</span>
+<span class="w">                 </span><span class="p">);</span>
+<span class="w">    </span><span class="nx">obj</span><span class="p">.</span><span class="nx">zip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="o">*</span><span class="mf">90000</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="cm">/* Open a new transaction and insert entries */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span> <span class="c1">//read/write</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mi">5000</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeName</span><span class="p">();</span>
-    <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">full</span> <span class="o">+</span> <span class="s2">&quot; from &quot;</span> <span class="o">+</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
-    <span class="cm">/* since entry is an object, it will be converted to CBOR */</span>
-    <span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">entry</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span><span class="w"> </span><span class="c1">//read/write</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">5000</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeName</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">full</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot; from &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* since entry is an object, it will be converted to CBOR */</span>
+<span class="w">    </span><span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">entry</span><span class="p">);</span>
 <span class="p">}</span>
 <span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 
@@ -1401,33 +1403,33 @@ significantly improved.</p>
 <span class="c1">//lmdb.sync();</span>
 
 <span class="cm">/* this must be done while outside a transaction */</span>
-<span class="kd">var</span> <span class="nx">total</span> <span class="o">=</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">getCount</span><span class="p">(</span><span class="nx">dbi</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">getCount</span><span class="p">(</span><span class="nx">dbi</span><span class="p">);</span>
 
 <span class="cm">/* get all the Sofías in the database */</span>
-<span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="kc">false</span><span class="p">);</span> <span class="c1">//read only</span>
+<span class="nx">txn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="kc">false</span><span class="p">);</span><span class="w"> </span><span class="c1">//read only</span>
 
 <span class="cm">/* get first entry, make the key a string, leave value as a buffer */</span>
-<span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_setRange</span><span class="p">,</span> <span class="s2">&quot;Sofía&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-<span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="w"> </span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_setRange</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Sofía&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+<span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span>
 
 <span class="cm">/* process first entry and loop to get entries after */</span>
-<span class="k">do</span> <span class="p">{</span>
-    <span class="cm">/* if there were no Sofías from the above cursorGet or if</span>
+<span class="k">do</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* if there were no Sofías from the above cursorGet or if</span>
 <span class="cm">       the current cursorNext is not a Sofía, we are done      */</span>
-    <span class="k">if</span><span class="p">(</span> <span class="o">!</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">key</span> <span class="o">||</span> <span class="o">!</span> <span class="sr">/^Sofía./</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">key</span><span class="p">)</span> <span class="p">)</span>
-        <span class="k">break</span><span class="p">;</span>
-    <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
-    <span class="cm">/* in transactions, CBOR is not automatically decoded */</span>
-    <span class="nx">entry</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">CBOR</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">street</span> <span class="o">==</span> <span class="s2">&quot;Main Street&quot;</span><span class="p">)</span>
-        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s lives at %d %s\n&quot;</span><span class="p">,</span>
-                <span class="nx">entry</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span>
-                <span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">streetno</span><span class="p">,</span>
-                <span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">street</span>
-              <span class="p">);</span>
-<span class="p">}</span> <span class="k">while</span><span class="p">(</span><span class="nx">entry</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="kc">true</span><span class="p">));</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="nx">entry</span><span class="p">.</span><span class="nx">key</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="sr">/^Sofía./</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">key</span><span class="p">)</span><span class="w"> </span><span class="p">)</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">i</span><span class="o">++</span><span class="p">;</span>
+<span class="w">    </span><span class="cm">/* in transactions, CBOR is not automatically decoded */</span>
+<span class="w">    </span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CBOR</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">street</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;Main Street&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s lives at %d %s\n&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">entry</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">streetno</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">street</span>
+<span class="w">              </span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="p">(</span><span class="nx">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">));</span>
 
-<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;There are %d Sofías out of %d entries in the database.\n&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;There are %d Sofías out of %d entries in the database.\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">total</span><span class="p">);</span>
 
 <span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 
@@ -1443,9 +1445,9 @@ significantly improved.</p>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
@@ -1466,7 +1468,7 @@ significantly improved.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Moat Crossing Systems.
+        &copy; Copyright 2023, Moat Crossing Systems.
 
     </p>
   </div>
@@ -1488,7 +1490,7 @@ significantly improved.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -1496,10 +1498,10 @@ significantly improved.</p>
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script type="text/javascript" src="_static/documentation_options.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/sphinx_highlight.js"></script>
 
   
 

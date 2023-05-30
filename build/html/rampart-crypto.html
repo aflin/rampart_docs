@@ -5,10 +5,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-crypto module &mdash; Rampart 0.1.0 documentation</title>
+  <title>The rampart-crypto module &mdash; Rampart 0.2.0 documentation</title>
   
 
   
@@ -37,7 +38,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.2.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-curl module" href="rampart-curl.html"/>
         <link rel="prev" title="The rampart-html module" href="rampart-html.html"/> 
 
@@ -82,10 +83,11 @@
           
             
             
-                <p class="caption"><span class="caption-text">Contents:</span></p>
+                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -212,61 +214,61 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-rampart-crypto-module">
-<h1>The rampart-crypto module<a class="headerlink" href="#the-rampart-crypto-module" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="preface">
-<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="acknowledgment">
-<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+  <section id="the-rampart-crypto-module">
+<h1>The rampart-crypto module<a class="headerlink" href="#the-rampart-crypto-module" title="Permalink to this heading">¶</a></h1>
+<section id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this heading">¶</a></h2>
+<section id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-crypto module uses the <a class="reference external" href="https://www.openssl.org/">OpenSSL</a>
 library.  We extend our thanks to the developers for this indispensable
 tool.</p>
-</div>
-<div class="section" id="license">
-<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-crypto module is released under the MIT license.
 The <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> library is released under the
 <a class="reference external" href="https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/LICENSE">OpenSSL License</a>.</p>
-</div>
-<div class="section" id="what-does-it-do">
-<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this heading">¶</a></h3>
 <p>The rampart-crypto module provides methods to encrypt, decrypt, hash and
 generate HMACs from within Rampart JavaScript.
 It also includes the full libssl and libcrypto libraries and is needed for
 the rampart-curl and rampart-server modules to operate using the https
 protocol.</p>
-</div>
-<div class="section" id="how-does-it-work">
-<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading">¶</a></h3>
 <p>After the module is loaded, functions are provided to perform crypto
 operations on JavaScript <span class="green">Strings</span> or <span class="green">Buffers</span>.</p>
-</div>
-</div>
-<div class="section" id="loading-and-using-the-module">
-<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="loading">
-<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this heading">¶</a></h2>
+<section id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this heading">¶</a></h3>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="encryption-and-decryption">
-<h2>Encryption and Decryption<a class="headerlink" href="#encryption-and-decryption" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="encrypt">
-<h3>encrypt<a class="headerlink" href="#encrypt" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="encryption-and-decryption">
+<h2>Encryption and Decryption<a class="headerlink" href="#encryption-and-decryption" title="Permalink to this heading">¶</a></h2>
+<section id="encrypt">
+<h3>encrypt<a class="headerlink" href="#encrypt" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">encrypt()</span></code> function encrypts the contents of a <span class="green">String</span> or
 <span class="green">Buffer</span>.  Encryption can be done by providing a key/iv pair or by
 providing a password.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">ciphertext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">ciphertext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="nx">pass</span><span class="p">,</span> <span class="nx">data</span><span class="p">[,</span> <span class="nx">cipher_mode</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="nx">pass</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">[,</span><span class="w"> </span><span class="nx">cipher_mode</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -301,9 +303,9 @@ using openssl version 1.1.1 from the command line.</p>
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">ciphertext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="s2">&quot;mypass&quot;</span><span class="p">,</span> <span class="s2">&quot;my data&quot;</span><span class="p">,</span> <span class="s2">&quot;aes-128-cbc&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="s2">&quot;mypass&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;my data&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;aes-128-cbc&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <dl class="simple">
@@ -315,9 +317,9 @@ and significantly lowering the <code class="docutils literal notranslate"><span 
 options instead of a password) will be more performant.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="decrypt">
-<h3>decrypt<a class="headerlink" href="#decrypt" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="decrypt">
+<h3>decrypt<a class="headerlink" href="#decrypt" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">decrypt()</span></code> function takes the same arguments as <a class="reference internal" href="#encrypt">encrypt</a> above, but decrypts
 the data.</p>
 <dl class="simple">
@@ -328,19 +330,19 @@ using openssl version 1.1.1 from the command line.</p>
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">ciphertext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">({</span>
-    <span class="nx">pass</span><span class="o">:</span> <span class="s2">&quot;mypass&quot;</span><span class="p">,</span>
-    <span class="nx">data</span><span class="o">:</span> <span class="s2">&quot;my data&quot;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">pass</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;mypass&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;my data&quot;</span>
 <span class="p">});</span>
 
-<span class="kd">var</span> <span class="nx">plaintext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">decrypt</span><span class="p">({</span>
-    <span class="nx">pass</span><span class="o">:</span> <span class="s2">&quot;mypass&quot;</span><span class="p">,</span>
-    <span class="nx">data</span><span class="o">:</span> <span class="nx">ciphertext</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">plaintext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">decrypt</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">pass</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;mypass&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="nx">ciphertext</span>
 <span class="p">});</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;The decrypted data: &quot;%s&quot;\n&#39;</span><span class="p">,</span> <span class="nx">plaintext</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;The decrypted data: &quot;%s&quot;\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">plaintext</span><span class="p">);</span>
 
 <span class="cm">/* expected output:</span>
 
@@ -349,15 +351,15 @@ using openssl version 1.1.1 from the command line.</p>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="passtokeyiv">
-<h3>passToKeyIv<a class="headerlink" href="#passtokeyiv" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="passtokeyiv">
+<h3>passToKeyIv<a class="headerlink" href="#passtokeyiv" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">passToKeyIv()</span></code> function performs the same password to
 key/iv pair generation as <a class="reference internal" href="#encrypt">encrypt</a> above.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">kiv</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passToKeyIv</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">kiv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">passToKeyIv</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where</p>
@@ -390,19 +392,19 @@ using openssl version 1.1.1 from the command line.</p>
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">salt</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">sha1</span><span class="p">(</span><span class="s2">&quot;a unique string for one time use as salt&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">salt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">sha1</span><span class="p">(</span><span class="s2">&quot;a unique string for one time use as salt&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">kiv</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passToKeyIv</span><span class="p">({</span>
-   <span class="nx">pass</span><span class="o">:</span> <span class="s2">&quot;mypass&quot;</span><span class="p">,</span>
-   <span class="nx">salt</span><span class="o">:</span> <span class="nx">salt</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">kiv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">passToKeyIv</span><span class="p">({</span>
+<span class="w">   </span><span class="nx">pass</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;mypass&quot;</span><span class="p">,</span>
+<span class="w">   </span><span class="nx">salt</span><span class="o">:</span><span class="w"> </span><span class="nx">salt</span>
 <span class="p">});</span>
 
-<span class="kd">var</span> <span class="nx">ciphertext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">({</span>
-    <span class="nx">key</span><span class="o">:</span>  <span class="nx">kiv</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span>
-    <span class="nx">iv</span><span class="o">:</span>   <span class="nx">kiv</span><span class="p">.</span><span class="nx">iv</span><span class="p">,</span>
-    <span class="nx">data</span><span class="o">:</span> <span class="s2">&quot;my data&quot;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w">  </span><span class="nx">kiv</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">iv</span><span class="o">:</span><span class="w">   </span><span class="nx">kiv</span><span class="p">.</span><span class="nx">iv</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;my data&quot;</span>
 <span class="p">});</span>
 
 <span class="cm">/*</span>
@@ -411,15 +413,15 @@ using openssl version 1.1.1 from the command line.</p>
 <span class="cm">   with the same key, iv derived using both &#39;password&#39; and &#39;salt&#39;.</span>
 <span class="cm">*/</span>
 
-<span class="kd">var</span> <span class="nx">plaintext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">decrypt</span><span class="p">({</span>
-    <span class="nx">key</span><span class="o">:</span>  <span class="nx">kiv</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span>
-    <span class="nx">iv</span><span class="o">:</span>   <span class="nx">kiv</span><span class="p">.</span><span class="nx">iv</span><span class="p">,</span>
-    <span class="nx">data</span><span class="o">:</span> <span class="nx">ciphertext</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">plaintext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">decrypt</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w">  </span><span class="nx">kiv</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">iv</span><span class="o">:</span><span class="w">   </span><span class="nx">kiv</span><span class="p">.</span><span class="nx">iv</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="nx">ciphertext</span>
 <span class="p">});</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;Key/Iv/Salt: &quot;%3J&quot;\n\n&#39;</span><span class="p">,</span> <span class="nx">kiv</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;Key/Iv/Salt: &quot;%3J&quot;\n\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">kiv</span><span class="p">);</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;The decrypted data: &quot;%s&quot;\n&#39;</span><span class="p">,</span> <span class="nx">plaintext</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;The decrypted data: &quot;%s&quot;\n&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">plaintext</span><span class="p">);</span>
 
 <span class="cm">/* expected output:</span>
 
@@ -434,15 +436,11 @@ using openssl version 1.1.1 from the command line.</p>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="supported-modes">
-<h3>Supported Modes<a class="headerlink" href="#supported-modes" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="supported-modes">
+<h3>Supported Modes<a class="headerlink" href="#supported-modes" title="Permalink to this heading">¶</a></h3>
 <p>The following cipher/modes are supported in rampart:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 36%" />
-<col style="width: 64%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>mode name</p></th>
 <th class="head"><p>Description</p></th>
@@ -607,17 +605,17 @@ using openssl version 1.1.1 from the command line.</p>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="rsa-encryption">
-<h2>RSA Encryption<a class="headerlink" href="#rsa-encryption" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="rsa-gen-key">
-<h3>rsa_gen_key<a class="headerlink" href="#rsa-gen-key" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="rsa-encryption">
+<h2>RSA Encryption<a class="headerlink" href="#rsa-encryption" title="Permalink to this heading">¶</a></h2>
+<section id="rsa-gen-key">
+<h3>rsa_gen_key<a class="headerlink" href="#rsa-gen-key" title="Permalink to this heading">¶</a></h3>
 <p>Generate an RSA key pair.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_gen_key</span><span class="p">([</span><span class="nx">bits</span><span class="p">][,</span> <span class="nx">password</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_gen_key</span><span class="p">([</span><span class="nx">bits</span><span class="p">][,</span><span class="w"> </span><span class="nx">password</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -645,16 +643,16 @@ encrypt the private key.</p></li>
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
 <span class="cm">/* for demo - generally should be 2048 or greater */</span>
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_gen_key</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="s2">&quot;mypass&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_gen_key</span><span class="p">(</span><span class="mf">1024</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;mypass&quot;</span><span class="p">);</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span> <span class="s2">&quot;%s\n%s\n%s\n%s\n&quot;</span><span class="p">,</span>
-   <span class="nx">key</span><span class="p">.</span><span class="kr">private</span><span class="p">,</span>
-   <span class="nx">key</span><span class="p">.</span><span class="kr">public</span><span class="p">,</span>
-   <span class="nx">key</span><span class="p">.</span><span class="nx">rsa_private</span><span class="p">,</span>
-   <span class="nx">key</span><span class="p">.</span><span class="nx">rsa_public</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;%s\n%s\n%s\n%s\n&quot;</span><span class="p">,</span>
+<span class="w">   </span><span class="nx">key</span><span class="p">.</span><span class="kr">private</span><span class="p">,</span>
+<span class="w">   </span><span class="nx">key</span><span class="p">.</span><span class="kr">public</span><span class="p">,</span>
+<span class="w">   </span><span class="nx">key</span><span class="p">.</span><span class="nx">rsa_private</span><span class="p">,</span>
+<span class="w">   </span><span class="nx">key</span><span class="p">.</span><span class="nx">rsa_public</span>
 <span class="p">);</span>
 
 <span class="cm">/* expect output similar to the following:</span>
@@ -712,18 +710,18 @@ encrypt the private key.</p></li>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="rsa-import-priv-key">
-<h3>rsa_import_priv_key<a class="headerlink" href="#rsa-import-priv-key" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="rsa-import-priv-key">
+<h3>rsa_import_priv_key<a class="headerlink" href="#rsa-import-priv-key" title="Permalink to this heading">¶</a></h3>
 <p>Import an existing private key and generate a new public and private keys.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span> <span class="nx">opts</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span><span class="w"> </span><span class="nx">opts</span><span class="p">]);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span> <span class="nx">oldpass</span><span class="p">][,</span> <span class="nx">newpass</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span><span class="w"> </span><span class="nx">oldpass</span><span class="p">][,</span><span class="w"> </span><span class="nx">newpass</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -749,14 +747,14 @@ encrypt the private key.</p></li>
 </div></blockquote>
 </dd>
 </dl>
-</div>
-<div class="section" id="rsa-components">
-<h3>rsa_components<a class="headerlink" href="#rsa-components" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="rsa-components">
+<h3>rsa_components<a class="headerlink" href="#rsa-components" title="Permalink to this heading">¶</a></h3>
 <p>Get the component parts of an RSA public or private key.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">components</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_components</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">components</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_components</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
 </pre></div>
 </div>
 <dl>
@@ -778,15 +776,15 @@ encrypt the private key.</p></li>
 </div></blockquote>
 </dd>
 </dl>
-</div>
-<div class="section" id="rsa-pub-encrypt">
-<h3>rsa_pub_encrypt<a class="headerlink" href="#rsa-pub-encrypt" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="rsa-pub-encrypt">
+<h3>rsa_pub_encrypt<a class="headerlink" href="#rsa-pub-encrypt" title="Permalink to this heading">¶</a></h3>
 <p>Encrypt data using an RSA public key.  The public key can be in either
 pem format generated by <a class="reference internal" href="#rsa-gen-key">rsa_gen_key</a>().</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_pub_encrypt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">public_key</span><span class="p">[,</span> <span class="nx">paddingMode</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_pub_encrypt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">public_key</span><span class="p">[,</span><span class="w"> </span><span class="nx">paddingMode</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -830,43 +828,43 @@ the modulus used to create the key pair minus 11 (or minus 42 in the case of
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="kd">var</span> <span class="nx">str</span>  <span class="o">=</span> <span class="s2">&quot;contents of my potentially long data file...\n&quot;</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">str</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;contents of my potentially long data file...\n&quot;</span><span class="p">;</span>
 
 <span class="cm">/* make content longer than can fit in rsa encrypted text */</span>
-<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="mi">100</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
-    <span class="nx">data</span><span class="o">+=</span><span class="nx">str</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">&lt;</span><span class="mf">100</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">+=</span><span class="nx">str</span><span class="p">;</span>
 
 <span class="cm">/* seed the random number generator before use */</span>
 <span class="nx">crypto</span><span class="p">.</span><span class="nx">seed</span><span class="p">();</span>
 
 <span class="cm">/* generate random data and base64 encode for easy use*/</span>
-<span class="kd">var</span> <span class="nx">symmetric_passwd</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%B&quot;</span><span class="p">,</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="mi">48</span><span class="p">));</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">symmetric_passwd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%B&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="mf">48</span><span class="p">));</span>
 
 <span class="cm">/* encrypt data using the random base64 data as the password */</span>
-<span class="kd">var</span> <span class="nx">ciphertext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="nx">symmetric_passwd</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">ciphertext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">encrypt</span><span class="p">(</span><span class="nx">symmetric_passwd</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">);</span>
 
 <span class="cm">/* rsa encrypt the password with public key */</span>
-<span class="kd">var</span> <span class="nx">encrypted_passwd</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_pub_encrypt</span><span class="p">(</span>
-    <span class="nx">symmetric_passwd</span><span class="p">,</span>
-    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;pubkey.pem&quot;</span><span class="p">)</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">encrypted_passwd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_pub_encrypt</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">symmetric_passwd</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;pubkey.pem&quot;</span><span class="p">)</span>
 <span class="p">);</span>
 
 <span class="cm">/* transmit ciphertext and encrypted password to</span>
 <span class="cm">   owner of the corresponding private key        */</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="rsa-priv-decrypt">
-<h3>rsa_priv_decrypt<a class="headerlink" href="#rsa-priv-decrypt" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="rsa-priv-decrypt">
+<h3>rsa_priv_decrypt<a class="headerlink" href="#rsa-priv-decrypt" title="Permalink to this heading">¶</a></h3>
 <p>Decrypt encrypted data using an RSA private key. The private key can be in either
 pem format generated by <a class="reference internal" href="#rsa-gen-key">rsa_gen_key</a>().</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_priv_decrypt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">private_key</span><span class="p">[,</span> <span class="nx">paddingMode</span><span class="p">][,</span> <span class="nx">password</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_priv_decrypt</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">private_key</span><span class="p">[,</span><span class="w"> </span><span class="nx">paddingMode</span><span class="p">][,</span><span class="w"> </span><span class="nx">password</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -888,25 +886,25 @@ protected, the password used to encrypt the private key.</p></li>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* continuing example from above, owner of privatekey.pem can do this */</span>
-<span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
 <span class="cm">/* receive ciphertext and encrypted password from above */</span>
 
-<span class="nx">symmetric_passwd</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_priv_decrypt</span><span class="p">(</span>
-    <span class="nx">encrypted_passwd</span><span class="p">,</span>
-    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;privatekey.pem&quot;</span><span class="p">),</span>
-    <span class="kc">null</span><span class="p">,</span> <span class="cm">/* use default &quot;pkcs&quot; */</span>
-    <span class="s2">&quot;mysecretpassword&quot;</span>
+<span class="nx">symmetric_passwd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_priv_decrypt</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">encrypted_passwd</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;privatekey.pem&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="cm">/* use default &quot;pkcs&quot; */</span>
+<span class="w">    </span><span class="s2">&quot;mysecretpassword&quot;</span>
 <span class="p">);</span>
 
 <span class="cm">/* decrypt message</span>
 <span class="cm">   password must be a string */</span>
-<span class="kd">var</span> <span class="nx">plaintext</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">decrypt</span><span class="p">(</span>
-    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">bufferToString</span><span class="p">(</span><span class="nx">symmetric_passwd</span><span class="p">),</span>
-    <span class="nx">ciphertext</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">plaintext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">decrypt</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">bufferToString</span><span class="p">(</span><span class="nx">symmetric_passwd</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">ciphertext</span>
 <span class="p">);</span>
 
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">plaintext</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">plaintext</span><span class="p">);</span>
 
 <span class="cm">/* expected output:</span>
 <span class="cm">contents of my potentially long data file...</span>
@@ -916,15 +914,15 @@ protected, the password used to encrypt the private key.</p></li>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="rsa-sign">
-<h3>rsa_sign<a class="headerlink" href="#rsa-sign" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="rsa-sign">
+<h3>rsa_sign<a class="headerlink" href="#rsa-sign" title="Permalink to this heading">¶</a></h3>
 <p>Sign a message with an RSA private key. The private key can be in either
 pem format generated by <a class="reference internal" href="#rsa-gen-key">rsa_gen_key</a>().</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">signature</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_sign</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="nx">private_key</span><span class="p">[,</span> <span class="nx">password</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">signature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_sign</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span><span class="w"> </span><span class="nx">private_key</span><span class="p">[,</span><span class="w"> </span><span class="nx">password</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -943,15 +941,15 @@ protected, the password used to encrypt the private key.</p></li>
 <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">dgst</span> <span class="pre">-sha256</span> <span class="pre">-sign</span> <span class="pre">private_key.pem</span> <span class="pre">-out</span> <span class="pre">sig</span> <span class="pre">msg.txt</span></code></p>
 </dd>
 </dl>
-</div>
-<div class="section" id="rsa-verify">
-<h3>rsa_verify<a class="headerlink" href="#rsa-verify" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="rsa-verify">
+<h3>rsa_verify<a class="headerlink" href="#rsa-verify" title="Permalink to this heading">¶</a></h3>
 <p>Verify a signed message with an RSA public key. The public key can be in either
 pem format generated by <a class="reference internal" href="#rsa-gen-key">rsa_gen_key</a>().</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">verified</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_verify</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">public_key</span><span class="p">,</span> <span class="nx">signature</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">verified</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_verify</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">public_key</span><span class="p">,</span><span class="w"> </span><span class="nx">signature</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -971,14 +969,14 @@ generated with <code class="docutils literal notranslate"><span class="pre">rsa_
 <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">dgst</span> <span class="pre">-sha256</span> <span class="pre">-verify</span> <span class="pre">public_key.pem</span> <span class="pre">-signature</span> <span class="pre">sig</span> <span class="pre">msg.txt</span></code>.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="gen-csr">
-<h3>gen_csr<a class="headerlink" href="#gen-csr" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="gen-csr">
+<h3>gen_csr<a class="headerlink" href="#gen-csr" title="Permalink to this heading">¶</a></h3>
 <p>Generate a certificate signing request.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">csr</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_csr</span><span class="p">(</span><span class="nx">private_key</span><span class="p">,</span> <span class="nx">opts</span><span class="p">[,</span> <span class="nx">password</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">csr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_csr</span><span class="p">(</span><span class="nx">private_key</span><span class="p">,</span><span class="w"> </span><span class="nx">opts</span><span class="p">[,</span><span class="w"> </span><span class="nx">password</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1020,39 +1018,39 @@ should be used, particularly where the requested certificate will cover more tha
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
 <span class="cm">/* generate a server key */</span>
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_gen_key</span><span class="p">(</span><span class="mi">4096</span> <span class="cm">/* ,&quot;password&quot; */</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rsa_gen_key</span><span class="p">(</span><span class="mf">4096</span><span class="w"> </span><span class="cm">/* ,&quot;password&quot; */</span><span class="p">);</span>
 
 <span class="cm">/* save it for use with webserver */</span>
-<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;./server.key&quot;</span><span class="p">,</span> <span class="s1">&#39;%s&#39;</span><span class="p">,</span> <span class="nx">key</span><span class="p">.</span><span class="kr">private</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;./server.key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">.</span><span class="kr">private</span><span class="p">);</span>
 
 <span class="cm">/* generate a signing request for current domains */</span>
-<span class="kd">var</span> <span class="nx">csr</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_csr</span><span class="p">(</span>
-    <span class="nx">key</span><span class="p">.</span><span class="kr">private</span><span class="p">,</span>
-    <span class="p">{</span>
-        <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;example.com&quot;</span><span class="p">,</span>
-        <span class="nx">subjectAltName</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;www.example.com&quot;</span><span class="p">]</span>
-    <span class="p">}</span>
-    <span class="cm">/* , &quot;password&quot; */</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">csr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_csr</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">key</span><span class="p">.</span><span class="kr">private</span><span class="p">,</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">subjectAltName</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;www.example.com&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="cm">/* , &quot;password&quot; */</span>
 <span class="p">);</span>
 <span class="cm">/* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="hashing">
-<h2>Hashing<a class="headerlink" href="#hashing" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="hash">
-<h3>hash<a class="headerlink" href="#hash" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="hashing">
+<h2>Hashing<a class="headerlink" href="#hashing" title="Permalink to this heading">¶</a></h2>
+<section id="hash">
+<h3>hash<a class="headerlink" href="#hash" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">hash()</span></code> function calculates a hash of the data in a <span class="green">String</span> or
 <span class="green">Buffer</span> and returns it in a hex encoded <span class="green">String</span> or as
 binary data in a <span class="green">Buffer</span>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hash</span><span class="p">(</span><span class="nx">data</span><span class="p">[,</span> <span class="nx">hash_func</span><span class="p">][,</span> <span class="nx">return_buffer</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">hash</span><span class="p">(</span><span class="nx">data</span><span class="p">[,</span><span class="w"> </span><span class="nx">hash_func</span><span class="p">][,</span><span class="w"> </span><span class="nx">return_buffer</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1073,32 +1071,32 @@ binary data in a <span class="green">Buffer</span>, and not hex encoded.</p></li
 </dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hash</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">,</span> <span class="s2">&quot;sha256&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">hash</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;sha256&quot;</span><span class="p">);</span>
 
 <span class="cm">/*</span>
 <span class="cm">    res == &#39;b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9&#39;</span>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="alias-functions">
-<h3>alias functions<a class="headerlink" href="#alias-functions" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="alias-functions">
+<h3>alias functions<a class="headerlink" href="#alias-functions" title="Permalink to this heading">¶</a></h3>
 <p>The hash function has an alias for each of the possible <code class="docutils literal notranslate"><span class="pre">hash_func</span></code>
 value above.  Thus, using <code class="docutils literal notranslate"><span class="pre">crypto.hash(&quot;hello</span> <span class="pre">world&quot;,</span> <span class="pre">&quot;sha256&quot;)</span></code> is equivalent to
 <code class="docutils literal notranslate"><span class="pre">crypto.sha256(&quot;hello</span> <span class="pre">world&quot;)</span></code>.  For <code class="docutils literal notranslate"><span class="pre">hash_func</span></code> names with a dash
 (<code class="docutils literal notranslate"><span class="pre">-</span></code>), an underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>) is used instead.  Thus
 <code class="docutils literal notranslate"><span class="pre">crypto.hash(&quot;hello</span> <span class="pre">world&quot;,</span> <span class="pre">&quot;sha3-256&quot;)</span></code> is equivalent to
 <code class="docutils literal notranslate"><span class="pre">crypto.sha3_256(&quot;hello</span> <span class="pre">world&quot;)</span></code>.</p>
-</div>
-<div class="section" id="hmac">
-<h3>hmac<a class="headerlink" href="#hmac" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="hmac">
+<h3>hmac<a class="headerlink" href="#hmac" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">hmac()</span></code> function computes a HMAC from the provided data and key.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hmac</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">[,</span> <span class="nx">hash_func</span><span class="p">][,</span> <span class="nx">return_buffer</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">hmac</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">[,</span><span class="w"> </span><span class="nx">hash_func</span><span class="p">][,</span><span class="w"> </span><span class="nx">return_buffer</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1121,17 +1119,17 @@ binary data in a <span class="green">Buffer</span>, and not hex encoded.</p></li
 <dt>Return Value:</dt><dd><p>A <span class="green">String</span> or <span class="green">Buffer</span>, the hmac hash of the data.</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="random">
-<h2>Random<a class="headerlink" href="#random" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="rand">
-<h3>rand<a class="headerlink" href="#rand" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="random">
+<h2>Random<a class="headerlink" href="#random" title="Permalink to this heading">¶</a></h2>
+<section id="rand">
+<h3>rand<a class="headerlink" href="#rand" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">rand()</span></code> function returns random generated bytes in a buffer.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="nx">nBytes</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="nx">nBytes</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">nBytes</span></code> is the number of bytes to return.</p>
@@ -1139,43 +1137,43 @@ binary data in a <span class="green">Buffer</span>, and not hex encoded.</p></li
 <dt>Return Value:</dt><dd><p>a <span class="green">Buffer</span> with <code class="docutils literal notranslate"><span class="pre">nBytes</span></code> bytes of random data.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="randnum">
-<h3>randnum<a class="headerlink" href="#randnum" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="randnum">
+<h3>randnum<a class="headerlink" href="#randnum" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">randnum()</span></code> function returns a random <span class="green">Number</span>
 between <code class="docutils literal notranslate"><span class="pre">0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
-</div>
-<div class="section" id="gaussrand">
-<h3>gaussrand<a class="headerlink" href="#gaussrand" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="gaussrand">
+<h3>gaussrand<a class="headerlink" href="#gaussrand" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">gaussrand([sigma])</span></code> function returns a random <span class="green">Number</span> based on
 a normal distribution centered at zero (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>), where <code class="docutils literal notranslate"><span class="pre">sigma</span></code> is one
 standard deviation.  <code class="docutils literal notranslate"><span class="pre">sigma</span></code> is optional, defaulting to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
-</div>
-<div class="section" id="normrand">
-<h3>normrand<a class="headerlink" href="#normrand" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="normrand">
+<h3>normrand<a class="headerlink" href="#normrand" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">normrand([scale])</span></code> function returns a random <span class="green">Number</span> based on
 a normal distribution centered at zero (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>) and clamped between <code class="docutils literal notranslate"><span class="pre">-scale</span></code>
 and <code class="docutils literal notranslate"><span class="pre">scale</span></code>.</p>
 <p>Similar to the <a class="reference internal" href="#gaussrand">gaussrand</a> above.  It is equivelant to:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">nrand</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">*</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gaussrand</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="mf">5.0</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">nrand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">scale</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">gaussrand</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="mf">5.0</span><span class="p">;</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">nrand</span><span class="o">&gt;</span><span class="nx">scale</span><span class="p">)</span>
-    <span class="nx">nrand</span><span class="o">=</span><span class="nx">scale</span><span class="p">;</span>
-<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">nrand</span> <span class="o">&lt;</span> <span class="o">-</span><span class="nx">scale</span><span class="p">)</span>
-    <span class="nx">nrand</span> <span class="o">=</span> <span class="o">-</span><span class="nx">scale</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">nrand</span><span class="o">=</span><span class="nx">scale</span><span class="p">;</span>
+<span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">nrand</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="o">-</span><span class="nx">scale</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">nrand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="nx">scale</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>With a <code class="docutils literal notranslate"><span class="pre">scale</span></code> of <code class="docutils literal notranslate"><span class="pre">1.0</span></code> (the default), the distribution of numbers has a
 standard deviation of <code class="docutils literal notranslate"><span class="pre">0.2</span></code>.</p>
-</div>
-<div class="section" id="seed">
-<h3>seed<a class="headerlink" href="#seed" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="seed">
+<h3>seed<a class="headerlink" href="#seed" title="Permalink to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">seed()</span></code> function seeds the random number generator from a file.
 There is no return value.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">seed</span><span class="p">([</span><span class="nx">options</span><span class="p">]);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">seed</span><span class="p">([</span><span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where options is an <span class="green">Object</span>, if provided, and contains the following
@@ -1186,23 +1184,23 @@ properties:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">bytes</span></code> - a <span class="green">Number</span> - Number of bytes to retrieve from <code class="docutils literal notranslate"><span class="pre">file</span></code>.
 Default is <code class="docutils literal notranslate"><span class="pre">32</span></code>.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="bigint">
-<h2>BigInt<a class="headerlink" href="#bigint" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="bigint">
+<h2>BigInt<a class="headerlink" href="#bigint" title="Permalink to this heading">¶</a></h2>
 <p>The rampart-crypto module includes functions which handle arbitrarily long
 integers using openssl’s <code class="docutils literal notranslate"><span class="pre">BIGNUM</span></code> library.  It is designed to be compatible with the
 <a class="reference external" href="https://github.com/GoogleChromeLabs/jsbi">JSBI</a> library and includes the
 same published functions.  See <a class="reference external" href="https://www.npmjs.com/package/jsbi">JSBI Node Module</a>
 for more information.</p>
 <p>Usage as documented below is as such:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">JSBI</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">JSBI</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">JSBI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">JSBI</span><span class="p">;</span>
 </pre></div>
 </div>
-<div class="section" id="jsbi-bigint">
-<h3>JSBI.BigInt<a class="headerlink" href="#jsbi-bigint" title="Permalink to this headline">¶</a></h3>
+<section id="jsbi-bigint">
+<h3>JSBI.BigInt<a class="headerlink" href="#jsbi-bigint" title="Permalink to this heading">¶</a></h3>
 <p>Create a BigInt from a <span class="green">String</span> or <span class="green">Number</span>.</p>
 <p>Possible Strings:</p>
 <ul class="simple">
@@ -1214,16 +1212,16 @@ for more information.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">-0b11110011</span></code></p></li>
 </ul>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">JSBI</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">JSBI</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">JSBI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">JSBI</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">mybignum</span> <span class="o">=</span> <span class="nx">JSBI</span><span class="p">.</span><span class="nx">BigInt</span><span class="p">(</span><span class="s2">&quot;123456789012345678901234567890&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">mybignum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JSBI</span><span class="p">.</span><span class="nb">BigInt</span><span class="p">(</span><span class="s2">&quot;123456789012345678901234567890&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="jsbi-compatible-functions">
-<h3>JSBI Compatible functions<a class="headerlink" href="#jsbi-compatible-functions" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="jsbi-compatible-functions">
+<h3>JSBI Compatible functions<a class="headerlink" href="#jsbi-compatible-functions" title="Permalink to this heading">¶</a></h3>
 <p>JSBI functions aspire to operate in a manner that mirrors the
 <a class="reference external" href="https://www.npmjs.com/package/jsbi">JSBI</a> library.  Please
 see that library for details.  Available commands include:</p>
@@ -1237,22 +1235,22 @@ see that library for details.  Available commands include:</p>
 <code class="docutils literal notranslate"><span class="pre">JSBI.LT()</span></code>, <code class="docutils literal notranslate"><span class="pre">JSBI.LE()</span></code>, <code class="docutils literal notranslate"><span class="pre">JSBI.GT()</span></code>, <code class="docutils literal notranslate"><span class="pre">JSBI.GE()</span></code>, <code class="docutils literal notranslate"><span class="pre">JSBI.ADD()</span></code>.</p>
 <p>Note that in rampart, <code class="docutils literal notranslate"><span class="pre">JSBI.BigInt().toString()</span></code> only accepts <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">16</span></code>
 as possible arguments, with <code class="docutils literal notranslate"><span class="pre">10</span></code> being the default.</p>
-</div>
-<div class="section" id="tosignedstring">
-<h3>toSignedString<a class="headerlink" href="#tosignedstring" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="tosignedstring">
+<h3>toSignedString<a class="headerlink" href="#tosignedstring" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">JSBI.BigInt().toSignedString()</span></code> will convert a BigInt into a
 string representing the equivalent signed number.  This differs from <code class="docutils literal notranslate"><span class="pre">JSBI.BigInt().toString()</span></code>
 only when used for a signed binary integer (using <code class="docutils literal notranslate"><span class="pre">JSBI.BigInt(num).toSignedString(2)</span></code>).</p>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">crypto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">JSBI</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">JSBI</span><span class="p">;</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">JSBI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">crypto</span><span class="p">.</span><span class="nx">JSBI</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">mybignum</span> <span class="o">=</span> <span class="nx">JSBI</span><span class="p">.</span><span class="nx">BigInt</span><span class="p">(</span><span class="s2">&quot;-256&quot;</span><span class="p">);</span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">mybignum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JSBI</span><span class="p">.</span><span class="nb">BigInt</span><span class="p">(</span><span class="s2">&quot;-256&quot;</span><span class="p">);</span>
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="nx">mybignum</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="w"> </span><span class="nx">mybignum</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="nx">mybignum</span><span class="p">.</span><span class="nx">toSignedString</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="w"> </span><span class="nx">mybignum</span><span class="p">.</span><span class="nx">toSignedString</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
 
 <span class="cm">/* expected output:</span>
 
@@ -1262,9 +1260,9 @@ only when used for a signed binary integer (using <code class="docutils literal 
 <span class="cm">*/</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
@@ -1285,7 +1283,7 @@ only when used for a signed binary integer (using <code class="docutils literal 
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Moat Crossing Systems.
+        &copy; Copyright 2023, Moat Crossing Systems.
 
     </p>
   </div>
@@ -1307,7 +1305,7 @@ only when used for a signed binary integer (using <code class="docutils literal 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -1315,10 +1313,10 @@ only when used for a signed binary integer (using <code class="docutils literal 
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script type="text/javascript" src="_static/documentation_options.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/sphinx_highlight.js"></script>
 
   
 

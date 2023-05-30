@@ -150,7 +150,12 @@ function parse_html_file(file, tofile){
     }
 
     var sections=hres.findClass("section");
-    
+    var altsection=0;
+    /* other versions of this theme replace '<div class="section"' with '<section id=' */
+    if(!sections.length) {
+        sections=hres.findTag("section").filterAttr('id');
+        altsection=1;
+    }   
     var els=[];
 
     function getSect(level, el)
@@ -161,10 +166,18 @@ function parse_html_file(file, tofile){
         var temp = body.findAttr("id=tempdiv");
         //copy our current section to temp div
         temp.append(el);
-        //get the copied section
-        var elcpy = temp.findClass("section").eq(0);
-        //remove subsections in the copy
-        elcpy.findClass("section").delete();
+
+        if(altsection){
+            //get the copied section
+            var elcpy = temp.findTag("section").eq(0);
+            //remove subsections in the copy
+            elcpy.findTag("section").delete();
+        } else {
+            //get the copied section
+            var elcpy = temp.findClass("section").eq(0);
+            //remove subsections in the copy
+            elcpy.findClass("section").delete();
+        }
         //remove the temp div
         temp.delete();
         return {
