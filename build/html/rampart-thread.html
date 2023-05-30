@@ -262,7 +262,7 @@ the <code class="docutils literal notranslate"><span class="pre">threadFunc</spa
 current event loop (in the thread in which <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code>
 was called).  It will be passed a single parameter, the return
 value of <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> - a delay, much like <a class="reference internal" href="rampart-main.html#settimeout"><span class="std std-ref">setTimeout() function</span></a>
+<li><p><code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> - a delay, similar to the <a class="reference internal" href="rampart-main.html#settimeout"><span class="std std-ref">setTimeout() function</span></a>,
 measured in milliseconds.  If omitted, the <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> <span class="green">Function</span>
 will execute immediately.</p></li>
 </ul>
@@ -275,6 +275,7 @@ will execute immediately.</p></li>
 <span class="kd">var</span><span class="w"> </span><span class="nx">notcopied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
 
 <span class="kd">function</span><span class="w"> </span><span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* var iscopied is available, var notcopied is not */</span>
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">myarg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -438,12 +439,10 @@ not affect the retrieved version.</p>
 <span class="p">});</span>
 
 <span class="nx">thr2</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+
 <span class="w">    </span><span class="c1">// wait a max of five seconds for &#39;mycopiedvar&#39; to be defined</span>
 <span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">retrieved_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;mycopiedvar&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">5000</span><span class="p">);</span>
-<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="nx">retrieved_var</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">);</span>
-<span class="w">        </span><span class="nx">retrieved_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;mycopiedvar&#39;</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
+
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside thread 2:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">retrieved_var</span><span class="p">);</span>
 <span class="p">});</span>
 

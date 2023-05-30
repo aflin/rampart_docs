@@ -82,7 +82,7 @@ thr.exec()
           was called).  It will be passed a single parameter, the return
           value of ``threadFunc``.
 
-        * ``threadDelay`` - a delay, much like :ref:`setTimeout() function <rampart-main:setTimeout()>`
+        * ``threadDelay`` - a delay, similar to the :ref:`setTimeout() function <rampart-main:setTimeout()>`\ ,
           measured in milliseconds.  If omitted, the ``threadFunc`` :green:`Function`
           will execute immediately.
 
@@ -98,6 +98,7 @@ thr.exec()
         var notcopied = true;
 
         function thrfunc(myarg) {
+            /* var iscopied is available, var notcopied is not */
             console.log("from inside the thread:", myarg);
             return myarg + 1;
         }
@@ -258,12 +259,10 @@ rampart.thread.get()
         });
 
         thr2.exec(function(){
+
             // wait a max of five seconds for 'mycopiedvar' to be defined
             var retrieved_var = rampart.thread.get('mycopiedvar', 5000);
-            while(!retrieved_var) {
-                rampart.utils.sleep(0.1);
-                retrieved_var = rampart.thread.get('mycopiedvar');
-            }
+
             console.log("from inside thread 2:", retrieved_var);
         });
 
