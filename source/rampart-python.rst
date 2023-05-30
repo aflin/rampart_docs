@@ -62,7 +62,7 @@ python.import()
 
         
     Return Value:
-        An :green:`Object` with the functions of the imported module.
+        An :green:`Object` with callable properties corresponding to the functions of the imported module.
 
     Example:
 
@@ -73,12 +73,6 @@ python.import()
         var pathlib = python.import('pathlib');
 
         var pvar = pathlib.PosixPath('./');
-
-    Caveats:
-
-        * The return :green:`Object` only returns functions exported by the
-          module.  Other variables are still available, but not directly
-          from JavaScript. See ... below.
 
 python.importString()
 ~~~~~~~~~~~~~~~~~~~~~
@@ -100,7 +94,7 @@ python.importString()
       error reporting.  Default is ``"module_from_string"``.
 
     Return Value:
-        An :green:`Object` with the functions of the imported module.
+        An :green:`Object` with callable properties corresponding to the functions of the imported module.
 
     Example:
 
@@ -137,7 +131,7 @@ python.importFile()
     * ``fileName`` is a :green:`String`, the path of the file to be imported.
 
     Return Value:
-        An :green:`Object` with the functions of the imported module.
+        An :green:`Object` with callable properties corresponding to the functions of the imported module.
 
 pvar.toString()
 ~~~~~~~~~~~~~~~
@@ -177,10 +171,12 @@ pvar.toValue()
     .. code-block:: javascript
     
         var python=require("rampart-python");
+        var printf = rampart.printf;
 
         var mymod = python.importString("/path/to/myscript.py");
 
         var pvar = mymod.makedict("mykey", ["val1", "val2"]);
+
         printf( "mykey = %s\nmykey.toValue=%3J\n",
             pvar.mykey.toString(), pvar.mykey.toValue() );
 
@@ -201,25 +197,27 @@ From Javascript to Python
     Variables passed to Python functions are automatically converted as follows:
 
     +-----------------------+------------------------------------------+
-    |* :green:`Number`:     | Float                                    |
+    |    JavaScript Type    | Python Type                              |
+    +=======================+==========================================+
+    |  :green:`Number`      | Float                                    |
     +-----------------------+------------------------------------------+
-    |* :green:`String`:     | String                                   |
+    |  :green:`String`      | String                                   |
     +-----------------------+------------------------------------------+
-    |* :green:`Array`:      | Tuple                                    |
+    |  :green:`Array`       | Tuple                                    |
     +-----------------------+------------------------------------------+
-    |* :green:`Object`:     | Dictionary                               |
+    |  :green:`Object`      | Dictionary                               |
     +-----------------------+------------------------------------------+
-    |* :green:`Buffer`:     | Bytes Object                             |
+    |  :green:`Buffer`      | Bytes Object                             |
     +-----------------------+------------------------------------------+
-    |* :green:`Date`:       | Datetime                                 |
+    |  :green:`Date`        | Datetime                                 |
     +-----------------------+------------------------------------------+
-    |* :green:`Undefined`:  | None                                     |
+    |  :green:`Undefined`   | None                                     |
     +-----------------------+------------------------------------------+
-    |* :green:`null`:       | None                                     |
+    |  :green:`null`        | None                                     |
     +-----------------------+------------------------------------------+
 
     Where possible, translations can be specified by creating an
-    :green:`Object` with ``pyType`` and ``value`` tags set.
+    :green:`Object` with ``pyType`` and ``value`` properties set.
 
     Example:
 
@@ -253,7 +251,7 @@ From Python to JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Translation of return values from Python are automatic when using
-    ``.toValue``.  For types which cannot be translated, a string
+    ``.toValue()``.  For types which cannot be translated, a string
     representation (same as ``.toString()``) will be returned instead.
 
     Example:
@@ -355,9 +353,15 @@ Python Named Arguments
 
         var comp1 = mymod.retvar({pyType: "complex", value: [1,2]});
         var comp2 = mymod.retvar({pyType: "complex", value: [3,4]});
-        var ret = mymod.add( {pyArgs: {a:comp1, b:comp2}});
+
+        var myNamedArgs = { pyArgs: {a:comp1, b:comp2} };
+
+        var ret = mymod.add( myNamedArgs );
         printf("%J\n", ret.toValue());
 
-        /* this is equivalent to calling with named variables in python:
-           add(a=comp1, b=comp2);
+        /* 
+           calling in JavaScript:
+               mymod.add( {pyArgs: {a:comp1, b:comp2} } );
+           is equivalent to calling with named arguments in python:
+               add(a=comp1, b=comp2);
         */

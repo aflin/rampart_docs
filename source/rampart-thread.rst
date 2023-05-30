@@ -328,7 +328,7 @@ rampart.thread.waitfor()
 
     Note:
         Unlike `rampart.thread.get()`_ above, this function will wait even
-        if ``varName`` is available and will return only when it changes or
+        if ``varName`` is defined and will return only when it changes or
         the ``timeOut`` is reached.
 
 Lock Functions
