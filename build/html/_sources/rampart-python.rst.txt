@@ -365,3 +365,61 @@ Python Named Arguments
            is equivalent to calling with named arguments in python:
                add(a=comp1, b=comp2);
         */
+
+Example Use Importing Data
+--------------------------
+
+    .. code-block:: javascript
+
+        var python = require('rampart-python');
+        var Sql = require('rampart-sql');
+        var printf = rampart.utils.printf;
+
+        /* create the rampart sql db*/
+        var sql = new Sql.init("./pytest-sql", true);
+
+        /* the sqlite db */
+        var dbfile="./test.db";
+
+        /* use python to create and connect to sqlite db */
+        var pysql = python.import('sqlite3');
+        var connection = pysql.connect(dbfile);
+        var cursor = connection.cursor();
+
+        /* create a test table */
+        cursor.execute("create table IF NOT EXISTS test(i int, i2 int);");
+
+        /* insert some test data into the db */
+        var itotal=0;
+        for (var i=0; i<100; i+=2) {
+            cursor.execute("insert into test values(?,?)", [i,   i+1]);
+        }
+
+        /* print out what we have */
+        cursor.execute("select * from test");
+        res = cursor.fetchall().toValue();
+        printf("Dump of sqlite table:\n%J\n", res);
+
+
+        /* create rampart sql table and copy data from sqlite */
+        sql.exec("create table test (i int, i2 int);");    
+        for (i=0;i<res.length;i++) {
+            sql.exec("insert into test values(?,?);", res[i]);
+        }
+
+        var res2 = sql.exec("select * from test", {returnType:"array", maxRows:-1});
+        printf("Dump of rampart sql table:\n%J\n", res2.rows);
+
+        /* output:
+            Dump of sqlite table:
+            [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[12,13],[14,15],[16,17],[18,19],[20,21],[22,23],[24,25],
+              [26,27],[28,29],[30,31],[32,33],[34,35],[36,37],[38,39],[40,41],[42,43],[44,45],[46,47],[48,49],
+              [50,51],[52,53],[54,55],[56,57],[58,59],[60,61],[62,63],[64,65],[66,67],[68,69],[70,71],[72,73],
+              [74,75],[76,77],[78,79],[80,81],[82,83],[84,85],[86,87],[88,89],[90,91],[92,93],[94,95],[96,97],[98,99]]
+            Dump of rampart sql table:
+            [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[12,13],[14,15],[16,17],[18,19],[20,21],[22,23],[24,25],
+              [26,27],[28,29],[30,31],[32,33],[34,35],[36,37],[38,39],[40,41],[42,43],[44,45],[46,47],[48,49],
+              [50,51],[52,53],[54,55],[56,57],[58,59],[60,61],[62,63],[64,65],[66,67],[68,69],[70,71],[72,73],
+              [74,75],[76,77],[78,79],[80,81],[82,83],[84,85],[86,87],[88,89],[90,91],[92,93],[94,95],[96,97],[98,99]]
+
+        */

@@ -404,7 +404,7 @@ thrlock.trylock()
 
         // ... while inside a threaded function
         
-        if(thrlock.lock())
+        if(thrlock.trylock())
         {
             /* critical section */
             thrlock.unlock();
