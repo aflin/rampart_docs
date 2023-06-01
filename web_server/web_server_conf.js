@@ -336,7 +336,8 @@ var serverpid=server.start(
 */
 
 fprintf(process.scriptPath+"/server.pid", "%d", serverpid);
-chown({user:serverConf.user, path:process.scriptPath+"/server.pid"});
+if(iam=='root')
+  chown({user:serverConf.user, path:process.scriptPath+"/server.pid"});
 
 sleep(0.5); //wait half a sec, so messages from forked server can print first in the case that logging is turned off.
 
