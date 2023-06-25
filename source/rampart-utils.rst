@@ -1203,6 +1203,48 @@ Where:
 Return Value:
    A JavaScript :green:`Date`.
 
+use
+'''
+
+Shortcut and alternative for importing modules with :ref:`require <rampart-main:Using the require Function to Import Modules>`\ .
+
+Usage:
+
+.. code-block:: javascript
+
+    rampart.globalize(rampart.utils);//put utils in the global namespace
+
+    var Sql = use.sql; //same as var Sql = require("rampart-sql");
+
+The ``use`` :green:`Object` is a proxy object which uses the property name referenced (here ``"sql``) and search for
+a module named ``"rampart-sql"``.  Failing that it will search for a module named (``"sql"``).  It will then call
+the :ref:`require <rampart-main:Using the require Function to Import Modules>` function to import and return that value.
+If no module can be found, it will throw an error.
+
+Return Value:
+    The exported module.
+
+load
+''''
+
+Same as `use`_ above except that the property name is also put in the global namespace.
+
+Example:
+
+.. code-block:: javascript
+
+    rampart.globalize(rampart.utils);//put utils in the global namespace
+
+    load.curl;  //same as var curl = require("rampart-curl");
+
+    var res = curl.fetch("http...");
+
+Caveat:
+    This cannot be used to load a module whose name contains illegal JavaScript variable name characters. Thus,
+    ``load["my@mod"]`` will not work since ``'@'`` is not legal in javaScript even though it is legal in a file name.
+    However ``'-'`` and ``'.'`` characters will be replaced with ``'_'``.  Thus, ``load["rampart-curl.so"]`` will 
+    load the Curl Module and put it in the global namespace similar to ``var rampart_curl_so = require("rampart-curl")``.
+
 File Handle Utilities
 """""""""""""""""""""
 
@@ -1251,7 +1293,7 @@ Pre-opened file handles:
       ``rampart-server`` module.  If not specified, or not loaded, same as
       ``rampart.utils.stderr``.
 
-   The ``rampart.utils.stdin`` handle includes the `fread`_\ (), `fgets`_\ () and `readLine`_\ () functions
+   The ``rampart.utils.stdin`` handle includes in its properties the `fread`_\ (), `fgets`_\ () and `readLine`_\ () functions
    while the other four include the `fprintf`_\ (), `fflush`_\ () and `fwrite`_\ () functions.
    Example:
 

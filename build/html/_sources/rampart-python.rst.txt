@@ -390,7 +390,6 @@ Example Use Importing Data
         cursor.execute("create table IF NOT EXISTS test(i int, i2 int);");
 
         /* insert some test data into the db */
-        var itotal=0;
         for (var i=0; i<100; i+=2) {
             cursor.execute("insert into test values(?,?)", [i,   i+1]);
         }
