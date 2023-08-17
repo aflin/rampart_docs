@@ -540,6 +540,14 @@ Example:
    'text'
    */
 
+Note:
+    If ``return_str`` is ``true`` and ``offsetPos`` and/or ``rLength`` are
+    set, the returned :green:`String` may be shortened to ensure that the
+    return value is a valid UTF-8 string.  If that behavior is not desired,
+    returning a :green:`Buffer` and converting to a string with, e.g.
+    `sprintf`_\ () or `bufferToString`_\ () will bypass the UTF-8
+    character/byte boundary check.
+
 
 trim
 ''''
@@ -1216,7 +1224,7 @@ Usage:
 
     var Sql = use.sql; //same as var Sql = require("rampart-sql");
 
-The ``use`` :green:`Object` is a proxy object which uses the property name referenced (here ``"sql``) and search for
+The ``use`` :green:`Object` is a proxy object which uses the property name referenced (here ``"sql``) and searches for
 a module named ``"rampart-sql"``.  Failing that it will search for a module named (``"sql"``).  It will then call
 the :ref:`require <rampart-main:Using the require Function to Import Modules>` function to import and return that value.
 If no module can be found, it will throw an error.
@@ -1235,15 +1243,20 @@ Example:
 
     rampart.globalize(rampart.utils);//put utils in the global namespace
 
-    load.curl;  //same as var curl = require("rampart-curl");
+    load.curl;  //same as global.curl = require("rampart-curl");
 
     var res = curl.fetch("http...");
+
+Note:
+    The file name of the module must be lowercase, while the variable name may be
+    mixed case.  Example: ``load.Sql;`` is equivalent to
+    ``global.Sql=require("rampart-sql");``.
 
 Caveat:
     This cannot be used to load a module whose name contains illegal JavaScript variable name characters. Thus,
     ``load["my@mod"]`` will not work since ``'@'`` is not legal in javaScript even though it is legal in a file name.
     However ``'-'`` and ``'.'`` characters will be replaced with ``'_'``.  Thus, ``load["rampart-curl.so"]`` will 
-    load the Curl Module and put it in the global namespace similar to ``var rampart_curl_so = require("rampart-curl")``.
+    load the Curl Module and put it in the global namespace similar to ``var rampart_curl_so = require("rampart-curl.so")``.
 
 File Handle Utilities
 """""""""""""""""""""

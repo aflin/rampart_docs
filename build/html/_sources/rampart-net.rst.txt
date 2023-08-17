@@ -7,7 +7,7 @@ Preface
 Acknowledgment
 ~~~~~~~~~~~~~~
 
-The rampart-cmark module makes extensive use of the 
+The rampart-net module makes extensive use of the 
 `libevent2 <https://libevent.org/>`_ library embedded in 
 the main rampart executable as well as the 
 `OpenSSL <https://www.openssl.org/>`_ library, imported from
@@ -156,7 +156,8 @@ socket.connect()
 socket.write()
 ~~~~~~~~~~~~~~
 
-    Write data to the server.
+    Write data to the server. The parameter can be a :green:`String` or a
+    :green:`Buffer`.
 
     .. code-block:: javascript
     
@@ -324,7 +325,24 @@ socket.setKeepAlive()
 
     Where ``enable`` is a :green:`Boolean` and the optional parameters are
     the same as in `socket.connect()`_\ .
-    
+
+socket.trigger()
+~~~~~~~~~~~~~~~~~~~~~ 
+
+    Trigger functions registered with `socket.on()`_ for a named event.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        socket.trigger(event[, argument]);
+
+    Where ``event`` is a :green:`String`, the name of an event registered with
+    `socket.on()`_\ , and ``argument`` is optionally an argument to pass to the
+    registered callbacks for the event.
+
+    Arbitarty events can be registered with `socket.on()`_\ , and then
+    called with this function.
 
 socket.bytesWritten
 ~~~~~~~~~~~~~~~~~~~
@@ -377,7 +395,7 @@ Other socket properties
     * ``_hostPort`` - :green:`Number`. Same as ``remotePort``
 
     * ``_hostAddrs`` - :green:`Object`. Host address used for this connection
-      returned from a call to `net.Resolve`_ by `socket.connect()`_ internally.
+      returned from a call to `new net.Resolve()`_ by `socket.connect()`_ internally.
 
     * ``sslCipher`` - :green:`String`.  If ``tls`` is true, the name of the
       openssl cipher being used for this connection.
@@ -860,7 +878,7 @@ resolver.resolve()
         ``resolver.resolve()`` may be called multiple times at any time, however
         each time an **anonymous** function is provided as the
         ``lookup_callback``, that additional callback will be run for each
-        "lookup" event.  However, duplicate **named** functions are only run
+        "lookup" event. Note that duplicate **named** functions are only run
         once per event.
 
         .. code-block:: javascript
@@ -979,7 +997,7 @@ net.resolve()
 
     Resolve a host name.  **This function is not asynchronous**.  The lookup
     will occur immediately, potentially before the event loop starts,
-    and wait for an answer.
+    and block further execution while waiting for an answer.
 
     Usage example:
 
@@ -1123,7 +1141,7 @@ net.createServer()
     Where
 
     * ``options`` is an :green:`Object` of options, the same as found in
-      ```new net.Server()`_ and `server.listen()`_ above.
+      `new net.Server()`_ and `server.listen()`_ above.
 
     * ``connection_callback`` is a :green:`Function`, the connection callback
       function.

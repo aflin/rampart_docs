@@ -316,10 +316,8 @@ rampart.thread.waitfor()
 
         * ``timeOut`` is a positive :green:`Number` in milliseconds.  If 
           provided, return ``undefined`` if the varable ``varName`` has not been
-          written to the clipboard within the given time return value would
-          be ``undefined``, `rampart.thread.waitfor()`_ below will be called
-          with ``varName`` and ``timeOut``.  The default value is ``-1``, or
-          wait indefinitely.
+          updated within the given time. If ``timeout`` is omitted, the
+          function will wait indefinely for the variable to be updated.
 
     Return Value: 
         A **copy** of the variable stored with `rampart.thread.put()`_ or

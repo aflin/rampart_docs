@@ -231,6 +231,11 @@ abbreviated version of the man page (written by Daniel Stenberg, et. al.).
 See `curl command line tool <https://linux.die.net/man/1/curl>`_ for a full
 description of each.  
 
+Note that the following options may also be set using camel case in place of
+``-`` and underscores for dots.  For example, ``cert-type`` and ``certType``,
+``user-agent`` and ``userAgent`` as well as ``http1.0`` and ``http1_0`` are all
+equivalent.
+
 Supported Options
 """""""""""""""""
 

@@ -230,7 +230,9 @@ From Javascript to Python
         def printvar(v):
             print( "%-30s %s" % (type(v), v))
         `;
+
         var mymod = python.importString(pyscript);
+
         mymod.printvar({pyType: "date",    value: 946713599999});
         mymod.printvar({pyType: "int",     value: "1234567800000000000000000000000000000000000000"});
         mymod.printvar({pyType: "list",    value: ["a", "b", "c"]});
@@ -265,6 +267,8 @@ From Python to JavaScript
         def retvar(v):
             return v
         `;
+
+        var mymod = python.importString(pyscript);
 
         var ret;
 

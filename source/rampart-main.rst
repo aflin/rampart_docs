@@ -1031,6 +1031,26 @@ Example:
 Note that this non-standard syntax is not available when using 
 :ref:`babel <babeljs>` below.
 
+Unescaped Literals
+""""""""""""""""""
+
+A **non-standard** (and unique to Rampart) shortcut syntax using triple
+backticks may be used in place of normal :green:`Strings` where ``\`` have
+no special meaning.  It also accepts multi-lined strings.
+
+Example:
+
+.. code-block:: javascript
+
+    var unescaped = ```here is a single backslash:
+    \
+    ```;
+    /* equiv to ""here is a single backslash:\n\\\n"; */
+
+Note that this non-standard syntax is not available when using 
+:ref:`babel <babeljs>` below.
+
+
 Duktape/Node.js Buffer Binding Extras
 """""""""""""""""""""""""""""""""""""
 

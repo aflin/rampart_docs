@@ -727,6 +727,15 @@ May be truncated if the file contains null characters.</p></td>
 <span class="cm">*/</span>
 </pre></div>
 </div>
+<dl class="simple">
+<dt>Note:</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">return_str</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">offsetPos</span></code> and/or <code class="docutils literal notranslate"><span class="pre">rLength</span></code> are
+set, the returned <span class="green">String</span> may be shortened to ensure that the
+return value is a valid UTF-8 string.  If that behavior is not desired,
+returning a <span class="green">Buffer</span> and converting to a string with, e.g.
+<a class="reference internal" href="#sprintf">sprintf</a>() or <a class="reference internal" href="#buffertostring">bufferToString</a>() will bypass the UTF-8
+character/byte boundary check.</p>
+</dd>
+</dl>
 </section>
 <section id="trim">
 <h3>trim<a class="headerlink" href="#trim" title="Permalink to this heading">¶</a></h3>
@@ -1298,7 +1307,7 @@ The default is <code class="docutils literal notranslate"><span class="pre">0</s
 <span class="kd">var</span><span class="w"> </span><span class="nx">Sql</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">use</span><span class="p">.</span><span class="nx">sql</span><span class="p">;</span><span class="w"> </span><span class="c1">//same as var Sql = require(&quot;rampart-sql&quot;);</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">use</span></code> <span class="green">Object</span> is a proxy object which uses the property name referenced (here <code class="docutils literal notranslate"><span class="pre">&quot;sql</span></code>) and search for
+<p>The <code class="docutils literal notranslate"><span class="pre">use</span></code> <span class="green">Object</span> is a proxy object which uses the property name referenced (here <code class="docutils literal notranslate"><span class="pre">&quot;sql</span></code>) and searches for
 a module named <code class="docutils literal notranslate"><span class="pre">&quot;rampart-sql&quot;</span></code>.  Failing that it will search for a module named (<code class="docutils literal notranslate"><span class="pre">&quot;sql&quot;</span></code>).  It will then call
 the <a class="reference internal" href="rampart-main.html#using-the-require-function-to-import-modules"><span class="std std-ref">require</span></a> function to import and return that value.
 If no module can be found, it will throw an error.</p>
@@ -1313,16 +1322,20 @@ If no module can be found, it will throw an error.</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span><span class="c1">//put utils in the global namespace</span>
 
-<span class="nx">load</span><span class="p">.</span><span class="nx">curl</span><span class="p">;</span><span class="w">  </span><span class="c1">//same as var curl = require(&quot;rampart-curl&quot;);</span>
+<span class="nx">load</span><span class="p">.</span><span class="nx">curl</span><span class="p">;</span><span class="w">  </span><span class="c1">//same as global.curl = require(&quot;rampart-curl&quot;);</span>
 
 <span class="kd">var</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;http...&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <dl class="simple">
+<dt>Note:</dt><dd><p>The file name of the module must be lowercase, while the variable name may be
+mixed case.  Example: <code class="docutils literal notranslate"><span class="pre">load.Sql;</span></code> is equivalent to
+<code class="docutils literal notranslate"><span class="pre">global.Sql=require(&quot;rampart-sql&quot;);</span></code>.</p>
+</dd>
 <dt>Caveat:</dt><dd><p>This cannot be used to load a module whose name contains illegal JavaScript variable name characters. Thus,
 <code class="docutils literal notranslate"><span class="pre">load[&quot;my&#64;mod&quot;]</span></code> will not work since <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> is not legal in javaScript even though it is legal in a file name.
 However <code class="docutils literal notranslate"><span class="pre">'-'</span></code> and <code class="docutils literal notranslate"><span class="pre">'.'</span></code> characters will be replaced with <code class="docutils literal notranslate"><span class="pre">'_'</span></code>.  Thus, <code class="docutils literal notranslate"><span class="pre">load[&quot;rampart-curl.so&quot;]</span></code> will
-load the Curl Module and put it in the global namespace similar to <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">rampart_curl_so</span> <span class="pre">=</span> <span class="pre">require(&quot;rampart-curl&quot;)</span></code>.</p>
+load the Curl Module and put it in the global namespace similar to <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">rampart_curl_so</span> <span class="pre">=</span> <span class="pre">require(&quot;rampart-curl.so&quot;)</span></code>.</p>
 </dd>
 </dl>
 </section>

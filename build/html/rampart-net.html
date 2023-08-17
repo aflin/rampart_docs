@@ -111,6 +111,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#socket-destroy">socket.destroy()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#socket-settimeout">socket.setTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#socket-setkeepalive">socket.setKeepAlive()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#socket-trigger">socket.trigger()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#socket-byteswritten">socket.bytesWritten</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#socket-bytesread">socket.bytesRead</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#other-socket-properties">Other socket properties</a></li>
@@ -226,7 +227,7 @@
 <h2>Preface<a class="headerlink" href="#preface" title="Permalink to this heading">¶</a></h2>
 <section id="acknowledgment">
 <h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this heading">¶</a></h3>
-<p>The rampart-cmark module makes extensive use of the
+<p>The rampart-net module makes extensive use of the
 <a class="reference external" href="https://libevent.org/">libevent2</a> library embedded in
 the main rampart executable as well as the
 <a class="reference external" href="https://www.openssl.org/">OpenSSL</a> library, imported from
@@ -356,7 +357,8 @@ numeric ip address.  No Default.</p></li>
 <section id="socket-write">
 <h3>socket.write()<a class="headerlink" href="#socket-write" title="Permalink to this heading">¶</a></h3>
 <blockquote>
-<div><p>Write data to the server.</p>
+<div><p>Write data to the server. The parameter can be a <span class="green">String</span> or a
+<span class="green">Buffer</span>.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span><span class="w"> </span><span class="nx">socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">net</span><span class="p">.</span><span class="nx">Socket</span><span class="p">();</span>
@@ -515,6 +517,21 @@ socket is connected.</p>
 the same as in <a class="reference internal" href="#socket-connect">socket.connect()</a>.</p>
 </div></blockquote>
 </section>
+<section id="socket-trigger">
+<h3>socket.trigger()<a class="headerlink" href="#socket-trigger" title="Permalink to this heading">¶</a></h3>
+<blockquote>
+<div><p>Trigger functions registered with <a class="reference internal" href="#socket-on">socket.on()</a> for a named event.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">socket</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="nx">event</span><span class="p">[,</span><span class="w"> </span><span class="nx">argument</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">event</span></code> is a <span class="green">String</span>, the name of an event registered with
+<a class="reference internal" href="#socket-on">socket.on()</a>, and <code class="docutils literal notranslate"><span class="pre">argument</span></code> is optionally an argument to pass to the
+registered callbacks for the event.</p>
+<p>Arbitarty events can be registered with <a class="reference internal" href="#socket-on">socket.on()</a>, and then
+called with this function.</p>
+</div></blockquote>
+</section>
 <section id="socket-byteswritten">
 <h3>socket.bytesWritten<a class="headerlink" href="#socket-byteswritten" title="Permalink to this heading">¶</a></h3>
 <blockquote>
@@ -556,7 +573,7 @@ before <code class="docutils literal notranslate"><span class="pre">socket.conne
 (<code class="docutils literal notranslate"><span class="pre">ipv4</span></code> or <code class="docutils literal notranslate"><span class="pre">ipv6</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> - <span class="green">Number</span>. Same as <code class="docutils literal notranslate"><span class="pre">remotePort</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Object</span>. Host address used for this connection
-returned from a call to <a href="#id4"><span class="problematic" id="id5">`net.Resolve`_</span></a> by <a class="reference internal" href="#socket-connect">socket.connect()</a> internally.</p></li>
+returned from a call to <a class="reference internal" href="#new-net-resolve">new net.Resolve()</a> by <a class="reference internal" href="#socket-connect">socket.connect()</a> internally.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sslCipher</span></code> - <span class="green">String</span>.  If <code class="docutils literal notranslate"><span class="pre">tls</span></code> is true, the name of the
 openssl cipher being used for this connection.</p></li>
 </ul>
@@ -1024,7 +1041,7 @@ event callback.</p></li>
 <dt>NOTE:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">resolver.resolve()</span></code> may be called multiple times at any time, however
 each time an <strong>anonymous</strong> function is provided as the
 <code class="docutils literal notranslate"><span class="pre">lookup_callback</span></code>, that additional callback will be run for each
-“lookup” event.  However, duplicate <strong>named</strong> functions are only run
+“lookup” event. Note that duplicate <strong>named</strong> functions are only run
 once per event.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
@@ -1140,7 +1157,7 @@ event is <code class="docutils literal notranslate"><span class="pre">lookup</sp
 <blockquote>
 <div><p>Resolve a host name.  <strong>This function is not asynchronous</strong>.  The lookup
 will occur immediately, potentially before the event loop starts,
-and wait for an answer.</p>
+and block further execution while waiting for an answer.</p>
 <p>Usage example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">net</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
@@ -1271,7 +1288,7 @@ function.</p></li>
 <p>Where</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> of options, the same as found in
-<a href="#id2"><span class="problematic" id="id3">``</span></a><a class="reference internal" href="#new-net-server">new net.Server()</a> and <a class="reference internal" href="#server-listen">server.listen()</a> above.</p></li>
+<a class="reference internal" href="#new-net-server">new net.Server()</a> and <a class="reference internal" href="#server-listen">server.listen()</a> above.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">connection_callback</span></code> is a <span class="green">Function</span>, the connection callback
 function.</p></li>
 </ul>
