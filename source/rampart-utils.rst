@@ -687,6 +687,14 @@ Where:
       :green:`Buffer` rather than a :green:`String`.  Useful for capturing
       binary data output.
 
+   *  ``args`` - :green:`Array`.  An array of arguments to be passed to the
+      executable.  If arguments are also given as parameters to ``exec()``,
+      the :green:`Array` of arguments are appended.
+
+   *  ``changeDirectory`` - :green:`String`.  Change the working directory
+      to value before executing.
+
+   *  ``cd`` - Alias for ``changeDirectory`` .
 
 *  ``argn`` - :green:`String`/:green:`Number`/:green:`Object`/:green:`Boolean`/:green:`Null` - Arguments to be passed to
    ``command``.  Non-Strings are converted to a :green:`String` (e.g. "true", "null",
