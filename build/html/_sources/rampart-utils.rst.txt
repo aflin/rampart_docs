@@ -373,6 +373,10 @@ Caveats:
 
 *  If ``json`` was used, numeric values will be preserved as :green:`Numbers`.
 
+*  If the querystring contains object like notation (e.g.
+   ``?myvar[mykey]=myval&myvar[mykey2]=myval2``), it will be converted into
+   an :green:`Object`;
+
 Example:
 
 .. code-block:: javascript
@@ -608,6 +612,11 @@ Return Value:
       "atime":             Date,
       "mtime":             Date,
       "ctime":             Date,
+      "readable":          Boolean,
+      "writable":          Boolean,
+      "executable":        Boolean,
+      "owner":             String,
+      "group":             String,
       "isBlockDevice":     Boolean,
       "isCharacterDevice": Boolean,
       "isDirectory":       Boolean,
@@ -642,6 +651,7 @@ Same as `stat`_\ () except if ``file`` is a link, return information about the l
 Return Value:
    Same as `stat`_\ () with the addition of the property
    ``isSymbolicLink`` which is set ``true`` if the file is a symbolic link.
+   ``readable`` and ``writable`` refer to the link, not the target.
 
 exec
 ''''
@@ -687,6 +697,14 @@ Where:
       :green:`Buffer` rather than a :green:`String`.  Useful for capturing
       binary data output.
 
+   *  ``args`` - :green:`Array`.  An array of arguments to be passed to the
+      executable.  If arguments are also given as parameters to ``exec()``,
+      the :green:`Array` of arguments are appended.
+
+   *  ``changeDirectory`` - :green:`String`.  Change the working directory
+      to value before executing.
+
+   *  ``cd`` - Alias for ``changeDirectory`` .
 
 *  ``argn`` - :green:`String`/:green:`Number`/:green:`Object`/:green:`Boolean`/:green:`Null` - Arguments to be passed to
    ``command``.  Non-Strings are converted to a :green:`String` (e.g. "true", "null",
@@ -742,6 +760,83 @@ Example:
       "pid": 24658
    }
    */
+
+forkpty
+'''''''
+
+Run an executable file in a pseudo-terminal with unbuffered IO.  IO is
+performed asynchronously in the event loop of the current thread.
+
+Usage:
+
+.. code-block:: javascript
+
+   var pty = rampart.utils.forkpty(command [, options] [,arg1, arg2, ..., argn] );
+
+Where:
+
+*  ``command`` - :green:`String`. An absolute path to an executable or the name of
+   an executable that may be found in the current ``PATH`` environment variable.
+
+*  ``options`` - :green:`Object`. Containing the following properties:
+
+   *  ``env`` - :green:`Object`. Key/value pairs to be used as environment variables for the executed process.
+
+   *  ``appendEnv`` - :green:`Boolean`.  Only valid if ``env`` is provided.  If ``false`` (the default),
+      only the environment variables given in ``env`` will be available.  If
+      ``true``, variables provided in ``env`` will be appended to :ref:`process.env <rampart-main:env>`.
+      Duplicate keys in :ref:`process.env <rampart-main:env>` are replaced with the value from ``env``.
+
+*  ``argn`` - :green:`String`/:green:`Number`/:green:`Object`/:green:`Boolean`/:green:`Null` - Arguments to be passed to
+   ``command``.  Non-Strings are converted to a :green:`String` (e.g. "true", "null",
+   "42" or for :green:`Object`, the equivalent of ``JSON.stringify(obj)``).
+
+Return Value:
+   :green:`Object`.  Properties as follows:
+
+   * ``read`` - :green:`Function`.  Read data from the stdout of the executed
+     process.
+
+      .. code-block:: javascript
+
+         pty.read([buffersize [, maxread]] [, retstring]);
+
+      Where: ``buffersize`` defaults to ``4096``, ``maxread`` defaults to
+      unlimited and ``retstring`` (default ``false`` for
+      :green:`Buffer`) is a :green:`Boolean` - whether the return
+      contents should be converted to :green:`String`.
+
+   * ``write`` - :green:`Function`. Write data to the stdin of the executed
+     process.
+
+     .. code-block:: javascript
+
+        pty.write([buffer|string]);
+
+   * ``resize`` - :green:`Function`. Set a new size for the pseudo-terminal.
+
+       .. code-block:: javascript
+
+          pty.resize(width, height);
+
+      Where: ``width`` and ``height`` are :green:`Numbers` - number of
+      character rows and columns.
+
+
+   * ``on`` - :green:`Function`:  Two events are currently allowed:
+     ``"data"`` and ``"close"``.  If, ``"data"`` is specified, when new data
+     is available to be read, the provided callback function will be called.
+     If ``"close"`` is specified, the provided callback function will be
+     called when the process exits.
+
+     .. code-block:: javascript
+
+	pty.on(['data'|'close'], callback);  
+
+
+   An example for using ``forkpty()`` with websockets to run a terminal in
+   a web browser can be found 
+   `here <https://github.com/aflin/rampart/tree/main/unsupported_extras/forkpty-term>`_\ .
 
 kill
 ''''
@@ -1042,11 +1137,15 @@ Where:
   will only update the timestamp, and will not create a non-existing
   ``file``.
 
-* ``setAccess`` is a :green:`Boolean` (default ``true``).  Whether to update
-  access timestamp of file.
+* ``setAccess`` is a :green:`Boolean` (default ``true``), a :green:`Date Object`,
+  or an :green:`Number` (seconds since unix epoch).  Update access time of
+  the file to specified date or current date if ``true``.  Do not update if
+  ``false``.
 
-* ``setModify`` is a :green:`Boolean` (default ``true``).  Whether to update
-  modification timestamp of file.
+* ``setModify`` is a :green:`Boolean` (default ``true``), a :green:`Date Object`,
+  or an :green:`Number` (seconds since unix epoch).  Update modification time of
+  the file to specified date or current date if ``true``.  Do not update if
+  ``false``.
 
 * ``referenceFile`` is a :green:`String`.  If specified, the named file's access and
   modification timestamps will be used rather than the current time/date.

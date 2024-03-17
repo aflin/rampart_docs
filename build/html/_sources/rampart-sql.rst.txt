@@ -67,6 +67,7 @@ Return value:
         rexFile:      {_func:true},
         re2File:      {_func:true},
         searchFile:   {_func:true}
+        searchText:   {_func:true}
     }
 
 The returned :green:`Object` contains :green:`Functions` that can be split into two groups:
@@ -3080,3 +3081,16 @@ Example:
    ]
    */
 
+searchText()
+~~~~~~~~~~~~
+
+The same as the ``searchFile`` function except the text to be searched is given in a 
+:green:`String` or :green:`Buffer` and returns the matching portions of that :green:`String` or
+:green:`Buffer`.
+
+Usage:
+
+.. code-block:: javascript
+
+   var Sql = require("rampart-sql");
+   var res = Sql.searchText(query, text [, options]);

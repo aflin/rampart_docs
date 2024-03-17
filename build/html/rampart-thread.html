@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Rampart Thread Functions &mdash; Rampart 0.2.0 documentation</title>
@@ -83,7 +82,7 @@
           
             
             
-                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+                <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
@@ -191,23 +190,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="rampart-thread-functions">
-<h1>Rampart Thread Functions<a class="headerlink" href="#rampart-thread-functions" title="Permalink to this heading">¶</a></h1>
-<section id="preface">
-<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this heading">¶</a></h2>
-<section id="license">
-<h3>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h3>
+  <div class="section" id="rampart-thread-functions">
+<h1>Rampart Thread Functions<a class="headerlink" href="#rampart-thread-functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
 <p>The rampart.thread functions are built into the rampart executable
 and as such are covered under the same MIT license.</p>
-</section>
-<section id="what-does-it-do">
-<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
 <p>The rampart.thread functions provides utility functions to create threads
 from within JavaScript and run functions asynchronously in them, as well as
 share variables between them.</p>
-</section>
-<section id="how-does-it-work">
-<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
 <p>The rampart.thread functions allow for the creation of native POSIX threads
 which when created, are paired with a separate JavaScript interpreter and event
 loop.  When created the event loop starts immediately and functions can be
@@ -217,78 +216,78 @@ be provided directly or by putting and getting from an internally maintained
 clipboard.  Global variables which are defined and set <strong>when the thread is
 created</strong> will be copied to the stack of the newly created JavaScript
 interpreter.</p>
-</section>
-</section>
-<section id="thread-functions">
-<h2>Thread Functions<a class="headerlink" href="#thread-functions" title="Permalink to this heading">¶</a></h2>
-<section id="new-rampart-thread">
-<h3>new rampart.thread()<a class="headerlink" href="#new-rampart-thread" title="Permalink to this heading">¶</a></h3>
+</div>
+</div>
+<div class="section" id="thread-functions">
+<h2>Thread Functions<a class="headerlink" href="#thread-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-rampart-thread">
+<h3>new rampart.thread()<a class="headerlink" href="#new-rampart-thread" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code> function creates the new thread.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>An <span class="green">Object</span> with two functions: <cite>exec</cite> and <cite>close</cite>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with two functions: <cite>exec</cite> and <cite>close</cite>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="thr-exec">
-<h3>thr.exec()<a class="headerlink" href="#thr-exec" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="thr-exec">
+<h3>thr.exec()<a class="headerlink" href="#thr-exec" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Execute a function in a thread.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
 
 <span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
 
-<span class="w">    </span><span class="cm">/* or */</span>
+    <span class="cm">/* or */</span>
 
-<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">threadFunc</span><span class="p">[,</span><span class="w"> </span><span class="nx">threadArg</span><span class="p">[,</span><span class="w"> </span><span class="nx">callbackFunc</span><span class="p">[,</span><span class="w"> </span><span class="nx">threadDelay</span><span class="p">]]]);</span>
+<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">threadFunc</span><span class="p">[,</span> <span class="nx">threadArg</span><span class="p">[,</span> <span class="nx">callbackFunc</span><span class="p">[,</span> <span class="nx">threadDelay</span><span class="p">]]]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> - an <span class="green">Object</span> with optional keys <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>,
-<code class="docutils literal notranslate"><span class="pre">threadArg</span></code>, <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> and/or <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> - a <span class="green">Function</span> that will be executed in the
-thread.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">threadArg</span></code> - a single variable of any type that will be passed to
-the <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> <span class="green">Function</span> as its sole parameter.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> - a <span class="green">Function</span> that will be executed in the
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> - an <span class="green">Object</span> with optional keys <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">threadArg</span></code>, <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> and/or <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> - a <span class="green">Function</span> that will be executed in the
+thread.</li>
+<li><code class="docutils literal notranslate"><span class="pre">threadArg</span></code> - a single variable of any type that will be passed to
+the <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> <span class="green">Function</span> as its sole parameter.</li>
+<li><code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> - a <span class="green">Function</span> that will be executed in the
 current event loop (in the thread in which <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code>
 was called).  It will be passed a single parameter, the return
-value of <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> - a delay, similar to the <a class="reference internal" href="rampart-main.html#settimeout"><span class="std std-ref">setTimeout() function</span></a>,
+value of <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> - a delay, similar to the <a class="reference internal" href="rampart-main.html#settimeout"><span class="std std-ref">setTimeout() function</span></a>,
 measured in milliseconds.  If omitted, the <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> <span class="green">Function</span>
-will execute immediately.</p></li>
+will execute immediately.</li>
 </ul>
 </div></blockquote>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">iscopied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">iscopied</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
 
-<span class="kd">var</span><span class="w"> </span><span class="nx">thr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
 
-<span class="kd">var</span><span class="w"> </span><span class="nx">notcopied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">notcopied</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
 
-<span class="kd">function</span><span class="w"> </span><span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="cm">/* var iscopied is available, var notcopied is not */</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">myarg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="kd">function</span> <span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* var iscopied is available, var notcopied is not */</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">myarg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">function</span><span class="w"> </span><span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
+<span class="kd">function</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">({</span>
-<span class="w">    </span><span class="nx">threadFunc</span><span class="o">:</span><span class="w"> </span><span class="nx">thrfunc</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">threadArg</span><span class="o">:</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">callbackFunc</span><span class="o">:</span><span class="w"> </span><span class="nx">callback</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">threadDelay</span><span class="o">:</span><span class="w"> </span><span class="mf">1000</span>
+    <span class="nx">threadFunc</span><span class="o">:</span> <span class="nx">thrfunc</span><span class="p">,</span>
+    <span class="nx">threadArg</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">callbackFunc</span><span class="o">:</span> <span class="nx">callback</span><span class="p">,</span>
+    <span class="nx">threadDelay</span><span class="o">:</span> <span class="mi">1000</span>
 <span class="p">});</span>
 
 <span class="cm">/* or */</span>
@@ -302,41 +301,41 @@ will execute immediately.</p></li>
 <span class="cm">*/</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
 <p>Caveats:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Threads may be created in inside threads, but they must be called
-from within the thread in which they were created.</p></li>
-<li><p>Only global variables are copied to threads at the time of
+<li>Threads may be created in inside threads, but they must be called
+from within the thread in which they were created.</li>
+<li>Only global variables are copied to threads at the time of
 creation.  The variable <code class="docutils literal notranslate"><span class="pre">iscopied</span></code> in the example above will be copied and
 available to the thread as a global variable.  The variable
 <code class="docutils literal notranslate"><span class="pre">notcopied</span></code> will not be copied since it was set after the thread was
-created.</p></li>
+created.</li>
 </ul>
 </div></blockquote>
 </div></blockquote>
-</section>
-<section id="thr-close">
-<h3>thr.close()<a class="headerlink" href="#thr-close" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="thr-close">
+<h3>thr.close()<a class="headerlink" href="#thr-close" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Close a thread, releasing its resources.</p>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
 
-<span class="kd">function</span><span class="w"> </span><span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">myarg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="kd">function</span> <span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">myarg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">function</span><span class="w"> </span><span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
+<span class="kd">function</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">thrfunc</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nx">callback</span><span class="p">,</span><span class="w"> </span><span class="mf">1000</span><span class="p">);</span>
+<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">thrfunc</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nx">callback</span><span class="p">,</span> <span class="mi">1000</span><span class="p">);</span>
 
 <span class="cm">/*</span>
 <span class="cm">    after one second, output will be:</span>
@@ -352,98 +351,98 @@ created.</p></li>
 <span class="cm">   in use can free up significant resources                       */</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="thr-getid">
-<h3>thr.getId()<a class="headerlink" href="#thr-getid" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="thr-getid">
+<h3>thr.getId()<a class="headerlink" href="#thr-getid" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Get a thread’s unique identification number.  This number is used to
 identify a thread, and may be reused after the thread is closed.</p>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>A <span class="green">Number</span>, the positive integer for identifying the thread.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Number</span>, the positive integer for identifying the thread.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="rampart-thread-put">
-<h3>rampart.thread.put()<a class="headerlink" href="#rampart-thread-put" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="rampart-thread-put">
+<h3>rampart.thread.put()<a class="headerlink" href="#rampart-thread-put" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Put a named variable to the clipboard.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">varName</span><span class="p">,</span><span class="w"> </span><span class="nx">varValue</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">varName</span><span class="p">,</span> <span class="nx">varValue</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key to later retrieve
-<code class="docutils literal notranslate"><span class="pre">varValue</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">varValue</span></code> is any normal JavaScript variable.</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key to later retrieve
+<code class="docutils literal notranslate"><span class="pre">varValue</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">varValue</span></code> is any normal JavaScript variable.</li>
 </ul>
 </div></blockquote>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="rampart-thread-get">
-<h3>rampart.thread.get()<a class="headerlink" href="#rampart-thread-get" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="rampart-thread-get">
+<h3>rampart.thread.get()<a class="headerlink" href="#rampart-thread-get" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Get a named variable from the clipboard.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">myval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span><span class="w"> </span><span class="nx">timeOut</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myval</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span> <span class="nx">timeOut</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
-<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is a positive <span class="green">Number</span>.  If provided and the
+<li><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is a positive <span class="green">Number</span>.  If provided and the
 return value would be <code class="docutils literal notranslate"><span class="pre">undefined</span></code>,  <a class="reference internal" href="#rampart-thread-waitfor">rampart.thread.waitfor()</a>
-below will be called with <code class="docutils literal notranslate"><span class="pre">varName</span></code> and <code class="docutils literal notranslate"><span class="pre">timeOut</span></code>.</p></li>
+below will be called with <code class="docutils literal notranslate"><span class="pre">varName</span></code> and <code class="docutils literal notranslate"><span class="pre">timeOut</span></code>.</li>
 </ul>
 </div></blockquote>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</p>
-</dd>
-<dt>Caveat:</dt><dd><p>The variable retrieved is a deep copy of the variable put.  If
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</dd>
+<dt>Caveat:</dt>
+<dd>The variable retrieved is a deep copy of the variable put.  If
 the original variable that was put is altered, the changes will
-not affect the retrieved version.</p>
-</dd>
+not affect the retrieved version.</dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thr1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">thr2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">thr2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
 
-<span class="kd">function</span><span class="w"> </span><span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside thread 1:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
-<span class="w">    </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;mycopiedvar&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">10</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">myarg</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="kd">function</span> <span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside thread 1:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;mycopiedvar&#39;</span><span class="p">,</span> <span class="nx">myarg</span> <span class="o">+</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">myarg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">function</span><span class="w"> </span><span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">myarg</span><span class="p">);</span>
+<span class="kd">function</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="nx">thr1</span><span class="p">.</span><span class="nx">exec</span><span class="p">({</span>
-<span class="w">    </span><span class="nx">threadFunc</span><span class="o">:</span><span class="w"> </span><span class="nx">thrfunc</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">threadArg</span><span class="o">:</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">callbackFunc</span><span class="o">:</span><span class="w"> </span><span class="nx">callback</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">threadDelay</span><span class="o">:</span><span class="w"> </span><span class="mf">1000</span>
+    <span class="nx">threadFunc</span><span class="o">:</span> <span class="nx">thrfunc</span><span class="p">,</span>
+    <span class="nx">threadArg</span><span class="o">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">callbackFunc</span><span class="o">:</span> <span class="nx">callback</span><span class="p">,</span>
+    <span class="nx">threadDelay</span><span class="o">:</span> <span class="mi">1000</span>
 <span class="p">});</span>
 
 <span class="nx">thr2</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
 
-<span class="w">    </span><span class="c1">// wait a max of five seconds for &#39;mycopiedvar&#39; to be defined</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">retrieved_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;mycopiedvar&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">5000</span><span class="p">);</span>
+    <span class="c1">// wait a max of five seconds for &#39;mycopiedvar&#39; to be defined</span>
+    <span class="kd">var</span> <span class="nx">retrieved_var</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;mycopiedvar&#39;</span><span class="p">,</span> <span class="mi">5000</span><span class="p">);</span>
 
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside thread 2:&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">retrieved_var</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside thread 2:&quot;</span><span class="p">,</span> <span class="nx">retrieved_var</span><span class="p">);</span>
 <span class="p">});</span>
 
 <span class="cm">/* output:</span>
@@ -458,110 +457,109 @@ not affect the retrieved version.</p>
 </pre></div>
 </div>
 </div></blockquote>
-</section>
-<section id="rampart-thread-del">
-<h3>rampart.thread.del()<a class="headerlink" href="#rampart-thread-del" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="rampart-thread-del">
+<h3>rampart.thread.del()<a class="headerlink" href="#rampart-thread-del" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Get a named variable and remove it from the clipboard.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">myval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span><span class="w"> </span><span class="nx">timeOut</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myval</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span> <span class="nx">timeOut</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
-<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is a positive <span class="green">Number</span>.  If provided and the
+<li><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is a positive <span class="green">Number</span>.  If provided and the
 return value would be <code class="docutils literal notranslate"><span class="pre">undefined</span></code>,  <a class="reference internal" href="#rampart-thread-waitfor">rampart.thread.waitfor()</a>
-below will be called with <code class="docutils literal notranslate"><span class="pre">varName</span></code> and <code class="docutils literal notranslate"><span class="pre">timeOut</span></code>.</p></li>
+below will be called with <code class="docutils literal notranslate"><span class="pre">varName</span></code> and <code class="docutils literal notranslate"><span class="pre">timeOut</span></code>.</li>
 </ul>
 </div></blockquote>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="rampart-thread-waitfor">
-<h3>rampart.thread.waitfor()<a class="headerlink" href="#rampart-thread-waitfor" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="rampart-thread-waitfor">
+<h3>rampart.thread.waitfor()<a class="headerlink" href="#rampart-thread-waitfor" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Wait for the named variable to be updated by another thread and return
 it.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">myval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">waitfor</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span><span class="w"> </span><span class="nx">timeOut</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myval</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">waitfor</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span> <span class="nx">timeOut</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
-<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is a positive <span class="green">Number</span> in milliseconds.  If
+<li><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is a positive <span class="green">Number</span> in milliseconds.  If
 provided, return <code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the varable <code class="docutils literal notranslate"><span class="pre">varName</span></code> has not been
 updated within the given time. If <code class="docutils literal notranslate"><span class="pre">timeout</span></code> is omitted, the
-function will wait indefinely for the variable to be updated.</p></li>
+function will wait indefinely for the variable to be updated.</li>
 </ul>
 </div></blockquote>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> or
-<code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</p>
-</dd>
-<dt>Note:</dt><dd><p>Unlike <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a> above, this function will wait even
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> or
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</dd>
+<dt>Note:</dt>
+<dd>Unlike <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a> above, this function will wait even
 if <code class="docutils literal notranslate"><span class="pre">varName</span></code> is defined and will return only when it changes or
-the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</p>
-</dd>
+the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</dd>
 </dl>
 </div></blockquote>
-</section>
-</section>
-<section id="lock-functions">
-<h2>Lock Functions<a class="headerlink" href="#lock-functions" title="Permalink to this heading">¶</a></h2>
-<section id="new-rampart-lock">
-<h3>new rampart.lock()<a class="headerlink" href="#new-rampart-lock" title="Permalink to this heading">¶</a></h3>
+</div>
+</div>
+<div class="section" id="lock-functions">
+<h2>Lock Functions<a class="headerlink" href="#lock-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-rampart-lock">
+<h3>new rampart.lock()<a class="headerlink" href="#new-rampart-lock" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><blockquote>
-<div><p>Calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.lock()</span></code> function creates a new
+<div>Calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.lock()</span></code> function creates a new
 <a class="reference external" href="https://linux.die.net/man/3/pthread_mutex_lock">POSIX backed mutex</a>
 which can be used to isolate critical sections of code running in
-multiple threads.</p>
-</div></blockquote>
+multiple threads.</div></blockquote>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thrlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thrlock</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>An <span class="green">Object</span> with two functions: <cite>lock</cite> and <cite>unlock</cite>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with two functions: <cite>lock</cite> and <cite>unlock</cite>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="thrlock-lock">
-<h3>thrlock.lock()<a class="headerlink" href="#thrlock-lock" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="thrlock-lock">
+<h3>thrlock.lock()<a class="headerlink" href="#thrlock-lock" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Lock the mutex referenced by <code class="docutils literal notranslate"><span class="pre">thrlock</span></code>.  If the mutex is not locked,
 a lock will be obtained.  If the mutex is locked in another thread,
 execution in the current thread will be paused until the other thread
 calls <a class="reference internal" href="#thrlock-unlock">thrlock.unlock()</a> and a lock will be obtained.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thrlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thrlock</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 
 <span class="c1">// ... while inside a threaded function</span>
 
 <span class="nx">thrlock</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="thrlock-unlock">
-<h3>thrlock.unlock()<a class="headerlink" href="#thrlock-unlock" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="thrlock-unlock">
+<h3>thrlock.unlock()<a class="headerlink" href="#thrlock-unlock" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Unlock the mutex referenced by <code class="docutils literal notranslate"><span class="pre">thrlock</span></code>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thrlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thrlock</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 
 <span class="c1">// ... while inside a threaded function</span>
 
@@ -570,91 +568,91 @@ calls <a class="reference internal" href="#thrlock-unlock">thrlock.unlock()</a> 
 <span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="thrlock-trylock">
-<h3>thrlock.trylock()<a class="headerlink" href="#thrlock-trylock" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="thrlock-trylock">
+<h3>thrlock.trylock()<a class="headerlink" href="#thrlock-trylock" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Same as <cite>thrlock.lock()</cite> except it always returns immediatedly.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thrlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thrlock</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 
 <span class="c1">// ... while inside a threaded function</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">thrlock</span><span class="p">.</span><span class="nx">trylock</span><span class="p">())</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="cm">/* critical section */</span>
-<span class="w">    </span><span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
-<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="cm">/* do something else */</span>
+    <span class="cm">/* critical section */</span>
+    <span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="cm">/* do something else */</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<dl class="simple">
-<dt>Return Value:</dt><dd><p>A <span class="green">Boolean</span>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the lock was obtained and <code class="docutils literal notranslate"><span class="pre">false</span></code>
-if not.</p>
-</dd>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Boolean</span>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the lock was obtained and <code class="docutils literal notranslate"><span class="pre">false</span></code>
+if not.</dd>
 </dl>
 </div></blockquote>
-</section>
-<section id="lock-caveats">
-<h3>Lock Caveats<a class="headerlink" href="#lock-caveats" title="Permalink to this heading">¶</a></h3>
+</div>
+<div class="section" id="lock-caveats">
+<h3>Lock Caveats<a class="headerlink" href="#lock-caveats" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
-<li><p>A mutex locked in a thread must be unlocked in the same thread.</p></li>
-<li><p>A <code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code> should be created before the threads in which it
+<li>A mutex locked in a thread must be unlocked in the same thread.</li>
+<li>A <code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code> should be created before the threads in which it
 will be used are created so that the <code class="docutils literal notranslate"><span class="pre">thrlock</span></code> variable is copied to
-each thread.</p></li>
-<li><p>Normal operations do not require explicit locking using
+each thread.</li>
+<li>Normal operations do not require explicit locking using
 <code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code>.  However updating variables on the clipboard might
-require using a lock.</p></li>
+require using a lock.</li>
 </ul>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span><span class="w"> </span><span class="nx">thread</span><span class="o">=</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thread</span><span class="o">=</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">;</span>
 
-<span class="kd">var</span><span class="w"> </span><span class="nx">thrlock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">thrlock</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 
-<span class="kd">var</span><span class="w"> </span><span class="nx">thr1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">thread</span><span class="p">();</span>
-<span class="kd">var</span><span class="w"> </span><span class="nx">thr2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">thread</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">thr1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">thread</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">thr2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">thread</span><span class="p">();</span>
 
-<span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
+<span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 
-<span class="nx">thr1</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span>
+<span class="nx">thr1</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="mf">50</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">thrlock</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+    <span class="k">for</span><span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="mi">50</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">thrlock</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 
-<span class="w">        </span><span class="nx">i</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="nx">i</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="p">);</span>
+        <span class="nx">i</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">);</span>
+        <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
+        <span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">);</span>
 
-<span class="w">        </span><span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
-<span class="w">    </span><span class="p">}</span>
+        <span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
+    <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">thr2</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">i</span><span class="p">,</span><span class="w"> </span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span>
+<span class="nx">thr2</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">&lt;</span><span class="mf">50</span><span class="p">;</span><span class="w"> </span><span class="nx">j</span><span class="o">++</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nx">thrlock</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
+    <span class="k">for</span><span class="p">(</span><span class="nx">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">j</span><span class="o">&lt;</span><span class="mi">50</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nx">thrlock</span><span class="p">.</span><span class="nx">lock</span><span class="p">();</span>
 
-<span class="w">        </span><span class="nx">i</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="nx">i</span><span class="o">++</span><span class="p">;</span>
-<span class="w">        </span><span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="p">);</span>
+        <span class="nx">i</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">);</span>
+        <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
+        <span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">);</span>
 
-<span class="w">        </span><span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
-<span class="w">    </span><span class="p">}</span>
+        <span class="nx">thrlock</span><span class="p">.</span><span class="nx">unlock</span><span class="p">();</span>
+    <span class="p">}</span>
 
-<span class="w">    </span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sleep</span><span class="p">(</span><span class="mf">0.25</span><span class="p">);</span>
-<span class="w">    </span><span class="nx">i</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;i =&quot;</span><span class="p">,</span><span class="nx">i</span><span class="p">);</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sleep</span><span class="p">(</span><span class="mf">0.25</span><span class="p">);</span>
+    <span class="nx">i</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;i =&quot;</span><span class="p">,</span><span class="nx">i</span><span class="p">);</span>
 <span class="p">});</span>
 
 <span class="cm">/* output:</span>
@@ -663,9 +661,9 @@ require using a lock.</p></li>
 </pre></div>
 </div>
 </div></blockquote>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>
@@ -716,10 +714,10 @@ require using a lock.</p></li>
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-      <script type="text/javascript" src="_static/documentation_options.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/sphinx_highlight.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
