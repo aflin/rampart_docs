@@ -206,6 +206,25 @@ submit()
     * ``callback`` is a :green:`Function`, which takes as an argument the
       same :green:`Object` as returned in `fetch() Results`_ above.
 
+NOTE:  
+    ``submit()`` is preferred over ``fetch()`` when retrieving multiple urls
+    which neet to have different option apply to each url.
+           
+
+fetchAsync()
+~~~~~~~~~~~~
+
+    The same as ``fetch()`` above, except it requires a callback function
+    and waiting for socket data, retrieval of the document and the execution
+    of the callback happens in the Rampart event loop.
+
+submitAsync()
+~~~~~~~~~~~~~
+
+    The same as ``submit()`` above, except that waiting for socket data,
+    retrieval of the document and the execution of the callback happens in
+    the Rampart event loop.
+
 default_ca_file
 ~~~~~~~~~~~~~~~
 

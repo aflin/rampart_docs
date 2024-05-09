@@ -309,7 +309,7 @@ following:</p>
 <li>File and C-functions utilities such as <code class="docutils literal notranslate"><span class="pre">printf</span></code>, <code class="docutils literal notranslate"><span class="pre">fseek</span></code>, and <code class="docutils literal notranslate"><span class="pre">exec</span></code>.</li>
 <li>Included <code class="docutils literal notranslate"><span class="pre">C</span></code> modules (<code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rampart-crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-lmdb</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-redis</span></code>,
-<code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code>).</li>
+<code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code>).</li>
 <li>Event loop using <code class="docutils literal notranslate"><span class="pre">libevent2</span></code>.</li>
 <li>ECMA 2015, 2016, 2017 and 2018 support using the <a class="reference external" href="https://babeljs.io/">Babel</a>
 JavaScript transpiler.</li>
@@ -320,6 +320,9 @@ JavaScript transpiler.</li>
 <li>HTML parsing and and error correcting via <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code>.</li>
 <li>Fast NOSQL database via <code class="docutils literal notranslate"><span class="pre">rampart-lmdb</span></code>.</li>
 <li>Redis Client via <code class="docutils literal notranslate"><span class="pre">rampart-redis</span></code>.</li>
+<li>Asynchronous networking and socket functions via <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code>.</li>
+<li>Python interpreter, running python functions and sharing variables via
+<code class="docutils literal notranslate"><span class="pre">rampart-python</span></code></li>
 <li>Simple Event functions via <a class="reference internal" href="#rampart-event">rampart.event</a>.</li>
 <li><a class="reference internal" href="#extra-javascript-functionality">Extra JavaScript Functionality</a>.</li>
 </ul>
@@ -327,12 +330,9 @@ JavaScript transpiler.</li>
 </div>
 <div class="section" id="rampart-philosophy">
 <h2>Rampart philosophy<a class="headerlink" href="#rampart-philosophy" title="Permalink to this headline">¶</a></h2>
-<p>Though Rampart supports <code class="docutils literal notranslate"><span class="pre">setTimeout()</span></code>, <a class="reference external" href="rampart.events">Events</a> (and
-other async functions via, e.g., <a class="reference internal" href="rampart-server.html#websockets"><span class="std std-ref">websockets</span></a>,
-<a class="reference internal" href="rampart-redis.html#the-rampart-redis-module"><span class="std std-ref">rampart-redis</span></a>, Babel, etc),
-all functions included in the <a class="reference external" href="https://duktape.org">Duktape</a> JavaScript
-engine (as well as most of the functions added to Rampart) are synchronous.  Raw
-JavaScript execution is more memory efficient, but far slower than with, e.g.,
+<p>Rampart uses the Duktape JavaScript Engine and API as a gateway for high
+performance functions written in C.
+JavaScript execution with Duktape is more memory efficient, but far slower than with, e.g.,
 node.js.  However, the functionality and speed of the available C functions provide
 comparable efficacy, excellent performance and are a viable alternative to
 <a class="reference external" href="https://en.wikipedia.org/wiki/LAMP_(software_bundle)">LAMP</a>,
@@ -441,7 +441,8 @@ when the event and function were registered with <a class="reference internal" h
 can be serialized using <a class="reference external" href="https://duktape.org/guide.html#builtin-cbor">CBOR</a>.
 Because this function may trigger events that span several threads and Duktape stacks, when
 used with the <a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">rampart-server</span></a>
-module, special variables such as <code class="docutils literal notranslate"><span class="pre">req</span></code> (see:
+or <a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">rampart-thread</span></a>
+modules, special variables such as <code class="docutils literal notranslate"><span class="pre">req</span></code> (see:
 <a class="reference internal" href="rampart-server.html#the-request-object"><span class="std std-ref">The Request Object</span></a>) may contain
 functions and hidden state variables which cannot be moved from stack
 to stack.  In most cases, it will not be limiting since each callback is run on its own thread/stack
@@ -985,31 +986,15 @@ for a detailed listing of available Duktape C API functions.</p>
 <h3>Module Search Path<a class="headerlink" href="#module-search-path" title="Permalink to this headline">¶</a></h3>
 <p>Modules are searched for in the following order:</p>
 <ol class="arabic simple">
-<li>As given.  If <code class="docutils literal notranslate"><span class="pre">/path/to/module.js</span></code> is given, the absolute path is checked first.
-If <code class="docutils literal notranslate"><span class="pre">path/to/module.js</span></code> or <code class="docutils literal notranslate"><span class="pre">module.js</span></code> is given
-<code class="docutils literal notranslate"><span class="pre">./path/to/module.js</span></code> or <code class="docutils literal notranslate"><span class="pre">./module.js</span></code> is checked
-first. Thus relative paths are checked from the current directory first.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">/path/to/module.js</span></code> is given, the absolute path is checked first.
+If absolute and not found, the search stops there.</li>
+<li>If included from within a module, in the module’s path.</li>
 <li>In <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">modules/</span></code> subdirectory of <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
-<li>In the current working directory. If <code class="docutils literal notranslate"><span class="pre">/module.js</span></code> is given,
-<code class="docutils literal notranslate"><span class="pre">./module.js</span></code> is checked.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">modules</span></code> subdirectory of <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">~/.rampart/modules</span></code> directory of current user’s home directory
+<li>In the directory or <code class="docutils literal notranslate"><span class="pre">modules/</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
+<li>In the <code class="docutils literal notranslate"><span class="pre">~/.rampart/modules</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> directory of current user’s home directory
 as provided by the <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> environment variable.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">modules</span></code> directory of the <code class="docutils literal notranslate"><span class="pre">-DRP_INST_PATH</span></code> path set when Rampart
-was compiled.  The default is <code class="docutils literal notranslate"><span class="pre">/usr/local/rampart/modules</span></code>. Or
-preferentially, if set, the path pointed to by the environment variable
-<code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> + <code class="docutils literal notranslate"><span class="pre">/modules</span></code>.</li>
-<li>In <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
-<li>In <a class="reference internal" href="#installpathbin"><span class="std std-ref">process.installPathBin</span></a>.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules</span></code> subdirectory of <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">~/.rampart/lib/rampart_modules</span></code> directory of current user’s home directory
-as provided by the <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> environment variable.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules</span></code> directory of the <code class="docutils literal notranslate"><span class="pre">-DRP_INST_PATH</span></code> path set when Rampart
-was compiled.  The default is <code class="docutils literal notranslate"><span class="pre">/usr/local/rampart/lib/rampart_modules</span></code>. Or
-preferentially, if set, the path pointed to by the environment variable
-<code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> + <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules</span></code>.</li>
+<li>If set, in the directory as provided by the <code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> environment variable.</li>
+<li>In the <code class="docutils literal notranslate"><span class="pre">modules</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
 </ol>
 </div>
 </div>
@@ -1383,11 +1368,16 @@ Rampart are extremely grateful to the
 included in the Rampart distribution.  To use ECMA 2015+ features of
 JavaScript, simply include the following at the beginning of the script:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel&quot;</span>
+
+ <span class="cm">/* or */</span>
+
+ <span class="s2">&quot;use babelGlobally&quot;</span> <span class="c1">//run included modules through babel as well</span>
 </pre></div>
 </div>
-<p>Note that the <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> string should be the first JavaScript text in
-the script.  However it may come after any comments or a hash-bang line.  It
-also should be the only text on the line, other than an optional comment.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babelGlobally&quot;</span></code> string should be the
+first JavaScript text in the script.  However it may come after any comments
+or a hash-bang line.  It also should be the only text on the line, other
+than an optional comment.</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/local/bin/rampart</span>
 <span class="c1">// above is ignored by rampart.</span>

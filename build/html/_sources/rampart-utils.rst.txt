@@ -622,7 +622,8 @@ Return Value:
       "isDirectory":       Boolean,
       "isFIFO":            Boolean,
       "isFile":            Boolean,
-      "isSocket":          Boolean
+      "isSocket":          Boolean,
+      "permissions":       String  /* i.e. "-rw-r--r--" */
    }
 
 See `stat (2) <https://man7.org/linux/man-pages/man2/stat.2.html>`_ for the
@@ -1362,7 +1363,7 @@ File Handle Utilities
 
 The functions `fprintf`_ (), `fseek`_\ (), `rewind`_\ (), `ftell`_\ (), `fflush`_\ (),
 `fread`_\ (), `fgets`_\ (), `fwrite`_\ (), and `readLine`_\ () take a filehandle, which may be obtained
-using `fopen`_\ ().
+using `fopen`_\ () or `fopenBuffer`_\ ().
 
 
 Calling Methods:
@@ -1459,10 +1460,38 @@ a :green:`String` (one of the following):
    is at the beginning of the file, but output is always appended to the end of the
    file.
 
+fopenBuffer
+'''''''''''
+
+Open a filehandle that writes to a dynamically sized JavaScrip Buffer
+for use with `fprintf`_\ (), `fclose`_\ (), `fseek`_\ (),
+`rewind`_\ (), `ftell`_\ (), `fflush`_\ () `fread`_\ (), `fgets`_\ (), `fwrite`_\ () and
+`readLine`_\ ().
+
+Return Value:
+   :green:`Object`. An object which opaquely contains the opened file handle along with
+   the above functions.
+
+Usage:
+
+.. code-block:: javascript
+
+   var handle = rampart.utils.fopen([chunkSize]);
+
+Where ``chunkSize`` is a :green:`Number` (default is ``4096``), amount of memory to allocate each
+time the buffer is resized.  When the filehandle is closed, the buffer will
+be sized to fit the data written, if necessary.
+
+Return Value:
+   :green:`Object`. An object which opaquely contains the opened file handle along with
+   the above functions, as well as a ``getBuffer()`` function which will return
+   the backing buffer.
+
 fclose
 ''''''
 
-Close a previously opened handle :green:`Object` opened with `fopen`_\ ().
+Close a previously opened handle :green:`Object` opened with `fopen`_\ () or
+`fopenBuffer`_\ ().
 
 Example:
 

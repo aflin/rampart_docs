@@ -130,6 +130,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#file-handle-utilities">File Handle Utilities</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#fopen">fopen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fopenbuffer">fopenBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fclose">fclose</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fprintf">fprintf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fseek">fseek</a></li>
@@ -809,7 +810,8 @@ properties:</dd>
    <span class="s2">&quot;isDirectory&quot;</span><span class="o">:</span>       <span class="nb">Boolean</span><span class="p">,</span>
    <span class="s2">&quot;isFIFO&quot;</span><span class="o">:</span>            <span class="nb">Boolean</span><span class="p">,</span>
    <span class="s2">&quot;isFile&quot;</span><span class="o">:</span>            <span class="nb">Boolean</span><span class="p">,</span>
-   <span class="s2">&quot;isSocket&quot;</span><span class="o">:</span>          <span class="nb">Boolean</span>
+   <span class="s2">&quot;isSocket&quot;</span><span class="o">:</span>          <span class="nb">Boolean</span><span class="p">,</span>
+   <span class="s2">&quot;permissions&quot;</span><span class="o">:</span>       <span class="nb">String</span>  <span class="cm">/* i.e. &quot;-rw-r--r--&quot; */</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1447,7 +1449,7 @@ load the Curl Module and put it in the global namespace similar to <code class="
 <h2>File Handle Utilities<a class="headerlink" href="#file-handle-utilities" title="Permalink to this headline">¶</a></h2>
 <p>The functions <a class="reference internal" href="#fprintf">fprintf</a> (), <a class="reference internal" href="#fseek">fseek</a>(), <a class="reference internal" href="#rewind">rewind</a>(), <a class="reference internal" href="#ftell">ftell</a>(), <a class="reference internal" href="#fflush">fflush</a>(),
 <a class="reference internal" href="#fread">fread</a>(), <a class="reference internal" href="#fgets">fgets</a>(), <a class="reference internal" href="#fwrite">fwrite</a>(), and <a class="reference internal" href="#readline">readLine</a>() take a filehandle, which may be obtained
-using <a class="reference internal" href="#fopen">fopen</a>().</p>
+using <a class="reference internal" href="#fopen">fopen</a>() or <a class="reference internal" href="#fopenbuffer">fopenBuffer</a>().</p>
 <dl class="docutils">
 <dt>Calling Methods:</dt>
 <dd><p class="first">The above listed functions (functions which take filehandles) may be called using one of
@@ -1529,9 +1531,35 @@ is at the beginning of the file, but output is always appended to the end of the
 file.</li>
 </ul>
 </div>
+<div class="section" id="fopenbuffer">
+<h3>fopenBuffer<a class="headerlink" href="#fopenbuffer" title="Permalink to this headline">¶</a></h3>
+<p>Open a filehandle that writes to a dynamically sized JavaScrip Buffer
+for use with <a class="reference internal" href="#fprintf">fprintf</a>(), <a class="reference internal" href="#fclose">fclose</a>(), <a class="reference internal" href="#fseek">fseek</a>(),
+<a class="reference internal" href="#rewind">rewind</a>(), <a class="reference internal" href="#ftell">ftell</a>(), <a class="reference internal" href="#fflush">fflush</a>() <a class="reference internal" href="#fread">fread</a>(), <a class="reference internal" href="#fgets">fgets</a>(), <a class="reference internal" href="#fwrite">fwrite</a>() and
+<a class="reference internal" href="#readline">readLine</a>().</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Object</span>. An object which opaquely contains the opened file handle along with
+the above functions.</dd>
+</dl>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">([</span><span class="nx">chunkSize</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">chunkSize</span></code> is a <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">4096</span></code>), amount of memory to allocate each
+time the buffer is resized.  When the filehandle is closed, the buffer will
+be sized to fit the data written, if necessary.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Object</span>. An object which opaquely contains the opened file handle along with
+the above functions, as well as a <code class="docutils literal notranslate"><span class="pre">getBuffer()</span></code> function which will return
+the backing buffer.</dd>
+</dl>
+</div>
 <div class="section" id="fclose">
 <h3>fclose<a class="headerlink" href="#fclose" title="Permalink to this headline">¶</a></h3>
-<p>Close a previously opened handle <span class="green">Object</span> opened with <a class="reference internal" href="#fopen">fopen</a>().</p>
+<p>Close a previously opened handle <span class="green">Object</span> opened with <a class="reference internal" href="#fopen">fopen</a>() or
+<a class="reference internal" href="#fopenbuffer">fopenBuffer</a>().</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="s2">&quot;/tmp/out.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">);</span>
 

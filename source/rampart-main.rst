@@ -72,7 +72,7 @@ following:
 
 * Included ``C`` modules (``rampart-sql``, ``rampart-server``, ``rampart-curl``, 
   ``rampart-crypto``, ``rampart-html``, ``rampart-lmdb``, ``rampart-redis``, 
-  ``rampart-cmark`` and ``rampart-robots``).
+  ``rampart-cmark``, ``rampart-net``, ``rampart-python`` and ``rampart-robots``).
 
 * Event loop using ``libevent2``.
 
@@ -93,6 +93,11 @@ following:
 
 * Redis Client via ``rampart-redis``.
 
+* Asynchronous networking and socket functions via ``rampart-net``.
+
+* Python interpreter, running python functions and sharing variables via
+  ``rampart-python`` 
+
 * Simple Event functions via `rampart.event`_\ .
 
 * `Extra JavaScript Functionality`_\ .
@@ -100,12 +105,9 @@ following:
 Rampart philosophy 
 ~~~~~~~~~~~~~~~~~~ 
 
-Though Rampart supports ``setTimeout()``, `Events <rampart.events>`_ (and
-other async functions via, e.g., :ref:`websockets <rampart-server:websockets>`, 
-:ref:`rampart-redis <rampart-redis:The rampart-redis module>`, Babel, etc), 
-all functions included in the `Duktape <https://duktape.org>`_ JavaScript
-engine (as well as most of the functions added to Rampart) are synchronous.  Raw 
-JavaScript execution is more memory efficient, but far slower than with, e.g., 
+Rampart uses the Duktape JavaScript Engine and API as a gateway for high
+performance functions written in C.
+JavaScript execution with Duktape is more memory efficient, but far slower than with, e.g., 
 node.js.  However, the functionality and speed of the available C functions provide 
 comparable efficacy, excellent performance and are a viable alternative to 
 `LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_, 
@@ -217,7 +219,8 @@ Where:
      can be serialized using `CBOR <https://duktape.org/guide.html#builtin-cbor>`_\ .
      Because this function may trigger events that span several threads and Duktape stacks, when
      used with the :ref:`rampart-server <rampart-server:The rampart-server HTTP module>`
-     module, special variables such as ``req`` (see: 
+     or :ref:`rampart-thread <rampart-thread:Rampart Thread Functions>`
+     modules, special variables such as ``req`` (see: 
      :ref:`The Request Object <rampart-server:The Request Object>`) may contain
      functions and hidden state variables which cannot be moved from stack
      to stack.  In most cases, it will not be limiting since each callback is run on its own thread/stack
@@ -830,43 +833,21 @@ Module Search Path
 
 Modules are searched for in the following order:
 
-#. As given.  If ``/path/to/module.js`` is given, the absolute path is checked first.
-   If ``path/to/module.js`` or ``module.js`` is given
-   ``./path/to/module.js`` or ``./module.js`` is checked
-   first. Thus relative paths are checked from the current directory first.
+#. If ``/path/to/module.js`` is given, the absolute path is checked first.
+   If absolute and not found, the search stops there.
+
+#. If included from within a module, in the module's path.
 
 #. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
 
-#. In the ``modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+#. In the directory or ``modules/`` or ``/lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
 
-#. In the current working directory. If ``/module.js`` is given, 
-   ``./module.js`` is checked.
-
-#. In the ``modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
-
-#. In the ``~/.rampart/modules`` directory of current user's home directory 
+#. In the ``~/.rampart/modules`` or ``/lib/rampart_modules/`` directory of current user's home directory 
    as provided by the ``$HOME`` environment variable.
 
-#. In the ``modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
-   was compiled.  The default is ``/usr/local/rampart/modules``. Or
-   preferentially, if set, the path pointed to by the environment variable
-   ``$RAMPART_PATH`` + ``/modules``.
+#. If set, in the directory as provided by the ``$RAMPART_PATH`` environment variable.
 
-#. In :ref:`process.installPath <rampart-main:installPath>`\ .
-
-#. In :ref:`process.installPathBin <rampart-main:installPathBin>`\ .
-
-#. In the ``/lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
-
-#. In the ``lib/rampart_modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
-
-#. In the ``~/.rampart/lib/rampart_modules`` directory of current user's home directory 
-   as provided by the ``$HOME`` environment variable.
-
-#. In the ``lib/rampart_modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
-   was compiled.  The default is ``/usr/local/rampart/lib/rampart_modules``. Or
-   preferentially, if set, the path pointed to by the environment variable
-   ``$RAMPART_PATH`` + ``/lib/rampart_modules``.
+#. In the ``modules`` or ``/lib/rampart_modules/`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
 
 
 Extra JavaScript Functionality
@@ -1340,9 +1321,14 @@ JavaScript, simply include the following at the beginning of the script:
 
    "use babel"
 
-Note that the ``"use babel"`` string should be the first JavaScript text in
-the script.  However it may come after any comments or a hash-bang line.  It
-also should be the only text on the line, other than an optional comment. 
+    /* or */
+
+    "use babelGlobally" //run included modules through babel as well
+
+Note that the ``"use babel"`` or ``"use babelGlobally"`` string should be the
+first JavaScript text in the script.  However it may come after any comments
+or a hash-bang line.  It also should be the only text on the line, other
+than an optional comment.
 
 Example:
 
