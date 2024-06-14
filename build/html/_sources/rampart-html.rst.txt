@@ -71,7 +71,8 @@ Usage:
 where:
 
 * ``document_text`` is a :green:`String` or :green:`Buffer` containing the 
-  HTML text to be parsed. If not specified or a blank string,
+  HTML text to be parsed. It also can be an :green:`Object` produced by 
+  `toObj`_ below. If not specified or a blank string,
   an empty document with the ``html``, ``head``, ``title`` and
   ``body`` tags in place will be created.
 
@@ -86,89 +87,164 @@ where:
 
   A small subset of these options include:
   
-  *  ``indent`` - a :green:`Boolean`, whether to add indentation and word wrapping
-     to the output when using `prettyPrint`_\ .
+  *  ``indent`` - a :green:`Boolean`, whether to add indentation and word
+     wrapping to the output when using `prettyPrint`_\ .
 
-  *  ``indent-spaces`` (aka ``indentSpaces``) - a :green:`Number` indicating the number of spaces
-     to indent the output when using `prettyPrint`_ and ``indent`` above 
-     is set ``true``. The default is ``2``.
+  *  ``indent-spaces`` (aka ``indentSpaces``) - a :green:`Number` indicating 
+     the number of spaces to indent the output when using `prettyPrint`_ and
+     ``indent`` above is set ``true``.  The default is ``2``.
 
   *  ``wrap`` - a :green:`Number` indicating the maximum length of a
      line of text or HTML used when using `prettyPrint`_ and ``indent``
      above is set ``true``.  The default is ``68``.  There may be some
      circumstances where it is not possible to wrap a line.
 
-  *  ``drop-empty-elements`` (aka ``dropEmptyElements``) - a :green:`Boolean`, whether to drop empty
-     elements. **In Rampart** the default is ``false``.
+  *  ``drop-empty-elements`` (aka ``dropEmptyElements``) - a
+     :green:`Boolean`, whether to drop empty elements.  **In Rampart** the
+     default is ``false``.
   
-  *  ``tidy-mark`` (aka ``tidyMark``) - a :green:`Boolean`, whether to insert a ``meta`` tag
-     in the head of the document indicating that the 
+  *  ``tidy-mark`` (aka ``tidyMark``) - a :green:`Boolean`, whether to insert
+     a ``meta`` tag in the head of the document indicating that the
      `Tidy-HTML5 <http://www.html-tidy.org/>`_ library was used to process
      the document.  **In Rampart** the default is ``false``.
-     
-  *  See the `HTML Tidy Options Quick Reference <https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html>`_
+
+  *  ``vertical-space`` - a :green:`Boolean` or a :green:`String`, whether
+     to add some extra empty lines for readability.  The default is
+     ``false``.  If set to ``"auto"`` nearly all newline characters will be
+     elimiated.
+
+  *  See the `HTML Tidy Options Quick Reference
+     <https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html>`_
      for more options.
 
 Return Value:
   An *html object* with all the functions for manipulating the HTML
-  document.  In addition, this will be the *root html object*, which
-  will also contain the ``prettyPrint()`` function.
+  document.  In addition, this will be the *root html object*.
 
-prettyPrint
-~~~~~~~~~~~
+objToHtml
+~~~~~~~~~
 
-The *root html object* includes an additional function which will
-output the entire text of the document with optional indentation.
+Take the output of `toObj`_ and produce html text.
 
-Example:
+Usage:
 
 .. code-block:: javascript
 
     var html = require("rampart-html");
     
-    var mydoc = html.newDocument({ indent: true });
+    var mydoc = html.newDocument(mydocText);
+   
+   /* manipulate document here */
 
-    var output = mydoc.prettyPrint();
+   var htmlJSON = JSON.stringify(mydoc.toObj());
 
-    console.log(output);
+   /* save the json in a file */
+   rampart.utils.fprintf("/path/to/my_html.json", '%s', htmlJSON);
 
-    /* expected output:
+   /* **** in another script **** */
 
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title></title>
-      </head>
-      <body>
-      </body>
-    </html>
+   var html = require("rampart-html");
+   /* load json, convert to object and then convert to text/html */
+   var htmlText = html.objToHtml( rampart.utils.readFile("/path/to/my_html.json") );
 
-    */
+   /* htmlText = "<!DOCTYPE html><html><head><title>...</html>" */
 
-    mydoc = html.newDocument(
-        '<title>My Page</title><h1>Welcome to my page</h2>', 
-        { indent: true } 
-    );
+Note:
+   The same can be performed in the browser by using JavaScript similar to
+   this:
 
-    output = mydoc.prettyPrint();
+.. code-block:: javascript
 
-    console.log(output);
+   /* distinguish between a plain object and an array
+      and make output similar to rampart.utils.getType()    */
+   function getType(v) {
+       
+       if(typeof v == 'object')
+       {
+           if(v instanceOf Array)
+               return "Array";
+           return "Object"
+       }
+       var ret = typeof v;
+       return ret.charAt(0).toUpperCase() + ret.slice(1);
+   }
 
-    /* expected output:
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>
-          My Page
-        </title>
-      </head>
-      <body>
-        <h1>
-          Welcome to my page
-        </h1>
-      </body>
-    </html>
-    */
+   var singletons = [
+           "br",
+           "input",
+           "link",
+           "meta",
+           "!doctype",
+           "col",
+           "area",
+           "base",
+           "param",
+           "track",
+           "wbr",
+           "keygen"
+   ];
+
+   function objToHtmlArr(obj, txtarr) {
+       var a, i=0, len, issingleton=false;
+
+       if(!txtarr)
+           txtarr=[];
+
+       if(getType(obj) != "Object")
+           return [];
+
+       if(obj.type)
+       {
+           if(obj.type !='document') {
+               issingleton = singletons.includes(obj.type.toLowerCase());
+               txtarr.push('<' + obj.type);
+
+               if(obj.attributes) {
+                   if (getType(obj.attributes) == "Object"){
+                       a = obj.attributes;
+                       for (key in a) {
+                           txtarr.push(' ' + key + '="' + a[key].replace(/"/g,'&quot;')+'"' )
+                       }
+                   } else if (getType(obj.attributes) == "Array") {
+                       a = obj.attributes;
+                       len = a.length;
+                       for(;i<len;i++){
+                           txtarr.push(' ' + a[i]);
+                       }
+                   }
+               }
+               txtarr.push('>');
+           }
+       }
+
+       if(obj.contents && getType(obj.contents)=='Array') {
+           a=obj.contents;
+           len=a.length;
+           for(i=0;i<len;i++){
+               if(getType(a[i])=='String')
+                   txtarr.push(a[i]);
+               else if (getType(a[i])=='Object')
+                   txtarr = objToHtmlArr(a[i],txtarr);
+           }
+       }
+
+       if(obj.type && obj.type !='document' && !issingleton)
+           txtarr.push("</"+obj.type+'>');
+       return txtarr;
+   }
+
+   function objToHtml(obj){
+       var i=0,ret=[];
+
+       if(getType(obj)=="Array") {
+           for(;i<obj.length;i++)
+               ret=objToHtmlArr(obj[i],ret);
+       } else if (getType(obj) == "Object"){
+           ret=objToHtmlArr(obj[i],ret);
+       }
+       return ret.join('');
+   }
+
 
 Manipulating the HTML
 ---------------------
@@ -183,7 +259,7 @@ with links to its descendant elements and/or plain text content, if any.
 
 The *root html object* is the :green:`Object` returned from
 `newDocument`_\ .  It is identical to other *html objects*, except that it
-additionally includes the `prettyPrint`_ function.
+contains only one element (the document root).
 
 In addition to the *root html object*, new ones can be created.  
 A new list of elements is returned in an *html object* when they are
@@ -193,10 +269,35 @@ classes changed with the functions below.
 Each *html object* created from any other *html object* will refer
 to elements in the same document.  These elements represent the actual
 content in the HTML document, and if manipulated, will change the contents
-returned from `prettyPrint`_\ .
+returned from any other *html object* derived from the same *root html
+object*.
 
 Additionally, the *html object* includes the ``length`` property (number of elements in
-the current list).
+the list).
+
+
+destroy
+~~~~~~~
+
+Destroy and release resources used by a document created with  ``newDocument()``.
+
+Usage:
+
+.. code-block:: javascript
+
+    var html = require("rampart-html");
+    
+    var mydoc = html.newDocument([document_text][, options]);
+
+    mydoc.destroy();
+
+NOTE:
+   ``destroy()`` may be used from the *root html object* or any list of elements
+   produced from functions below (any dependent *html object*).
+   Calling destroy will invalidate the *root html object* and any lists
+   created from it (see ``Manipulating the HTML`` below).
+
+
 
 Selecting Elements
 ~~~~~~~~~~~~~~~~~~
@@ -242,8 +343,18 @@ Usage:
 
 Where ``attrname`` is the name of the attribute in the element to be selected (e.g. "id").
 
-Additionally, ``attrname`` can specify a value by using ``attr=val``
-syntax.
+Additionally: 
+
+   * ``attrname`` can specify a value by using ``"attr=val"`` syntax.
+   * whitespace is ignored (e.g. ``"attr = val "``.
+   * globs may be used at the beginning or end (but not both) of ``val`` 
+     (e.g ``"id=my_id_*"`` or ``id=*_val``)
+   * quotes are respected (e.g. ``"id='my val'"`` or ``'id="my val"'``)
+   * quotes can be escaped (e.g. ``"id='john\\'s msg'"``). Note the double 
+     backslash.  It is required for the JavaScript string to pass a single
+     backslash.
+   * Quotes, backslashes and globs are also available in `filterAttr`_ and
+     `hasAttr`_\ .
 
 Example:
 
@@ -439,6 +550,167 @@ Example:
 
     */
 
+toObj
+"""""
+
+Return an :green:`Array` of :green:`Objects` representing the elements
+in the *html object* or the entire document if the object is the *root html
+object*.
+
+Example:
+
+.. code-block:: javascript
+
+   var html = require("rampart-html");
+
+   var doc = html.newDocument(
+       '<div title="div1">one</div><div>two</div>' +
+       '<div title="div3">three</div><div>four</div>' +
+       '<div title="div5">five <span>six</span></div>'
+   );
+
+   var mytags = doc.findTag("div").toObj();
+
+   rampart.utils.printf("%3J\n", mytags);
+
+   /* expected output:
+   [
+      {
+         "type": "div",
+         "attributes": {
+            "title": "div1"
+         },
+         "contents": [
+            "one"
+         ]
+      },
+      {
+         "type": "div",
+         "contents": [
+            "two"
+         ]
+      },
+      {
+         "type": "div",
+         "attributes": {
+            "title": "div3"
+         },
+         "contents": [
+            "three"
+         ]
+      },
+      {
+         "type": "div",
+         "contents": [
+            "four"
+         ]
+      },
+      {
+         "type": "div",
+         "attributes": {
+            "title": "div5"
+         },
+         "contents": [
+            "five ",
+            {
+               "type": "span",
+               "contents": [
+                  "six"
+               ]
+            }
+         ]
+      }
+   ]
+   */
+
+   rampart.utils.printf("%3J\n", doc.toObj());
+
+   /* expected output:
+   [
+      {
+         "type": "document",
+         "contents": [
+            {
+               "type": "!DOCTYPE",
+               "attributes": [
+                  "html"
+               ]
+            },
+            {
+               "type": "html",
+               "contents": [
+                  {
+                     "type": "head",
+                     "contents": [
+                        {
+                           "type": "title"
+                        }
+                     ]
+                  },
+                  {
+                     "type": "body",
+                     "contents": [
+                        {
+                           "type": "div",
+                           "attributes": {
+                              "title": "div1"
+                           },
+                           "contents": [
+                              "one"
+                           ]
+                        },
+                        {
+                           "type": "div",
+                           "contents": [
+                              "two"
+                           ]
+                        },
+                        {
+                           "type": "div",
+                           "attributes": {
+                              "title": "div3"
+                           },
+                           "contents": [
+                              "three"
+                           ]
+                        },
+                        {
+                           "type": "div",
+                           "contents": [
+                              "four"
+                           ]
+                        },
+                        {
+                           "type": "div",
+                           "attributes": {
+                              "title": "div5"
+                           },
+                           "contents": [
+                              "five ",
+                              {
+                                 "type": "span",
+                                 "contents": [
+                                    "six"
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  }
+               ]
+            }
+         ]
+      }
+   ]
+
+   */
+
+Note:
+   The return :green:`Object` can be used as the input for html.\ `newDocument`_ or 
+   html.\ `objToHtml`_ above.
+
+Text and HTML Output
+~~~~~~~~~~~~~~~~~~~~            
 
 toHtml
 """"""
@@ -497,10 +769,11 @@ Example:
 toText
 """"""
 
-Return an :green:`Array` of :green:`Strings`, each string the plain text
-extracted from each of the given elements and their children.  By default,
-``toText()`` attempts to extract only visible text.  Options below allow for
-some formatting and other relevant text to be returned as well.
+Return an :green:`Array` of :green:`Strings` (or optionally a concatenated
+:green:`String`), each string being the plain text extracted from each of
+the given elements and their children.  By default, ``toText()`` attempts to
+extract only visible text.  Options below allow for some formatting and
+other relevant text to be returned as well.
 
 Usage:
 
@@ -625,6 +898,93 @@ Example:
     ![me at 21](myimage2.jpg)
     I got a job guessing weights at [a carnival](http://example.com/ "The Carnival Website")...
 
+    */
+
+prettyPrint
+"""""""""""
+
+Format and output a :green:`String` of the *first* element in the list of
+elements. If used with the *root html object*, it will output the entire
+document.
+
+Usage:
+
+.. code-block:: javascript
+
+    var html = require("rampart-html");
+    
+    var mydoc = html.newDocument();
+
+    var output = mydoc.prettyPrint({formattingOptions});
+
+    /* or */
+
+    var output = mydoc.prettyPrint(indentSpaces, wrap);
+
+Where
+
+   * `formattingOptions` is an :green:`Object` - the same formatting options from `newDocument`_
+     above.
+
+   * `indentSpaces` is a :green:`Number` - number of spaces to be used for
+     indentation.
+
+   * `wrap` is a :green:`Number` - minimum number of characters to print before
+     wrapping a line. Line length may exceed this value but will break at
+     the first opportunity when line length exceeds it.
+
+Note:
+   Setting options in ``prettyPrint`` overrides the options set in `newDocument`_
+   for all future operations.
+
+Example:
+
+.. code-block:: javascript
+
+    var html = require("rampart-html");
+    
+    var mydoc = html.newDocument();
+
+    var output = mydoc.prettyPrint(2,80);
+
+    console.log(output);
+
+    /* expected output:
+
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title></title>
+      </head>
+      <body>
+      </body>
+    </html>
+
+    */
+
+    mydoc = html.newDocument(
+        '<title>My Page</title><h1>Welcome to my page</h2>', 
+        { indent: true } 
+    );
+
+    output = mydoc.prettyPrint({indent:true, indenSpaces:2});
+
+    console.log(output);
+
+    /* expected output:
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>
+          My Page
+        </title>
+      </head>
+      <body>
+        <h1>
+          Welcome to my page
+        </h1>
+      </body>
+    </html>
     */
 
 Traversing HTML tree
@@ -752,7 +1112,7 @@ Example:
     */
 
 Note that even though there are four elements in ``myspans``, ``parent()``,
-like all *html object* functions, returns a unique list.
+like all *html object* functions, it returns a unique list.
 
 getDocument
 """""""""""
@@ -955,6 +1315,11 @@ Where
 * ``additions`` is an *html object* or a :green:`String` of text or HTML
   to be added to the list.
 
+Note:
+  Additions made to list with ``add()`` are detached and will not be a part
+  of the output of `prettyPrint` unless one of `append`_\ , `prepend`_\, `before`_\ ,
+  or `after`_ is used to insert the list into the document.
+  
 Example:
 
 .. code-block:: javascript

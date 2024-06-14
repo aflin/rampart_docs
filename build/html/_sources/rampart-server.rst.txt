@@ -988,7 +988,7 @@ The Return Object
         html: myhtmltext,
         headers: { "X-Custom-Header": "custom value"}
      }
-  				
+
   To set more than one header with the same name, the value must be an :green:`Array`.
   
   .. code-block:: javascript
@@ -1347,10 +1347,10 @@ Below is a full example:
 
         directoryFunc: true, //use default directory list function
 
-		/* remap a few extensions -> mimetypes */
+        /* remap a few extensions -> mimetypes */
         mimeMap: {
-          	  "m4v": "video/mp4",
-          	  "mov": "video/mp4"
+                "m4v": "video/mp4",
+                "mov": "video/mp4"
         },
 
         /* **********************************************************
@@ -1862,6 +1862,490 @@ and :ref:`rampart.event <rampart-main:rampart.event>` functions.
     see the ``rampart/examples/web_server/modules/wschat.js``
     script.
 
+Standard Server Layout
+----------------------
+
+Included in the rampart distribution is a sample server with a standard
+layout for the server tree:
+
+* ``web_server/``                    - the main web server directory
+
+* ``web_server/web_server_conf.js``  - the web server start script, with
+  options at the top of the file.
+
+* ``web_server/start_server.sh``     - a bash script to start the web server.
+
+* ``web_server/stop_server.sh``      - a bash script to stop the web server.
+
+* ``web_server/apps``                - the standard location for server modules.
+
+* ``web_server/wsapps``              - the standard location for modules
+  that server websocket connections
+
+* ``web_server/data``                - a location for databases.
+
+* ``web_server/html``                - the standard location for static files.
+
+* ``web_server/logs``                - the standard location for access and
+  error log files.
+
+See the ``serverConf`` variable near the top of ``web_server/web_server_conf.js``
+for possible settings. The global ``serverConf`` will be available to 
+all server module scripts.
+
+This layout translates as:
+
+* Access to, e.g. ``http://example.com/index.html`` will return the
+  ``web_server/html/index.html``.
+* Access to, e.g. ``http://example.com/apps/myapp.html`` will display
+  the return value from ``module.exports`` function in the file
+  ``web_server/apps/myapp.js``.  For `Mapped Functions`_ the
+  ``module.exports`` is an :green:`Object` with keys equating to files in
+  the ``apps/myapp`` directory.  With the values in the key/value pairs of
+  the :green:`Object` as :green:`Functions`, the url would be
+  ``http://example.com/apps/myapp/key`` where the output is the return value
+  of the paired :green:`Function`. See `Mapped Functions`_ for examples.
+  
+* Access to ``web_server/wsapps`` is similar to ``web_server/apps``
+  except that a :green:`Function` or mapped :green:`Functions` are expected
+  to handle `Websockets`_ connections.
+
+Although any layout is possible, it is highly recommended that this layout
+is adapted and used for ease of use and organization.
+
+C-API
+-----
+
+Using the rp-server c-api, server modules can be written in c without
+the need for a deep dive into the duktape api.
+
+Basic Layout
+~~~~~~~~~~~~
+
+Below is skeleton module in c.
+
+.. code-block:: c
+
+    #include "rp_server.h"
+
+    static duk_ret_t my_cfunc(duk_context *ctx)
+    {
+        // initialize the server context struct "serv"
+        INIT_RPSERV(serv, ctx);
+
+        //example: get a malloced string - the json of the req object
+        char *reply = rp_server_get_req_json(serv,3);
+
+        // your code here
+
+
+        // function must end by calling rp_server_put_reply*
+        // and must return 1;
+
+        // example: return "reply as text/plain and free it. return 1
+        return rp_server_put_reply_string_and_free(serv, 200, "txt", reply);
+
+        //OR:
+        rp_server_put_reply_string(serv, 200, "txt", reply);
+        free(reply);
+        return 1;
+
+    }
+
+    // Initialize module
+    duk_ret_t duk_open_module(duk_context *ctx)
+    {
+        duk_push_c_function(ctx, my_cfunc, 1);
+
+        return 1;
+    }
+
+To compile:
+
+.. code-block:: shell
+
+    #Linux:
+    cc -I/usr/local/rampart/include -fPIC -shared -Wl,-soname,mymod.so -o mymod.so mymod.c
+    #Macos:
+    cc -I/usr/local/rampart/include -dynamiclib -undefined dynamic_lookup -install_name mymod.so -o mymod.so mymod.c
+
+And then copy ``mymod.so`` to the ``web_server/apps`` directory (or wherever
+server modules are stored in a custom setup).
+
+The initialization of the module may also be done to map function (see `Mapped Functions`_\ ).
+
+.. code-block:: c
+
+    // a map of urls relative to http(s)://example.com/apps/mymod/
+    rp_server_map exports[] = 
+    {
+        {"/",                my_indexfunc },
+        {"/index.html",      my_indexfunc },
+        {"/myurl_1.html",    my_func1     },
+        {"/myurl_2.json",    my_func2     }
+    };
+
+    duk_ret_t duk_open_module(duk_context *ctx)
+    {
+        return rp_server_export_map(ctx, exports);
+    }
+
+Typedefs
+~~~~~~~~
+
+rpserv
+""""""
+
+Handle for all functions and macros below.
+
+.. code-block:: c
+
+    typedef struct {
+        duk_context *ctx;
+        void *dhs;
+    } rpserv;
+
+rp_server_map
+"""""""""""""
+
+A map of functions to url paths.
+
+.. code-block:: c
+
+    typedef struct {
+        char *relpath;
+        duk_c_function func;
+    } rp_server_map;
+
+multipart_postvar
+"""""""""""""""""
+
+A struct containing data and metadata from a single entry in a multipart/form-data
+post parsed from the body of the request.
+
+.. code-block:: c
+
+    typedef struct {
+        void         *value;                 // the extracted data
+        size_t        length;                // length of the data
+        const char   *file_name;             // if a file upload, otherwise NULL
+        const char   *name;                  // name from <input name=...>
+        const char   *content_type;          // content-type of part, or NULL
+        const char   *content_disposition;   // content-disposition of part, or NULL
+    } multipart_postvar;
+
+
+Init Macro
+~~~~~~~~~~
+
+INIT_RPSERV
+"""""""""""
+
+Declare and initialize the ``rpserv`` handle.
+
+.. code-block:: c
+
+    static duk_ret_t my_cfunc(duk_context *ctx)
+    {
+        INIT_RPSERV(serv_var_name, duk_context *ctx);
+        //...
+    }
+
+Export Function
+~~~~~~~~~~~~~~~
+
+This function is used from within the mandatory duk_open_module to map multiple
+functions.  See `Basic Layout`_ example above.
+
+rp_server_export_map
+""""""""""""""""""""
+
+.. code-block:: c
+
+    duk_ret_t rp_server_export_map(duk_context *ctx,  rp_server_map *map);
+
+See `rp_server_map`_ above.
+
+Get Functions
+~~~~~~~~~~~~~
+
+For an explanation of the logical layout of request variables, see 
+`The Request Object`_\ .
+
+NOTE: 
+Except for multipart form data, all values returned will be strings. 
+If value is repeated in posted form data or in the query, then it will be
+returned as a JSON string.  E.g:
+
+::
+
+      http://localhost:8088/apps/my_mod/?x=val1&x=val2
+          x = "[\"val1\", \"val2\"]"
+
+      http://localhost:8088/apps/my_mod/?x[key1]=val1&x[key2]=val2
+          x = "{\"key1\":\"val1\", \"key2\":\"val2\"}"
+
+      http://localhost:8088/apps/my_mod/?x[key1]=val1&x=val2
+          x = "{\"0\":\"val2\", \"key1\":\"val1\"}
+
+rp_server_get_param
+"""""""""""""""""""
+
+Get a parameter by name (parameters includes query, post, headers and cookies)
+
+.. code-block:: c
+
+    const char * rp_server_get_param(rpserv *serv, const char *name);
+
+rp_server_get_header
+""""""""""""""""""""
+
+Get a header by name
+
+.. code-block:: c
+
+    const char * rp_server_get_header(rpserv *serv, const char *name);
+
+rp_server_get_query
+"""""""""""""""""""
+
+Get a query string parameter by name
+
+.. code-block:: c
+
+    const char * rp_server_get_query(rpserv *serv, const char *name);
+
+rp_server_get_path
+""""""""""""""""""
+
+Get a path component where ``name`` is
+``["file"|"path"|"base"|"scheme"|"host"|"url"]``.
+
+.. code-block:: c
+
+    const char * rp_server_get_path(rpserv *serv, const char *name);
+
+rp_server_get_cookie
+""""""""""""""""""""
+
+Get a parsed cookie value by name.
+
+.. code-block:: c
+
+    const char * rp_server_get_cookie(rpserv *serv, const char *name);
+
+rp_server_get_body
+""""""""""""""""""
+
+Get unparsed, posted body content as a void buffer.
+
+.. code-block:: c
+
+    void * rp_server_get_body(rpserv *serv, size_t *sz);
+
+rp_server_get_req_json
+""""""""""""""""""""""
+
+Get a string of the current request object (just like in `The Request
+Object` above).  If indent is >0, pretty print the JSON with specified level
+of indentation.
+
+.. code-block:: c
+
+    const char * rp_server_get_req_json(rpserv *serv, int indent);
+
+Get Multiple Values Functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following functions returns a null terminated array of null terminated
+strings that are the keys in the corresponding section of `The Request Object`_\ .  
+If ``values`` is not null, values will be set as well.
+
+Example usage:
+
+.. code-block:: c
+
+    int i=0;
+    const char **vals, *val, *key;
+    const char **keys = rp_server_get_params(serv, &vals);
+
+    while(keys) //keys will not be null (so long as the duktape value stack remains untouched)
+    {
+        key=keys[i];
+        if(!key)  //keys and vals are null terminated lists
+            break;
+        val=vals[i];
+
+        //do something here with key & val
+
+        i++;
+    }
+
+rp_server_get_params
+""""""""""""""""""""
+
+.. code-block:: c
+
+    const char ** rp_server_get_params(rpserv *serv, const char ***values);
+
+rp_server_get_headers
+"""""""""""""""""""""
+
+.. code-block:: c
+
+    const char ** rp_server_get_headers(rpserv *serv, const char ***values);
+
+rp_server_get_paths
+"""""""""""""""""""
+
+.. code-block:: c
+
+    const char ** rp_server_get_paths(rpserv *serv, const char ***values);
+
+rp_server_get_cookies
+"""""""""""""""""""""
+
+.. code-block:: c
+
+    const char ** rp_server_get_cookies(rpserv *serv, const char ***values);
+
+Get Multipart Form Data
+~~~~~~~~~~~~~~~~~~~~~~~
+
+rp_server_get_multipart_length
+""""""""""""""""""""""""""""""
+
+Get the number of parts in a multipart form post.  If there is no
+such post, return will be ``0``.
+
+.. code-block:: c
+
+    int rp_server_get_multipart_length(rpserv *serv);
+
+rp_server_get_multipart_postitem
+""""""""""""""""""""""""""""""""
+Retrieve the multipart variable and metadata at position "index".
+See `multipart_postvar`_ struct above for members.
+If index is invalid, returns a zeroed struct (``length`` == ``0``,
+others == ``NULL``);
+
+.. code-block:: c
+
+    multipart_postvar rp_server_get_multipart_postitem(rpserv *serv, int index);
+
+Put Functions
+~~~~~~~~~~~~~
+
+The following functions add to the buffer that hold the content to be
+returned to the connecting client.  See, e.g. `req.put()`_ above.
+
+rp_server_put
+"""""""""""""
+
+Add the contents of ``*buf`` to buffer to be returned to client
+
+.. code-block:: c
+
+    void rp_server_put(rpserv *serv, void *buf, size_t bufsz);
+
+rp_server_put_string
+""""""""""""""""""""
+
+Add the contents of the null terminated ``*s`` to buffer to be returned to client
+
+.. code-block:: c
+
+    void rp_server_put_string(rpserv *serv, const char *s);
+
+rp_server_put_and_free
+""""""""""""""""""""""
+
+Same as `rp_server_put`_\ , but takes a malloced string and frees it 
+after it is sent to the client.
+Using this function with malloced data saves a copy and a free.
+
+.. code-block:: c
+
+    void rp_server_put_and_free(rpserv *serv, void *buf, size_t bufsz);
+
+rp_server_put_string_and_free
+"""""""""""""""""""""""""""""
+
+same as `rp_server_put_and_free`_\ , but takes a null terminated string.
+
+.. code-block:: c
+
+    void rp_server_put_string_and_free(rpserv *serv, char *s);
+
+rp_server_printf
+""""""""""""""""
+
+Same as `rp_server_put`_\ , but takes format string and 0+ arguments
+Returns number of bytes added, or -1 on failure.
+See: `here <https://libevent.org/doc/buffer_8h.html#abb5d7931c7be6b2bde597cbb9b6dc72d>`_
+for details.
+
+.. code-block:: c
+
+    int rp_server_printf(rpserv *serv, const char *format, ...);
+
+End Functions
+~~~~~~~~~~~~~
+
+The end of a function which serves a webpage must call one of the following
+functions.
+
+Note:
+   1) One and only one of these should be called at or near the end of the exported function.
+   2) Each function returns ``(duk_ret_t)1``.
+
+
+rp_server_put_reply
+"""""""""""""""""""
+
+Set HTTP Code "code" and mime type that matches "ext" (e.g. "html", "txt", "json", etc. --
+for ext->mime_type map, see `Key to Mime Mappings`_\ ).
+
+If all the content to be sent to client has already been added via the rp_server_put_*  functions
+above, set buf to NULL and bufsz to 0.
+
+Otherwise to append more content, set buf and bufsz as appropriate.
+
+.. code-block:: c
+
+    duk_ret_t rp_server_put_reply(rpserv *serv, int code, char *ext, void *buf, size_t bufsz);
+
+rp_server_put_reply_string
+""""""""""""""""""""""""""
+
+Same as above, but ``*s`` is either a null terminated string or NULL.
+
+.. code-block:: c
+
+    duk_ret_t rp_server_put_reply_string(rpserv *serv, int code, char *ext, const char *s);
+
+rp_server_put_reply_and_free
+""""""""""""""""""""""""""""
+
+Same as rp_server_put_reply, but takes a malloced ``void *`` buffer and frees it.
+Using this function with malloced data saves a copy and a free.
+
+.. code-block:: c
+
+    duk_ret_t rp_server_put_reply_and_free(rpserv *serv, int code, char *ext, void *buf, size_t bufsz);
+
+rp_server_put_reply_string_and_free
+"""""""""""""""""""""""""""""""""""
+
+Same as `rp_server_put_reply_and_free`_\ , but takes a null terminated string.
+
+.. code-block:: c
+
+    duk_ret_t rp_server_put_reply_string_and_free(rpserv *serv, int code, char *ext, char *s);
+
+
+
+
 Technical Notes
 ---------------
 
@@ -1974,504 +2458,504 @@ from the filesystem which end in ``.jpeg`` or ``.jpg``.
 
 ::
 
-    "3dm"	->	"x-world/x-3dmf"
-    "3dmf"	->	"x-world/x-3dmf"
-    "3gp"	->	"video/3gpp"
-    "3gpp"	->	"video/3gpp"
-    "7z"	->	"application/x-7z-compressed"
-    "a"		->	"application/octet-stream"
-    "aab"	->	"application/x-authorware-bin"
-    "aam"	->	"application/x-authorware-map"
-    "aas"	->	"application/x-authorware-seg"
-    "abc"	->	"text/vnd.abc"
-    "acgi"	->	"text/html"
-    "afl"	->	"video/animaflex"
-    "ai"	->	"application/postscript"
-    "aif"	->	"audio/aiff"
-    "aifc"	->	"audio/aiff"
-    "aiff"	->	"audio/aiff"
-    "aim"	->	"application/x-aim"
-    "aip"	->	"text/x-audiosoft-intra"
-    "ani"	->	"application/x-navi-animation"
-    "aos"	->	"application/x-nokia-9000-communicator-add-on-software"
-    "aps"	->	"application/mime"
-    "arc"	->	"application/octet-stream"
-    "arj"	->	"application/arj"
-    "art"	->	"image/x-jg"
-    "asf"	->	"video/x-ms-asf"
-    "asm"	->	"text/x-asm"
-    "asp"	->	"text/asp"
-    "asx"	->	"video/x-ms-asf"
-    "atom"	->	"application/atom+xml"
-    "au"	->	"audio/x-au"
-    "avi"	->	"video/x-msvideo"
-    "avs"	->	"video/avs-video"
-    "bcpio"	->	"application/x-bcpio"
-    "bin"	->	"application/octet-stream"
-    "bm"	->	"image/bmp"
-    "bmp"	->	"image/x-ms-bmp"
-    "boo"	->	"application/book"
-    "book"	->	"application/book"
-    "boz"	->	"application/x-bzip2"
-    "bsh"	->	"application/x-bsh"
-    "bz"	->	"application/x-bzip"
-    "bz2"	->	"application/x-bzip2"
-    "c"		->	"text/plain"
-    "c++"	->	"text/plain"
-    "cat"	->	"application/vnd.ms-pki.seccat"
-    "cc"	->	"text/plain"
-    "ccad"	->	"application/clariscad"
-    "cco"	->	"application/x-cocoa"
-    "cdf"	->	"application/x-cdf"
-    "cer"	->	"application/x-x509-ca-cert"
-    "cha"	->	"application/x-chat"
-    "chat"	->	"application/x-chat"
-    "class"	->	"application/x-java-class"
-    "com"	->	"application/octet-stream"
-    "conf"	->	"text/plain"
-    "cpio"	->	"application/x-cpio"
-    "cpp"	->	"text/x-c"
-    "cpt"	->	"application/x-cpt"
-    "crl"	->	"application/pkix-crl"
-    "crt"	->	"application/x-x509-ca-cert"
-    "csh"	->	"text/x-script.csh"
-    "css"	->	"text/css"
-    "cxx"	->	"text/plain"
-    "data"	->	"application/octet-stream"
-    "dcr"	->	"application/x-director"
-    "deb"	->	"application/octet-stream"
-    "deepv"	->	"application/x-deepv"
-    "def"	->	"text/plain"
-    "der"	->	"application/x-x509-ca-cert"
-    "dif"	->	"video/x-dv"
-    "dir"	->	"application/x-director"
-    "dl"	->	"video/x-dl"
-    "dll"	->	"application/octet-stream"
-    "dmg"	->	"application/octet-stream"
-    "doc"	->	"application/msword"
-    "docx"	->	"application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    "dot"	->	"application/msword"
-    "dp"	->	"application/commonground"
-    "drw"	->	"application/drafting"
-    "dump"	->	"application/octet-stream"
-    "dv"	->	"video/x-dv"
-    "dvi"	->	"application/x-dvi"
-    "dwf"	->	"model/vnd.dwf"
-    "dwg"	->	"image/x-dwg"
-    "dxf"	->	"image/x-dwg"
-    "dxr"	->	"application/x-director"
-    "ear"	->	"application/java-archive"
-    "el"	->	"text/x-script.elisp"
-    "elc"	->	"application/x-elc"
-    "env"	->	"application/x-envoy"
-    "eot"	->	"application/vnd.ms-fontobject"
-    "eps"	->	"application/postscript"
-    "es"	->	"application/x-esrehber"
-    "etx"	->	"text/x-setext"
-    "evy"	->	"application/x-envoy"
-    "exe"	->	"application/octet-stream"
-    "f"		->	"text/plain"
-    "f77"	->	"text/plain"
-    "f90"	->	"text/plain"
-    "fdf"	->	"application/vnd.fdf"
-    "fif"	->	"image/fif"
-    "fli"	->	"video/x-fli"
-    "flo"	->	"image/florian"
-    "flv"	->	"video/x-flv"
-    "flx"	->	"text/vnd.fmi.flexstor"
-    "fmf"	->	"video/x-atomic3d-feature"
-    "for"	->	"text/plain"
-    "fpx"	->	"image/vnd.fpx"
-    "frl"	->	"application/freeloader"
-    "funk"	->	"audio/make"
-    "g"		->	"text/plain"
-    "g3"	->	"image/g3fax"
-    "gif"	->	"image/gif"
-    "gl"	->	"video/x-gl"
-    "gsd"	->	"audio/x-gsm"
-    "gsm"	->	"audio/x-gsm"
-    "gsp"	->	"application/x-gsp"
-    "gss"	->	"application/x-gss"
-    "gtar"	->	"application/x-gtar"
-    "gz"	->	"application/x-gzip"
-    "gzip"	->	"application/x-gzip"
-    "h"		->	"text/plain"
-    "hdf"	->	"application/x-hdf"
-    "help"	->	"application/x-helpfile"
-    "hgl"	->	"application/vnd.hp-hpgl"
-    "hh"	->	"text/plain"
-    "hlb"	->	"text/x-script"
-    "hlp"	->	"application/x-helpfile"
-    "hpg"	->	"application/vnd.hp-hpgl"
-    "hpgl"	->	"application/vnd.hp-hpgl"
-    "hqx"	->	"application/mac-binhex40"
-    "hta"	->	"application/hta"
-    "htc"	->	"text/x-component"
-    "htm"	->	"text/html"
-    "html"	->	"text/html"
-    "htmls"	->	"text/html"
-    "htt"	->	"text/webviewhtml"
-    "htx"	->	"text/html"
-    "ice"	->	"x-conference/x-cooltalk"
-    "ico"	->	"image/x-icon"
-    "idc"	->	"text/plain"
-    "ief"	->	"image/ief"
-    "iefs"	->	"image/ief"
-    "iges"	->	"application/iges"
-    "igs"	->	"application/iges"
-    "ima"	->	"application/x-ima"
-    "imap"	->	"application/x-httpd-imap"
-    "img"	->	"application/octet-stream"
-    "inf"	->	"application/inf"
-    "ins"	->	"application/x-internett-signup"
-    "ip"	->	"application/x-ip2"
-    "iso"	->	"application/octet-stream"
-    "isu"	->	"video/x-isvideo"
-    "it"	->	"audio/it"
-    "iv"	->	"application/x-inventor"
-    "ivr"	->	"i-world/i-vrml"
-    "ivy"	->	"application/x-livescreen"
-    "jad"	->	"text/vnd.sun.j2me.app-descriptor"
-    "jam"	->	"audio/x-jam"
-    "jar"	->	"application/java-archive"
-    "jardiff"	->	"application/x-java-archive-diff"
-    "jav"	->	"text/plain"
-    "java"	->	"text/plain"
-    "jcm"	->	"application/x-java-commerce"
-    "jfif"	->	"image/jpeg"
-    "jfif-tbnl"	->	"image/jpeg"
-    "jng"	->	"image/x-jng"
-    "jnlp"	->	"application/x-java-jnlp-file"
-    "jpe"	->	"image/jpeg"
-    "jpeg"	->	"image/jpeg"
-    "jpg"	->	"image/jpeg"
-    "jps"	->	"image/x-jps"
-    "js"	->	"application/javascript"
-    "json"	->	"application/json"
-    "jut"	->	"image/jutvision"
-    "kar"	->	"music/x-karaoke"
-    "kml"	->	"application/vnd.google-earth.kml+xml"
-    "kmz"	->	"application/vnd.google-earth.kmz"
-    "ksh"	->	"application/x-ksh"
-    "la"	->	"audio/x-nspaudio"
-    "lam"	->	"audio/x-liveaudio"
-    "latex"	->	"application/x-latex"
-    "lha"	->	"application/x-lha"
-    "lhx"	->	"application/octet-stream"
-    "list"	->	"text/plain"
-    "lma"	->	"audio/nspaudio"
-    "log"	->	"text/plain"
-    "lst"	->	"text/plain"
-    "lsx"	->	"text/x-la-asf"
-    "ltx"	->	"application/x-latex"
-    "lzh"	->	"application/x-lzh"
-    "lzx"	->	"application/x-lzx"
-    "m"		->	"text/plain"
-    "m1v"	->	"video/mpeg"
-    "m2a"	->	"audio/mpeg"
-    "m2v"	->	"video/mpeg"
-    "m3u"	->	"audio/x-mpequrl"
-    "m3u8"	->	"application/vnd.apple.mpegurl"
-    "m4a"	->	"audio/x-m4a"
-    "m4v"	->	"video/x-m4v"
-    "man"	->	"application/x-troff-man"
-    "map"	->	"application/x-navimap"
-    "mar"	->	"text/plain"
-    "mbd"	->	"application/mbedlet"
-    "mc$"	->	"application/x-magic-cap-package-1.0"
-    "mcd"	->	"application/x-mathcad"
-    "mcf"	->	"text/mcf"
-    "mcp"	->	"application/netmc"
-    "me"	->	"application/x-troff-me"
-    "mht"	->	"message/rfc822"
-    "mhtml"	->	"message/rfc822"
-    "mid"	->	"audio/midi"
-    "midi"	->	"audio/midi"
-    "mif"	->	"application/x-frame"
-    "mime"	->	"message/rfc822"
-    "mjf"	->	"audio/x-vnd.audioexplosion.mjuicemediafile"
-    "mjpg"	->	"video/x-motion-jpeg"
-    "mm"	->	"application/x-meme"
-    "mme"	->	"application/base64"
-    "mml"	->	"text/mathml"
-    "mng"	->	"video/x-mng"
-    "mod"	->	"audio/x-mod"
-    "moov"	->	"video/quicktime"
-    "mov"	->	"video/quicktime"
-    "movie"	->	"video/x-sgi-movie"
-    "mp2"	->	"audio/mpeg"
-    "mp3"	->	"audio/mpeg"
-    "mp4"	->	"video/mp4"
-    "mpa"	->	"audio/mpeg"
-    "mpc"	->	"application/x-project"
-    "mpe"	->	"video/mpeg"
-    "mpeg"	->	"video/mpeg"
-    "mpg"	->	"video/mpeg"
-    "mpga"	->	"audio/mpeg"
-    "mpp"	->	"application/vnd.ms-project"
-    "mpt"	->	"application/x-project"
-    "mpv"	->	"application/x-project"
-    "mpx"	->	"application/x-project"
-    "mrc"	->	"application/marc"
-    "ms"	->	"application/x-troff-ms"
-    "msi"	->	"application/octet-stream"
-    "msm"	->	"application/octet-stream"
-    "msp"	->	"application/octet-stream"
-    "mv"	->	"video/x-sgi-movie"
-    "my"	->	"audio/make"
-    "mzz"	->	"application/x-vnd.audioexplosion.mzz"
-    "nap"	->	"image/naplps"
-    "naplps"	->	"image/naplps"
-    "nc"	->	"application/x-netcdf"
-    "ncm"	->	"application/vnd.nokia.configuration-message"
-    "nif"	->	"image/x-niff"
-    "niff"	->	"image/x-niff"
-    "nix"	->	"application/x-mix-transfer"
-    "nsc"	->	"application/x-conference"
-    "nvd"	->	"application/x-navidoc"
-    "o"		->	"application/octet-stream"
-    "oda"	->	"application/oda"
-    "odg"	->	"application/vnd.oasis.opendocument.graphics"
-    "odp"	->	"application/vnd.oasis.opendocument.presentation"
-    "ods"	->	"application/vnd.oasis.opendocument.spreadsheet"
-    "odt"	->	"application/vnd.oasis.opendocument.text"
-    "ogg"	->	"audio/ogg"
-    "omc"	->	"application/x-omc"
-    "omcd"	->	"application/x-omcdatamaker"
-    "omcr"	->	"application/x-omcregerator"
-    "p"		->	"text/x-pascal"
-    "p10"	->	"application/x-pkcs10"
-    "p12"	->	"application/x-pkcs12"
-    "p7c"	->	"application/x-pkcs7-mime"
-    "p7m"	->	"application/x-pkcs7-mime"
-    "p7r"	->	"application/x-pkcs7-certreqresp"
-    "p7s"	->	"application/pkcs7-signature"
-    "part"	->	"application/pro_eng"
-    "pas"	->	"text/pascal"
-    "pbm"	->	"image/x-portable-bitmap"
-    "pcl"	->	"application/x-pcl"
-    "pct"	->	"image/x-pict"
-    "pcx"	->	"image/x-pcx"
-    "pdb"	->	"application/x-pilot"
-    "pdf"	->	"application/pdf"
-    "pem"	->	"application/x-x509-ca-cert"
-    "pfunk"	->	"audio/make"
-    "pgm"	->	"image/x-portable-graymap"
-    "pic"	->	"image/pict"
-    "pict"	->	"image/pict"
-    "pkg"	->	"application/x-newton-compatible-pkg"
-    "pko"	->	"application/vnd.ms-pki.pko"
-    "pl"	->	"application/x-perl"
-    "plx"	->	"application/x-pixclscript"
-    "pm"	->	"application/x-perl"
-    "pm4"	->	"application/x-pagemaker"
-    "pm5"	->	"application/x-pagemaker"
-    "png"	->	"image/png"
-    "pnm"	->	"image/x-portable-anymap"
-    "pot"	->	"application/mspowerpoint"
-    "pov"	->	"model/x-pov"
-    "ppa"	->	"application/vnd.ms-powerpoint"
-    "ppm"	->	"image/x-portable-pixmap"
-    "pps"	->	"application/mspowerpoint"
-    "ppt"	->	"application/vnd.ms-powerpoint"
-    "pptx"	->	"application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    "ppz"	->	"application/mspowerpoint"
-    "prc"	->	"application/x-pilot"
-    "pre"	->	"application/x-freelance"
-    "prt"	->	"application/pro_eng"
-    "ps"	->	"application/postscript"
-    "psd"	->	"application/octet-stream"
-    "pvu"	->	"paleovu/x-pv"
-    "pwz"	->	"application/vnd.ms-powerpoint"
-    "py"	->	"text/x-script.phyton"
-    "pyc"	->	"application/x-bytecode.python"
-    "qcp"	->	"audio/vnd.qcelp"
-    "qd3"	->	"x-world/x-3dmf"
-    "qd3d"	->	"x-world/x-3dmf"
-    "qif"	->	"image/x-quicktime"
-    "qt"	->	"video/quicktime"
-    "qtc"	->	"video/x-qtc"
-    "qti"	->	"image/x-quicktime"
-    "qtif"	->	"image/x-quicktime"
-    "ra"	->	"audio/x-realaudio"
-    "ram"	->	"audio/x-pn-realaudio"
-    "rar"	->	"application/x-rar-compressed"
-    "ras"	->	"image/x-cmu-raster"
-    "rast"	->	"image/cmu-raster"
-    "rexx"	->	"text/x-script.rexx"
-    "rf"	->	"image/vnd.rn-realflash"
-    "rgb"	->	"image/x-rgb"
-    "rm"	->	"audio/x-pn-realaudio"
-    "rmi"	->	"audio/mid"
-    "rmm"	->	"audio/x-pn-realaudio"
-    "rmp"	->	"audio/x-pn-realaudio"
-    "rng"	->	"application/ringing-tones"
-    "rnx"	->	"application/vnd.rn-realplayer"
-    "roff"	->	"application/x-troff"
-    "rp"	->	"image/vnd.rn-realpix"
-    "rpm"	->	"application/x-redhat-package-manager"
-    "rss"	->	"application/rss+xml"
-    "rt"	->	"text/richtext"
-    "rtf"	->	"application/rtf"
-    "rtx"	->	"text/richtext"
-    "run"	->	"application/x-makeself"
-    "rv"	->	"video/vnd.rn-realvideo"
-    "s"		->	"text/x-asm"
-    "s3m"	->	"audio/s3m"
-    "saveme"	->	"application/octet-stream"
-    "sbk"	->	"application/x-tbook"
-    "scm"	->	"text/x-script.scheme"
-    "sdml"	->	"text/plain"
-    "sdp"	->	"application/x-sdp"
-    "sdr"	->	"application/sounder"
-    "sea"	->	"application/x-sea"
-    "set"	->	"application/set"
-    "sgm"	->	"text/sgml"
-    "sgml"	->	"text/sgml"
-    "sh"	->	"text/x-script.sh"
-    "shar"	->	"application/x-shar"
-    "shtml"	->	"text/html"
-    "sid"	->	"audio/x-psid"
-    "sit"	->	"application/x-stuffit"
-    "skd"	->	"application/x-koan"
-    "skm"	->	"application/x-koan"
-    "skp"	->	"application/x-koan"
-    "skt"	->	"application/x-koan"
-    "sl"	->	"application/x-seelogo"
-    "smi"	->	"application/smil"
-    "smil"	->	"application/smil"
-    "snd"	->	"audio/basic"
-    "sol"	->	"application/solids"
-    "spc"	->	"text/x-speech"
-    "spl"	->	"application/futuresplash"
-    "spr"	->	"application/x-sprite"
-    "sprite"	->	"application/x-sprite"
-    "src"	->	"application/x-wais-source"
-    "ssi"	->	"text/x-server-parsed-html"
-    "ssm"	->	"application/streamingmedia"
-    "sst"	->	"application/vnd.ms-pki.certstore"
-    "step"	->	"application/step"
-    "stl"	->	"application/sla"
-    "stp"	->	"application/step"
-    "sv4cpio"	->	"application/x-sv4cpio"
-    "sv4crc"	->	"application/x-sv4crc"
-    "svf"	->	"image/x-dwg"
-    "svg"	->	"image/svg+xml"
-    "svgz"	->	"image/svg+xml"
-    "svr"	->	"application/x-world"
-    "swf"	->	"application/x-shockwave-flash"
-    "t"		->	"application/x-troff"
-    "talk"	->	"text/x-speech"
-    "tar"	->	"application/x-tar"
-    "tbk"	->	"application/x-tbook"
-    "tcl"	->	"application/x-tcl"
-    "tcsh"	->	"text/x-script.tcsh"
-    "tex"	->	"application/x-tex"
-    "texi"	->	"application/x-texinfo"
-    "texinfo"	->	"application/x-texinfo"
-    "text"	->	"text/plain"
-    "tgz"	->	"application/gnutar"
-    "tif"	->	"image/tiff"
-    "tiff"	->	"image/tiff"
-    "tk"	->	"application/x-tcl"
-    "tr"	->	"application/x-troff"
-    "ts"	->	"video/mp2t"
-    "tsi"	->	"audio/tsp-audio"
-    "tsp"	->	"audio/tsplayer"
-    "tsv"	->	"text/tab-separated-values"
-    "turbot"	->	"image/florian"
-    "txt"	->	"text/plain"
-    "uni"	->	"text/uri-list"
-    "unis"	->	"text/uri-list"
-    "unv"	->	"application/i-deas"
-    "uri"	->	"text/uri-list"
-    "uris"	->	"text/uri-list"
-    "ustar"	->	"application/x-ustar"
-    "uu"	->	"text/x-uuencode"
-    "uue"	->	"text/x-uuencode"
-    "vcd"	->	"application/x-cdlink"
-    "vcs"	->	"text/x-vcalendar"
-    "vda"	->	"application/vda"
-    "vdo"	->	"video/vdo"
-    "vew"	->	"application/groupwise"
-    "viv"	->	"video/vivo"
-    "vivo"	->	"video/vivo"
-    "vmd"	->	"application/vocaltec-media-desc"
-    "vmf"	->	"application/vocaltec-media-file"
-    "voc"	->	"audio/voc"
-    "vos"	->	"video/vosaic"
-    "vox"	->	"audio/voxware"
-    "vqe"	->	"audio/x-twinvq-plugin"
-    "vqf"	->	"audio/x-twinvq"
-    "vql"	->	"audio/x-twinvq-plugin"
-    "vrml"	->	"application/x-vrml"
-    "vrt"	->	"x-world/x-vrt"
-    "vsd"	->	"application/x-visio"
-    "vst"	->	"application/x-visio"
-    "vsw"	->	"application/x-visio"
-    "w60"	->	"application/wordperfect6.0"
-    "w61"	->	"application/wordperfect6.1"
-    "w6w"	->	"application/msword"
-    "war"	->	"application/java-archive"
-    "wav"	->	"audio/wav"
-    "wb1"	->	"application/x-qpro"
-    "wbmp"	->	"image/vnd.wap.wbmp"
-    "web"	->	"application/vnd.xara"
-    "webm"	->	"video/webm"
-    "webp"	->	"image/webp"
-    "wiz"	->	"application/msword"
-    "wk1"	->	"application/x-123"
-    "wmf"	->	"windows/metafile"
-    "wml"	->	"text/vnd.wap.wml"
-    "wmlc"	->	"application/vnd.wap.wmlc"
-    "wmls"	->	"text/vnd.wap.wmlscript"
-    "wmlsc"	->	"application/vnd.wap.wmlscriptc"
-    "wmv"	->	"video/x-ms-wmv"
-    "woff"	->	"font/woff"
-    "woff2"	->	"font/woff2"
-    "word"	->	"application/msword"
-    "wp"	->	"application/wordperfect"
-    "wp5"	->	"application/wordperfect"
-    "wp6"	->	"application/wordperfect"
-    "wpd"	->	"application/wordperfect"
-    "wq1"	->	"application/x-lotus"
-    "wri"	->	"application/x-wri"
-    "wrl"	->	"application/x-world"
-    "wrz"	->	"model/vrml"
-    "wsc"	->	"text/scriplet"
-    "wsrc"	->	"application/x-wais-source"
-    "wtk"	->	"application/x-wintalk"
-    "x-png"	->	"image/png"
-    "xbm"	->	"image/x-xbitmap"
-    "xdr"	->	"video/x-amt-demorun"
-    "xgz"	->	"xgl/drawing"
-    "xhtml"	->	"application/xhtml+xml"
-    "xif"	->	"image/vnd.xiff"
-    "xl"	->	"application/excel"
-    "xla"	->	"application/excel"
-    "xlb"	->	"application/excel"
-    "xlc"	->	"application/excel"
-    "xld"	->	"application/excel"
-    "xlk"	->	"application/excel"
-    "xll"	->	"application/excel"
-    "xlm"	->	"application/excel"
-    "xls"	->	"application/vnd.ms-excel"
-    "xlsx"	->	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    "xlt"	->	"application/excel"
-    "xlv"	->	"application/excel"
-    "xlw"	->	"application/excel"
-    "xm"	->	"audio/xm"
-    "xml"	->	"text/xml"
-    "xmz"	->	"xgl/movie"
-    "xpi"	->	"application/x-xpinstall"
-    "xpix"	->	"application/x-vnd.ls-xpix"
-    "xpm"	->	"image/xpm"
-    "xspf"	->	"application/xspf+xml"
-    "xsr"	->	"video/x-amt-showrun"
-    "xwd"	->	"image/x-xwd"
-    "xyz"	->	"chemical/x-pdb"
-    "z"		->	"application/x-compressed"
-    "zip"	->	"application/zip"
-    "zoo"	->	"application/octet-stream"
-    "zsh"	->	"text/x-script.zsh"
+    "3dm"       ->    "x-world/x-3dmf"
+    "3dmf"      ->    "x-world/x-3dmf"
+    "3gp"       ->    "video/3gpp"
+    "3gpp"      ->    "video/3gpp"
+    "7z"        ->    "application/x-7z-compressed"
+    "a"         ->    "application/octet-stream"
+    "aab"       ->    "application/x-authorware-bin"
+    "aam"       ->    "application/x-authorware-map"
+    "aas"       ->    "application/x-authorware-seg"
+    "abc"       ->    "text/vnd.abc"
+    "acgi"      ->    "text/html"
+    "afl"       ->    "video/animaflex"
+    "ai"        ->    "application/postscript"
+    "aif"       ->    "audio/aiff"
+    "aifc"      ->    "audio/aiff"
+    "aiff"      ->    "audio/aiff"
+    "aim"       ->    "application/x-aim"
+    "aip"       ->    "text/x-audiosoft-intra"
+    "ani"       ->    "application/x-navi-animation"
+    "aos"       ->    "application/x-nokia-9000-communicator-add-on-software"
+    "aps"       ->    "application/mime"
+    "arc"       ->    "application/octet-stream"
+    "arj"       ->    "application/arj"
+    "art"       ->    "image/x-jg"
+    "asf"       ->    "video/x-ms-asf"
+    "asm"       ->    "text/x-asm"
+    "asp"       ->    "text/asp"
+    "asx"       ->    "video/x-ms-asf"
+    "atom"      ->    "application/atom+xml"
+    "au"        ->    "audio/x-au"
+    "avi"       ->    "video/x-msvideo"
+    "avs"       ->    "video/avs-video"
+    "bcpio"     ->    "application/x-bcpio"
+    "bin"       ->    "application/octet-stream"
+    "bm"        ->    "image/bmp"
+    "bmp"       ->    "image/x-ms-bmp"
+    "boo"       ->    "application/book"
+    "book"      ->    "application/book"
+    "boz"       ->    "application/x-bzip2"
+    "bsh"       ->    "application/x-bsh"
+    "bz"        ->    "application/x-bzip"
+    "bz2"       ->    "application/x-bzip2"
+    "c"         ->    "text/plain"
+    "c++"       ->    "text/plain"
+    "cat"       ->    "application/vnd.ms-pki.seccat"
+    "cc"        ->    "text/plain"
+    "ccad"      ->    "application/clariscad"
+    "cco"       ->    "application/x-cocoa"
+    "cdf"       ->    "application/x-cdf"
+    "cer"       ->    "application/x-x509-ca-cert"
+    "cha"       ->    "application/x-chat"
+    "chat"      ->    "application/x-chat"
+    "class"     ->    "application/x-java-class"
+    "com"       ->    "application/octet-stream"
+    "conf"      ->    "text/plain"
+    "cpio"      ->    "application/x-cpio"
+    "cpp"       ->    "text/x-c"
+    "cpt"       ->    "application/x-cpt"
+    "crl"       ->    "application/pkix-crl"
+    "crt"       ->    "application/x-x509-ca-cert"
+    "csh"       ->    "text/x-script.csh"
+    "css"       ->    "text/css"
+    "cxx"       ->    "text/plain"
+    "data"      ->    "application/octet-stream"
+    "dcr"       ->    "application/x-director"
+    "deb"       ->    "application/octet-stream"
+    "deepv"     ->    "application/x-deepv"
+    "def"       ->    "text/plain"
+    "der"       ->    "application/x-x509-ca-cert"
+    "dif"       ->    "video/x-dv"
+    "dir"       ->    "application/x-director"
+    "dl"        ->    "video/x-dl"
+    "dll"       ->    "application/octet-stream"
+    "dmg"       ->    "application/octet-stream"
+    "doc"       ->    "application/msword"
+    "docx"      ->    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    "dot"       ->    "application/msword"
+    "dp"        ->    "application/commonground"
+    "drw"       ->    "application/drafting"
+    "dump"      ->    "application/octet-stream"
+    "dv"        ->    "video/x-dv"
+    "dvi"       ->    "application/x-dvi"
+    "dwf"       ->    "model/vnd.dwf"
+    "dwg"       ->    "image/x-dwg"
+    "dxf"       ->    "image/x-dwg"
+    "dxr"       ->    "application/x-director"
+    "ear"       ->    "application/java-archive"
+    "el"        ->    "text/x-script.elisp"
+    "elc"       ->    "application/x-elc"
+    "env"       ->    "application/x-envoy"
+    "eot"       ->    "application/vnd.ms-fontobject"
+    "eps"       ->    "application/postscript"
+    "es"        ->    "application/x-esrehber"
+    "etx"       ->    "text/x-setext"
+    "evy"       ->    "application/x-envoy"
+    "exe"       ->    "application/octet-stream"
+    "f"         ->    "text/plain"
+    "f77"       ->    "text/plain"
+    "f90"       ->    "text/plain"
+    "fdf"       ->    "application/vnd.fdf"
+    "fif"       ->    "image/fif"
+    "fli"       ->    "video/x-fli"
+    "flo"       ->    "image/florian"
+    "flv"       ->    "video/x-flv"
+    "flx"       ->    "text/vnd.fmi.flexstor"
+    "fmf"       ->    "video/x-atomic3d-feature"
+    "for"       ->    "text/plain"
+    "fpx"       ->    "image/vnd.fpx"
+    "frl"       ->    "application/freeloader"
+    "funk"      ->    "audio/make"
+    "g"         ->    "text/plain"
+    "g3"        ->    "image/g3fax"
+    "gif"       ->    "image/gif"
+    "gl"        ->    "video/x-gl"
+    "gsd"       ->    "audio/x-gsm"
+    "gsm"       ->    "audio/x-gsm"
+    "gsp"       ->    "application/x-gsp"
+    "gss"       ->    "application/x-gss"
+    "gtar"      ->    "application/x-gtar"
+    "gz"        ->    "application/x-gzip"
+    "gzip"      ->    "application/x-gzip"
+    "h"         ->    "text/plain"
+    "hdf"       ->    "application/x-hdf"
+    "help"      ->    "application/x-helpfile"
+    "hgl"       ->    "application/vnd.hp-hpgl"
+    "hh"        ->    "text/plain"
+    "hlb"       ->    "text/x-script"
+    "hlp"       ->    "application/x-helpfile"
+    "hpg"       ->    "application/vnd.hp-hpgl"
+    "hpgl"      ->    "application/vnd.hp-hpgl"
+    "hqx"       ->    "application/mac-binhex40"
+    "hta"       ->    "application/hta"
+    "htc"       ->    "text/x-component"
+    "htm"       ->    "text/html"
+    "html"      ->    "text/html"
+    "htmls"     ->    "text/html"
+    "htt"       ->    "text/webviewhtml"
+    "htx"       ->    "text/html"
+    "ice"       ->    "x-conference/x-cooltalk"
+    "ico"       ->    "image/x-icon"
+    "idc"       ->    "text/plain"
+    "ief"       ->    "image/ief"
+    "iefs"      ->    "image/ief"
+    "iges"      ->    "application/iges"
+    "igs"       ->    "application/iges"
+    "ima"       ->    "application/x-ima"
+    "imap"      ->    "application/x-httpd-imap"
+    "img"       ->    "application/octet-stream"
+    "inf"       ->    "application/inf"
+    "ins"       ->    "application/x-internett-signup"
+    "ip"        ->    "application/x-ip2"
+    "iso"       ->    "application/octet-stream"
+    "isu"       ->    "video/x-isvideo"
+    "it"        ->    "audio/it"
+    "iv"        ->    "application/x-inventor"
+    "ivr"       ->    "i-world/i-vrml"
+    "ivy"       ->    "application/x-livescreen"
+    "jad"       ->    "text/vnd.sun.j2me.app-descriptor"
+    "jam"       ->    "audio/x-jam"
+    "jar"       ->    "application/java-archive"
+    "jardiff"   ->    "application/x-java-archive-diff"
+    "jav"       ->    "text/plain"
+    "java"      ->    "text/plain"
+    "jcm"       ->    "application/x-java-commerce"
+    "jfif"      ->    "image/jpeg"
+    "jfif-tbnl" ->    "image/jpeg"
+    "jng"       ->    "image/x-jng"
+    "jnlp"      ->    "application/x-java-jnlp-file"
+    "jpe"       ->    "image/jpeg"
+    "jpeg"      ->    "image/jpeg"
+    "jpg"       ->    "image/jpeg"
+    "jps"       ->    "image/x-jps"
+    "js"        ->    "application/javascript"
+    "json"      ->    "application/json"
+    "jut"       ->    "image/jutvision"
+    "kar"       ->    "music/x-karaoke"
+    "kml"       ->    "application/vnd.google-earth.kml+xml"
+    "kmz"       ->    "application/vnd.google-earth.kmz"
+    "ksh"       ->    "application/x-ksh"
+    "la"        ->    "audio/x-nspaudio"
+    "lam"       ->    "audio/x-liveaudio"
+    "latex"     ->    "application/x-latex"
+    "lha"       ->    "application/x-lha"
+    "lhx"       ->    "application/octet-stream"
+    "list"      ->    "text/plain"
+    "lma"       ->    "audio/nspaudio"
+    "log"       ->    "text/plain"
+    "lst"       ->    "text/plain"
+    "lsx"       ->    "text/x-la-asf"
+    "ltx"       ->    "application/x-latex"
+    "lzh"       ->    "application/x-lzh"
+    "lzx"       ->    "application/x-lzx"
+    "m"         ->    "text/plain"
+    "m1v"       ->    "video/mpeg"
+    "m2a"       ->    "audio/mpeg"
+    "m2v"       ->    "video/mpeg"
+    "m3u"       ->    "audio/x-mpequrl"
+    "m3u8"      ->    "application/vnd.apple.mpegurl"
+    "m4a"       ->    "audio/x-m4a"
+    "m4v"       ->    "video/x-m4v"
+    "man"       ->    "application/x-troff-man"
+    "map"       ->    "application/x-navimap"
+    "mar"       ->    "text/plain"
+    "mbd"       ->    "application/mbedlet"
+    "mc$"       ->    "application/x-magic-cap-package-1.0"
+    "mcd"       ->    "application/x-mathcad"
+    "mcf"       ->    "text/mcf"
+    "mcp"       ->    "application/netmc"
+    "me"        ->    "application/x-troff-me"
+    "mht"       ->    "message/rfc822"
+    "mhtml"     ->    "message/rfc822"
+    "mid"       ->    "audio/midi"
+    "midi"      ->    "audio/midi"
+    "mif"       ->    "application/x-frame"
+    "mime"      ->    "message/rfc822"
+    "mjf"       ->    "audio/x-vnd.audioexplosion.mjuicemediafile"
+    "mjpg"      ->    "video/x-motion-jpeg"
+    "mm"        ->    "application/x-meme"
+    "mme"       ->    "application/base64"
+    "mml"       ->    "text/mathml"
+    "mng"       ->    "video/x-mng"
+    "mod"       ->    "audio/x-mod"
+    "moov"      ->    "video/quicktime"
+    "mov"       ->    "video/quicktime"
+    "movie"     ->    "video/x-sgi-movie"
+    "mp2"       ->    "audio/mpeg"
+    "mp3"       ->    "audio/mpeg"
+    "mp4"       ->    "video/mp4"
+    "mpa"       ->    "audio/mpeg"
+    "mpc"       ->    "application/x-project"
+    "mpe"       ->    "video/mpeg"
+    "mpeg"      ->    "video/mpeg"
+    "mpg"       ->    "video/mpeg"
+    "mpga"      ->    "audio/mpeg"
+    "mpp"       ->    "application/vnd.ms-project"
+    "mpt"       ->    "application/x-project"
+    "mpv"       ->    "application/x-project"
+    "mpx"       ->    "application/x-project"
+    "mrc"       ->    "application/marc"
+    "ms"        ->    "application/x-troff-ms"
+    "msi"       ->    "application/octet-stream"
+    "msm"       ->    "application/octet-stream"
+    "msp"       ->    "application/octet-stream"
+    "mv"        ->    "video/x-sgi-movie"
+    "my"        ->    "audio/make"
+    "mzz"       ->    "application/x-vnd.audioexplosion.mzz"
+    "nap"       ->    "image/naplps"
+    "naplps"    ->    "image/naplps"
+    "nc"        ->    "application/x-netcdf"
+    "ncm"       ->    "application/vnd.nokia.configuration-message"
+    "nif"       ->    "image/x-niff"
+    "niff"      ->    "image/x-niff"
+    "nix"       ->    "application/x-mix-transfer"
+    "nsc"       ->    "application/x-conference"
+    "nvd"       ->    "application/x-navidoc"
+    "o"         ->    "application/octet-stream"
+    "oda"       ->    "application/oda"
+    "odg"       ->    "application/vnd.oasis.opendocument.graphics"
+    "odp"       ->    "application/vnd.oasis.opendocument.presentation"
+    "ods"       ->    "application/vnd.oasis.opendocument.spreadsheet"
+    "odt"       ->    "application/vnd.oasis.opendocument.text"
+    "ogg"       ->    "audio/ogg"
+    "omc"       ->    "application/x-omc"
+    "omcd"      ->    "application/x-omcdatamaker"
+    "omcr"      ->    "application/x-omcregerator"
+    "p"         ->    "text/x-pascal"
+    "p10"       ->    "application/x-pkcs10"
+    "p12"       ->    "application/x-pkcs12"
+    "p7c"       ->    "application/x-pkcs7-mime"
+    "p7m"       ->    "application/x-pkcs7-mime"
+    "p7r"       ->    "application/x-pkcs7-certreqresp"
+    "p7s"       ->    "application/pkcs7-signature"
+    "part"      ->    "application/pro_eng"
+    "pas"       ->    "text/pascal"
+    "pbm"       ->    "image/x-portable-bitmap"
+    "pcl"       ->    "application/x-pcl"
+    "pct"       ->    "image/x-pict"
+    "pcx"       ->    "image/x-pcx"
+    "pdb"       ->    "application/x-pilot"
+    "pdf"       ->    "application/pdf"
+    "pem"       ->    "application/x-x509-ca-cert"
+    "pfunk"     ->    "audio/make"
+    "pgm"       ->    "image/x-portable-graymap"
+    "pic"       ->    "image/pict"
+    "pict"      ->    "image/pict"
+    "pkg"       ->    "application/x-newton-compatible-pkg"
+    "pko"       ->    "application/vnd.ms-pki.pko"
+    "pl"        ->    "application/x-perl"
+    "plx"       ->    "application/x-pixclscript"
+    "pm"        ->    "application/x-perl"
+    "pm4"       ->    "application/x-pagemaker"
+    "pm5"       ->    "application/x-pagemaker"
+    "png"       ->    "image/png"
+    "pnm"       ->    "image/x-portable-anymap"
+    "pot"       ->    "application/mspowerpoint"
+    "pov"       ->    "model/x-pov"
+    "ppa"       ->    "application/vnd.ms-powerpoint"
+    "ppm"       ->    "image/x-portable-pixmap"
+    "pps"       ->    "application/mspowerpoint"
+    "ppt"       ->    "application/vnd.ms-powerpoint"
+    "pptx"      ->    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    "ppz"       ->    "application/mspowerpoint"
+    "prc"       ->    "application/x-pilot"
+    "pre"       ->    "application/x-freelance"
+    "prt"       ->    "application/pro_eng"
+    "ps"        ->    "application/postscript"
+    "psd"       ->    "application/octet-stream"
+    "pvu"       ->    "paleovu/x-pv"
+    "pwz"       ->    "application/vnd.ms-powerpoint"
+    "py"        ->    "text/x-script.phyton"
+    "pyc"       ->    "application/x-bytecode.python"
+    "qcp"       ->    "audio/vnd.qcelp"
+    "qd3"       ->    "x-world/x-3dmf"
+    "qd3d"      ->    "x-world/x-3dmf"
+    "qif"       ->    "image/x-quicktime"
+    "qt"        ->    "video/quicktime"
+    "qtc"       ->    "video/x-qtc"
+    "qti"       ->    "image/x-quicktime"
+    "qtif"      ->    "image/x-quicktime"
+    "ra"        ->    "audio/x-realaudio"
+    "ram"       ->    "audio/x-pn-realaudio"
+    "rar"       ->    "application/x-rar-compressed"
+    "ras"       ->    "image/x-cmu-raster"
+    "rast"      ->    "image/cmu-raster"
+    "rexx"      ->    "text/x-script.rexx"
+    "rf"        ->    "image/vnd.rn-realflash"
+    "rgb"       ->    "image/x-rgb"
+    "rm"        ->    "audio/x-pn-realaudio"
+    "rmi"       ->    "audio/mid"
+    "rmm"       ->    "audio/x-pn-realaudio"
+    "rmp"       ->    "audio/x-pn-realaudio"
+    "rng"       ->    "application/ringing-tones"
+    "rnx"       ->    "application/vnd.rn-realplayer"
+    "roff"      ->    "application/x-troff"
+    "rp"        ->    "image/vnd.rn-realpix"
+    "rpm"       ->    "application/x-redhat-package-manager"
+    "rss"       ->    "application/rss+xml"
+    "rt"        ->    "text/richtext"
+    "rtf"       ->    "application/rtf"
+    "rtx"       ->    "text/richtext"
+    "run"       ->    "application/x-makeself"
+    "rv"        ->    "video/vnd.rn-realvideo"
+    "s"         ->    "text/x-asm"
+    "s3m"       ->    "audio/s3m"
+    "saveme"    ->    "application/octet-stream"
+    "sbk"       ->    "application/x-tbook"
+    "scm"       ->    "text/x-script.scheme"
+    "sdml"      ->    "text/plain"
+    "sdp"       ->    "application/x-sdp"
+    "sdr"       ->    "application/sounder"
+    "sea"       ->    "application/x-sea"
+    "set"       ->    "application/set"
+    "sgm"       ->    "text/sgml"
+    "sgml"      ->    "text/sgml"
+    "sh"        ->    "text/x-script.sh"
+    "shar"      ->    "application/x-shar"
+    "shtml"     ->    "text/html"
+    "sid"       ->    "audio/x-psid"
+    "sit"       ->    "application/x-stuffit"
+    "skd"       ->    "application/x-koan"
+    "skm"       ->    "application/x-koan"
+    "skp"       ->    "application/x-koan"
+    "skt"       ->    "application/x-koan"
+    "sl"        ->    "application/x-seelogo"
+    "smi"       ->    "application/smil"
+    "smil"      ->    "application/smil"
+    "snd"       ->    "audio/basic"
+    "sol"       ->    "application/solids"
+    "spc"       ->    "text/x-speech"
+    "spl"       ->    "application/futuresplash"
+    "spr"       ->    "application/x-sprite"
+    "sprite"    ->    "application/x-sprite"
+    "src"       ->    "application/x-wais-source"
+    "ssi"       ->    "text/x-server-parsed-html"
+    "ssm"       ->    "application/streamingmedia"
+    "sst"       ->    "application/vnd.ms-pki.certstore"
+    "step"      ->    "application/step"
+    "stl"       ->    "application/sla"
+    "stp"       ->    "application/step"
+    "sv4cpio"   ->    "application/x-sv4cpio"
+    "sv4crc"    ->    "application/x-sv4crc"
+    "svf"       ->    "image/x-dwg"
+    "svg"       ->    "image/svg+xml"
+    "svgz"      ->    "image/svg+xml"
+    "svr"       ->    "application/x-world"
+    "swf"       ->    "application/x-shockwave-flash"
+    "t"         ->    "application/x-troff"
+    "talk"      ->    "text/x-speech"
+    "tar"       ->    "application/x-tar"
+    "tbk"       ->    "application/x-tbook"
+    "tcl"       ->    "application/x-tcl"
+    "tcsh"      ->    "text/x-script.tcsh"
+    "tex"       ->    "application/x-tex"
+    "texi"      ->    "application/x-texinfo"
+    "texinfo"   ->    "application/x-texinfo"
+    "text"      ->    "text/plain"
+    "tgz"       ->    "application/gnutar"
+    "tif"       ->    "image/tiff"
+    "tiff"      ->    "image/tiff"
+    "tk"        ->    "application/x-tcl"
+    "tr"        ->    "application/x-troff"
+    "ts"        ->    "video/mp2t"
+    "tsi"       ->    "audio/tsp-audio"
+    "tsp"       ->    "audio/tsplayer"
+    "tsv"       ->    "text/tab-separated-values"
+    "turbot"    ->    "image/florian"
+    "txt"       ->    "text/plain"
+    "uni"       ->    "text/uri-list"
+    "unis"      ->    "text/uri-list"
+    "unv"       ->    "application/i-deas"
+    "uri"       ->    "text/uri-list"
+    "uris"      ->    "text/uri-list"
+    "ustar"     ->    "application/x-ustar"
+    "uu"        ->    "text/x-uuencode"
+    "uue"       ->    "text/x-uuencode"
+    "vcd"       ->    "application/x-cdlink"
+    "vcs"       ->    "text/x-vcalendar"
+    "vda"       ->    "application/vda"
+    "vdo"       ->    "video/vdo"
+    "vew"       ->    "application/groupwise"
+    "viv"       ->    "video/vivo"
+    "vivo"      ->    "video/vivo"
+    "vmd"       ->    "application/vocaltec-media-desc"
+    "vmf"       ->    "application/vocaltec-media-file"
+    "voc"       ->    "audio/voc"
+    "vos"       ->    "video/vosaic"
+    "vox"       ->    "audio/voxware"
+    "vqe"       ->    "audio/x-twinvq-plugin"
+    "vqf"       ->    "audio/x-twinvq"
+    "vql"       ->    "audio/x-twinvq-plugin"
+    "vrml"      ->    "application/x-vrml"
+    "vrt"       ->    "x-world/x-vrt"
+    "vsd"       ->    "application/x-visio"
+    "vst"       ->    "application/x-visio"
+    "vsw"       ->    "application/x-visio"
+    "w60"       ->    "application/wordperfect6.0"
+    "w61"       ->    "application/wordperfect6.1"
+    "w6w"       ->    "application/msword"
+    "war"       ->    "application/java-archive"
+    "wav"       ->    "audio/wav"
+    "wb1"       ->    "application/x-qpro"
+    "wbmp"      ->    "image/vnd.wap.wbmp"
+    "web"       ->    "application/vnd.xara"
+    "webm"      ->    "video/webm"
+    "webp"      ->    "image/webp"
+    "wiz"       ->    "application/msword"
+    "wk1"       ->    "application/x-123"
+    "wmf"       ->    "windows/metafile"
+    "wml"       ->    "text/vnd.wap.wml"
+    "wmlc"      ->    "application/vnd.wap.wmlc"
+    "wmls"      ->    "text/vnd.wap.wmlscript"
+    "wmlsc"     ->    "application/vnd.wap.wmlscriptc"
+    "wmv"       ->    "video/x-ms-wmv"
+    "woff"      ->    "font/woff"
+    "woff2"     ->    "font/woff2"
+    "word"      ->    "application/msword"
+    "wp"        ->    "application/wordperfect"
+    "wp5"       ->    "application/wordperfect"
+    "wp6"       ->    "application/wordperfect"
+    "wpd"       ->    "application/wordperfect"
+    "wq1"       ->    "application/x-lotus"
+    "wri"       ->    "application/x-wri"
+    "wrl"       ->    "application/x-world"
+    "wrz"       ->    "model/vrml"
+    "wsc"       ->    "text/scriplet"
+    "wsrc"      ->    "application/x-wais-source"
+    "wtk"       ->    "application/x-wintalk"
+    "x-png"     ->    "image/png"
+    "xbm"       ->    "image/x-xbitmap"
+    "xdr"       ->    "video/x-amt-demorun"
+    "xgz"       ->    "xgl/drawing"
+    "xhtml"     ->    "application/xhtml+xml"
+    "xif"       ->    "image/vnd.xiff"
+    "xl"        ->    "application/excel"
+    "xla"       ->    "application/excel"
+    "xlb"       ->    "application/excel"
+    "xlc"       ->    "application/excel"
+    "xld"       ->    "application/excel"
+    "xlk"       ->    "application/excel"
+    "xll"       ->    "application/excel"
+    "xlm"       ->    "application/excel"
+    "xls"       ->    "application/vnd.ms-excel"
+    "xlsx"      ->    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    "xlt"       ->    "application/excel"
+    "xlv"       ->    "application/excel"
+    "xlw"       ->    "application/excel"
+    "xm"        ->    "audio/xm"
+    "xml"       ->    "text/xml"
+    "xmz"       ->    "xgl/movie"
+    "xpi"       ->    "application/x-xpinstall"
+    "xpix"      ->    "application/x-vnd.ls-xpix"
+    "xpm"       ->    "image/xpm"
+    "xspf"      ->    "application/xspf+xml"
+    "xsr"       ->    "video/x-amt-showrun"
+    "xwd"       ->    "image/x-xwd"
+    "xyz"       ->    "chemical/x-pdb"
+    "z"         ->    "application/x-compressed"
+    "zip"       ->    "application/zip"
+    "zoo"       ->    "application/octet-stream"
+    "zsh"       ->    "text/x-script.zsh"
 

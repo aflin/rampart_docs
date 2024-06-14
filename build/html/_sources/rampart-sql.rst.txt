@@ -57,17 +57,17 @@ Return value:
 .. code-block:: none
 
     {
-        init:         {_func:true},
-        stringFormat: {_func:true},
-        abstract:     {_func:true},
-        sandr:        {_func:true},
-        sandr2:       {_func:true},
-        rex:          {_func:true},
-        re2:          {_func:true},
-        rexFile:      {_func:true},
-        re2File:      {_func:true},
-        searchFile:   {_func:true}
-        searchText:   {_func:true}
+        init:          {_func:true},
+        stringFormat:  {_func:true},
+        abstract:      {_func:true},
+        sandr:         {_func:true},
+        sandr2:        {_func:true},
+        rex:           {_func:true},
+        re2:           {_func:true},
+        rexFile:       {_func:true},
+        re2File:       {_func:true},
+        searchFile:    {_func:true},
+        searchText:    {_func:true},
     }
 
 The returned :green:`Object` contains :green:`Functions` that can be split into two groups:
@@ -91,17 +91,37 @@ Usage:
 
 .. code-block:: javascript
 
-    var sql = new Sql.init(dbpath [,create]);
+    var sql = new Sql.init(path [,create]);
+           /* or */
+    var sql = new Sql.init(options);
 
 +--------+------------------+---------------------------------------------------+
 |Argument|Type              |Description                                        |
 +========+==================+===================================================+
-|dbpath  |:green:`String`   | The path to the directory containing the database |
+|path    |:green:`String`   | The path to the directory containing the database |
 +--------+------------------+---------------------------------------------------+
 |create  |:green:`Boolean`  | if true, and the directory does not exist, the    |
 |        |                  | directory and a new database will be created in   |
 |        |                  | the location specified.                           |
 +--------+------------------+---------------------------------------------------+
+|options |:green:`Object`   | options must include `path` and may include any   |
+|        |                  | of the remaining three:                           |
+|        |                  |                                                   |
+|        |                  | * ``path`` - :green:`String` - The path to the    |
+|        |                  |   directory containing the database.              |
+|        |                  | * ``create`` - :green:`Boolean` create the        |
+|        |                  |   database if it doesn'texist.                    |
+|        |                  | * ``force`` - :green:`Boolean` force create a     |
+|        |                  |   database in a non-empty directory (must not     |
+|        |                  |   contain a db). This option implies ``create``.  |
+|        |                  | * ``addTables`` - :green:`Boolean` - Automatically|
+|        |                  |   add any table files that are in ``path``        |
+|        |                  |   but are not in the database.  If path           |
+|        |                  |   does not contain a database, create one first.  |
+|        |                  |   Implies `force`. See `addTable()`_ below.       |
++--------+------------------+---------------------------------------------------+
+
+
 
 Return Value:
    An :green:`Object` of :green:`Functions`:
@@ -116,6 +136,12 @@ Return Value:
         importCsvFile: {_func:true},
         importCsv:     {_func:true},
         close:         {_func:true}
+        addTable:      {_func:true},
+	importCsv:     {_func:true},
+	importCsvFile: {_func:true},
+	errMsg:        "",
+        db:            "/path/to/db",
+	selectMaxRows: 10
     }
     
 Example:
@@ -1100,6 +1126,29 @@ longer needed, ``close()`` will clean up some of those resources.  Note that
 even after calling ``sql.close()``, using the ``sql.*`` :green:`Functions`
 will re-open handles to the database and continue to operate as expected and
 in the same manner as when the "connection" was first opened.
+
+addTable()
+~~~~~~~~~~
+
+Add a table to the current database.
+
+Usage: 
+
+.. code-block:: javascript
+
+   var sql = new Sql.init('/path/to/db');
+
+   sql.addTable(path);
+
+Where ``path`` is the path to the ``*.tbl`` file from another database. 
+This file should be a copy and upon adding, may not exist in more than one
+database.  The file will not be copied and used as is from ``path``.
+
+Note:
+   Any existing indexes on the added table that existed in the old database
+   will need to be recreated.
+
+See also: :ref:`The importfile command line utility <sql-utils:The addtable Command Line Utility>`.
 
 Database Indexing
 -----------------

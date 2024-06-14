@@ -110,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#importcsvfile">importCsvFile()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#importcsv">importCsv()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#close">close()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#addtable">addTable()</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#database-indexing">Database Indexing</a><ul>
@@ -294,17 +295,17 @@ of using the <code class="docutils literal notranslate"><span class="pre">requir
 </div>
 <p>Return value:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{
-    init:         {_func:true},
-    stringFormat: {_func:true},
-    abstract:     {_func:true},
-    sandr:        {_func:true},
-    sandr2:       {_func:true},
-    rex:          {_func:true},
-    re2:          {_func:true},
-    rexFile:      {_func:true},
-    re2File:      {_func:true},
-    searchFile:   {_func:true}
-    searchText:   {_func:true}
+    init:          {_func:true},
+    stringFormat:  {_func:true},
+    abstract:      {_func:true},
+    sandr:         {_func:true},
+    sandr2:        {_func:true},
+    rex:           {_func:true},
+    re2:           {_func:true},
+    rexFile:       {_func:true},
+    re2File:       {_func:true},
+    searchFile:    {_func:true},
+    searchText:    {_func:true},
 }
 </pre></div>
 </div>
@@ -321,7 +322,9 @@ new connection to the specified database.  The return <span class="green">Object
 following <span class="green">Functions</span>: <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, <code class="docutils literal notranslate"><span class="pre">one()</span></code>, <code class="docutils literal notranslate"><span class="pre">set()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">reset()</span></code>, <code class="docutils literal notranslate"><span class="pre">importCsvFile()</span></code>, <code class="docutils literal notranslate"><span class="pre">importCsv</span></code> and <code class="docutils literal notranslate"><span class="pre">close()</span></code>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">dbpath</span> <span class="p">[,</span><span class="nx">create</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span><span class="nx">create</span><span class="p">]);</span>
+       <span class="cm">/* or */</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </div>
 <table border="1" class="docutils">
@@ -337,7 +340,7 @@ following <span class="green">Functions</span>: <code class="docutils literal no
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>dbpath</td>
+<tr class="row-even"><td>path</td>
 <td><span class="green">String</span></td>
 <td>The path to the directory containing the database</td>
 </tr>
@@ -346,6 +349,26 @@ following <span class="green">Functions</span>: <code class="docutils literal no
 <td>if true, and the directory does not exist, the
 directory and a new database will be created in
 the location specified.</td>
+</tr>
+<tr class="row-even"><td>options</td>
+<td><span class="green">Object</span></td>
+<td><p class="first">options must include <cite>path</cite> and may include any
+of the remaining three:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> - <span class="green">String</span> - The path to the
+directory containing the database.</li>
+<li><code class="docutils literal notranslate"><span class="pre">create</span></code> - <span class="green">Boolean</span> create the
+database if it doesn’texist.</li>
+<li><code class="docutils literal notranslate"><span class="pre">force</span></code> - <span class="green">Boolean</span> force create a
+database in a non-empty directory (must not
+contain a db). This option implies <code class="docutils literal notranslate"><span class="pre">create</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">addTables</span></code> - <span class="green">Boolean</span> - Automatically
+add any table files that are in <code class="docutils literal notranslate"><span class="pre">path</span></code>
+but are not in the database.  If path
+does not contain a database, create one first.
+Implies <cite>force</cite>. See <a class="reference internal" href="#addtable">addTable()</a> below.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -361,6 +384,12 @@ the location specified.</td>
     importCsvFile: {_func:true},
     importCsv:     {_func:true},
     close:         {_func:true}
+    addTable:      {_func:true},
+    importCsv:     {_func:true},
+    importCsvFile: {_func:true},
+    errMsg:        &quot;&quot;,
+    db:            &quot;/path/to/db&quot;,
+    selectMaxRows: 10
 }
 </pre></div>
 </div>
@@ -1290,6 +1319,25 @@ longer needed, <code class="docutils literal notranslate"><span class="pre">clos
 even after calling <code class="docutils literal notranslate"><span class="pre">sql.close()</span></code>, using the <code class="docutils literal notranslate"><span class="pre">sql.*</span></code> <span class="green">Functions</span>
 will re-open handles to the database and continue to operate as expected and
 in the same manner as when the “connection” was first opened.</p>
+</div>
+<div class="section" id="addtable">
+<h2>addTable()<a class="headerlink" href="#addtable" title="Permalink to this headline">¶</a></h2>
+<p>Add a table to the current database.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s1">&#39;/path/to/db&#39;</span><span class="p">);</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">addTable</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is the path to the <code class="docutils literal notranslate"><span class="pre">*.tbl</span></code> file from another database.
+This file should be a copy and upon adding, may not exist in more than one
+database.  The file will not be copied and used as is from <code class="docutils literal notranslate"><span class="pre">path</span></code>.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>Any existing indexes on the added table that existed in the old database
+will need to be recreated.</dd>
+</dl>
+<p>See also: <a class="reference internal" href="sql-utils.html#the-addtable-command-line-utility"><span class="std std-ref">The importfile command line utility</span></a>.</p>
 </div>
 </div>
 <div class="section" id="database-indexing">
