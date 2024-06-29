@@ -42,8 +42,15 @@ new rampart.thread()
     Usage:
 
     .. code-block:: javascript
-    
-        var thr = new rampart.thread(); 
+
+        var thr = new rampart.thread([keepOpen]);
+
+    Where ``keepOpen`` is a :green:`Boolean`, whether to keep the thread
+    open when the thread's event loop is empty and a parent thread is
+    ready to exit.  Normally at the end of a script, the main thread's
+    event loop waits for any child threads to finish pending events and
+    allow it to exit.  This option thus requires an explicit `thr.close()`_
+    for a parent thread to completely exit.
 
     Return Value:
         An :green:`Object` with two functions: `exec` and `close`.
@@ -57,8 +64,8 @@ thr.exec()
     Usage:
 
     .. code-block:: javascript
-    
-        var thr = new rampart.thread(); 
+
+        var thr = new rampart.thread();
 
         thr.exec(options);
 
@@ -79,12 +86,17 @@ thr.exec()
 
         * ``callbackFunc`` - a :green:`Function` that will be executed in the
           current event loop (in the thread in which ``new rampart.thread()``
-          was called).  It will be passed a single parameter, the return
-          value of ``threadFunc``.
+          was called).  It will be passed two parameter
+          (``function(value,error){...}``) where either ``value`` (the
+          return value of ``threadFunc``) or ``error`` (any errors in thrown
+          in ``threadFunc``).
 
         * ``threadDelay`` - a delay, similar to the :ref:`setTimeout() function <rampart-main:setTimeout()>`\ ,
           measured in milliseconds.  If omitted, the ``threadFunc`` :green:`Function`
           will execute immediately.
+
+    Note:
+       If no ``callbackFunc`` is provided, errors in ``threadFunc`` wil be printed to stderr.
 
 
     Example:
@@ -93,7 +105,7 @@ thr.exec()
 
         var iscopied = true;
 
-        var thr = new rampart.thread(); 
+        var thr = new rampart.thread();
 
         var notcopied = true;
 
@@ -103,8 +115,11 @@ thr.exec()
             return myarg + 1;
         }
 
-        function callback(myarg) {
-            console.log("back in the main thread:", myarg);
+        function callback(myarg, err) {
+            if(err)
+               console.log("error:", err);
+            else
+               console.log("back in the main thread with myarg = ", myarg);
         }
 
         thr.exec({
@@ -118,13 +133,13 @@ thr.exec()
 
         // thr.exec(thrfunc, 3, callback, 1000);
 
-        /* 
+        /*
             after one second, output will be:
                 from inside the thread: 3
-                back in the main thread: 4
+                back in the main thread with myarg = 4
         */
 
-    Return Value: 
+    Return Value:
         ``undefined``.
 
     Caveats:
@@ -147,7 +162,7 @@ thr.close()
 
     .. code-block:: javascript
 
-        var thr = new rampart.thread(); 
+        var thr = new rampart.thread();
 
         function thrfunc(myarg) {
             console.log("from inside the thread:", myarg);
@@ -160,7 +175,7 @@ thr.close()
 
         thr.exec(thrfunc, 3, callback, 1000);
 
-        /* 
+        /*
             after one second, output will be:
                 from inside the thread: 3
                 back in the main thread: 4
@@ -173,17 +188,27 @@ thr.close()
            However in a long lived script, closing a thread when no longer
            in use can free up significant resources                       */
 
-    Return Value: 
+    Return Value:
         ``undefined``.
 
 thr.getId()
 ~~~~~~~~~~~
 
-    Get a thread's unique identification number.  This number is used to 
-    identify a thread, and may be reused after the thread is closed.
+    Get ``thr`` thread's unique identification number.  This number is used to
+    identify a thread. The number may be reused after the thread is closed.
 
-    Return Value: 
+    Return Value:
         A :green:`Number`, the positive integer for identifying the thread.
+
+rampart.thread.getCurrentId()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Return the thread id of the current thread.  Unlike `thr.getId()`_\ ,
+   this function returns the thread number of the current thread (i.e. the
+   thread in which it is called).
+
+   Return Value:
+        A :green:`Number`, the positive integer for identifying the current thread.
 
 rampart.thread.put()
 ~~~~~~~~~~~~~~~~~~~~
@@ -203,7 +228,7 @@ rampart.thread.put()
 
         * ``varValue`` is any normal JavaScript variable.
 
-    Return Value: 
+    Return Value:
         ``undefined``.
 
 rampart.thread.get()
@@ -224,15 +249,15 @@ rampart.thread.get()
 
         * ``timeOut`` is a positive :green:`Number`.  If provided and the
           return value would be ``undefined``,  `rampart.thread.waitfor()`_
-          below will be called with ``varName`` and ``timeOut``.  
+          below will be called with ``varName`` and ``timeOut``.
 
-    Return Value: 
+    Return Value:
         A **copy** of the variable stored with `rampart.thread.put()`_.
 
-    Caveat:  
+    Caveat:
         The variable retrieved is a deep copy of the variable put.  If
         the original variable that was put is altered, the changes will
-        not affect the retrieved version. 
+        not affect the retrieved version.
 
     Example:
 
@@ -270,7 +295,7 @@ rampart.thread.get()
             from inside thread 1: 3
             from inside thread 2: 13
             back in the main thread: 4
-        
+
            Note that thr1's callbackFunc runs last.  The event loop
            of threads start immediately while the main event loop in
            which the callbackFunc runs starts at the end of the script.
@@ -294,9 +319,9 @@ rampart.thread.del()
 
         * ``timeOut`` is a positive :green:`Number`.  If provided and the
           return value would be ``undefined``,  `rampart.thread.waitfor()`_
-          below will be called with ``varName`` and ``timeOut``.  
+          below will be called with ``varName`` and ``timeOut``.
 
-    Return Value: 
+    Return Value:
         A **copy** of the variable stored with `rampart.thread.put()`_.
 
 rampart.thread.waitfor()
@@ -314,12 +339,12 @@ rampart.thread.waitfor()
         * ``varName`` is a :green:`String`, the key used in
           `rampart.thread.put()`_.
 
-        * ``timeOut`` is a positive :green:`Number` in milliseconds.  If 
+        * ``timeOut`` is a positive :green:`Number` in milliseconds.  If
           provided, return ``undefined`` if the varable ``varName`` has not been
           updated within the given time. If ``timeout`` is omitted, the
           function will wait indefinely for the variable to be updated.
 
-    Return Value: 
+    Return Value:
         A **copy** of the variable stored with `rampart.thread.put()`_ or
         ``undefined`` if the ``timeOut`` is reached.
 
@@ -334,7 +359,7 @@ Lock Functions
 new rampart.lock()
 ~~~~~~~~~~~~~~~~~~
 
-     Calling ``new rampart.lock()`` function creates a new 
+     Calling ``new rampart.lock()`` function creates a new
      `POSIX backed mutex <https://linux.die.net/man/3/pthread_mutex_lock>`_
      which can be used to isolate critical sections of code running in
      multiple threads.
@@ -342,8 +367,8 @@ new rampart.lock()
     Usage:
 
     .. code-block:: javascript
-    
-        var thrlock = new rampart.lock(); 
+
+        var thrlock = new rampart.lock();
 
     Return Value:
         An :green:`Object` with two functions: `lock` and `unlock`.
@@ -359,14 +384,14 @@ thrlock.lock()
     Usage:
 
     .. code-block:: javascript
-    
-        var thrlock = new rampart.lock(); 
+
+        var thrlock = new rampart.lock();
 
         // ... while inside a threaded function
-        
+
         thrlock.lock();
 
-    Return Value: 
+    Return Value:
         ``undefined``.
 
 thrlock.unlock()
@@ -377,16 +402,16 @@ thrlock.unlock()
     Usage:
 
     .. code-block:: javascript
-    
-        var thrlock = new rampart.lock(); 
+
+        var thrlock = new rampart.lock();
 
         // ... while inside a threaded function
-        
+
         thrlock.lock();
         /* critical section */
         thrlock.unlock();
 
-    Return Value: 
+    Return Value:
         ``undefined``.
 
 thrlock.trylock()
@@ -397,11 +422,11 @@ thrlock.trylock()
     Usage:
 
     .. code-block:: javascript
-    
-        var thrlock = new rampart.lock(); 
+
+        var thrlock = new rampart.lock();
 
         // ... while inside a threaded function
-        
+
         if(thrlock.trylock())
         {
             /* critical section */
@@ -410,18 +435,18 @@ thrlock.trylock()
             /* do something else */
         }
 
-    Return Value: 
+    Return Value:
         A :green:`Boolean`: ``true`` if the lock was obtained and ``false``
         if not.
 
 Lock Caveats
 ~~~~~~~~~~~~
 
-    * A mutex locked in a thread must be unlocked in the same thread. 
+    * A mutex locked in a thread must be unlocked in the same thread.
 
-    * A ``rampart.lock`` should be created before the threads in which it
-      will be used are created so that the ``thrlock`` variable is copied to
-      each thread.
+    * A ``rampart.lock`` must be created as a global variable before the
+      threads in which it will be used are created so that the ``thrlock``
+      variable is copied to each thread.
 
     * Normal operations do not require explicit locking using
       ``rampart.lock``.  However updating variables on the clipboard might
@@ -433,20 +458,23 @@ Lock Caveats
 
         var thread=rampart.thread;
 
+        // thrlock is a global, and will be copied to thr1 and thr2 below.
         var thrlock = new rampart.lock();
-        
+
         var thr1 = new thread();
         var thr2 = new thread();
 
+        // copy 0 to the clipboard prior to executing functions in threads.
         thread.put("i", 0);
 
         thr1.exec(function() {
             var i, j=0;
-            
+
             for(j=0; j<50; j++)
             {
+                //get the variable and increment, blocking thr2
                 thrlock.lock();
-            
+
                 i=thread.get("i");
                 i++;
                 thread.put("i", i);
@@ -457,11 +485,12 @@ Lock Caveats
 
         thr2.exec(function() {
             var i, j=0;
-            
+
             for(j=0; j<50; j++)
             {
+               //get the variable and increment, blocking thr1
                 thrlock.lock();
-            
+
                 i=thread.get("i");
                 i++;
                 thread.put("i", i);

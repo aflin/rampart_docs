@@ -133,8 +133,6 @@ Return Value:
         one:           {_func:true},
         set:           {_func:true},
         reset:         {_func:true},
-        importCsvFile: {_func:true},
-        importCsv:     {_func:true},
         close:         {_func:true}
         addTable:      {_func:true},
 	importCsv:     {_func:true},

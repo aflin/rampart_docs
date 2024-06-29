@@ -105,6 +105,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#lstat">lstat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#exec">exec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shell">shell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fork">fork</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#newpipe">newPipe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#forkpty">forkpty</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#kill">kill</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getcwd">getcwd</a></li>
@@ -927,6 +929,107 @@ passed to bash and <code class="docutils literal notranslate"><span class="pre">
 <span class="cm">   &quot;pid&quot;: 24658</span>
 <span class="cm">}</span>
 <span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fork">
+<h3>fork<a class="headerlink" href="#fork" title="Permalink to this headline">¶</a></h3>
+<p>Fork the current process.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fork</span><span class="p">([</span><span class="nx">pipe</span> <span class="p">[,</span><span class="nx">pipe</span> <span class="p">[,...]</span> <span class="p">]</span> <span class="p">]);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+   <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error piping\n&quot;</span><span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="p">)</span> <span class="p">{</span>
+   <span class="c1">//parent</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+   <span class="c1">//child</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">pipe</span></code> is one or several pipes created with <a class="reference internal" href="#newpipe">newPipe</a> below.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Number</span> - The pid of the child in the parent process, <code class="docutils literal notranslate"><span class="pre">0</span></code> in
+the child process and <code class="docutils literal notranslate"><span class="pre">-1</span></code> if there is an error and fork failed.</dd>
+<dt>Note:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">fork</span></code> will throw an error if there are any threads running at the
+time of the fork, either from <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code> or <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>.
+Threads, however, can be created after the fork in either the child
+or parent process.</dd>
+</dl>
+</div>
+<div class="section" id="newpipe">
+<h3>newPipe<a class="headerlink" href="#newpipe" title="Permalink to this headline">¶</a></h3>
+<p>Create a bi-directional pipe for passing variables between processes created
+with <a class="reference internal" href="#fork">fork</a> above.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pipe</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">newPipe</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">fork</span><span class="p">(</span><span class="nx">pipe</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> of <span class="green">Functions</span>:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">write(data)</span></code> - write to the pipe, where data is any variable which
+can be serialized using <code class="docutils literal notranslate"><span class="pre">CBOR</span></code>.  Return value is the number of bytes
+written. Note: writes may block if the pipe is full until the reading
+process reads with one of the two read functions below.  Throws an
+error if pipe has been closed.</li>
+<li><code class="docutils literal notranslate"><span class="pre">read([function])</span></code>  - perform a blocking read of data sent from
+another process using <code class="docutils literal notranslate"><span class="pre">write()</span></code> above.  If a function is provided
+(i.e. <code class="docutils literal notranslate"><span class="pre">function(value,</span> <span class="pre">error){}</span></code>) the value or error will be passed
+to that callback (with the other being undefined).  Return value will
+be undefined. If no function is provided, the return value will be an
+<span class="green">Object</span> with either <code class="docutils literal notranslate"><span class="pre">value</span></code> or <code class="docutils literal notranslate"><span class="pre">error</span></code> set.</li>
+<li><code class="docutils literal notranslate"><span class="pre">onRead(function)</span></code> - same as <code class="docutils literal notranslate"><span class="pre">read</span></code>, except that a
+<span class="green">Function</span> is required, the call is non-blocking and the
+callback <span class="green">Function</span> will be called in the event loop each time
+data is available.  On error, the pipe will close and the event will be
+removed.</li>
+<li><code class="docutils literal notranslate"><span class="pre">close()</span></code> - close the pipe.  Any further reads or writes from either
+process will produce or throw an error.</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pipe</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">newPipe</span><span class="p">();</span>
+
+<span class="c1">// fork and set the pipe for parent and child processes</span>
+<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">fork</span><span class="p">(</span><span class="nx">pipe</span><span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">pid</span> <span class="o">==-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error piping\n&quot;</span><span class="p">);</span>
+   <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="p">)</span> <span class="p">{</span>
+   <span class="c1">//parent</span>
+
+   <span class="nx">pipe</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s2">&quot;My first message&quot;</span><span class="p">);</span>
+   <span class="nx">pipe</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s2">&quot;My second message&quot;</span><span class="p">);</span>
+
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+   <span class="c1">//child</span>
+
+   <span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class="nx">pipe</span><span class="p">.</span><span class="nx">read</span><span class="p">();</span>
+   <span class="k">if</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">err</span><span class="p">)</span>
+      <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error reading- %s\n&quot;</span><span class="p">,</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+   <span class="k">else</span>
+      <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;msg = &#39;%s&#39;\n&quot;</span><span class="p">,</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+
+   <span class="c1">//run non-blocking in event loop</span>
+   <span class="nx">pipe</span><span class="p">.</span><span class="nx">onRead</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+         <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;read event: error reading- %s\n&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span>
+      <span class="k">else</span>
+         <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;read event: msg = &#39;%s&#39;\n&quot;</span><span class="p">,</span> <span class="nx">val</span><span class="p">);</span>
+   <span class="p">});</span>
+
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>

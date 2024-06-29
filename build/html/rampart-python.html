@@ -118,6 +118,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#python-named-arguments">Python Named Arguments</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#calling-rampart-from-within-python">Calling rampart from within Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-call">rampart.call</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-triggerevent">rampart.triggerEvent</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#example-use-importing-data">Example Use Importing Data</a></li>
 </ul>
 </li>
@@ -555,6 +560,114 @@ in the following example:</p>
 <span class="cm">       mymod.add( {pyArgs: {a:comp1, b:comp2} } );</span>
 <span class="cm">   is equivalent to calling with named arguments in python:</span>
 <span class="cm">       add(a=comp1, b=comp2);</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="calling-rampart-from-within-python">
+<h2>Calling rampart from within Python<a class="headerlink" href="#calling-rampart-from-within-python" title="Permalink to this headline">¶</a></h2>
+<p>When python scripts are executed from within rampart, the <code class="docutils literal notranslate"><span class="pre">rampart</span></code> module
+is available to python.  It includes two methods: <code class="docutils literal notranslate"><span class="pre">call</span></code> and
+<code class="docutils literal notranslate"><span class="pre">triggerEvent</span></code>.</p>
+<div class="section" id="rampart-call">
+<h3>rampart.call<a class="headerlink" href="#rampart-call" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Call a global rampart function from within python.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">python</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-python&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">iscript</span> <span class="o">=</span>
+<span class="sb">`</span>
+<span class="sb">#when operating from within rampart, the rampart module is available</span>
+<span class="sb">import rampart</span>
+
+<span class="sb">#call a rampart global func</span>
+<span class="sb">def callRampartFunc(funcName, var1, var2):</span>
+<span class="sb">    res = rampart.call(funcName, var1, var2);</span>
+<span class="sb">    print(res);</span>
+<span class="sb">`</span><span class="p">;</span>
+
+
+<span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span> <span class="sb">`</span><span class="si">${</span><span class="nx">a</span><span class="si">}</span><span class="sb"> + </span><span class="si">${</span><span class="nx">b</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="nx">a</span><span class="o">+</span><span class="nx">b</span> <span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">r</span><span class="o">=</span><span class="nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class="nx">iscript</span><span class="p">);</span>
+
+<span class="nx">r</span><span class="p">.</span><span class="nx">callRampartFunc</span><span class="p">(</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+<span class="cm">/* expected results:</span>
+<span class="cm">    (&#39;3 + 4&#39;, 7.0)</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="rampart-triggerevent">
+<h3>rampart.triggerEvent<a class="headerlink" href="#rampart-triggerevent" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>A registered event in a thread may be triggered from within rampart</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">python</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-python&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">iscript</span> <span class="o">=</span>
+<span class="sb">`</span>
+<span class="sb">#when operating from within rampart, the rampart module is availabe</span>
+<span class="sb">import rampart</span>
+
+<span class="sb">#trigger a rampart event and pass a &quot;triggerVar&quot; to it</span>
+<span class="sb">def trigger(eventName, triggervar):</span>
+<span class="sb">    rampart.triggerEvent(eventName, triggervar);</span>
+<span class="sb">`</span><span class="p">;</span>
+
+
+<span class="kd">function</span> <span class="nx">pytrigger</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="nx">err</span><span class="p">){</span>
+    <span class="c1">//check for errors in thrfunc</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">val</span><span class="p">)</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="c1">// load script into python and return its functions</span>
+    <span class="kd">var</span> <span class="nx">r</span><span class="o">=</span><span class="nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class="nx">iscript</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;trigger myev&quot;</span><span class="p">);</span>
+    <span class="c1">// execute &quot;trigger&quot; function in python script with a triggervar</span>
+    <span class="nx">r</span><span class="p">.</span><span class="nx">trigger</span><span class="p">(</span><span class="s2">&quot;myev&quot;</span><span class="p">,</span><span class="s2">&quot;Hello from Python&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// create a new thread in rampart</span>
+<span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+
+<span class="c1">// the function which will be run in the rampart.thread.</span>
+<span class="kd">function</span> <span class="nx">thrfunc</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;setup myev&quot;</span><span class="p">);</span>
+    <span class="c1">// register an event in this thread</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span>
+        <span class="c1">// the name of the event</span>
+        <span class="s2">&quot;myev&quot;</span><span class="p">,</span>
+        <span class="c1">// the name of the function (required but not used here)</span>
+        <span class="s2">&quot;myfunc&quot;</span><span class="p">,</span>
+        <span class="c1">// the function to be executed when triggered</span>
+        <span class="kd">function</span><span class="p">(</span><span class="nx">uservar</span><span class="p">,</span><span class="nx">triggervar</span><span class="p">){</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Uservar=&#39;%s&#39;\nTriggervar=&#39;%s&#39;\n&quot;</span><span class="p">,</span> <span class="nx">uservar</span><span class="p">,</span> <span class="nx">triggervar</span><span class="p">);</span>
+            <span class="c1">//remove the event so thread is empty of events and rampart can exit</span>
+            <span class="nx">rampart</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="s2">&quot;myev&quot;</span><span class="p">);</span>
+        <span class="p">},</span>
+        <span class="c1">//the user variable to be passed upon triggering</span>
+        <span class="s2">&quot;Hello from JS main thread&quot;</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//execute the function thrfunc in the thread, and then run</span>
+<span class="c1">//pytriggervar in the main thread.</span>
+<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">thrfunc</span><span class="p">,</span><span class="nx">pytrigger</span><span class="p">);</span>
+
+<span class="cm">/* expected results:</span>
+<span class="cm">    setup myev</span>
+<span class="cm">    trigger myev</span>
+<span class="cm">    Uservar=&#39;Hello from JS main thread&#39;</span>
+<span class="cm">    Triggervar=&#39;Hello from Python&#39;</span>
 <span class="cm">*/</span>
 </pre></div>
 </div>

@@ -7,21 +7,21 @@ Preface
 Acknowledgment
 ~~~~~~~~~~~~~~
 
-The rampart-server module uses the 
+The rampart-server module uses the
 `libevhtp_ws <https://github.com/aflin/libevhtp_ws>`_ library,
-a fast, embedded, event driven http/https server 
+a fast, embedded, event driven http/https server
 which itself uses the `libevent2 <https://libevent.org/>`_ library.
- 
+
 The developers of Rampart are extremely grateful for the excellent APIs and ease
 of use of these libraries.
 
 License
 ~~~~~~~
 
-The rampart-server module is released under the MIT license. 
+The rampart-server module is released under the MIT license.
 The `libevhtp_ws <https://github.com/aflin/libevhtp_ws>`_ library
 and the `libevent2 <https://libevent.org/>`_ library
-are both provided under a 
+are both provided under a
 `BSD-3-Clause License <https://github.com/aflin/libevhtp_ws/blob/main/LICENSE>`_\ .
 
 What does it do?
@@ -37,11 +37,11 @@ How does it work?
 
 Once the module is loaded and configuration parameters are passed to the
 `start()`_ function, the server maps paths to the filesystem, JavaScript
-functions, :ref:`JavaScript Modules <rampart-main:Using the require Function to Import Modules>` 
-and/or directories containing 
+functions, :ref:`JavaScript Modules <rampart-main:Using the require Function to Import Modules>`
+and/or directories containing
 :ref:`JavaScript Modules <rampart-main:Using the require Function to Import Modules>`.
-Modules allow scripts and functions to reside in separate files.  
-If changes are made to a module, the server does not need to be 
+Modules allow scripts and functions to reside in separate files.
+If changes are made to a module, the server does not need to be
 restarted for the changes to take effect.
 
 The server can operate from a pool of threads, taking advantage of systems
@@ -52,9 +52,10 @@ and mapped functions passed to `start()`_ are automatically copied to each
 context and each runs independently.  Modules are likewise loaded from
 within each thread and checked for changes upon each request.
 
-It is worth noting that not all rampart-sql functions are thread safe.  When
-SQL functions are executed from within a function or module, rampart may
-create a fork, one per thread, in order to handle such functions.
+It is worth noting that rampart-sql and rampart-python functions are not
+thread safe.  When SQL or Python functions are executed from within a
+function or module, rampart may create a fork, one per thread, in order to
+handle such functions.
 
 A timeout for script execution may also be set.  Should the script timeout,
 the serving thread will cancel the request and re-initialize the JavaScript
@@ -73,7 +74,7 @@ statement:
 
    var server = require("rampart-server");
 
-It returns an :green:`Object` with a single function: 
+It returns an :green:`Object` with a single function:
 
 ::
 
@@ -88,7 +89,7 @@ Configuring and Starting the Server
 start()
 """""""
 
-The server is configured and started using the ``start()`` function. 
+The server is configured and started using the ``start()`` function.
 Options are passed to the function in a single :green:`Object`.
 
 Usage:
@@ -97,23 +98,23 @@ Usage:
 
    var server = require("rampart-server");
 
-   server.start(Options);  
+   server.start(Options);
 
 Where:
    ``Options`` is an :green:`Object` with the following properties:
 
     * ``bind`` - An :green:`Array` of :green:`Strings`, with each :green:`String`
-      representing an ip address and port.  If not specified, the server will 
+      representing an ip address and port.  If not specified, the server will
       bind to port 8088 on the loopback device (i.e. 127.0.0.1, which is only
       accessible from the same machine), using the following default value:
-      
-      ``[ "[::1]:8088", "127.0.0.1:8088" ]``. 
-      
-      When specifying an Ipv6 address, bracket notation is required (e.g. 
+
+      ``[ "[::1]:8088", "127.0.0.1:8088" ]``.
+
+      When specifying an Ipv6 address, bracket notation is required (e.g.
       ``[2001:db8::1111:2222]:80``) while a dot-decimal notation is used for
       ipv4 (e.g. ``172.16.254.1:80``).  To bind to all ip addresses using port 80,
-      the following may be used: 
-      
+      the following may be used:
+
       ``[ "[::]:80", "0.0.0.0:80" ]``.
 
     * ``scriptTimeout``: A :green:`Number`, amount of time in seconds (or fraction
@@ -130,12 +131,12 @@ Where:
       ``accessLog`` and/or ``errorLog`` below are set.
 
     * ``accessLog``: A :green:`String`, the location of the access log.  The
-      default, if not specified is to log to ``stdout``.  If given, the log 
+      default, if not specified is to log to ``stdout``.  If given, the log
       file will be closed and re-opened upon sending the rampart executable
       a ``USR1`` signal, which allows log rotation.
-      
+
     * ``errorLog``: A :green:`String`, the location of the error log.  The
-      default, if not specified is to log to ``stderr``. If given, the log 
+      default, if not specified is to log to ``stderr``. If given, the log
       file will be closed and re-opened upon sending the rampart executable
       a ``USR1`` signal, which allows log rotation.
 
@@ -144,7 +145,7 @@ Where:
       the pid of the server. Otherwise the pid of the current process is
       returned. The default is ``false``.
 
-    * ``useThreads``: A :green:`Boolean`, whether the server is multi-threaded. 
+    * ``useThreads``: A :green:`Boolean`, whether the server is multi-threaded.
       If ``true`` and ``threads`` below is not set, the server will create a
       threadpool consisting of one thread per cpu core.  If set ``false``, it is
       equivalent to setting ``useThreads`` to ``true`` and ``threads`` to ``1``.
@@ -154,18 +155,18 @@ Where:
       server thread pool.  The default, if ``useThreads`` is ``true`` or is
       unset, is the number of cpu cores on the current system.
 
-    * ``maxRead``: A :green:`Number`, the largest single read from a client 
-      allowed in the event loop.  If reading data larger than this, it will 
+    * ``maxRead``: A :green:`Number`, the largest single read from a client
+      allowed in the event loop.  If reading data larger than this, it will
       be done in multiple cycles of the event loop in order to allow the
-      servicing of other requests.  A high number can make receiving large 
+      servicing of other requests.  A high number can make receiving large
       requests unfairly slow down other clients, especially if the server is
       not using multiple threads.  A low number will slow down the reading
       of data over the specified size. Default is ``65536``.
 
-    * ``maxWrite``: A :green:`Number`, the largest single write to a client 
-      allowed in the event loop.  If writing data larger than this, it will 
+    * ``maxWrite``: A :green:`Number`, the largest single write to a client
+      allowed in the event loop.  If writing data larger than this, it will
       be done in multiple cycles of the event loop in order to allow the
-      servicing of other requests.  A high number can make sending large 
+      servicing of other requests.  A high number can make sending large
       replies unfairly slow down other clients, especially if the server is
       not using multiple threads.  A low number will slow down the writing
       of data over the specified size. Default is ``65536``.
@@ -175,18 +176,18 @@ Where:
       ``sslKeyFile`` and ``sslCertFile`` parameters must also be set.
 
     * ``sslKeyFile``: A :green:`String`, the location of the ssl key file for
-      serving via the ``https`` protocol.  An example, if using 
+      serving via the ``https`` protocol.  An example, if using
       `letsencrypt <https://letsencrypt.org/>`_ for "example.com" might be
       ``"/etc/letsencrypt/live/example.com/privkey.pem"``.  This setting has
       no effect unless ``secure`` is ``true``.
 
     * ``sslCertFile``: A :green:`String`, the location of the ssl cert file for
-      serving via the ``https`` protocol.  An example, if using 
+      serving via the ``https`` protocol.  An example, if using
       `letsencrypt <https://letsencrypt.org/>`_ for "example.com" might be
       ``"/etc/letsencrypt/live/example.com/fullchain.pem"``.  This setting has
       no effect unless ``secure`` is ``true``.
 
-    * ``sslMinVersion``:  A :green:`String`, the minimum SSL/TLS version to use. 
+    * ``sslMinVersion``:  A :green:`String`, the minimum SSL/TLS version to use.
       Possible values are ``ssl3``, ``tls1``, ``tls1.1`` or ``tls1.2``.  The
       default is ``tls1.2``. This setting has no effect unless ``secure`` is ``true``.
 
@@ -199,7 +200,7 @@ Where:
       and error line numbers printed.  If false, JavaScript errors will
       result in the generic ``404 Not Found Page`` or alternatively, if set
       ``notFoundFunc`` will be called and the request object (``req``) will
-      contain the key ``errMsg`` (``req.errMsg``), with the error message. 
+      contain the key ``errMsg`` (``req.errMsg``), with the error message.
 
     * ``directoryFunc``: A :green:`Function` to handle directory listings from
       the filesystem, if no ``index.html`` file exists in the requested
@@ -208,7 +209,7 @@ Where:
       where a directory listing is requested and no index.html file exists.
       See `Built-in Directory Function`_ below for more information.
 
-    * ``user``: A :green:`String`, the user account which the server will switch 
+    * ``user``: A :green:`String`, the user account which the server will switch
       to after binding to the specified ip address and port.  Only valid if
       server is started as ``root``.  This setting is used for binding to
       privileged ports as ``root`` and then dropping privileges.  If the server
@@ -218,26 +219,26 @@ Where:
       :green:`String` - the text to set the "Cache-Control" header when
       serving files off of the filesystem.  The default is "max-age=84600,
       public", if not set or set ``true``.  If set ``false``, no header is
-      sent. 
+      sent.
 
     * ``compressFiles``: A :green:`Boolean` or :green:`Array`.  Whether to
       use gzip compression for files served from the filesystem.  Default is
       ``false``.  If an :green:`Array`. is given, it is a list of file
       extension which will be compressed.  If ``true`` - the following default
-      :green:`Array` of extensions will be used: 
+      :green:`Array` of extensions will be used:
       ``["html", "css", "js", "json, "xml", "txt", "text", "htm"]``.
-      
+
       Note that compressed files will be cached in a directory named
-      ".gzipcache/" in the directory in which the files are located. 
-      Compressed cached files are updated based on the date of the original. 
+      ".gzipcache/" in the directory in which the files are located.
+      Compressed cached files are updated based on the date of the original.
       The webserver's ``user`` must have write permissions in the directory
       in which the files are located in order for compressed files to be
       cached.
 
     * ``compressScripts``:  A :green:`Boolean`. Whether to compress the
-      output from scripts by default.  If not set, the default is ``false``. 
+      output from scripts by default.  If not set, the default is ``false``.
       This can be overridden in the return value from a script using the key
-      ``compress`` set to a :green:`Boolean` or a compression level (1-10). 
+      ``compress`` set to a :green:`Boolean` or a compression level (1-10).
       See the last example in `The Return Object`_ below.
 
     * ``compressLevel``: A :green:`Number`. The default level of compression
@@ -257,9 +258,9 @@ Where:
       it is necessary to change the default "content-type" for both `Mapped
       Functions`_ and files served from `Mapped Directories`_\ ,
       extension:mime-types mappings may be set or changed as follows:
-      
+
       .. code-block:: javascript
-      
+
           server.start({
               ...,
               mimeMap: {
@@ -281,18 +282,18 @@ Where:
       example, a key ``/myscript.html`` would match an incoming request for
       ``http://example.com/myscript.html``.  The value to which the key is
       set controls which function, module or filesystem path will be used.
-      
+
       If the value is a :green:`Function`, that function is used as
       the callback function.  If the value is an :green:`Object` with
-      ``module`` or ``modulePath`` key set, it is assumed to 
-      be a script name (the same as is used for 
+      ``module`` or ``modulePath`` key set, it is assumed to
+      be a script name (the same as is used for
       :ref:`require() <rampart-main:using the require function to import modules>`)
       or a path with scripts.
-      
+
       If the value is a :green:`String`, or it is an :green:`Object` with
       ``path`` set, it is assumed to be a mapping to the filesystem.  A
       mapping to a filesystem path may also include headers.
-      
+
       Example:
 
       .. code-block:: javascript
@@ -301,7 +302,7 @@ Where:
 
         var pid = server.start({
             bind: [ "[::]:8088", "0.0.0.0:8088" ], /* bind to all */
-            map : 
+            map :
             {
                 "/":            "/usr/local/etc/httpd/htdocs"  /* map all file requests */
                 "/search.html": function (req) { ... },         /* search function */
@@ -323,27 +324,27 @@ Where:
 
       Keys/paths used for mapping a :green:`Function` may be given in one of
       three different formats, which are tested for a match in the following order:
-       
+
       * Exact Paths - Paths starting with a "/" and having no unescaped ``*`` characters
         will be matched exactly with the incoming request.
 
       * Regular Expression paths - A path/key that starts with ``~`` will match the
-        Perl Regular Expression following the ``~``.  Example: 
+        Perl Regular Expression following the ``~``.  Example:
         ``map: {"~/.*/myfile.html": myfunction }`` will match any path ending
         in ``myfile.html`` and run the named function ``myfunction``.
-       
+
       * Glob Paths - A glob path will have the last priority for matching the
         requested url.  Example: ``map: {"/*/myfile.html": myfunction2 }`` will
         match the same as the example above, but would have lower priority.  If
         both these examples were present, ``myfunction2`` would never match.
 
-      Keys/paths used for mapping to the **filesystem** are always taken as an Exact path. 
+      Keys/paths used for mapping to the **filesystem** are always taken as an Exact path.
       Regular expressions and globs are not allowed.
 
     * ``mapSort``: A :green:`Boolean`, whether to automatically sort the
-      mapped paths given as keys to the :green:`Object` passed to ``map`` below. 
+      mapped paths given as keys to the :green:`Object` passed to ``map`` below.
       Default is ``true``.  If ``false``, paths from the ``map`` :green:`Object`
-      will be matched in the order they are given.  
+      will be matched in the order they are given.
 
       Note that regardless of this setting, paths are match by type of path (see
       below) with Exact paths tested first, then regular expression paths and
@@ -353,7 +354,7 @@ Where:
       ``/search.html`` should be checked first, otherwise ``/`` will match and
       ``/search.html`` will never match.  When ``mapSort`` is ``true``,
       key/paths are automatically sorted by length.
-      
+
 Return Value
   A :green:`Number`, the pid of the current process, or if ``daemon`` is
   set to ``true``, the pid of the forked server.
@@ -372,12 +373,12 @@ Mapped Functions
 """"""""""""""""
 
   A mapped function may be expressed in one of several ways.
-  
+
   * Inline function: ``map: {"/search.html": function(res) { ... } }``.
-  
+
   * A Global function: ``map: {"/search.html": myfunc }`` where ``myfunc`` is a
     function declared **globally** in the current script.
-  
+
   * A module with ``module.exports`` set to the desired function.   Example:
     ``map: {"/search.html" : {module:"mysearchmod"} }`` where mysearchmod.js is
     in a :ref:`standard module search path <rampart-main:Module Search Path>`.
@@ -402,7 +403,7 @@ NOTE:
   Example:
 
   .. code-block:: javascript
-     
+
     var server = require("rampart-server");
 
     server.start({
@@ -437,8 +438,8 @@ NOTE:
   advantage of using modules is that they can be changed at any time without
   having to restart the server and that variables declared in the module
   have their scopes appropriately set.
-  
-  See :ref:`rampart-main:Using the require Function to Import Modules` 
+
+  See :ref:`rampart-main:Using the require Function to Import Modules`
   for details on writing and using modules.
 
   It is also important to note that only global variables and functions from
@@ -455,9 +456,9 @@ NOTE:
   of events and the ``callbackTriggerVar`` do cross threads).
 
   Example of a scoped variable that would not be available:
-  
+
   .. code-block:: javascript
-     
+
     var server = require("rampart-server");
 
     function startserver() {
@@ -472,22 +473,22 @@ NOTE:
 
     var pid=startserver();
 
-          
+
     /* result from http://localhost:8088/myfunc.html:
           Internal Server Error
           ReferenceError: identifier 'html' undefined
             at [anon] (duk_js_var.c:1236) internal
             at [anon] (test-server.js:8) preventsyield
     */
-    
 
-  Note that if ``var html`` was declared globally (e.g. directly after 
+
+  Note that if ``var html`` was declared globally (e.g. directly after
   ``var server`` line), the function would not throw an error.
- 
+
   Example of local variables that are available in a module:
-  
+
   .. code-block:: javascript
-  
+
     /* mymod.js */
 
     var html = "<pre>HELLO WORLD!</pre>";
@@ -506,7 +507,7 @@ NOTE:
       map: {
         "/myfunc.html": {module:'mymod'}
       }
-           
+
     });
 
   In the above example, ``var html`` would be set once when the module is
@@ -519,7 +520,7 @@ Mapped Directories
   Mapped Directories are specified by setting the value of a path key to a
   :green:`String`, where the :green:`String` is the name of the directory on
   the current filesystem to use:
-  
+
   .. code-block:: javascript
 
       var server = require("rampart-server");
@@ -534,7 +535,7 @@ Mapped Directories
 
   Mapped directories may also be mapped using the following syntax, which allows for custom headers
   to be sent with each file served:
-  
+
   .. code-block:: javascript
 
       var server = require("rampart-server");
@@ -551,7 +552,7 @@ Mapped Directories
             "/css/": "/usr/local/etc/httpd/css"
           }
       });
-  
+
   In the above example, all the files in ``/var/www/html/*`` would be mapped
   to ``http://localhost:8088/*`` including any subdirectories.  However,
   ``http://localhost:8088/css/*`` is mapped from
@@ -560,7 +561,7 @@ Mapped Directories
 
   Note that globs and regular expressions are not allowed for mapped
   directories.  Note also that keys for mapped directories are always
-  treated as directories and have a trailing ``/`` added if not present. 
+  treated as directories and have a trailing ``/`` added if not present.
   If, e.g., ``map:{"/file.html":"/my/dir"}`` was specified,
   ``http://localhost:8088/file.html`` would return "NOT FOUND" but URLs
   beginning with ``http://localhost:8088/file.html/`` would return files
@@ -571,10 +572,10 @@ The Request Object
 
   Mapped :green:`Functions` are passed a single :green:`Object` which contains the details
   of the request.  For example, if the url
-  ``http://localhost:8088/showreq.html?q=search+terms`` is requested 
+  ``http://localhost:8088/showreq.html?q=search+terms`` is requested
   (with a cookie set), the
   :green:`Object` passed to the function might look something like this:
-  
+
   .. code-block::  javascript
 
         {
@@ -677,9 +678,9 @@ Posting Form Data
                         '<input type="text" id="fname" name="fname"><br>' +
                         '<label for="lname">Last name:</label><br>' +
                         '<input type="text" id="lname" name="lname">'+
-                        '<input type="submit" name="go">'+                
+                        '<input type="submit" name="go">'+
                     '</form></body></html>';
-            
+
                      return {html:html};
                 },
 
@@ -730,7 +731,7 @@ Posting Form Data
                   ...,
 
                }
-            }    
+            }
         */
 
 Posting Multipart Form Data
@@ -740,10 +741,10 @@ Posting Multipart Form Data
     and will have the ``Content-Type`` property set to
     ``"multipart/form-data"``.  The ``content`` property will contain an
     array of objects, one object for each "part" of the form data.  The key
-    and values of an object provides details and the content for each part. 
+    and values of an object provides details and the content for each part.
 
     Example:
-    
+
     .. code-block:: javascript
 
         server.start(
@@ -757,7 +758,7 @@ Posting Multipart Form Data
                         '<input type="submit" name="Upload" value="Upload" />' +
                     '</form></body></html>';
 
-                    return {html: html};    
+                    return {html: html};
                 },
 
                 "/showreq.txt" : function(req) {
@@ -769,7 +770,7 @@ Posting Multipart Form Data
                 }
             }
         });
-    
+
         /* posting a small file called "helloWorld.txt with the contents "Hello World!"
 
         {
@@ -863,13 +864,13 @@ Posting Multipart Form Data
            }
         }
         */
-    
+
     Note that like ``body``, the ``contents`` property of each uploaded part is a :green:`Buffer`.
 
 Posting JSON Data
 """""""""""""""""
 
-    JSON data, sent with ``Content-Type`` set to ``"application/json"`` will also be parsed in 
+    JSON data, sent with ``Content-Type`` set to ``"application/json"`` will also be parsed in
     a manner similar to `Posting Form Data`_.
 
     .. code-block:: javascript
@@ -890,7 +891,7 @@ Posting JSON Data
                              'xhr.open("POST", "/showreq.json");\n' +
                              'xhr.setRequestHeader("Content-Type", "application/json");\n' +
                              'xhr.onreadystatechange = function () { \n' +
-                               'if (xhr.readyState === 4 && xhr.status === 200) {\n' + 
+                               'if (xhr.readyState === 4 && xhr.status === 200) {\n' +
                                   'res.innerHTML = "<pre>"+ this.responseText +"</pre>";\n' +
                                '} \n' +
                              '};\n' +
@@ -978,24 +979,24 @@ The Return Object
   of the key (``html``) controls which mime-type will be sent to the
   connecting client.  Supported key-names to mime-types are listed
   :ref:`below <rampart-server:Key to Mime Mappings>`.
-  
+
   The return object can optionally contain header parameters to be sent to
   the client.
-  
+
   .. code-block:: javascript
-  
-     return { 
+
+     return {
         html: myhtmltext,
         headers: { "X-Custom-Header": "custom value"}
      }
 
   To set more than one header with the same name, the value must be an :green:`Array`.
-  
+
   .. code-block:: javascript
-  
-     return { 
+
+     return {
         html: myhtmltext,
-        headers: { 
+        headers: {
             "X-Custom-Header": "custom value",
             "Set-Cookie": [
                 rampart.utils.sprintf("id=%U; Expires=Wed, 15 Oct 2025 10:28:00 GMT", id),
@@ -1006,9 +1007,9 @@ The Return Object
 
   A Status Code may also be specified. For example, to redirect a url to a
   new one:
-  
+
   .. code-block:: javascript
-  
+
      var newurl = "https://example.com/myNewLocation.html";
      return {
         html:rampart.utils.sprintf(
@@ -1020,20 +1021,20 @@ The Return Object
         headers: { "location": newurl}
      }
 
-  The specified mime-type can also be overwritten using the 
+  The specified mime-type can also be overwritten using the
   ``content-type`` header.  This way, any arbitrary mime-type can be
   set regardless of the name of the key (though the name of the key
   must be a known extension):
-  
+
   .. code-block:: javascript
 
-    var jpg = rampart.utils.readFile("/path/to/my/jpeg.jpg"); 
+    var jpg = rampart.utils.readFile("/path/to/my/jpeg.jpg");
     /* overwrite the bin -> "application/octet-stream" header */
     return {
        bin:jpg,
        headers: {"content-type": "image/jpeg"}
     };
-    
+
   See also ``mimeMap`` in `start()`_ above.
 
   The content of a file may be sent by returning the file name prepended
@@ -1048,7 +1049,7 @@ The Return Object
   This will be more efficient than reading the file and returing its
   content as shown in the previous example.
 
-  Note that in order to send a string whose first character is ``@``, it 
+  Note that in order to send a string whose first character is ``@``, it
   must be escaped.
 
   .. code-block:: javascript
@@ -1056,16 +1057,16 @@ The Return Object
     return {
        txt: "\\@home is a defunct internet service"
     };
-  
+
   The ``compressScripts`` setting in server.\ `start()`_ above can be
   overridden with the key ``compress``.  It may be set to ``true``/``false``
   or to a compression level (1-10).
 
   .. code-block:: javascript
-  
-     return { 
+
+     return {
         html: myhtmltext,
-        compress: 5 // gzip compress output at medium level 
+        compress: 5 // gzip compress output at medium level
      }
 
 The Return Object with Defer
@@ -1109,8 +1110,8 @@ Built-in Directory Function
 
         function dirlist(req) {
             var html="<!DOCTYPE html>\n"+
-                '<html><head><meta charset="UTF-8"><title>Index of ' + 
-                req.path.path+ 
+                '<html><head><meta charset="UTF-8"><title>Index of ' +
+                req.path.path+
                 "</title><style>td{padding-right:22px;}</style></head><body><h1>"+
                 req.path.path+
                 '</h1><hr><table>';
@@ -1122,7 +1123,7 @@ Built-in Directory Function
                 else if (size >= 1048576)
                     ret=rampart.utils.sprintf("%.1fM", size/1048576);
                 else if (size >=1024)
-                    ret=rampart.utils.sprintf("%.1fk", size/1024); 
+                    ret=rampart.utils.sprintf("%.1fk", size/1024);
                 return ret;
             }
 
@@ -1135,7 +1136,7 @@ Built-in Directory Function
                 html=rampart.utils.sprintf('%s<tr><td><a href="%s">%s</a></td><td>%s</td><td>%s</td></tr>',
                     html, d, d, st.mtime.toLocaleString() ,hsize(st.size));
             });
-            
+
             html+="</table></body></html>";
             return {html:html};
         }
@@ -1152,17 +1153,17 @@ The ``rampart-server`` module creates a buffer to efficiently store data
 that will be returned to the client by the webserver.  There is one buffer per thread
 and it is used from within each thread.
 
-The request object contains the functions to manipulate and print to the server buffer, 
+The request object contains the functions to manipulate and print to the server buffer,
 which will be directly sent to the client without extra copying.
 
 req.printf()
 """"""""""""
 
 The request object to a callback function includes the ``printf`` function
-which will print directly to the server buffer that will be sent to the client. 
+which will print directly to the server buffer that will be sent to the client.
 It uses the same formats as :ref:`rampart.utils.printf <rampart-utils:printf>`.
-The advantages of using ``req.printf`` rather than returning a string is that 
-content is not copied, but instead placed directly in the server buffer to be 
+The advantages of using ``req.printf`` rather than returning a string is that
+content is not copied, but instead placed directly in the server buffer to be
 returned to the client.
 
 Example from a normal server callback function:
@@ -1190,20 +1191,20 @@ Example using ``req.printf`` from a server callback function:
 Return Value:
     The number of bytes written to the server buffer.
 
-Note: 
+Note:
     If ``content`` is large, it is more efficiently handled using
     ``req.printf`` and/or ``req.put`` below than concatenating strings in
     JavaScript.
-    
+
     The one exception to this is if ``content`` is a :green:`Buffer` and is
     the total content to be returned to the client without concatenation or
     manipulation, doing ``return {html:content}`` is the most efficient
     method.
-    
+
     However, in nearly all cases, if a function needs to print many strings
     that make up the totality of the data sent to the client, using
     ``req.printf`` or ``req.put`` is preferable.
-    
+
 req.put()
 """""""""
 
@@ -1221,7 +1222,7 @@ Example:
         req.put(content);
         return {html: end_cont};
     }
-                                                
+
 Return Value:
     The number of bytes written to the server buffer.
 
@@ -1275,7 +1276,7 @@ Below is a full example:
     var pid=server.start(
     {
         /* bind: string|[array,of,strings]
-           default: [ "[::1]:8088", "127.0.0.1:8088" ] 
+           default: [ "[::1]:8088", "127.0.0.1:8088" ]
             ipv6 format: [2001:db8::1111:2222]:80
             ipv4 format: 127.0.0.1:80
             spaces are ignored (i.e. " [ 2001:db8::1111:2222 ] : 80" is ok)
@@ -1283,7 +1284,7 @@ Below is a full example:
         /* bind to all */
         bind: [ "[::]:8088", "0.0.0.0:8088" ],
 
-        /* if started as root, set user here.  
+        /* if started as root, set user here.
            If not root, option "user" is ignored. */
         user: "nobody",
 
@@ -1311,7 +1312,7 @@ Below is a full example:
         */
         //threads: 8, /* for a 4 core, 8 virtual core hyper-threaded processor. */
 
-        /* 
+        /*
             for https support, these three are the minimum number of options needed:
         */
         secure:true,
@@ -1354,16 +1355,16 @@ Below is a full example:
         },
 
         /* **********************************************************
-           map urls to functions or paths on the filesystem 
+           map urls to functions or paths on the filesystem
            If it ends in a '/' then matches everything in that path
            except a more specific ('/something.html') path
-           
+
            priority is given to Exact Paths (Begins with '/' and no '*' in path), then
              regular expressions, then globs.
-             
+
            If mapSort: false, then in each of these groups
              is left unsorted.
-           Otherwise, within these groups, they are then ordered by length, 
+           Otherwise, within these groups, they are then ordered by length,
              with longest having priority.
 
            If you wish to specify your own priority, set:
@@ -1374,7 +1375,7 @@ Below is a full example:
            ********************************************************** */
         map:
         {
-            "/helloWorld.html" : function(){ 
+            "/helloWorld.html" : function(){
                 return {
                     html:"<pre>Hello World!</pre>"
                 }
@@ -1454,7 +1455,7 @@ A string starting with `@` is used to send the contents of the file
 specified (see `The Return Object`_ for details).
 
 In addition ``data`` may be ``null`` or ``undefined``, in which case, any
-data in the server buffer (e.g., when using `req.printf()` or `req.put()` 
+data in the server buffer (e.g., when using `req.printf()` or `req.put()`
 above) will be sent to the client.  Note that the server buffer is reset
 between invocations of `The Chunk Callback`.
 
@@ -1504,7 +1505,7 @@ Sending a large file in chunks:
         req.file="/path/to/myfile.mp4";
         req.stat= stat(req.file);
         return {
-            "mp4": sendchunk, 
+            "mp4": sendchunk,
             chunk:  true,
             headers: {
                 'Content-Disposition': 'attachment; filename="myfile.mp4"'
@@ -1518,11 +1519,11 @@ Sending a large file in chunks:
     {
         map:
         {
-            "/":            function(req){ 
-                                return { 
+            "/":            function(req){
+                                return {
                                     status:302,
                                     headers:{location:'/myfile.mp4'}
-                                } 
+                                }
                             },
             "/myfile.mp4":  sendfile
         }
@@ -1537,7 +1538,7 @@ Sending mjpeg, simple:
     rampart.globalize(rampart.utils);
 
     function sendpic(req){
-        
+
         msg=curl.fetch('https://jpg.nyctmc.org/5',{insecure:true});
 
         req.chunkSend(
@@ -1559,8 +1560,8 @@ Sending mjpeg, simple:
     {
         map:
         {
-            "/":  function(req){ 
-                        return { 
+            "/":  function(req){
+                        return {
                             status:302,
                             headers: {
                                 location:'/mjpeg.jpg'
@@ -1595,10 +1596,10 @@ Sending mjpeg, using ffmpeg and a webcam on Linux:
 
     function start_ffmpeg(){
         var pid=0;
-        try{ 
-            pid=parseInt(readFile("./ffmpeg.pid")); 
+        try{
+            pid=parseInt(readFile("./ffmpeg.pid"));
         } catch(e){}
-        
+
         if( pid && kill(pid,0))
             return; //it's running
 
@@ -1638,8 +1639,8 @@ Sending mjpeg, using ffmpeg and a webcam on Linux:
         user:'nobody',
         map:
         {
-            "/":  function(req){ 
-                        return { 
+            "/":  function(req){
+                        return {
                             status:302,
                             headers: {
                                 location:'/mjpeg.jpg'
@@ -1668,7 +1669,7 @@ the same as a normal http callback, with a few exceptions:
   callbacks are supplied with the same ``req`` object every time new data
   from the client is received.
 
-* Replies to the connected client may be returned asynchronously using 
+* Replies to the connected client may be returned asynchronously using
   :ref:`rampart.event <rampart-main:rampart.event>` functions or
   :ref:`setTimeout <rampart-main:setTimeout()>`.
 
@@ -1678,11 +1679,11 @@ the same as a normal http callback, with a few exceptions:
 
 * Since the ``req`` object is recycled, variables may be attached to it
   that will be available on subsequent callbacks.  Example: setting
-  ``req.userName=getUserName()`` would allow the return value from the 
-  hypothetical ``getUserName`` function to be accessed 
+  ``req.userName=getUserName()`` would allow the return value from the
+  hypothetical ``getUserName`` function to be accessed
   on subsequent calls.
 
-* ``req.body`` is empty upon first connecting.  In subsequent calls of the 
+* ``req.body`` is empty upon first connecting.  In subsequent calls of the
   callback function, ``req.body`` contains the text or binary data sent by
   the client.
 
@@ -1761,7 +1762,7 @@ and :ref:`rampart.event <rampart-main:rampart.event>` functions.
     /* this function just returns html */
     function frontpage(req)
     {
-        return {html: 
+        return {html:
         `<html><body>
             <div id="chatbox"></div>
             <input id="chatin" type=text style="width:50%">
@@ -1800,12 +1801,12 @@ and :ref:`rampart.event <rampart-main:rampart.event>` functions.
         if (req.count==0)
         {
             /* make a name for our event callback function
-               which is unique for this connection and that we can 
+               which is unique for this connection and that we can
                use to insert and remove the event callback         */
             var func_name = "myfunc_" + req.websocketId;
 
             /* what to do if client disconnects */
-            req.wsOnDisconnect(function(){ 
+            req.wsOnDisconnect(function(){
                 //remove our event callback function */
                 rampart.event.off("myev", func_name);
                 rampart.utils.printf("disconnected...\n");
@@ -1814,7 +1815,7 @@ and :ref:`rampart.event <rampart-main:rampart.event>` functions.
             /* insert the callback */
             rampart.event.on("myev", func_name, function(req, data)
             {
-                // only send if from someone else 
+                // only send if from someone else
                 if (data.id != req.websocketId)
                     req.wsSend(data.msg);
             }, req);
@@ -1832,9 +1833,9 @@ and :ref:`rampart.event <rampart-main:rampart.event>` functions.
         {
             /* send message to any other client that is connected */
             rampart.event.trigger(
-                "myev", 
+                "myev",
                 {
-                    id: req.websocketId, 
+                    id: req.websocketId,
                     msg: "a message from "+req.websocketId + ": " + req.body
                 }
             );
@@ -1880,7 +1881,7 @@ layout for the server tree:
 * ``web_server/apps``                - the standard location for server modules.
 
 * ``web_server/wsapps``              - the standard location for modules
-  that server websocket connections
+  that serve websocket connections.
 
 * ``web_server/data``                - a location for databases.
 
@@ -1890,7 +1891,7 @@ layout for the server tree:
   error log files.
 
 See the ``serverConf`` variable near the top of ``web_server/web_server_conf.js``
-for possible settings. The global ``serverConf`` will be available to 
+for possible settings. The global ``serverConf`` will be available to
 all server module scripts.
 
 This layout translates as:
@@ -1905,7 +1906,7 @@ This layout translates as:
   the :green:`Object` as :green:`Functions`, the url would be
   ``http://example.com/apps/myapp/key`` where the output is the return value
   of the paired :green:`Function`. See `Mapped Functions`_ for examples.
-  
+
 * Access to ``web_server/wsapps`` is similar to ``web_server/apps``
   except that a :green:`Function` or mapped :green:`Functions` are expected
   to handle `Websockets`_ connections.
@@ -1922,43 +1923,39 @@ the need for a deep dive into the duktape api.
 Basic Layout
 ~~~~~~~~~~~~
 
-Below is skeleton module in c.
+Below is a sample module in c.
 
 .. code-block:: c
 
     #include "rp_server.h"
 
-    static duk_ret_t my_cfunc(duk_context *ctx)
+    static char *httop =    "<!DOCTYPE html><html><head><title>Sample C-Mod</title></head><body><div>",
+                *htbottom = "</div></body></html>";
+
+    static duk_ret_t hello(duk_context *ctx)
     {
-        // initialize the server context struct "serv"
+        /* declare and init 'rpserv *serv' */
         INIT_RPSERV(serv, ctx);
 
-        //example: get a malloced string - the json of the req object
-        char *reply = rp_server_get_req_json(serv,3);
+        //check query string for "?name=..."
+        const char *name = rp_server_get_query(serv, "name");
 
-        // your code here
+        rp_server_put_string(serv, httop);
 
+        if(name)
+            rp_server_printf(serv, "%s%s%s", "<h2>Hello there ", name, "!</h2>");
+        else
+            rp_server_put_string(serv,
+                          "<form>"
+                            "Your name: <input name=\"name\" type=text><input type=submit>"
+                          "</form>");
 
         // function must end by calling rp_server_put_reply*
         // and must return 1;
-
-        // example: return "reply as text/plain and free it. return 1
-        return rp_server_put_reply_string_and_free(serv, 200, "txt", reply);
-
-        //OR:
-        rp_server_put_reply_string(serv, 200, "txt", reply);
-        free(reply);
-        return 1;
-
+        return rp_server_put_reply_string(serv, 200, "html", htbottom);
     }
 
-    // Initialize module
-    duk_ret_t duk_open_module(duk_context *ctx)
-    {
-        duk_push_c_function(ctx, my_cfunc, 1);
-
-        return 1;
-    }
+    RP_EXPORT_FUNCTION(hello)
 
 To compile:
 
@@ -1972,12 +1969,12 @@ To compile:
 And then copy ``mymod.so`` to the ``web_server/apps`` directory (or wherever
 server modules are stored in a custom setup).
 
-The initialization of the module may also be done to map function (see `Mapped Functions`_\ ).
+A map of functions may also be exported (see `Mapped Functions`_\ ).
 
 .. code-block:: c
 
     // a map of urls relative to http(s)://example.com/apps/mymod/
-    rp_server_map exports[] = 
+    rp_server_map exports[] =
     {
         {"/",                my_indexfunc },
         {"/index.html",      my_indexfunc },
@@ -1985,10 +1982,7 @@ The initialization of the module may also be done to map function (see `Mapped F
         {"/myurl_2.json",    my_func2     }
     };
 
-    duk_ret_t duk_open_module(duk_context *ctx)
-    {
-        return rp_server_export_map(ctx, exports);
-    }
+    RP_EXPORT_MAP(exports);
 
 Typedefs
 ~~~~~~~~
@@ -2035,8 +2029,8 @@ post parsed from the body of the request.
     } multipart_postvar;
 
 
-Init Macro
-~~~~~~~~~~
+Macros
+~~~~~~
 
 INIT_RPSERV
 """""""""""
@@ -2051,29 +2045,55 @@ Declare and initialize the ``rpserv`` handle.
         //...
     }
 
-Export Function
-~~~~~~~~~~~~~~~
+RP_EXPORT_FUNCTION
+""""""""""""""""""
 
-This function is used from within the mandatory duk_open_module to map multiple
-functions.  See `Basic Layout`_ example above.
-
-rp_server_export_map
-""""""""""""""""""""
+Export the function that will serve requests. This (or `RP_EXPORT_MAP`_
+must be placed somewhere in the file outside other functions.
 
 .. code-block:: c
 
-    duk_ret_t rp_server_export_map(duk_context *ctx,  rp_server_map *map);
+    static duk_ret_t my_cfunc(duk_context *ctx)
+    {
+        INIT_RPSERV(serv_var_name, duk_context *ctx);
+        //...
+    }
+
+    RP_EXPORT_FUNCTION(my_cfunc)
+
+RP_EXPORT_MAP
+"""""""""""""
+
+Export the functions that will serve requests. This (or `RP_EXPORT_FUNCTION`_
+must be placed somewhere in the file outside other functions.
+
+.. code-block:: c
+
+    static duk_ret_t my_cfunc(duk_context *ctx)
+    {
+        INIT_RPSERV(serv_var_name, duk_context *ctx);
+        //...
+    }
+
+    rp_server_map my_exports[] =
+    {
+        {"/",                my_indexfunc },
+        {"/index.html",      my_indexfunc },
+        {"/myurl_1.html",    my_func1     },
+    };
+
+    RP_EXPORT_MAP(my_exports)
 
 See `rp_server_map`_ above.
 
 Get Functions
 ~~~~~~~~~~~~~
 
-For an explanation of the logical layout of request variables, see 
+For an explanation of the logical layout of request variables, see
 `The Request Object`_\ .
 
-NOTE: 
-Except for multipart form data, all values returned will be strings. 
+NOTE:
+Except for multipart form data, all values returned will be strings.
 If value is repeated in posted form data or in the query, then it will be
 returned as a JSON string.  E.g:
 
@@ -2100,7 +2120,7 @@ Get a parameter by name (parameters includes query, post, headers and cookies)
 rp_server_get_header
 """"""""""""""""""""
 
-Get a header by name
+Get a header by name.
 
 .. code-block:: c
 
@@ -2109,11 +2129,22 @@ Get a header by name
 rp_server_get_query
 """""""""""""""""""
 
-Get a query string parameter by name
+Get a query string variable by name.
 
 .. code-block:: c
 
     const char * rp_server_get_query(rpserv *serv, const char *name);
+
+rp_server_get_post
+""""""""""""""""""
+
+Get a posted form variable or posted JSON parameter by name.
+
+See also: `Get Multipart Form Data`_ for multipart file uploads.
+
+.. code-block:: c
+
+    const char * rp_server_get_post(rpserv *serv, const char *name);
 
 rp_server_get_path
 """"""""""""""""""
@@ -2158,7 +2189,7 @@ Get Multiple Values Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following functions returns a null terminated array of null terminated
-strings that are the keys in the corresponding section of `The Request Object`_\ .  
+strings that are the keys in the corresponding section of `The Request Object`_\ .
 If ``values`` is not null, values will be set as well.
 
 Example usage:
@@ -2167,9 +2198,9 @@ Example usage:
 
     int i=0;
     const char **vals, *val, *key;
-    const char **keys = rp_server_get_params(serv, &vals);
+    const char **keys = rp_server_get_queries(serv, &vals);
 
-    while(keys) //keys will not be null (so long as the duktape value stack remains untouched)
+    while(keys) //keys and vals will be null if there are no query string params
     {
         key=keys[i];
         if(!key)  //keys and vals are null terminated lists
@@ -2180,6 +2211,24 @@ Example usage:
 
         i++;
     }
+    if(keys)
+        free(keys);
+    if(vals)
+        free(vals);
+
+rp_server_get_queries
+"""""""""""""""""""""
+
+.. code-block:: c
+
+    const char ** rp_server_get_queries(rpserv *serv, const char ***values);
+
+rp_server_get_posts
+"""""""""""""""""""
+
+.. code-block:: c
+
+    const char ** rp_server_get_posts(rpserv *serv, const char ***values);
 
 rp_server_get_params
 """"""""""""""""""""
@@ -2233,6 +2282,92 @@ others == ``NULL``);
 
     multipart_postvar rp_server_get_multipart_postitem(rpserv *serv, int index);
 
+Example for uploading files to server:
+
+.. code-block:: c
+
+    #include <errno.h>
+    #include "rp_server.h"
+
+    static char *httop    = "<!DOCTYPE html><html><head><title>Sample C-Mod</title></head><body><div>",
+                *htbottom = "</div></body></html>";
+
+    static duk_ret_t index_html(duk_context *ctx)
+    {
+        /* declare and init 'rpserv *serv' */
+        INIT_RPSERV(serv, ctx)
+
+        //check query string for "?name=..."
+        const char *name = rp_server_get_post(serv, "name");
+
+        rp_server_put_string(serv, httop);
+
+        rp_server_put_string(serv,
+            "<form enctype=\"multipart/form-data\" method=\"POST\" action=\"savepost.html\">"
+                "File: <input type=\"FILE\" name=\"myfile\"/>"
+                "<input type=\"submit\" name=\"Upload\" value=\"Upload\" />"
+            "</form>");
+
+        return rp_server_put_reply_string(serv, 200, "html", htbottom);
+    }
+
+    static duk_ret_t savepost(duk_context *ctx)
+    {
+        INIT_RPSERV(serv, ctx);
+        multipart_postvar pvar={0};
+        FILE *pfile;
+        size_t fileout_sz;
+        int i=0, nvars = rp_server_get_multipart_length(serv);
+        char filename[PATH_MAX];
+
+        rp_server_put_string(serv, httop);
+
+        for(i=0;i<nvars;i++)
+        {
+            pvar = rp_server_get_multipart_postitem(serv, 0);
+            if (strcmp(pvar.name,"myfile")==0)
+                break;
+        }
+
+        if(i==nvars || !pvar.file_name) //either no vars(0==0) or not found or no filename
+        {
+            //redirect to index
+            rp_server_add_header(serv, "location", "./");
+            rp_server_put_string(serv, "<a href=\"./\">Moved</a>");
+            return rp_server_put_reply_string(serv, 302, "html", htbottom);
+        }
+
+        snprintf(filename, PATH_MAX, "/tmp/%s", pvar.file_name);
+
+        pfile=fopen(filename,"w");
+        if(!pfile)
+            goto err;
+
+        fileout_sz=fwrite(pvar.value, 1, pvar.length, pfile);
+
+        if(fileout_sz != pvar.length)
+            goto err;
+
+        rp_server_printf(serv, "Your file is at %s on the server", filename);
+
+        return rp_server_put_reply_string(serv, 200, "html", htbottom);
+
+        err:
+        rp_server_put_string(serv, "Error writing file: ");
+        if(errno)
+            rp_server_put_string(serv, strerror(errno));
+        return rp_server_put_reply_string(serv, 200, "html", htbottom);
+    }
+
+    rp_server_map exports[] = {
+        {"/",              index_html},
+        {"/index.html",    index_html},
+        {"/savepost.html", savepost}
+    };
+
+    RP_EXPORT_MAP(exports)
+
+
 Put Functions
 ~~~~~~~~~~~~~
 
@@ -2260,7 +2395,7 @@ Add the contents of the null terminated ``*s`` to buffer to be returned to clien
 rp_server_put_and_free
 """"""""""""""""""""""
 
-Same as `rp_server_put`_\ , but takes a malloced string and frees it 
+Same as `rp_server_put`_\ , but takes a malloced string and frees it
 after it is sent to the client.
 Using this function with malloced data saves a copy and a free.
 
@@ -2289,6 +2424,21 @@ for details.
 
     int rp_server_printf(rpserv *serv, const char *format, ...);
 
+Header Function
+~~~~~~~~~~~~~~~
+
+rp_server_add_header
+""""""""""""""""""""
+
+Add a header to the reply.  key and val are copied.  Note that
+``content-type`` (which is set in  `End Functions`_ below)
+and ``date`` are automatically set (or overwritten)
+after the exported function returns.
+
+.. code-block:: c
+
+    void rp_server_add_header(rpserv *serv, char *key, char *val);
+
 End Functions
 ~~~~~~~~~~~~~
 
@@ -2300,10 +2450,11 @@ Note:
    2) Each function returns ``(duk_ret_t)1``.
 
 
+
 rp_server_put_reply
 """""""""""""""""""
 
-Set HTTP Code "code" and mime type that matches "ext" (e.g. "html", "txt", "json", etc. --
+Set HTTP Code "code" and ``content-type`` that matches "ext" (e.g. "html", "txt", "json", etc. --
 for ext->mime_type map, see `Key to Mime Mappings`_\ ).
 
 If all the content to be sent to client has already been added via the rp_server_put_*  functions
@@ -2383,7 +2534,7 @@ happen:
     * An event loop is created for each thread.
 
     * Global variables and functions from "begin code" are copied from the
-      main thread's Duktape context to all the Duktape thread contexts. 
+      main thread's Duktape context to all the Duktape thread contexts.
       Local variables are lost.
 
     * The main thread listens for HTTP connections in its event loop and
@@ -2405,7 +2556,7 @@ happen:
       the server (in "begin code" or before "end of script") are run in the
       main event loop.  Certain event data is stored in the main thread so
       events can be triggered regardless on which thread they reside.
-      
+
     * HTTP requests which have a timeout are run from a new thread which can
       be interrupted.  If the timeout is reached before the callback
       function finishes, the thread is canceled and the threads Duktape
@@ -2425,7 +2576,7 @@ Modules vs Global callback functions:
     * Global functions and variables are set once when the server script is
       first loaded and cannot be changed without restarting the server.
 
-    * Modules are loaded in each thread and are checked upon each execution. 
+    * Modules are loaded in each thread and are checked upon each execution.
       If the source script of a module is changed while the server is
       running, it is reloaded.
 
@@ -2450,9 +2601,9 @@ from `Mapped Directories`_\ . This list of defaults can be appended or modified
 using the ``mimeMap`` property in the :green:`Object` passed to `start()`_ \.
 
 An example: If the variable ``jpg`` is set
-(e.g. ``var jpg = rampart.utils.readFile("/path/to/my/jpeg.jpg");``), 
-then ``return {jpeg:jpg};`` at the end of a mapped function would send 
-the contents of the file ``/path/to/my/jpeg.jpg`` with the 
+(e.g. ``var jpg = rampart.utils.readFile("/path/to/my/jpeg.jpg");``),
+then ``return {jpeg:jpg};`` at the end of a mapped function would send
+the contents of the file ``/path/to/my/jpeg.jpg`` with the
 mime-type ``image/jpeg`` to the client.  The same applies to files served
 from the filesystem which end in ``.jpeg`` or ``.jpg``.
 

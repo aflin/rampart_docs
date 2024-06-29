@@ -24,7 +24,7 @@ How does it work?
 The module and the embedded Python interpreter are used to load Python
 modules and scripts into the Python environment.  Translation of variables
 between the two languages are handled automatically.  As the Python Library
-does not function in parallel in multiple threads, if run in 
+does not function in parallel in multiple threads, if run in
 :ref:`rampart.threads <rampart-thread:Rampart Thread Functions>` the module
 will run in multiple processes.
 
@@ -41,7 +41,7 @@ Loading the Javascript Module
 
     Return value:
         An :green:`Object` with the functions listed below.
-    
+
 
 Python Module Functions
 -----------------------
@@ -54,13 +54,13 @@ python.import()
     Usage:
 
     .. code-block:: javascript
-    
+
         var python=require("rampart-python");
 
         /* same as "import mymod" in Python */
         var mymod=python.import("mymod");
 
-        
+
     Return Value:
         An :green:`Object` with callable properties corresponding to the functions of the imported module.
 
@@ -82,7 +82,7 @@ python.importString()
     Usage:
 
     .. code-block:: javascript
-    
+
         var python=require("rampart-python");
 
         var mymod = python.importString(pyscript[, scriptName);
@@ -90,7 +90,7 @@ python.importString()
     Where:
 
     * ``script`` is a :green:`String`, the python source code
-    * ``scriptName`` is a :green:`String`, an optional name for this script for 
+    * ``scriptName`` is a :green:`String`, an optional name for this script for
       error reporting.  Default is ``"module_from_string"``.
 
     Return Value:
@@ -121,7 +121,7 @@ python.importFile()
     Usage:
 
     .. code-block:: javascript
-    
+
         var python=require("rampart-python");
 
         var mymod = python.importFile(fileName);
@@ -148,7 +148,7 @@ pvar.toString()
 
         var pvar = pathlib.PosixPath('./');
 
-        rampart.utils.printf( "pathlib=%s\npvar=%s\npvar.resolve()=%s\n", 
+        rampart.utils.printf( "pathlib=%s\npvar=%s\npvar.resolve()=%s\n",
             pathlib.toString(), pvar.toString(), pvar.resolve().toString() );
 
         /* output:
@@ -169,7 +169,7 @@ pvar.toValue()
     Example:
 
     .. code-block:: javascript
-    
+
         var python=require("rampart-python");
         var printf = rampart.printf;
 
@@ -363,11 +363,123 @@ Python Named Arguments
         var ret = mymod.add( myNamedArgs );
         printf("%J\n", ret.toValue());
 
-        /* 
+        /*
            calling in JavaScript:
                mymod.add( {pyArgs: {a:comp1, b:comp2} } );
            is equivalent to calling with named arguments in python:
                add(a=comp1, b=comp2);
+        */
+
+Calling rampart from within Python
+----------------------------------
+
+When python scripts are executed from within rampart, the ``rampart`` module
+is available to python.  It includes two methods: ``call`` and
+``triggerEvent``.
+
+rampart.call
+~~~~~~~~~~~~
+
+    Call a global rampart function from within python.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python = require('rampart-python');
+
+        var iscript =
+        `
+        #when operating from within rampart, the rampart module is available
+        import rampart
+
+        #call a rampart global func
+        def callRampartFunc(funcName, var1, var2):
+            res = rampart.call(funcName, var1, var2);
+            print(res);
+        `;
+
+
+        function add(a,b) {
+            return [ `${a} + ${b}`, a+b ];
+        }
+
+        var r=python.importString(iscript);
+
+        r.callRampartFunc("add", 3, 4);
+
+        /* expected results:
+            ('3 + 4', 7.0)
+        */
+
+
+rampart.triggerEvent
+~~~~~~~~~~~~~~~~~~~
+
+    A registered event in a thread may be triggered from within rampart
+
+    Example:
+
+    .. code-block:: javascript
+
+        rampart.globalize(rampart.utils);
+        var python = require('rampart-python');
+
+        var iscript =
+        `
+        #when operating from within rampart, the rampart module is availabe
+        import rampart
+
+        #trigger a rampart event and pass a "triggerVar" to it
+        def trigger(eventName, triggervar):
+            rampart.triggerEvent(eventName, triggervar);
+        `;
+
+
+        function pytrigger(val,err){
+            //check for errors in thrfunc
+            if(!val)
+                console.log(err);
+            // load script into python and return its functions
+            var r=python.importString(iscript);
+            console.log("trigger myev");
+            // execute "trigger" function in python script with a triggervar
+            r.trigger("myev","Hello from Python");
+        }
+
+        // create a new thread in rampart
+        var thr = new rampart.thread();
+
+        // the function which will be run in the rampart.thread.
+        function thrfunc() {
+            console.log("setup myev");
+            // register an event in this thread
+            rampart.event.on(
+                // the name of the event
+                "myev",
+                // the name of the function (required but not used here)
+                "myfunc",
+                // the function to be executed when triggered
+                function(uservar,triggervar){
+                    printf("Uservar='%s'\nTriggervar='%s'\n", uservar, triggervar);
+                    //remove the event so thread is empty of events and rampart can exit
+                    rampart.event.remove("myev");
+                },
+                //the user variable to be passed upon triggering
+                "Hello from JS main thread"
+            );
+            return 1;
+        }
+
+        //execute the function thrfunc in the thread, and then run
+        //pytriggervar in the main thread.
+        thr.exec(thrfunc,pytrigger);
+
+        /* expected results:
+            setup myev
+            trigger myev
+            Uservar='Hello from JS main thread'
+            Triggervar='Hello from Python'
         */
 
 Example Use Importing Data
@@ -405,7 +517,7 @@ Example Use Importing Data
 
 
         /* create rampart sql table and copy data from sqlite */
-        sql.exec("create table test (i int, i2 int);");    
+        sql.exec("create table test (i int, i2 int);");
         for (i=0;i<res.length;i++) {
             sql.exec("insert into test values(?,?);", res[i]);
         }

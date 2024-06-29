@@ -14,12 +14,12 @@ is provided by
 `Marco Paland <https://github.com/mpaland/printf>`_ under the
 `MIT License <https://github.com/mpaland/printf/blob/master/LICENSE>`_\ .
 
-The ``%!H`` HTML escape decoding is provided by 
+The ``%!H`` HTML escape decoding is provided by
 `Christoph Gärtner <https://bitbucket.org/cggaertner/cstuff/src/master/entities.c>`_
 under the  `Boost License <https://www.boost.org/users/license.html>`_\ .
 
 The utilities are included in Rampart JavaScript and as such are licensed under
-the same MIT license. 
+the same MIT license.
 
 General Utilities
 """""""""""""""""
@@ -456,7 +456,7 @@ Example:
 getchar
 '''''''
 
-Get one or more characters from ``stdin``.  
+Get one or more characters from ``stdin``.
 
 Usage:
 
@@ -472,7 +472,7 @@ Return Value:
 
 Note:
    If ``stdin`` is from an interactive terminal, execution
-   will be paused until ``nchar`` chars are input.  Unlike 
+   will be paused until ``nchar`` chars are input.  Unlike
    ``fread(stdin);`` :ref:`below <rampart-utils:fread>`, the terminal will be
    set to return characters in without waiting for a newline.
 
@@ -762,6 +762,116 @@ Example:
    }
    */
 
+fork
+''''
+
+Fork the current process.
+
+Usage:
+
+.. code-block:: javascript
+
+   var pid = rampart.utils.fork([pipe [,pipe [,...] ] ]);
+
+   if(pid=-1)
+      rampart.utils.fprintf(rampart.utils.stderr, "error piping\n");
+
+   if(pid) {
+      //parent
+   } else {
+      //child
+   }
+
+Where ``pipe`` is one or several pipes created with `newPipe`_ below.
+
+Return Value:
+   A :green:`Number` - The pid of the child in the parent process, ``0`` in
+   the child process and ``-1`` if there is an error and fork failed.
+
+Note:
+    ``fork`` will throw an error if there are any threads running at the
+    time of the fork, either from ``rampart.thread`` or ``rampart-server``.
+    Threads, however, can be created after the fork in either the child
+    or parent process.
+
+newPipe
+'''''''
+
+Create a bi-directional pipe for passing variables between processes created
+with `fork`_ above.
+
+Usage:
+
+.. code-block:: javascript
+
+   var pipe = rampart.utils.newPipe();
+
+   var pid = fork(pipe);
+
+Return Value:
+   An :green:`Object` of :green:`Functions`:
+
+   * ``write(data)`` - write to the pipe, where data is any variable which
+     can be serialized using ``CBOR``.  Return value is the number of bytes
+     written. Note: writes may block if the pipe is full until the reading
+     process reads with one of the two read functions below.  Throws an
+     error if pipe has been closed.
+
+   * ``read([function])``  - perform a blocking read of data sent from
+     another process using ``write()`` above.  If a function is provided
+     (i.e. ``function(value, error){}``) the value or error will be passed
+     to that callback (with the other being undefined).  Return value will
+     be undefined. If no function is provided, the return value will be an
+     :green:`Object` with either ``value`` or ``error`` set.
+
+   * ``onRead(function)`` - same as ``read``, except that a
+     :green:`Function` is required, the call is non-blocking and the
+     callback :green:`Function` will be called in the event loop each time
+     data is available.  On error, the pipe will close and the event will be
+     removed.
+
+   * ``close()`` - close the pipe.  Any further reads or writes from either
+     process will produce or throw an error.
+
+Example:
+
+.. code-block:: javascript
+
+   var pipe = rampart.utils.newPipe();
+
+   // fork and set the pipe for parent and child processes
+   var pid = fork(pipe);
+
+   if(pid ==-1) {
+      rampart.utils.fprintf(rampart.utils.stderr, "error piping\n");
+      process.exit(1);
+   }
+
+   if(pid) {
+      //parent
+
+      pipe.write("My first message");
+      pipe.write("My second message");
+
+   } else {
+      //child
+
+      var msg = pipe.read();
+      if(msg.err)
+         rampart.utils.fprintf(rampart.utils.stderr, "error reading- %s\n", msg.error);
+      else
+         rampart.utils.printf("msg = '%s'\n", msg.value);
+
+      //run non-blocking in event loop
+      pipe.onRead(function(val,err) {
+         if(err)
+            rampart.utils.fprintf(rampart.utils.stderr, "read event: error reading- %s\n", err);
+         else
+            rampart.utils.printf("read event: msg = '%s'\n", val);
+      });
+
+   }
+
 forkpty
 '''''''
 
@@ -832,12 +942,13 @@ Return Value:
 
      .. code-block:: javascript
 
-	pty.on(['data'|'close'], callback);  
+	pty.on(['data'|'close'], callback);
 
 
    An example for using ``forkpty()`` with websockets to run a terminal in
-   a web browser can be found 
+   a web browser can be found
    `here <https://github.com/aflin/rampart/tree/main/unsupported_extras/forkpty-term>`_\ .
+
 
 kill
 ''''
@@ -851,7 +962,7 @@ Usage:
    var ret = rampart.utils.kill(pid [, signal]);
 
 Where ``pid`` is a :green:`Number`, the process id of process which will
-receive the signal and ``signal`` is a :green:`Number`, the signal to send. 
+receive the signal and ``signal`` is a :green:`Number`, the signal to send.
 If ``signal`` is not specified, ``15`` (``SIGTERM``) is used.  See manual
 page for kill(1) for a list of signals, which may vary by platform.  Setting
 ``signal`` to ``0`` sends no signal, but checks for the existence of the
@@ -1302,12 +1413,12 @@ Usage:
 Where:
 
    * ``dateString`` is the same as ``date`` (as a :green:`String`) in `dateFmt`_ above.
-   
+
    * ``default_offset`` is the time zone offset in seconds to use if not provided in ``dateString``.
      The default is ``0`` (UTC).
-   
+
    * ``input_format`` is the same as in `dateFmt`_ above.
-   
+
 Return Value:
    A JavaScript :green:`Date`.
 
@@ -1355,7 +1466,7 @@ Note:
 Caveat:
     This cannot be used to load a module whose name contains illegal JavaScript variable name characters. Thus,
     ``load["my@mod"]`` will not work since ``'@'`` is not legal in javaScript even though it is legal in a file name.
-    However ``'-'`` and ``'.'`` characters will be replaced with ``'_'``.  Thus, ``load["rampart-curl.so"]`` will 
+    However ``'-'`` and ``'.'`` characters will be replaced with ``'_'``.  Thus, ``load["rampart-curl.so"]`` will
     load the Curl Module and put it in the global namespace similar to ``var rampart_curl_so = require("rampart-curl.so")``.
 
 File Handle Utilities
@@ -1606,7 +1717,7 @@ Example
    var out=fread(handle);
 
    printf("'%s'\n", out);
-   /* 
+   /*
    expect output:
    'abcdef'
    */
@@ -1724,8 +1835,8 @@ Usage:
 
     var data = rampart.utils.fgets([handle|file] [, max_size]);
 
-Read data from file, up to ``max_size`` bytes (default ``1``), stopping at the 
-and including the first ``\n`` or the end of the file.  
+Read data from file, up to ``max_size`` bytes (default ``1``), stopping at the
+and including the first ``\n`` or the end of the file.
 
 Return Value:
     A :green:`String`.
@@ -1835,7 +1946,7 @@ Where ``min`` is the floor and ``max``
 is the ceiling (EXCLUSIVE) of the range of the random number to produce.
 If not provided, ``min`` and ``max`` default to ``0.0`` and
 ``1.0`` respectively.
- 
+
 Return Value:
    A :green:`Number` - the generated random number.
 
@@ -1867,7 +1978,7 @@ If not provided, ``min`` and ``max`` default to ``0`` and
 ``99`` respectively.
 
 If provided, ``callback`` is a :green:`Function` ``callback(r,i)`` where
-``r`` is the random integer and i is the loop count. The :green:`Function` 
+``r`` is the random integer and i is the loop count. The :green:`Function`
 will be called repeatedly until it returns ``false``.
 
 Return Value:
@@ -1906,7 +2017,7 @@ Similar to the `gaussrand`_ above.  It is equivelant to:
     if(nrand>scale)
         nrand=scale;
     else if (nrand < -scale)
-        nrand = -scale;   
+        nrand = -scale;
 
 
 With a ``scale`` of ``1.0`` (the default), the distribution of numbers has a

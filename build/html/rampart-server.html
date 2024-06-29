@@ -160,18 +160,17 @@
 <li class="toctree-l4"><a class="reference internal" href="#multipart-postvar">multipart_postvar</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#init-macro">Init Macro</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#macros">Macros</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#init-rpserv">INIT_RPSERV</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#export-function">Export Function</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rp-server-export-map">rp_server_export_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rp-export-function">RP_EXPORT_FUNCTION</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rp-export-map">RP_EXPORT_MAP</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#get-functions">Get Functions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-param">rp_server_get_param</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-header">rp_server_get_header</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-query">rp_server_get_query</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rp-server-get-post">rp_server_get_post</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-path">rp_server_get_path</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-cookie">rp_server_get_cookie</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-body">rp_server_get_body</a></li>
@@ -179,6 +178,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#get-multiple-values-functions">Get Multiple Values Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rp-server-get-queries">rp_server_get_queries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rp-server-get-posts">rp_server_get_posts</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-params">rp_server_get_params</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-headers">rp_server_get_headers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-get-paths">rp_server_get_paths</a></li>
@@ -196,6 +197,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-put-and-free">rp_server_put_and_free</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-put-string-and-free">rp_server_put_string_and_free</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rp-server-printf">rp_server_printf</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#header-function">Header Function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rp-server-add-header">rp_server_add_header</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#end-functions">End Functions</a><ul>
@@ -329,9 +334,10 @@ context is created for each thread.  Global variables, global functions
 and mapped functions passed to <a class="reference internal" href="#start">start()</a> are automatically copied to each
 context and each runs independently.  Modules are likewise loaded from
 within each thread and checked for changes upon each request.</p>
-<p>It is worth noting that not all rampart-sql functions are thread safe.  When
-SQL functions are executed from within a function or module, rampart may
-create a fork, one per thread, in order to handle such functions.</p>
+<p>It is worth noting that rampart-sql and rampart-python functions are not
+thread safe.  When SQL or Python functions are executed from within a
+function or module, rampart may create a fork, one per thread, in order to
+handle such functions.</p>
 <p>A timeout for script execution may also be set.  Should the script timeout,
 the serving thread will cancel the request and re-initialize the JavaScript
 context in order to serve new requests.</p>
@@ -2032,7 +2038,7 @@ options at the top of the file.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/stop_server.sh</span></code>      - a bash script to stop the web server.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/apps</span></code>                - the standard location for server modules.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/wsapps</span></code>              - the standard location for modules
-that server websocket connections</li>
+that serve websocket connections.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/data</span></code>                - a location for databases.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/html</span></code>                - the standard location for static files.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/logs</span></code>                - the standard location for access and
@@ -2066,40 +2072,36 @@ is adapted and used for ease of use and organization.</p>
 the need for a deep dive into the duktape api.</p>
 <div class="section" id="basic-layout">
 <h3>Basic Layout<a class="headerlink" href="#basic-layout" title="Permalink to this headline">¶</a></h3>
-<p>Below is skeleton module in c.</p>
+<p>Below is a sample module in c.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;rp_server.h&quot;</span><span class="cp"></span>
 
-<span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">my_cfunc</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="k">static</span> <span class="kt">char</span> <span class="o">*</span><span class="n">httop</span> <span class="o">=</span>    <span class="s">&quot;&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;Sample C-Mod&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;div&gt;&quot;</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">htbottom</span> <span class="o">=</span> <span class="s">&quot;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&quot;</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">hello</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="c1">// initialize the server context struct &quot;serv&quot;</span>
+    <span class="cm">/* declare and init &#39;rpserv *serv&#39; */</span>
     <span class="n">INIT_RPSERV</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">ctx</span><span class="p">);</span>
 
-    <span class="c1">//example: get a malloced string - the json of the req object</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">reply</span> <span class="o">=</span> <span class="n">rp_server_get_req_json</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+    <span class="c1">//check query string for &quot;?name=...&quot;</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">rp_server_get_query</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;name&quot;</span><span class="p">);</span>
 
-    <span class="c1">// your code here</span>
+    <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">httop</span><span class="p">);</span>
 
+    <span class="k">if</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">rp_server_printf</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;%s%s%s&quot;</span><span class="p">,</span> <span class="s">&quot;&lt;h2&gt;Hello there &quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s">&quot;!&lt;/h2&gt;&quot;</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span>
+                      <span class="s">&quot;&lt;form&gt;&quot;</span>
+                        <span class="s">&quot;Your name: &lt;input name=</span><span class="se">\&quot;</span><span class="s">name</span><span class="se">\&quot;</span><span class="s"> type=text&gt;&lt;input type=submit&gt;&quot;</span>
+                      <span class="s">&quot;&lt;/form&gt;&quot;</span><span class="p">);</span>
 
     <span class="c1">// function must end by calling rp_server_put_reply*</span>
     <span class="c1">// and must return 1;</span>
-
-    <span class="c1">// example: return &quot;reply as text/plain and free it. return 1</span>
-    <span class="k">return</span> <span class="n">rp_server_put_reply_string_and_free</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s">&quot;txt&quot;</span><span class="p">,</span> <span class="n">reply</span><span class="p">);</span>
-
-    <span class="c1">//OR:</span>
-    <span class="n">rp_server_put_reply_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s">&quot;txt&quot;</span><span class="p">,</span> <span class="n">reply</span><span class="p">);</span>
-    <span class="n">free</span><span class="p">(</span><span class="n">reply</span><span class="p">);</span>
-    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-
+    <span class="k">return</span> <span class="n">rp_server_put_reply_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s">&quot;html&quot;</span><span class="p">,</span> <span class="n">htbottom</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="c1">// Initialize module</span>
-<span class="n">duk_ret_t</span> <span class="nf">duk_open_module</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">duk_push_c_function</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">my_cfunc</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-
-    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="n">RP_EXPORT_FUNCTION</span><span class="p">(</span><span class="n">hello</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To compile:</p>
@@ -2111,7 +2113,7 @@ cc -I/usr/local/rampart/include -dynamiclib -undefined dynamic_lookup -install_n
 </div>
 <p>And then copy <code class="docutils literal notranslate"><span class="pre">mymod.so</span></code> to the <code class="docutils literal notranslate"><span class="pre">web_server/apps</span></code> directory (or wherever
 server modules are stored in a custom setup).</p>
-<p>The initialization of the module may also be done to map function (see <a class="reference internal" href="#mapped-functions">Mapped Functions</a>).</p>
+<p>A map of functions may also be exported (see <a class="reference internal" href="#mapped-functions">Mapped Functions</a>).</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// a map of urls relative to http(s)://example.com/apps/mymod/</span>
 <span class="n">rp_server_map</span> <span class="n">exports</span><span class="p">[]</span> <span class="o">=</span>
 <span class="p">{</span>
@@ -2121,10 +2123,7 @@ server modules are stored in a custom setup).</p>
     <span class="p">{</span><span class="s">&quot;/myurl_2.json&quot;</span><span class="p">,</span>    <span class="n">my_func2</span>     <span class="p">}</span>
 <span class="p">};</span>
 
-<span class="n">duk_ret_t</span> <span class="nf">duk_open_module</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">return</span> <span class="n">rp_server_export_map</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">exports</span><span class="p">);</span>
-<span class="p">}</span>
+<span class="n">RP_EXPORT_MAP</span><span class="p">(</span><span class="n">exports</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -2166,8 +2165,8 @@ post parsed from the body of the request.</p>
 </div>
 </div>
 </div>
-<div class="section" id="init-macro">
-<h3>Init Macro<a class="headerlink" href="#init-macro" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="macros">
+<h3>Macros<a class="headerlink" href="#macros" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="init-rpserv">
 <h4>INIT_RPSERV<a class="headerlink" href="#init-rpserv" title="Permalink to this headline">¶</a></h4>
 <p>Declare and initialize the <code class="docutils literal notranslate"><span class="pre">rpserv</span></code> handle.</p>
@@ -2179,14 +2178,38 @@ post parsed from the body of the request.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="rp-export-function">
+<h4>RP_EXPORT_FUNCTION<a class="headerlink" href="#rp-export-function" title="Permalink to this headline">¶</a></h4>
+<p>Export the function that will serve requests. This (or <a class="reference internal" href="#rp-export-map">RP_EXPORT_MAP</a>
+must be placed somewhere in the file outside other functions.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">my_cfunc</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">INIT_RPSERV</span><span class="p">(</span><span class="n">serv_var_name</span><span class="p">,</span> <span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">);</span>
+    <span class="c1">//...</span>
+<span class="p">}</span>
+
+<span class="n">RP_EXPORT_FUNCTION</span><span class="p">(</span><span class="n">my_cfunc</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="export-function">
-<h3>Export Function<a class="headerlink" href="#export-function" title="Permalink to this headline">¶</a></h3>
-<p>This function is used from within the mandatory duk_open_module to map multiple
-functions.  See <a class="reference internal" href="#basic-layout">Basic Layout</a> example above.</p>
-<div class="section" id="rp-server-export-map">
-<h4>rp_server_export_map<a class="headerlink" href="#rp-server-export-map" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">duk_ret_t</span> <span class="nf">rp_server_export_map</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">,</span>  <span class="n">rp_server_map</span> <span class="o">*</span><span class="n">map</span><span class="p">);</span>
+</div>
+<div class="section" id="rp-export-map">
+<h4>RP_EXPORT_MAP<a class="headerlink" href="#rp-export-map" title="Permalink to this headline">¶</a></h4>
+<p>Export the functions that will serve requests. This (or <a class="reference internal" href="#rp-export-function">RP_EXPORT_FUNCTION</a>
+must be placed somewhere in the file outside other functions.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">my_cfunc</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">INIT_RPSERV</span><span class="p">(</span><span class="n">serv_var_name</span><span class="p">,</span> <span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">);</span>
+    <span class="c1">//...</span>
+<span class="p">}</span>
+
+<span class="n">rp_server_map</span> <span class="n">my_exports</span><span class="p">[]</span> <span class="o">=</span>
+<span class="p">{</span>
+    <span class="p">{</span><span class="s">&quot;/&quot;</span><span class="p">,</span>                <span class="n">my_indexfunc</span> <span class="p">},</span>
+    <span class="p">{</span><span class="s">&quot;/index.html&quot;</span><span class="p">,</span>      <span class="n">my_indexfunc</span> <span class="p">},</span>
+    <span class="p">{</span><span class="s">&quot;/myurl_1.html&quot;</span><span class="p">,</span>    <span class="n">my_func1</span>     <span class="p">},</span>
+<span class="p">};</span>
+
+<span class="n">RP_EXPORT_MAP</span><span class="p">(</span><span class="n">my_exports</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="#rp-server-map">rp_server_map</a> above.</p>
@@ -2219,15 +2242,23 @@ http://localhost:8088/apps/my_mod/?x[key1]=val1&amp;x=val2
 </div>
 <div class="section" id="rp-server-get-header">
 <h4>rp_server_get_header<a class="headerlink" href="#rp-server-get-header" title="Permalink to this headline">¶</a></h4>
-<p>Get a header by name</p>
+<p>Get a header by name.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="nf">rp_server_get_header</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="rp-server-get-query">
 <h4>rp_server_get_query<a class="headerlink" href="#rp-server-get-query" title="Permalink to this headline">¶</a></h4>
-<p>Get a query string parameter by name</p>
+<p>Get a query string variable by name.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="nf">rp_server_get_query</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rp-server-get-post">
+<h4>rp_server_get_post<a class="headerlink" href="#rp-server-get-post" title="Permalink to this headline">¶</a></h4>
+<p>Get a posted form variable or posted JSON parameter by name.</p>
+<p>See also: <a class="reference internal" href="#get-multipart-form-data">Get Multipart Form Data</a> for multipart file uploads.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="nf">rp_server_get_post</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -2271,9 +2302,9 @@ If <code class="docutils literal notranslate"><span class="pre">values</span></c
 <p>Example usage:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">vals</span><span class="p">,</span> <span class="o">*</span><span class="n">val</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">;</span>
-<span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">keys</span> <span class="o">=</span> <span class="n">rp_server_get_params</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">vals</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">keys</span> <span class="o">=</span> <span class="n">rp_server_get_queries</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">vals</span><span class="p">);</span>
 
-<span class="k">while</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="c1">//keys will not be null (so long as the duktape value stack remains untouched)</span>
+<span class="k">while</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="c1">//keys and vals will be null if there are no query string params</span>
 <span class="p">{</span>
     <span class="n">key</span><span class="o">=</span><span class="n">keys</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
     <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">key</span><span class="p">)</span>  <span class="c1">//keys and vals are null terminated lists</span>
@@ -2284,7 +2315,23 @@ If <code class="docutils literal notranslate"><span class="pre">values</span></c
 
     <span class="n">i</span><span class="o">++</span><span class="p">;</span>
 <span class="p">}</span>
+<span class="k">if</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">keys</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">vals</span><span class="p">);</span>
 </pre></div>
+</div>
+<div class="section" id="rp-server-get-queries">
+<h4>rp_server_get_queries<a class="headerlink" href="#rp-server-get-queries" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">**</span> <span class="nf">rp_server_get_queries</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">***</span><span class="n">values</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rp-server-get-posts">
+<h4>rp_server_get_posts<a class="headerlink" href="#rp-server-get-posts" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span> <span class="o">**</span> <span class="nf">rp_server_get_posts</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">***</span><span class="n">values</span><span class="p">);</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="rp-server-get-params">
 <h4>rp_server_get_params<a class="headerlink" href="#rp-server-get-params" title="Permalink to this headline">¶</a></h4>
@@ -2328,6 +2375,89 @@ See <a class="reference internal" href="#multipart-postvar">multipart_postvar</a
 If index is invalid, returns a zeroed struct (<code class="docutils literal notranslate"><span class="pre">length</span></code> == <code class="docutils literal notranslate"><span class="pre">0</span></code>,
 others == <code class="docutils literal notranslate"><span class="pre">NULL</span></code>);</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">multipart_postvar</span> <span class="nf">rp_server_get_multipart_postitem</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example for uploading files to server:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;errno.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&quot;rp_server.h&quot;</span><span class="cp"></span>
+
+<span class="k">static</span> <span class="kt">char</span> <span class="o">*</span><span class="n">httop</span>    <span class="o">=</span> <span class="s">&quot;&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;Sample C-Mod&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;div&gt;&quot;</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">htbottom</span> <span class="o">=</span> <span class="s">&quot;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&quot;</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">index_html</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* declare and init &#39;rpserv *serv&#39; */</span>
+    <span class="n">INIT_RPSERV</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)</span>
+
+    <span class="c1">//check query string for &quot;?name=...&quot;</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">rp_server_get_post</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;name&quot;</span><span class="p">);</span>
+
+    <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">httop</span><span class="p">);</span>
+
+    <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span>
+        <span class="s">&quot;&lt;form enctype=</span><span class="se">\&quot;</span><span class="s">multipart/form-data</span><span class="se">\&quot;</span><span class="s"> method=</span><span class="se">\&quot;</span><span class="s">POST</span><span class="se">\&quot;</span><span class="s"> action=</span><span class="se">\&quot;</span><span class="s">savepost.html</span><span class="se">\&quot;</span><span class="s">&gt;&quot;</span>
+            <span class="s">&quot;File: &lt;input type=</span><span class="se">\&quot;</span><span class="s">FILE</span><span class="se">\&quot;</span><span class="s"> name=</span><span class="se">\&quot;</span><span class="s">myfile</span><span class="se">\&quot;</span><span class="s">/&gt;&quot;</span>
+            <span class="s">&quot;&lt;input type=</span><span class="se">\&quot;</span><span class="s">submit</span><span class="se">\&quot;</span><span class="s"> name=</span><span class="se">\&quot;</span><span class="s">Upload</span><span class="se">\&quot;</span><span class="s"> value=</span><span class="se">\&quot;</span><span class="s">Upload</span><span class="se">\&quot;</span><span class="s"> /&gt;&quot;</span>
+        <span class="s">&quot;&lt;/form&gt;&quot;</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">rp_server_put_reply_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s">&quot;html&quot;</span><span class="p">,</span> <span class="n">htbottom</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">savepost</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">INIT_RPSERV</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">ctx</span><span class="p">);</span>
+    <span class="n">multipart_postvar</span> <span class="n">pvar</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="kt">FILE</span> <span class="o">*</span><span class="n">pfile</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">fileout_sz</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nvars</span> <span class="o">=</span> <span class="n">rp_server_get_multipart_length</span><span class="p">(</span><span class="n">serv</span><span class="p">);</span>
+    <span class="kt">char</span> <span class="n">filename</span><span class="p">[</span><span class="n">PATH_MAX</span><span class="p">];</span>
+
+    <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">httop</span><span class="p">);</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">nvars</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">pvar</span> <span class="o">=</span> <span class="n">rp_server_get_multipart_postitem</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">pvar</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="s">&quot;myfile&quot;</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="n">nvars</span> <span class="o">||</span> <span class="o">!</span><span class="n">pvar</span><span class="p">.</span><span class="n">file_name</span><span class="p">)</span> <span class="c1">//either no vars(0==0) or not found or no filename</span>
+    <span class="p">{</span>
+        <span class="c1">//redirect to index</span>
+        <span class="n">rp_server_add_header</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;location&quot;</span><span class="p">,</span> <span class="s">&quot;./&quot;</span><span class="p">);</span>
+        <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;&lt;a href=</span><span class="se">\&quot;</span><span class="s">./</span><span class="se">\&quot;</span><span class="s">&gt;Moved&lt;/a&gt;&quot;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">rp_server_put_reply_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">302</span><span class="p">,</span> <span class="s">&quot;html&quot;</span><span class="p">,</span> <span class="n">htbottom</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">snprintf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">PATH_MAX</span><span class="p">,</span> <span class="s">&quot;/tmp/%s&quot;</span><span class="p">,</span> <span class="n">pvar</span><span class="p">.</span><span class="n">file_name</span><span class="p">);</span>
+
+    <span class="n">pfile</span><span class="o">=</span><span class="n">fopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&quot;w&quot;</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">pfile</span><span class="p">)</span>
+        <span class="k">goto</span> <span class="n">err</span><span class="p">;</span>
+
+    <span class="n">fileout_sz</span><span class="o">=</span><span class="n">fwrite</span><span class="p">(</span><span class="n">pvar</span><span class="p">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">pvar</span><span class="p">.</span><span class="n">length</span><span class="p">,</span> <span class="n">pfile</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">fileout_sz</span> <span class="o">!=</span> <span class="n">pvar</span><span class="p">.</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">goto</span> <span class="n">err</span><span class="p">;</span>
+
+    <span class="n">rp_server_printf</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;Your file is at %s on the server&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">rp_server_put_reply_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s">&quot;html&quot;</span><span class="p">,</span> <span class="n">htbottom</span><span class="p">);</span>
+
+    <span class="nl">err</span><span class="p">:</span>
+    <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="s">&quot;Error writing file: &quot;</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">errno</span><span class="p">)</span>
+        <span class="n">rp_server_put_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span>
+    <span class="k">return</span> <span class="n">rp_server_put_reply_string</span><span class="p">(</span><span class="n">serv</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="s">&quot;html&quot;</span><span class="p">,</span> <span class="n">htbottom</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">rp_server_map</span> <span class="n">exports</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">{</span><span class="s">&quot;/&quot;</span><span class="p">,</span>              <span class="n">index_html</span><span class="p">},</span>
+    <span class="p">{</span><span class="s">&quot;/index.html&quot;</span><span class="p">,</span>    <span class="n">index_html</span><span class="p">},</span>
+    <span class="p">{</span><span class="s">&quot;/savepost.html&quot;</span><span class="p">,</span> <span class="n">savepost</span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="n">RP_EXPORT_MAP</span><span class="p">(</span><span class="n">exports</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -2377,6 +2507,19 @@ for details.</p>
 </div>
 </div>
 </div>
+<div class="section" id="header-function">
+<h3>Header Function<a class="headerlink" href="#header-function" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="rp-server-add-header">
+<h4>rp_server_add_header<a class="headerlink" href="#rp-server-add-header" title="Permalink to this headline">¶</a></h4>
+<p>Add a header to the reply.  key and val are copied.  Note that
+<code class="docutils literal notranslate"><span class="pre">content-type</span></code> (which is set in  <a class="reference internal" href="#end-functions">End Functions</a> below)
+and <code class="docutils literal notranslate"><span class="pre">date</span></code> are automatically set (or overwritten)
+after the exported function returns.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">rp_server_add_header</span><span class="p">(</span><span class="n">rpserv</span> <span class="o">*</span><span class="n">serv</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">val</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="end-functions">
 <h3>End Functions<a class="headerlink" href="#end-functions" title="Permalink to this headline">¶</a></h3>
 <p>The end of a function which serves a webpage must call one of the following
@@ -2391,7 +2534,7 @@ functions.</p>
 </dl>
 <div class="section" id="rp-server-put-reply">
 <h4>rp_server_put_reply<a class="headerlink" href="#rp-server-put-reply" title="Permalink to this headline">¶</a></h4>
-<p>Set HTTP Code “code” and mime type that matches “ext” (e.g. “html”, “txt”, “json”, etc. –
+<p>Set HTTP Code “code” and <code class="docutils literal notranslate"><span class="pre">content-type</span></code> that matches “ext” (e.g. “html”, “txt”, “json”, etc. –
 for ext-&gt;mime_type map, see <a class="reference internal" href="#key-to-mime-mappings">Key to Mime Mappings</a>).</p>
 <p>If all the content to be sent to client has already been added via the rp_server_put_*  functions
 above, set buf to NULL and bufsz to 0.</p>

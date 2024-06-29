@@ -7,7 +7,7 @@ Preface
 Acknowledgment
 ~~~~~~~~~~~~~~
 
-The rampart-html module uses the 
+The rampart-html module uses the
 `Tidy-HTML5 <http://www.html-tidy.org/>`_ library
 to parse, fix-up, and manipulate HTML formatted documents.
 The developers of Rampart are extremely grateful for the excellent api and ease
@@ -16,8 +16,8 @@ of use of the `Tidy-HTML5 <http://www.html-tidy.org/>`_ library.
 License
 ~~~~~~~
 
-The rampart-html module is released under the MIT license. 
-The `Tidy-HTML5 <http://www.html-tidy.org/>`_ library is 
+The rampart-html module is released under the MIT license.
+The `Tidy-HTML5 <http://www.html-tidy.org/>`_ library is
 `licensed <https://github.com/htacg/tidy-html5/blob/next/README/LICENSE.md>`_
 with a `zlib <https://opensource.org/licenses/Zlib>`_\ -like license.
 
@@ -33,7 +33,7 @@ How does it work?
 ~~~~~~~~~~~~~~~~~
 
 After the module is loaded, an HTML document may be created or parsed by
-passing a :green:`String` or :green:`Buffer` to the ``newDocument`` 
+passing a :green:`String` or :green:`Buffer` to the ``newDocument``
 function.  The parsed document may then be manipulated using functions
 to select, add or delete specific elements.
 It then may be written to a new string using the ``prettyPrint`` function.
@@ -65,19 +65,19 @@ Usage:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument([document_text][, options]);
 
 where:
 
-* ``document_text`` is a :green:`String` or :green:`Buffer` containing the 
-  HTML text to be parsed. It also can be an :green:`Object` produced by 
+* ``document_text`` is a :green:`String` or :green:`Buffer` containing the
+  HTML text to be parsed. It also can be an :green:`Object` produced by
   `toObj`_ below. If not specified or a blank string,
   an empty document with the ``html``, ``head``, ``title`` and
   ``body`` tags in place will be created.
 
 * ``options`` is an optional :green:`Object` of key/value pairs that correspond
-  to the `standard command line <https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html>`_ 
+  to the `standard command line <https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html>`_
   options for `Tidy-HTML5 <http://www.html-tidy.org/>`_\ .
   Some of these options apply to the rules for parsing the document, while
   others apply to the appearance of the document (such as indentation and
@@ -86,11 +86,11 @@ where:
   given as camelCase.
 
   A small subset of these options include:
-  
+
   *  ``indent`` - a :green:`Boolean`, whether to add indentation and word
      wrapping to the output when using `prettyPrint`_\ .
 
-  *  ``indent-spaces`` (aka ``indentSpaces``) - a :green:`Number` indicating 
+  *  ``indent-spaces`` (aka ``indentSpaces``) - a :green:`Number` indicating
      the number of spaces to indent the output when using `prettyPrint`_ and
      ``indent`` above is set ``true``.  The default is ``2``.
 
@@ -102,7 +102,7 @@ where:
   *  ``drop-empty-elements`` (aka ``dropEmptyElements``) - a
      :green:`Boolean`, whether to drop empty elements.  **In Rampart** the
      default is ``false``.
-  
+
   *  ``tidy-mark`` (aka ``tidyMark``) - a :green:`Boolean`, whether to insert
      a ``meta`` tag in the head of the document indicating that the
      `Tidy-HTML5 <http://www.html-tidy.org/>`_ library was used to process
@@ -131,9 +131,9 @@ Usage:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument(mydocText);
-   
+
    /* manipulate document here */
 
    var htmlJSON = JSON.stringify(mydoc.toObj());
@@ -158,7 +158,7 @@ Note:
    /* distinguish between a plain object and an array
       and make output similar to rampart.utils.getType()    */
    function getType(v) {
-       
+
        if(typeof v == 'object')
        {
            if(v instanceOf Array)
@@ -261,7 +261,7 @@ The *root html object* is the :green:`Object` returned from
 `newDocument`_\ .  It is identical to other *html objects*, except that it
 contains only one element (the document root).
 
-In addition to the *root html object*, new ones can be created.  
+In addition to the *root html object*, new ones can be created.
 A new list of elements is returned in an *html object* when they are
 selected, detached, moved, copied or have their attributes and
 classes changed with the functions below.
@@ -286,7 +286,7 @@ Usage:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument([document_text][, options]);
 
     mydoc.destroy();
@@ -323,7 +323,7 @@ Example:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument(document, options);
 
     /* get a list of all the divs in the document */
@@ -343,14 +343,14 @@ Usage:
 
 Where ``attrname`` is the name of the attribute in the element to be selected (e.g. "id").
 
-Additionally: 
+Additionally:
 
    * ``attrname`` can specify a value by using ``"attr=val"`` syntax.
    * whitespace is ignored (e.g. ``"attr = val "``.
-   * globs may be used at the beginning or end (but not both) of ``val`` 
+   * globs may be used at the beginning or end (but not both) of ``val``
      (e.g ``"id=my_id_*"`` or ``id=*_val``)
    * quotes are respected (e.g. ``"id='my val'"`` or ``'id="my val"'``)
-   * quotes can be escaped (e.g. ``"id='john\\'s msg'"``). Note the double 
+   * quotes can be escaped (e.g. ``"id='john\\'s msg'"``). Note the double
      backslash.  It is required for the JavaScript string to pass a single
      backslash.
    * Quotes, backslashes and globs are also available in `filterAttr`_ and
@@ -361,7 +361,7 @@ Example:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument(document, options);
 
     /* get a list of all the elements with a href in the element */
@@ -382,7 +382,7 @@ Usage:
 
     var list = doc.findClass(classname);
 
-Where ``classname`` is the name of the HTML tag to be selected 
+Where ``classname`` is the name of the HTML tag to be selected
 (e.g. if an element has the attribute ``class="foo1 bar2"``, ``classname``
 of ``bar2`` would select the element).
 
@@ -391,10 +391,10 @@ Example:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument(document, options);
 
-    /* get a list of all the elements in the document 
+    /* get a list of all the elements in the document
        which belong to the "foo1" class              */
     var alldivs = mydoc.findClass("foo1");
 
@@ -706,11 +706,11 @@ Example:
    */
 
 Note:
-   The return :green:`Object` can be used as the input for html.\ `newDocument`_ or 
+   The return :green:`Object` can be used as the input for html.\ `newDocument`_ or
    html.\ `objToHtml`_ above.
 
 Text and HTML Output
-~~~~~~~~~~~~~~~~~~~~            
+~~~~~~~~~~~~~~~~~~~~
 
 toHtml
 """"""
@@ -732,7 +732,7 @@ elements and their children.
     * ``hobj`` is an *html object* with 0 or more elements.
 
     *  ``options`` is an :green:`Object` which can have one setting:
-       
+
         * ``{concatenate: true}`` - if set, ``tags`` will be returned as a
           :green:`String` consisting of the concatenated output from
           each element.
@@ -765,7 +765,7 @@ Example:
 
     */
 
- 
+
 toText
 """"""
 
@@ -788,18 +788,18 @@ Where:
 * ``hobj`` is an *html object* with 0 or more elements.
 
 *  ``options`` is an :green:`Object` with the following setting:
-   
+
     * ``concatenate`` - a :green:`Boolean` if true, the function will return
       a :green:`String` consisting of the concatenated output from each given
       element.  Default is ``false``.
 
     * ``metaDescription`` - a :green:`Boolean` if true, text from the
       ``content`` of an existing ``<meta name="description" content="text">``
-      will also be output.  Default is ``false``. 
+      will also be output.  Default is ``false``.
 
     * ``metaKeywords`` - a :green:`Boolean` if true, text from the
       ``content`` of an existing ``<meta name="keywords" content="text">``
-      will also be output.  Default is ``false``. 
+      will also be output.  Default is ``false``.
 
     * ``enumerateLists`` - a :green:`Boolean` if true, text in ``<li>`` tags
       will be indented and prepended with an asterisk ``*`` for unordered lists
@@ -849,10 +849,10 @@ Example:
         metaDescription:true,
         metaKeywords: true,
         enumerateLists: true,
-        aLinks:true, 
+        aLinks:true,
         titleText:true,
-        showHRTags:true, 
-        imgLinks:true, 
+        showHRTags:true,
+        imgLinks:true,
         imgAltText:true
     })[0]);
 
@@ -912,7 +912,7 @@ Usage:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument();
 
     var output = mydoc.prettyPrint({formattingOptions});
@@ -942,7 +942,7 @@ Example:
 .. code-block:: javascript
 
     var html = require("rampart-html");
-    
+
     var mydoc = html.newDocument();
 
     var output = mydoc.prettyPrint(2,80);
@@ -963,8 +963,8 @@ Example:
     */
 
     mydoc = html.newDocument(
-        '<title>My Page</title><h1>Welcome to my page</h2>', 
-        { indent: true } 
+        '<title>My Page</title><h1>Welcome to my page</h2>',
+        { indent: true }
     );
 
     output = mydoc.prettyPrint({indent:true, indenSpaces:2});
@@ -1124,7 +1124,7 @@ Example:
 .. code-block:: javascript
 
     var html = require("rampart-html");
- 
+
     /* var doc is our root object */
     var doc = html.newDocument(
         '<span>one</span><div class="myclass">two</div>' +
@@ -1172,9 +1172,9 @@ Example:
     console.log(divs.toHtml());
 
     /* expected output:
-    
+
     ["<div class=\"myclass\">one</div>","<div>four</div>"]
-    
+
     */
 
 filterAttr
@@ -1201,9 +1201,9 @@ Example:
     console.log(mydiv.toHtml());
 
     /* expected output:
-    
+
     ["<div id=\"mydiv\" class=\"myclass\">one</div>"]
-    
+
     */
 
 filterClass
@@ -1230,17 +1230,17 @@ Example:
     console.log(els.toHtml());
 
     /* expected output:
-    
+
     ["<div id=\"mydiv\" class=\"myclass\">one</div>","<span class=\"myclass\">three</span>"]
-    
+
     */
 
 
 slice
 """""
 
-Reduce the current list of elements to only include a subset of the list 
-and return a new *html object*. Arguments are the same as 
+Reduce the current list of elements to only include a subset of the list
+and return a new *html object*. Arguments are the same as
 `Array.slice <https://www.w3schools.com/jsref/jsref_slice_array.asp>`_
 
 Example:
@@ -1261,9 +1261,9 @@ Example:
     console.log(els.toHtml());
 
     /* expected output:
-    
+
     ["<span>two</span>","<span>three</span>"]
-    
+
     */
 
 
@@ -1271,7 +1271,7 @@ eq
 ""
 
 Reduce the current list of elements to only include a single element
-at the given index and return a new *html object*. 
+at the given index and return a new *html object*.
 
 Example:
 
@@ -1291,9 +1291,9 @@ Example:
     console.log(els.toHtml());
 
     /* expected output:
-    
+
     ["<span>two</span>"]
-    
+
     */
 
 add
@@ -1319,7 +1319,7 @@ Note:
   Additions made to list with ``add()`` are detached and will not be a part
   of the output of `prettyPrint` unless one of `append`_\ , `prepend`_\, `before`_\ ,
   or `after`_ is used to insert the list into the document.
-  
+
 Example:
 
 .. code-block:: javascript
@@ -1334,9 +1334,9 @@ Example:
     var spans = doc.findTag('span');
 
     var divs = doc.findTag('div');
-    
+
     var newlist = spans.add(divs);
-    
+
     newlist = newlist.add("<div>seven</div><div>eight</div>");
 
     rampart.utils.printf("%3J\n", newlist.toHtml());
@@ -1353,9 +1353,9 @@ Example:
        "<div>seven</div>",
        "<div>eight</div>"
     ]
-    
+
     */
-   
+
 
 Testing Elements
 ~~~~~~~~~~~~~~~~
@@ -1384,9 +1384,9 @@ Example:
     console.log(isdiv);
 
     /* expected output:
-    
+
     [true,false,false,true]
-    
+
     */
 
 
@@ -1394,7 +1394,7 @@ Example:
 hasAttr
 """""""
 
-Test each element in the current list for the presence of an attribute. 
+Test each element in the current list for the presence of an attribute.
 Returns an :green:`Array` of :green:`Booleans`, one for each element.
 
 Example:
@@ -1412,15 +1412,15 @@ Example:
 
     var hasanid = els.hasAttr('id');
     var hasmyid = els.hasAttr('id=myid');
-    
+
     console.log(hasanid);
     console.log(hasmyid);
 
     /* expected output:
-    
+
     [true,false,false,true]
     [false,false,false,true]
-    
+
     */
 
 hasClass
@@ -1446,9 +1446,9 @@ Example:
     console.log(hasmyclass);
 
     /* expected output:
-    
+
     [true,false,true,false]
-    
+
     */
 
 Manipulating Elements
@@ -1479,14 +1479,14 @@ Example:
     rampart.utils.printf("%3J\n", els.toHtml());
 
     /* expected output:
-    
+
     [
        "<div title=\"I'm an element\">one</div>",
        "<span title=\"I'm an element\">two</span>",
        "<span title=\"I'm an element\">three</span>",
        "<div title=\"I'm an element\">four</div>"
     ]
-    
+
     */
 
 
@@ -1514,14 +1514,14 @@ Example:
     rampart.utils.printf("%3J\n", els.toHtml());
 
     /* expected output:
-    
+
     [
        "<div>one</div>",
        "<span>two</span>",
        "<span>three</span>",
        "<div>four</div>"
     ]
-    
+
     */
 
 
@@ -1550,14 +1550,14 @@ Example:
     rampart.utils.printf("%3J\n", els.toHtml());
 
     /* expected output:
-    
+
     [
        "<div class=\"myclass mycolor\">one</div>",
        "<span class=\"mycolor\">two</span>",
        "<span class=\"myclass mycolor\">three</span>",
        "<div class=\"mycolor\" id=\"myid\">four</div>"
     ]
-    
+
     */
 
 
@@ -1585,7 +1585,7 @@ Example:
     rampart.utils.printf("%3J\n", els.toHtml());
 
     /* expected output:
-    
+
     [
        "<div class>one</div>",
        "<span>two</span>",
@@ -1693,10 +1693,10 @@ Example:
        Note also that '&nbsp;' is used as leading white space
        is automatically trimmed.
     */
-    
+
     spans = spans.prepend("&nbsp;");
 
-    /* add the spans back to document as children of the divs 
+    /* add the spans back to document as children of the divs
        BUT before any existing children                      */
 
     var newlist = divs.prepend(spans);
@@ -1759,7 +1759,7 @@ Example:
 
     /* expected output:
 
-    [  
+    [
        "<div>one</div>",
        "<span>3</span>",
        "<span>4</span>",
