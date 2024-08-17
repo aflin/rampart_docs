@@ -124,10 +124,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#rename">rename</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sleep">sleep</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#gettype">getType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#timezone">timezone</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#datefmt">dateFmt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scandate">scanDate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#autoscandate">autoScanDate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#use">use</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#load">load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#errorconfig">errorConfig</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#file-handle-utilities">File Handle Utilities</a><ul>
@@ -175,6 +178,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
 </ul>
 
@@ -289,6 +293,14 @@ not a <span class="green">String</span>.</p>
 <code class="docutils literal notranslate"><span class="pre">printf(&quot;%4J&quot;,</span> <span class="pre">obj);</span></code>) may be given which will print with new lines and
 indentation of the specified amount. Thus <code class="docutils literal notranslate"><span class="pre">printf(&quot;%4J&quot;,</span> <span class="pre">obj);</span></code> is
 equivalent to <code class="docutils literal notranslate"><span class="pre">printf(&quot;%s&quot;,</span> <span class="pre">JSON.stringify(obj,</span> <span class="pre">null,</span> <span class="pre">4)</span> <span class="pre">);</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li>if <code class="docutils literal notranslate"><span class="pre">!</span></code> flag is present, a safe version of JSON will be printed where
+any references to inner <span class="green">Objects</span> are marked.  See second
+example below.  Note: if <code class="docutils literal notranslate"><span class="pre">!</span></code> is omitted but printing would fail
+because of cyclic references, then <code class="docutils literal notranslate"><span class="pre">!</span></code> is implied.</li>
+</ul>
+</div></blockquote>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">%B</span></code> - print contents of a <span class="green">Buffer</span> or <span class="green">String</span> as
 base64.</p>
@@ -388,6 +400,65 @@ Remove all leading white space from each line and don’t wrap lines.</p>
 <span class="cm"> &lt;/body&gt;</span>
 <span class="cm"> &lt;/html&gt;</span>
 <span class="cm"> */</span>
+</pre></div>
+</div>
+<p>Example printing JSON with cyclic references:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span><span class="p">{</span><span class="nx">c</span><span class="o">:</span><span class="mi">1</span><span class="p">},</span><span class="nx">b</span><span class="o">:</span><span class="p">{}</span> <span class="p">};</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">a</span> <span class="o">=</span> <span class="nx">x</span><span class="p">.</span><span class="nx">a</span><span class="p">;</span>
+
+<span class="c1">// without &quot;!&quot;, it is printed as normal</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">x</span><span class="p">);</span>
+
+<span class="cm">/* expected results</span>
+<span class="cm">   {</span>
+<span class="cm">      &quot;a&quot;: {</span>
+<span class="cm">         &quot;c&quot;: 1</span>
+<span class="cm">      },</span>
+<span class="cm">      &quot;b&quot;: {</span>
+<span class="cm">         &quot;a&quot;: {</span>
+<span class="cm">            &quot;c&quot;: 1</span>
+<span class="cm">         }</span>
+<span class="cm">      }</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// with &quot;!&quot; all self references are printed</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%!3J\n&quot;</span><span class="p">,</span> <span class="nx">x</span><span class="p">);</span>
+
+<span class="cm">/* expected results:</span>
+<span class="cm">   {</span>
+<span class="cm">      &quot;a&quot;: {</span>
+<span class="cm">         &quot;c&quot;: 1</span>
+<span class="cm">      },</span>
+<span class="cm">      &quot;b&quot;: {</span>
+<span class="cm">         &quot;a&quot;: {</span>
+<span class="cm">            &quot;_cyclic_ref&quot;: &quot;$.a&quot;</span>
+<span class="cm">         }</span>
+<span class="cm">      }</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// add cyclic ref</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">x_ref</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
+
+<span class="c1">// with a cyclic ref present, &quot;!&quot; is implied</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">x</span><span class="p">);</span>
+
+<span class="cm">/* expected results:</span>
+<span class="cm">   {</span>
+<span class="cm">      &quot;a&quot;: {</span>
+<span class="cm">         &quot;c&quot;: 1</span>
+<span class="cm">      },</span>
+<span class="cm">      &quot;b&quot;: {</span>
+<span class="cm">         &quot;a&quot;: {</span>
+<span class="cm">            &quot;_cyclic_ref&quot;: &quot;$.a&quot;</span>
+<span class="cm">         }</span>
+<span class="cm">      },</span>
+<span class="cm">      &quot;x_ref&quot;: {</span>
+<span class="cm">         &quot;_cyclic_ref&quot;: &quot;$&quot;</span>
+<span class="cm">      }</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
 </pre></div>
 </div>
 </div>
@@ -1100,6 +1171,18 @@ called when the process exits.</p>
 </div>
 </li>
 </ul>
+<p>If there is an initial error executing <code class="docutils literal notranslate"><span class="pre">command</span></code>, <code class="docutils literal notranslate"><span class="pre">forkpty()</span></code> will throw an
+error.  When the command exits, the functions in the return object will be deleted.
+Therefore a check should be run before accessing any functions in case the pty has
+closed:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pty</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">forkpty</span><span class="p">(</span><span class="nx">command</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]</span> <span class="p">[,</span><span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">argn</span><span class="p">]</span> <span class="p">);</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">pty</span><span class="p">.</span><span class="nx">write</span><span class="p">)</span>
+   <span class="nx">pty</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span>
+<span class="k">else</span>
+   <span class="nx">do_cleanup</span><span class="p">();</span>
+</pre></div>
+</div>
 <p class="last">An example for using <code class="docutils literal notranslate"><span class="pre">forkpty()</span></code> with websockets to run a terminal in
 a web browser can be found
 <a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/forkpty-term">here</a>.</p>
@@ -1110,19 +1193,27 @@ a web browser can be found
 <h3>kill<a class="headerlink" href="#kill" title="Permalink to this headline">¶</a></h3>
 <p>Terminate a process or send a signal.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">kill</span><span class="p">(</span><span class="nx">pid</span> <span class="p">[,</span> <span class="nx">signal</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">kill</span><span class="p">(</span><span class="nx">pid</span> <span class="p">[,</span> <span class="nx">signal</span><span class="p">[,</span> <span class="nx">throwOnError</span><span class="p">]]);</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">pid</span></code> is a <span class="green">Number</span>, the process id of process which will
-receive the signal and <code class="docutils literal notranslate"><span class="pre">signal</span></code> is a <span class="green">Number</span>, the signal to send.
+<dl class="docutils">
+<dt>Where:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">pid</span></code> is a <span class="green">Number</span>, the process id of process which will
+receive the signal.</li>
+<li><code class="docutils literal notranslate"><span class="pre">signal</span></code> is a <span class="green">Number</span>, or <span class="green">String</span>, the signal to send.
 If <code class="docutils literal notranslate"><span class="pre">signal</span></code> is not specified, <code class="docutils literal notranslate"><span class="pre">15</span></code> (<code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code>) is used.  See manual
 page for kill(1) for a list of signals, which may vary by platform.  Setting
 <code class="docutils literal notranslate"><span class="pre">signal</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> sends no signal, but checks for the existence of the
-process identified by <code class="docutils literal notranslate"><span class="pre">pid</span></code>.</p>
-<dl class="docutils">
+process identified by <code class="docutils literal notranslate"><span class="pre">pid</span></code>. <code class="docutils literal notranslate"><span class="pre">signal</span></code> may also be a <span class="green">String</span>, a well
+known signal such as <code class="docutils literal notranslate"><span class="pre">&quot;SIGTERM&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;SIGUSR1&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">throwOnError</span></code> - <span class="green">Boolean</span> - whether to throw an error with a specified
+reason upon failure.</li>
+</ul>
+</dd>
 <dt>Return Value:</dt>
-<dd><span class="green">Boolean</span>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> if the signal was successfully sent.  <code class="docutils literal notranslate"><span class="pre">false</span></code> if there was
-an error or process does not exist.</dd>
+<dd><span class="green">Boolean</span>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> if the signal was successfully sent.  If <code class="docutils literal notranslate"><span class="pre">throwOnError</span></code>
+is not <code class="docutils literal notranslate"><span class="pre">true</span></code>, will return <code class="docutils literal notranslate"><span class="pre">false</span></code> if there was an error or process does not exist.</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;sleep&quot;</span><span class="p">,</span> <span class="s2">&quot;100&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">background</span><span class="o">:</span><span class="kc">true</span><span class="p">});</span>
@@ -1415,6 +1506,114 @@ is used.</p>
 <span class="green">Objects</span> such as <code class="docutils literal notranslate"><span class="pre">Null</span></code>, <code class="docutils literal notranslate"><span class="pre">Array</span></code> or <code class="docutils literal notranslate"><span class="pre">Function</span></code>) .</dd>
 </dl>
 </div>
+<div class="section" id="timezone">
+<h3>timezone<a class="headerlink" href="#timezone" title="Permalink to this headline">¶</a></h3>
+<p>Retrieve system timezone information.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">tz</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">timezone</span><span class="p">([</span><span class="nx">directory</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">directory</span></code> is an optional directory with timezone information.  Default
+is <code class="docutils literal notranslate"><span class="pre">&quot;/usr/share/zoneinfo&quot;</span></code>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with the following functions: <code class="docutils literal notranslate"><span class="pre">findZone()</span></code>, <code class="docutils literal notranslate"><span class="pre">findAbbr()</span></code> and <code class="docutils literal notranslate"><span class="pre">dump()</span></code>.</dd>
+</dl>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">tz.findZone(tzname)</span></code> - Return an <span class="green">Object</span> with timezone information.  If the timezone
+does not exist, returns undefined.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tz.findAbbr(abbrname)</span></code> - Return an <span class="green">Object</span> with a list of timezones that match the given
+abbreviation.  If the abbreviation does not exist, returns undefined.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tz.dump()</span></code> - Return an <span class="green">Object</span> with the entire database organized by timezones and
+abbreviations.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">tz</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">timezone</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">pstZones</span> <span class="o">=</span> <span class="nx">tz</span><span class="p">.</span><span class="nx">findAbbr</span><span class="p">(</span><span class="s2">&quot;PST&quot;</span><span class="p">);</span>
+<span class="cm">/*  ambiguous     =&gt; whether there are zones in &quot;entries&quot; with differing offsets</span>
+<span class="cm">    zoneAbbrIndex =&gt; where in the &quot;abbreviations&quot; section of the zone info</span>
+<span class="cm">                     below &quot;PST&quot; is found</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;ambiguous&quot;: true,</span>
+<span class="cm">   &quot;entries&quot;: [</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;offset&quot;: -28800,</span>
+<span class="cm">         &quot;offsetString&quot;: &quot;-8:00&quot;,</span>
+<span class="cm">         &quot;zoneName&quot;: &quot;America/Bahia_Banderas&quot;,</span>
+<span class="cm">         &quot;zoneAbbrIndex&quot;: 5</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;offset&quot;: -28800,</span>
+<span class="cm">         &quot;offsetString&quot;: &quot;-8:00&quot;,</span>
+<span class="cm">         &quot;zoneName&quot;: &quot;America/Boise&quot;,</span>
+<span class="cm">         &quot;zoneAbbrIndex&quot;: 2</span>
+<span class="cm">      },</span>
+<span class="cm">      ...</span>
+<span class="cm">   ]</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+
+<span class="kd">var</span> <span class="nx">LAZone</span> <span class="o">=</span> <span class="nx">tz</span><span class="p">.</span><span class="nx">findZone</span><span class="p">(</span><span class="s2">&quot;America/Los_Angeles&quot;</span><span class="p">);</span>
+<span class="cm">/*</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;name&quot;: &quot;America/Los_Angeles&quot;,</span>
+<span class="cm">   &quot;abbreviations&quot;: [</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;Abbreviation&quot;: &quot;LMT&quot;,</span>
+<span class="cm">         &quot;UTCOffset&quot;: -28378,</span>
+<span class="cm">         &quot;isDST&quot;: false</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;Abbreviation&quot;: &quot;PDT&quot;,</span>
+<span class="cm">         &quot;UTCOffset&quot;: -25200,</span>
+<span class="cm">         &quot;isDST&quot;: true</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;Abbreviation&quot;: &quot;PST&quot;,</span>
+<span class="cm">         &quot;UTCOffset&quot;: -28800,</span>
+<span class="cm">         &quot;isDST&quot;: false</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;Abbreviation&quot;: &quot;PWT&quot;,</span>
+<span class="cm">         &quot;UTCOffset&quot;: -25200,</span>
+<span class="cm">         &quot;isDST&quot;: true</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;Abbreviation&quot;: &quot;PPT&quot;,</span>
+<span class="cm">         &quot;UTCOffset&quot;: -25200,</span>
+<span class="cm">         &quot;isDST&quot;: true</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;Abbreviation&quot;: &quot;PST&quot;,</span>
+<span class="cm">         &quot;UTCOffset&quot;: -28800,</span>
+<span class="cm">         &quot;isDST&quot;: false</span>
+<span class="cm">      }</span>
+<span class="cm">   ],</span>
+<span class="cm">   &quot;transitions&quot;: [</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;transitionDate&quot;: &quot;1901-12-13T20:45:52.000Z&quot;,</span>
+<span class="cm">         &quot;transition&quot;: {</span>
+<span class="cm">            &quot;Abbreviation&quot;: &quot;PST&quot;,</span>
+<span class="cm">            &quot;UTCOffset&quot;: -28800,</span>
+<span class="cm">            &quot;isDST&quot;: false</span>
+<span class="cm">         }</span>
+<span class="cm">      },</span>
+<span class="cm">      {</span>
+<span class="cm">         &quot;transitionDate&quot;: &quot;1918-03-31T10:00:00.000Z&quot;,</span>
+<span class="cm">         &quot;transition&quot;: {</span>
+<span class="cm">            &quot;Abbreviation&quot;: &quot;PDT&quot;,</span>
+<span class="cm">            &quot;UTCOffset&quot;: -25200,</span>
+<span class="cm">            &quot;isDST&quot;: true</span>
+<span class="cm">         }</span>
+<span class="cm">      },</span>
+<span class="cm">      ...</span>
+<span class="cm">   ]</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="datefmt">
 <h3>dateFmt<a class="headerlink" href="#datefmt" title="Permalink to this headline">¶</a></h3>
 <p>Format a date <span class="green">String</span>.</p>
@@ -1506,6 +1705,101 @@ The default is <code class="docutils literal notranslate"><span class="pre">0</s
 <dd>A JavaScript <span class="green">Date</span>.</dd>
 </dl>
 </div>
+<div class="section" id="autoscandate">
+<h3>autoScanDate<a class="headerlink" href="#autoscandate" title="Permalink to this headline">¶</a></h3>
+<p>Attempt to match a date from a string using various formats.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">dateRes</span> <span class="o">=</span> <span class="nx">autoScanDate</span><span class="p">(</span><span class="nx">dateString</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Return Value: An <span class="green">Object</span>.</p>
+<blockquote>
+<div><p>If no timezone offset or abbreviation is present, the return object has
+the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">date</span></code>          - a JavaScript <span class="green">Date</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">offset</span></code>        - timezone offset (in this case <code class="docutils literal notranslate"><span class="pre">0</span></code> for GMT).</li>
+<li><code class="docutils literal notranslate"><span class="pre">endIndex</span></code>      - last character position in <code class="docutils literal notranslate"><span class="pre">dateString</span></code> of the match.</li>
+<li><code class="docutils literal notranslate"><span class="pre">matchedFormat</span></code> - the format that was successfully matched.</li>
+</ul>
+<p>If a timezone offset is present, offset will be set to that timezone and
+and GMT will be returned with the offset set.</p>
+<p>If a timezone abbreviation is present and valid, offset will be set to
+the best matching timezone (as sorted by distance from the system timezone).
+Also present is <code class="docutils literal notranslate"><span class="pre">dates</span></code> for all the possible timezones which match the
+abbreviation, filtered by the validity of the Abbreviation (i.e. PST vs PDT)
+on the given date.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">dateString</span></code> could not be parsed, <code class="docutils literal notranslate"><span class="pre">Null</span></code> is returned.</p>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">dateRes</span> <span class="o">=</span> <span class="nx">autoScanDate</span><span class="p">(</span><span class="s2">&quot;Jan 5 03:20 pm 2002&quot;</span><span class="p">);</span>
+<span class="cm">/*</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;date&quot;: &quot;2002-01-05T15:20:00.000Z&quot;,</span>
+<span class="cm">   &quot;offset&quot;: 0,</span>
+<span class="cm">   &quot;endIndex&quot;: 19,</span>
+<span class="cm">   &quot;matchedFormat&quot;: &quot;%b %e %I:%M %p %Y&quot;</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+
+<span class="nx">dateRes</span><span class="o">=</span><span class="nx">autoScanDate</span><span class="p">(</span><span class="s2">&quot;Jan 5 03:20 pm 2002 -0800&quot;</span><span class="p">);</span>
+<span class="cm">/*</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;date&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">   &quot;offset&quot;: -28800,</span>
+<span class="cm">   &quot;endIndex&quot;: 25,</span>
+<span class="cm">   &quot;matchedFormat&quot;: &quot;%b %e %I:%M %p %Y %z&quot;</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+
+<span class="nx">dateRes</span><span class="o">=</span><span class="nx">autoScanDate</span><span class="p">(</span><span class="s2">&quot;Jan 5 03:20 pm 2002 PST&quot;</span><span class="p">);</span>
+<span class="cm">/* &quot;dates&quot; is sorted by distance from current timezone offset</span>
+<span class="cm">   &quot;ambiguous&quot; is true because Manila has a timezone abbv &quot;PST&quot;</span>
+<span class="cm">   &quot;date&quot; is set to the first record in &quot;dates&quot;</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;ambiguous&quot;: true,</span>
+<span class="cm">   &quot;dates&quot;: {</span>
+<span class="cm">      &quot;America/Dawson&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;America/Fort_Nelson&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;America/Metlakatla&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;America/Ensenada&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;America/Santa_Isabel&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;America/Tijuana&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;America/Los_Angeles&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      ...</span>
+<span class="cm">      &quot;Asia/Manila&quot;: &quot;2002-01-05T07:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;posix/Asia/Manila&quot;: &quot;2002-01-05T07:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;right/Asia/Manila&quot;: &quot;2002-01-05T07:20:00.000Z&quot;</span>
+<span class="cm">   },</span>
+<span class="cm">   &quot;date&quot;: &quot;2002-01-05T23:20:00.000Z&quot;,</span>
+<span class="cm">   &quot;offset&quot;: -28800,</span>
+<span class="cm">   &quot;endIndex&quot;: 23,</span>
+<span class="cm">   &quot;matchedFormat&quot;: &quot;%b %e %I:%M %p %Y %Z&quot;</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+
+<span class="nx">dateRes</span><span class="o">=</span><span class="nx">autoScanDate</span><span class="p">(</span><span class="s2">&quot;Aug 5 03:20 pm 2002 PST&quot;</span><span class="p">);</span>
+<span class="cm">/* note that most timezones that would match PST are observing</span>
+<span class="cm">   PDT in August, so they are excluded.</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;ambiguous&quot;: true,</span>
+<span class="cm">   &quot;dates&quot;: {</span>
+<span class="cm">      &quot;America/Metlakatla&quot;: &quot;2002-08-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;posix/America/Metlakatla&quot;: &quot;2002-08-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;right/America/Metlakatla&quot;: &quot;2002-08-05T23:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;Asia/Manila&quot;: &quot;2002-08-05T07:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;posix/Asia/Manila&quot;: &quot;2002-08-05T07:20:00.000Z&quot;,</span>
+<span class="cm">      &quot;right/Asia/Manila&quot;: &quot;2002-08-05T07:20:00.000Z&quot;</span>
+<span class="cm">   },</span>
+<span class="cm">   &quot;date&quot;: &quot;2002-08-05T23:20:00.000Z&quot;,</span>
+<span class="cm">   &quot;offset&quot;: -28800,</span>
+<span class="cm">   &quot;endIndex&quot;: 23,</span>
+<span class="cm">   &quot;matchedFormat&quot;: &quot;%b %e %I:%M %p %Y %Z&quot;</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="use">
 <h3>use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h3>
 <p>Shortcut and alternative for importing modules with <a class="reference internal" href="rampart-main.html#using-the-require-function-to-import-modules"><span class="std std-ref">require</span></a>.</p>
@@ -1546,6 +1840,83 @@ mixed case.  Example: <code class="docutils literal notranslate"><span class="pr
 However <code class="docutils literal notranslate"><span class="pre">'-'</span></code> and <code class="docutils literal notranslate"><span class="pre">'.'</span></code> characters will be replaced with <code class="docutils literal notranslate"><span class="pre">'_'</span></code>.  Thus, <code class="docutils literal notranslate"><span class="pre">load[&quot;rampart-curl.so&quot;]</span></code> will
 load the Curl Module and put it in the global namespace similar to <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">rampart_curl_so</span> <span class="pre">=</span> <span class="pre">require(&quot;rampart-curl.so&quot;)</span></code>.</dd>
 </dl>
+</div>
+<div class="section" id="errorconfig">
+<h3>errorConfig<a class="headerlink" href="#errorconfig" title="Permalink to this headline">¶</a></h3>
+<p>Configure the format of reported errors.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">errorConfig</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">errorConfig</span><span class="p">(</span><span class="nx">simple</span><span class="p">,</span> <span class="nx">lines</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> with the properties <code class="docutils literal notranslate"><span class="pre">simple</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lines</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">simple</span></code> is a <span class="green">Boolean</span> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>) - whether to reduce
+the verbosity of the stack trace.</li>
+<li><code class="docutils literal notranslate"><span class="pre">lines</span></code> is a <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">0</span></code>) - the number of lines of
+the source code surrounding the error to print.  If greater than <code class="docutils literal notranslate"><span class="pre">0</span></code> and
+an even number, it will be incremented up to the next odd number.</li>
+</ul>
+<p>Examples:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* default settings */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">errorConfig</span><span class="p">(</span><span class="kc">false</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">myfunc</span><span class="p">(</span><span class="nx">myvar</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">myvar</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">myfunc</span><span class="p">();</span>
+
+<span class="cm">/* expected output</span>
+<span class="cm">   TypeError: cannot read property &#39;x&#39; of undefined</span>
+<span class="cm">       at [anon] (/usr/local/src/rampart/src/duktape/core/duktape.c:60539) internal</span>
+<span class="cm">       at myfunc (myscript.js:4)</span>
+<span class="cm">       at global (myscript.js:7) preventsyield</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* simple stack */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">errorConfig</span><span class="p">({</span><span class="nx">simple</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span><span class="nx">lines</span><span class="o">:</span><span class="mi">0</span><span class="p">});</span>
+
+<span class="kd">function</span> <span class="nx">myfunc</span><span class="p">(</span><span class="nx">myvar</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">myvar</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">myfunc</span><span class="p">();</span>
+
+<span class="cm">/* expected output</span>
+<span class="cm">   TypeError: cannot read property &#39;x&#39; of undefined</span>
+<span class="cm">       at myfunc (myscript.js:4)</span>
+<span class="cm">       at global (myscript.js:7)</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* simple stack and 3 lines */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">errorConfig</span><span class="p">({</span><span class="nx">simple</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span><span class="nx">lines</span><span class="o">:</span><span class="mi">3</span><span class="p">});</span>
+
+<span class="kd">function</span> <span class="nx">myfunc</span><span class="p">(</span><span class="nx">myvar</span><span class="p">)</span> <span class="p">{</span>
+   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">myvar</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">myfunc</span><span class="p">();</span>
+
+<span class="cm">/* expected output</span>
+<span class="cm">   TypeError: cannot read property &#39;x&#39; of undefined</span>
+<span class="cm">       at myfunc (myscript.js:4)</span>
+<span class="cm">       at global (myscript.js:7)</span>
+
+<span class="cm">   File: myscript.js</span>
+<span class="cm">   line 3:    |function myfunc(myvar) {</span>
+<span class="cm">   line 4: -&gt; |    console.log(myvar.x);</span>
+<span class="cm">   line 5:    |}</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="file-handle-utilities">
@@ -1610,11 +1981,11 @@ Example:</p>
 the above functions.</dd>
 </dl>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span> <span class="nx">mode</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span> <span class="nx">mode</span><span class="p">[,</span> <span class="nx">sdtRedir</span><span class="p">]);</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span> containing the file to be opened and mode is
-a <span class="green">String</span> (one of the following):</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span> containing the file to be opened.</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mode</span></code> is a <span class="green">String</span> (one of the following):</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">&quot;r&quot;</span></code> - Open text file for reading.  The stream is positioned at the
 beginning of the file.</li>
@@ -1633,10 +2004,15 @@ file is created if it does not exist.  The initial file position for reading
 is at the beginning of the file, but output is always appended to the end of the
 file.</li>
 </ul>
+<p>Where optional <code class="docutils literal notranslate"><span class="pre">stdRedir</span></code> is one of <code class="docutils literal notranslate"><span class="pre">rampart.utils.stdin</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.utils.stdout</span></code>
+or <code class="docutils literal notranslate"><span class="pre">rampart.utils.stderr</span></code> and the mode is set appropriately (<code class="docutils literal notranslate"><span class="pre">&quot;r&quot;</span></code> for stdin, <code class="docutils literal notranslate"><span class="pre">&quot;w&quot;</span></code>
+or <code class="docutils literal notranslate"><span class="pre">a</span></code> for stdout/stderr; no <code class="docutils literal notranslate"><span class="pre">&quot;+&quot;</span></code> allowed).  Any data read or written to one of the
+<code class="docutils literal notranslate"><span class="pre">std</span></code> filehandles will be redirected to the newly opened file.  When the filehandle
+is closed, the <code class="docutils literal notranslate"><span class="pre">std</span></code> filehandle will be restored to its previous value.</p>
 </div>
 <div class="section" id="fopenbuffer">
 <h3>fopenBuffer<a class="headerlink" href="#fopenbuffer" title="Permalink to this headline">¶</a></h3>
-<p>Open a filehandle that writes to a dynamically sized JavaScrip Buffer
+<p>Open a filehandle that writes to a dynamically sized opaque buffer
 for use with <a class="reference internal" href="#fprintf">fprintf</a>(), <a class="reference internal" href="#fclose">fclose</a>(), <a class="reference internal" href="#fseek">fseek</a>(),
 <a class="reference internal" href="#rewind">rewind</a>(), <a class="reference internal" href="#ftell">ftell</a>(), <a class="reference internal" href="#fflush">fflush</a>() <a class="reference internal" href="#fread">fread</a>(), <a class="reference internal" href="#fgets">fgets</a>(), <a class="reference internal" href="#fwrite">fwrite</a>() and
 <a class="reference internal" href="#readline">readLine</a>().</p>
@@ -1646,18 +2022,59 @@ for use with <a class="reference internal" href="#fprintf">fprintf</a>(), <a cla
 the above functions.</dd>
 </dl>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">([</span><span class="nx">chunkSize</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopenBuffer</span><span class="p">([</span><span class="nx">chunkSize</span><span class="p">][,</span> <span class="nx">sdtRedir</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">chunkSize</span></code> is a <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">4096</span></code>), amount of memory to allocate each
 time the buffer is resized.  When the filehandle is closed, the buffer will
 be sized to fit the data written, if necessary.</p>
+<p>Where optional <code class="docutils literal notranslate"><span class="pre">stdRedir</span></code> is one of <code class="docutils literal notranslate"><span class="pre">rampart.utils.stdout</span></code> or
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.stderr</span></code>.  Any data written to one of the <code class="docutils literal notranslate"><span class="pre">std</span></code>
+filehandles will be redirected to the newly opened filehandle and placed in
+the buffer.  When the filehandle is closed, the <code class="docutils literal notranslate"><span class="pre">std</span></code> filehandle will be
+restored to its previous value.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd><span class="green">Object</span>. An object which opaquely contains the opened file handle along with
-the above functions, as well as a <code class="docutils literal notranslate"><span class="pre">getBuffer()</span></code> function which will return
-the backing buffer.</dd>
+the same functions as in <code class="docutils literal notranslate"><span class="pre">fopen()</span></code> above, as well as <code class="docutils literal notranslate"><span class="pre">destroy()</span></code>, <code class="docutils literal notranslate"><span class="pre">getBuffer()</span></code> and <code class="docutils literal notranslate"><span class="pre">getString()</span></code>
+functions, which will delete the backing data or copy the backing data and return the corresponding
+JavaScript type.</dd>
+<dt>Note:</dt>
+<dd>Calling <code class="docutils literal notranslate"><span class="pre">fclose()</span></code> will close the file handle, but the backing buffer is still available for use with
+<code class="docutils literal notranslate"><span class="pre">getBuffer()</span></code> and <code class="docutils literal notranslate"><span class="pre">getString()</span></code>.  Calling <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> will close close the file handle if still open
+and delete the backing buffer.  There is no finalizer on the returned object, so it is important
+to call <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> when it is no longer needed.  Also note that the <code class="docutils literal notranslate"><span class="pre">fopenBuffer()</span></code> return object can be
+used in several threads at the same time, so long as it hasn’t been destroyed in any thread.  Attempting to
+use a destroyed <code class="docutils literal notranslate"><span class="pre">fopenBuffer()</span></code> object will throw an error.</dd>
 </dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">fh</span> <span class="o">=</span> <span class="nx">fopenBuffer</span><span class="p">(</span><span class="nx">stdout</span><span class="p">);</span>
+
+<span class="c1">// prints to buffer</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;line 1\n&quot;</span><span class="p">);</span>
+<span class="c1">// also prints to buffer</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;line 2&quot;</span><span class="p">);</span>
+
+<span class="c1">//stdout restored after close</span>
+<span class="nx">fclose</span><span class="p">(</span><span class="nx">fh</span><span class="p">);</span> <span class="c1">// or fh.fclose()</span>
+
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;file handle closed\n&quot;</span><span class="p">);</span>
+<span class="c1">// this goes to the terminal like expected</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">fh</span><span class="p">.</span><span class="nx">getString</span><span class="p">()</span> <span class="p">);</span>
+
+<span class="c1">// manual cleanup is necessary</span>
+<span class="nx">fh</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+
+<span class="cm">/* expected output&quot;</span>
+
+<span class="cm">      file handle closed</span>
+<span class="cm">      line 1</span>
+<span class="cm">      line 2</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="fclose">
 <h3>fclose<a class="headerlink" href="#fclose" title="Permalink to this headline">¶</a></h3>

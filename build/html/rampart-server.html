@@ -226,6 +226,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
 </ul>
 
@@ -410,6 +411,14 @@ default, if not specified is to log to <code class="docutils literal notranslate
 file will be closed and re-opened upon sending the rampart executable
 a <code class="docutils literal notranslate"><span class="pre">USR1</span></code> signal, which allows log rotation.</p>
 </li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logIpFromHeader</span></code>: A <span class="green">String</span>, a header name to use for logging
+the ip address of the request.  In cases where the server is behind a proxy
+such as nginx, instead of logging <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, setting, e.g.
+<code class="docutils literal notranslate"><span class="pre">proxy_set_header</span> <span class="pre">Remote_address</span> <span class="pre">$remote_addr;</span></code> in the appropriate section
+of <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code>, and setting <code class="docutils literal notranslate"><span class="pre">logIpFromHeader:</span> <span class="pre">&quot;Remote_address&quot;</span></code>
+here will log the ip address of the client connecting to nginx, rather the
+ip address of the nginx proxy server.</p>
+</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">daemon</span></code>: A <span class="green">Boolean</span>, whether to fork and detach from the
 controlling terminal.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the <code class="docutils literal notranslate"><span class="pre">start()</span></code> function will return
 the pid of the server. Otherwise the pid of the current process is
@@ -517,6 +526,10 @@ default, if not specified, is <code class="docutils literal notranslate"><span c
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressMinSize</span></code>: A <span class="green">Number</span>. The minimum size in bytes any file or
 script output must be in order for the content to be compressed.  The default,
 if not specified, is <code class="docutils literal notranslate"><span class="pre">1000</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">appendProcTitle</span></code>: A <span class="green">Boolean</span>. Whether to append the process
+title (as seen in utilities like <code class="docutils literal notranslate"><span class="pre">ps</span></code>) with the ip address and port
+number of the server.  The default if not specified is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">mimeMap</span></code>: An <span class="green">Object</span>, additions or changes to the standard extension
 to mime mappings.  Normally, if, e.g., <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{</span> <span class="pre">&quot;m4v&quot;:</span> <span class="pre">mymovie</span> <span class="pre">};</span></code>

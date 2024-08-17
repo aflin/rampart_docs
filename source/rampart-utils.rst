@@ -60,6 +60,11 @@ Extended (non-standard) formats:
      indentation of the specified amount. Thus ``printf("%4J", obj);`` is
      equivalent to ``printf("%s", JSON.stringify(obj, null, 4) );``.
 
+      * if ``!`` flag is present, a safe version of JSON will be printed where
+        any references to inner :green:`Objects` are marked.  See second
+        example below.  Note: if ``!`` is omitted but printing would fail
+        because of cyclic references, then ``!`` is implied.
+
    * ``%B`` - print contents of a :green:`Buffer` or :green:`String` as
      base64.
 
@@ -164,6 +169,66 @@ Example:
     </html>
     */
 
+Example printing JSON with cyclic references:
+
+.. code-block:: javascript
+
+   var x = {a:{c:1},b:{} };
+   x.b.a = x.a;
+
+   // without "!", it is printed as normal
+   rampart.utils.printf("%3J\n", x);
+
+   /* expected results
+      {
+         "a": {
+            "c": 1
+         },
+         "b": {
+            "a": {
+               "c": 1
+            }
+         }
+      }
+   */
+
+   // with "!" all self references are printed
+   rampart.utils.printf("%!3J\n", x);
+
+   /* expected results:
+      {
+         "a": {
+            "c": 1
+         },
+         "b": {
+            "a": {
+               "_cyclic_ref": "$.a"
+            }
+         }
+      }
+   */
+
+   // add cyclic ref
+   x.x_ref = x;
+
+   // with a cyclic ref present, "!" is implied
+   rampart.utils.printf("%3J\n", x);
+
+   /* expected results:
+      {
+         "a": {
+            "c": 1
+         },
+         "b": {
+            "a": {
+               "_cyclic_ref": "$.a"
+            }
+         },
+         "x_ref": {
+            "_cyclic_ref": "$"
+         }
+      }
+   */
 
 sprintf
 '''''''
@@ -945,6 +1010,20 @@ Return Value:
 	pty.on(['data'|'close'], callback);
 
 
+   If there is an initial error executing ``command``, ``forkpty()`` will throw an
+   error.  When the command exits, the functions in the return object will be deleted.
+   Therefore a check should be run before accessing any functions in case the pty has
+   closed:
+
+   .. code-block:: javascript
+
+      var pty = rampart.utils.forkpty(command [, options] [,arg1, arg2, ..., argn] );
+
+      if(pty.write)
+         pty.write(msg);
+      else
+         do_cleanup();
+
    An example for using ``forkpty()`` with websockets to run a terminal in
    a web browser can be found
    `here <https://github.com/aflin/rampart/tree/main/unsupported_extras/forkpty-term>`_\ .
@@ -959,18 +1038,24 @@ Usage:
 
 .. code-block:: javascript
 
-   var ret = rampart.utils.kill(pid [, signal]);
+   var ret = rampart.utils.kill(pid [, signal[, throwOnError]]);
 
-Where ``pid`` is a :green:`Number`, the process id of process which will
-receive the signal and ``signal`` is a :green:`Number`, the signal to send.
-If ``signal`` is not specified, ``15`` (``SIGTERM``) is used.  See manual
-page for kill(1) for a list of signals, which may vary by platform.  Setting
-``signal`` to ``0`` sends no signal, but checks for the existence of the
-process identified by ``pid``.
+Where:
+   * ``pid`` is a :green:`Number`, the process id of process which will
+     receive the signal.
+   * ``signal`` is a :green:`Number`, or :green:`String`, the signal to send.
+     If ``signal`` is not specified, ``15`` (``SIGTERM``) is used.  See manual
+     page for kill(1) for a list of signals, which may vary by platform.  Setting
+     ``signal`` to ``0`` sends no signal, but checks for the existence of the
+     process identified by ``pid``. ``signal`` may also be a :green:`String`, a well
+     known signal such as ``"SIGTERM"`` or ``"SIGUSR1"``.
+
+   * ``throwOnError`` - :green:`Boolean` - whether to throw an error with a specified
+     reason upon failure.
 
 Return Value:
-   :green:`Boolean`.  ``true`` if the signal was successfully sent.  ``false`` if there was
-   an error or process does not exist.
+   :green:`Boolean`.  ``true`` if the signal was successfully sent.  If ``throwOnError``
+   is not ``true``, will return ``false`` if there was an error or process does not exist.
 
 Example:
 
@@ -1322,6 +1407,121 @@ Return Value:
   ``Undefined``, ``Date`` or ``Object`` (excluding any of the other types of
   :green:`Objects` such as ``Null``, ``Array`` or ``Function``) .
 
+timezone
+''''''''
+
+Retrieve system timezone information.
+
+Usage:
+
+.. code-block:: javascript
+
+   var tz = rampart.utils.timezone([directory]);
+
+Where ``directory`` is an optional directory with timezone information.  Default
+is ``"/usr/share/zoneinfo"``.
+
+Return Value:
+  An :green:`Object` with the following functions: ``findZone()``, ``findAbbr()`` and ``dump()``.
+
+* ``tz.findZone(tzname)`` - Return an :green:`Object` with timezone information.  If the timezone 
+  does not exist, returns undefined.
+
+* ``tz.findAbbr(abbrname)`` - Return an :green:`Object` with a list of timezones that match the given
+  abbreviation.  If the abbreviation does not exist, returns undefined.
+
+* ``tz.dump()`` - Return an :green:`Object` with the entire database organized by timezones and 
+  abbreviations.
+
+
+Example:
+
+.. code-block:: javascript
+
+   var tz = rampart.utils.timezone();
+
+   var pstZones = tz.findAbbr("PST");
+   /*  ambiguous     => whether there are zones in "entries" with differing offsets
+       zoneAbbrIndex => where in the "abbreviations" section of the zone info
+                        below "PST" is found
+   {
+      "ambiguous": true,
+      "entries": [
+         {
+            "offset": -28800,
+            "offsetString": "-8:00",
+            "zoneName": "America/Bahia_Banderas",
+            "zoneAbbrIndex": 5
+         },
+         {
+            "offset": -28800,
+            "offsetString": "-8:00",
+            "zoneName": "America/Boise",
+            "zoneAbbrIndex": 2
+         },
+         ...
+      ]
+   }
+   */   
+
+   var LAZone = tz.findZone("America/Los_Angeles");
+   /*
+   {
+      "name": "America/Los_Angeles",
+      "abbreviations": [
+         {
+            "Abbreviation": "LMT",
+            "UTCOffset": -28378,
+            "isDST": false
+         },
+         {
+            "Abbreviation": "PDT",
+            "UTCOffset": -25200,
+            "isDST": true
+         },
+         {
+            "Abbreviation": "PST",
+            "UTCOffset": -28800,
+            "isDST": false
+         },
+         {
+            "Abbreviation": "PWT",
+            "UTCOffset": -25200,
+            "isDST": true
+         },
+         {
+            "Abbreviation": "PPT",
+            "UTCOffset": -25200,
+            "isDST": true
+         },
+         {
+            "Abbreviation": "PST",
+            "UTCOffset": -28800,
+            "isDST": false
+         }
+      ],
+      "transitions": [
+         {
+            "transitionDate": "1901-12-13T20:45:52.000Z",
+            "transition": {
+               "Abbreviation": "PST",
+               "UTCOffset": -28800,
+               "isDST": false
+            }
+         },
+         {
+            "transitionDate": "1918-03-31T10:00:00.000Z",
+            "transition": {
+               "Abbreviation": "PDT",
+               "UTCOffset": -25200,
+               "isDST": true
+            }
+         },
+         ...
+      ]
+   }
+   */
+
 dateFmt
 '''''''
 
@@ -1422,6 +1622,111 @@ Where:
 Return Value:
    A JavaScript :green:`Date`.
 
+
+autoScanDate
+''''''''''''
+
+Attempt to match a date from a string using various formats.
+
+Usage:
+
+.. code-block:: javascript
+
+    var dateRes = autoScanDate(dateString);
+
+
+Return Value: An :green:`Object`.
+
+   If no timezone offset or abbreviation is present, the return object has 
+   the following properties:
+   
+   * ``date``          - a JavaScript :green:`Date`.
+   * ``offset``        - timezone offset (in this case ``0`` for GMT).
+   * ``endIndex``      - last character position in ``dateString`` of the match.
+   * ``matchedFormat`` - the format that was successfully matched.
+
+   If a timezone offset is present, offset will be set to that timezone and 
+   and GMT will be returned with the offset set.
+
+   If a timezone abbreviation is present and valid, offset will be set to 
+   the best matching timezone (as sorted by distance from the system timezone).
+   Also present is ``dates`` for all the possible timezones which match the 
+   abbreviation, filtered by the validity of the Abbreviation (i.e. PST vs PDT) 
+   on the given date.
+
+   If ``dateString`` could not be parsed, ``Null`` is returned.
+
+Example:
+
+
+.. code-block:: javascript
+
+   var dateRes = autoScanDate("Jan 5 03:20 pm 2002");
+   /*
+   {
+      "date": "2002-01-05T15:20:00.000Z",
+      "offset": 0,
+      "endIndex": 19,
+      "matchedFormat": "%b %e %I:%M %p %Y"
+   }
+   */
+
+   dateRes=autoScanDate("Jan 5 03:20 pm 2002 -0800");
+   /*
+   {
+      "date": "2002-01-05T23:20:00.000Z",
+      "offset": -28800,
+      "endIndex": 25,
+      "matchedFormat": "%b %e %I:%M %p %Y %z"
+   }
+   */
+
+   dateRes=autoScanDate("Jan 5 03:20 pm 2002 PST");
+   /* "dates" is sorted by distance from current timezone offset
+      "ambiguous" is true because Manila has a timezone abbv "PST"
+      "date" is set to the first record in "dates"
+   {
+      "ambiguous": true,
+      "dates": {
+         "America/Dawson": "2002-01-05T23:20:00.000Z",
+         "America/Fort_Nelson": "2002-01-05T23:20:00.000Z",
+         "America/Metlakatla": "2002-01-05T23:20:00.000Z",
+         "America/Ensenada": "2002-01-05T23:20:00.000Z",
+         "America/Santa_Isabel": "2002-01-05T23:20:00.000Z",
+         "America/Tijuana": "2002-01-05T23:20:00.000Z",
+         "America/Los_Angeles": "2002-01-05T23:20:00.000Z",
+         ...
+         "Asia/Manila": "2002-01-05T07:20:00.000Z",
+         "posix/Asia/Manila": "2002-01-05T07:20:00.000Z",
+         "right/Asia/Manila": "2002-01-05T07:20:00.000Z"
+      },
+      "date": "2002-01-05T23:20:00.000Z",
+      "offset": -28800,
+      "endIndex": 23,
+      "matchedFormat": "%b %e %I:%M %p %Y %Z"
+   }
+   */
+
+   dateRes=autoScanDate("Aug 5 03:20 pm 2002 PST");
+   /* note that most timezones that would match PST are observing
+      PDT in August, so they are excluded.
+   {
+      "ambiguous": true,
+      "dates": {
+         "America/Metlakatla": "2002-08-05T23:20:00.000Z",
+         "posix/America/Metlakatla": "2002-08-05T23:20:00.000Z",
+         "right/America/Metlakatla": "2002-08-05T23:20:00.000Z",
+         "Asia/Manila": "2002-08-05T07:20:00.000Z",
+         "posix/Asia/Manila": "2002-08-05T07:20:00.000Z",
+         "right/Asia/Manila": "2002-08-05T07:20:00.000Z"
+      },
+      "date": "2002-08-05T23:20:00.000Z",
+      "offset": -28800,
+      "endIndex": 23,
+      "matchedFormat": "%b %e %I:%M %p %Y %Z"
+   }
+   */
+
 use
 '''
 
@@ -1468,6 +1773,94 @@ Caveat:
     ``load["my@mod"]`` will not work since ``'@'`` is not legal in javaScript even though it is legal in a file name.
     However ``'-'`` and ``'.'`` characters will be replaced with ``'_'``.  Thus, ``load["rampart-curl.so"]`` will
     load the Curl Module and put it in the global namespace similar to ``var rampart_curl_so = require("rampart-curl.so")``.
+
+errorConfig
+'''''''''''
+
+Configure the format of reported errors.
+
+Usage:
+
+.. code-block:: javascript
+
+    rampart.utils.errorConfig(options);
+
+   /* or */
+
+   rampart.utils.errorConfig(simple, lines);
+
+Where:
+
+* ``options`` is an :green:`Object` with the properties ``simple`` and
+  ``lines``.
+
+* ``simple`` is a :green:`Boolean` (default ``false``) - whether to reduce
+  the verbosity of the stack trace.
+
+* ``lines`` is a :green:`Number` (default ``0``) - the number of lines of
+  the source code surrounding the error to print.  If greater than ``0`` and
+  an even number, it will be incremented up to the next odd number.
+  
+Examples:
+
+.. code-block:: javascript
+
+   /* default settings */
+   rampart.utils.errorConfig(false,0);
+    
+   function myfunc(myvar) {
+      console.log(myvar.x);
+   }
+
+   myfunc();
+
+   /* expected output
+      TypeError: cannot read property 'x' of undefined
+          at [anon] (/usr/local/src/rampart/src/duktape/core/duktape.c:60539) internal
+          at myfunc (myscript.js:4)
+          at global (myscript.js:7) preventsyield
+   */
+
+.. code-block:: javascript
+
+   /* simple stack */
+   rampart.utils.errorConfig({simple:true,lines:0});
+
+   function myfunc(myvar) {
+      console.log(myvar.x);
+   }
+
+   myfunc();
+
+   /* expected output
+      TypeError: cannot read property 'x' of undefined
+          at myfunc (myscript.js:4)
+          at global (myscript.js:7)
+   */
+
+
+.. code-block:: javascript
+
+   /* simple stack and 3 lines */
+   rampart.utils.errorConfig({simple:true,lines:3});
+
+   function myfunc(myvar) {
+      console.log(myvar.x);
+   }
+
+   myfunc();
+
+   /* expected output
+      TypeError: cannot read property 'x' of undefined
+          at myfunc (myscript.js:4)
+          at global (myscript.js:7)
+
+      File: myscript.js
+      line 3:    |function myfunc(myvar) {
+      line 4: -> |    console.log(myvar.x);
+      line 5:    |}
+   */
+
 
 File Handle Utilities
 """""""""""""""""""""
@@ -1544,10 +1937,11 @@ Usage:
 
 .. code-block:: javascript
 
-   var handle = rampart.utils.fopen(filename, mode);
+   var handle = rampart.utils.fopen(filename, mode[, sdtRedir]);
 
-Where ``filename`` is a :green:`String` containing the file to be opened and mode is
-a :green:`String` (one of the following):
+Where ``filename`` is a :green:`String` containing the file to be opened.
+
+Where ``mode`` is a :green:`String` (one of the following):
 
 *  ``"r"`` - Open text file for reading.  The stream is positioned at the
    beginning of the file.
@@ -1571,10 +1965,16 @@ a :green:`String` (one of the following):
    is at the beginning of the file, but output is always appended to the end of the
    file.
 
+Where optional ``stdRedir`` is one of ``rampart.utils.stdin``, ``rampart.utils.stdout`` 
+or ``rampart.utils.stderr`` and the mode is set appropriately (``"r"`` for stdin, ``"w"``
+or ``a`` for stdout/stderr; no ``"+"`` allowed).  Any data read or written to one of the
+``std`` filehandles will be redirected to the newly opened file.  When the filehandle
+is closed, the ``std`` filehandle will be restored to its previous value.
+
 fopenBuffer
 '''''''''''
 
-Open a filehandle that writes to a dynamically sized JavaScrip Buffer
+Open a filehandle that writes to a dynamically sized opaque buffer
 for use with `fprintf`_\ (), `fclose`_\ (), `fseek`_\ (),
 `rewind`_\ (), `ftell`_\ (), `fflush`_\ () `fread`_\ (), `fgets`_\ (), `fwrite`_\ () and
 `readLine`_\ ().
@@ -1587,16 +1987,62 @@ Usage:
 
 .. code-block:: javascript
 
-   var handle = rampart.utils.fopen([chunkSize]);
+   var handle = rampart.utils.fopenBuffer([chunkSize][, sdtRedir]);
 
 Where ``chunkSize`` is a :green:`Number` (default is ``4096``), amount of memory to allocate each
 time the buffer is resized.  When the filehandle is closed, the buffer will
 be sized to fit the data written, if necessary.
 
+Where optional ``stdRedir`` is one of ``rampart.utils.stdout`` or
+``rampart.utils.stderr``.  Any data written to one of the ``std``
+filehandles will be redirected to the newly opened filehandle and placed in
+the buffer.  When the filehandle is closed, the ``std`` filehandle will be
+restored to its previous value.
+
 Return Value:
    :green:`Object`. An object which opaquely contains the opened file handle along with
-   the above functions, as well as a ``getBuffer()`` function which will return
-   the backing buffer.
+   the same functions as in ``fopen()`` above, as well as ``destroy()``, ``getBuffer()`` and ``getString()``
+   functions, which will delete the backing data or copy the backing data and return the corresponding 
+   JavaScript type.
+
+Note:
+   Calling ``fclose()`` will close the file handle, but the backing buffer is still available for use with
+   ``getBuffer()`` and ``getString()``.  Calling ``destroy()`` will close close the file handle if still open
+   and delete the backing buffer.  There is no finalizer on the returned object, so it is important
+   to call ``destroy()`` when it is no longer needed.  Also note that the ``fopenBuffer()`` return object can be
+   used in several threads at the same time, so long as it hasn't been destroyed in any thread.  Attempting to 
+   use a destroyed ``fopenBuffer()`` object will throw an error.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.globalize(rampart.utils);
+
+   var fh = fopenBuffer(stdout);
+
+   // prints to buffer
+   printf("line 1\n");
+   // also prints to buffer
+   console.log("line 2");
+
+   //stdout restored after close
+   fclose(fh); // or fh.fclose()
+
+   printf("file handle closed\n");
+   // this goes to the terminal like expected
+   printf("%s", fh.getString() );
+
+   // manual cleanup is necessary
+   fh.destroy();
+
+   /* expected output"
+
+         file handle closed
+         line 1
+         line 2
+   */
+
 
 fclose
 ''''''

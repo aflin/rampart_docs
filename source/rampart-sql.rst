@@ -76,10 +76,15 @@ The returned :green:`Object` contains :green:`Functions` that can be split into 
 Database Functions
 ------------------
 
-.. _initconst:
-
 init() constructor
 ~~~~~~~~~~~~~~~~~~
+
+DEPRICATED: see connection() below.
+
+.. _initconst:
+
+connection() constructor
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``init`` constructor function takes a :green:`String`, the path to the database
 and an optional :green:`Boolean` as parameters. It returns an :green:`Object` representing a
@@ -91,9 +96,9 @@ Usage:
 
 .. code-block:: javascript
 
-    var sql = new Sql.init(path [,create]);
+    var sql = new Sql.connection(path [,create]);
            /* or */
-    var sql = new Sql.init(options);
+    var sql = new Sql.connection(options);
 
 +--------+------------------+---------------------------------------------------+
 |Argument|Type              |Description                                        |
@@ -119,6 +124,15 @@ Usage:
 |        |                  |   but are not in the database.  If path           |
 |        |                  |   does not contain a database, create one first.  |
 |        |                  |   Implies `force`. See `addTable()`_ below.       |
+|        |                  | * ``user`` - :green:`String` - The database user  |
+|        |                  |   name for this connection.                       |
+|        |                  |   Default is ``"PUBLIC"``.  For normal usage      |
+|        |                  |   this should be left unset.                      |
+|        |                  | * ``pass`` - :green:`String` - The password       |
+|        |                  |   for above ``user``.  Default is ``""``.         |
+|        |                  | * **DO NOT USE** the sql command ``GRANT``, and/or|
+|        |                  |   ``user`` and ``pass`` above to implement        |
+|        |                  |   security for your application.                  |
 +--------+------------------+---------------------------------------------------+
 
 
@@ -141,19 +155,34 @@ Return Value:
         db:            "/path/to/db",
 	selectMaxRows: 10
     }
-    
+
 Example:
 
 .. code-block:: javascript
-    
+
 	var Sql = require("rampart-sql");
 
 	/* create database if it does not exist */
-	var sql = new Sql.init("/path/to/my/db", true);
+	var sql = new Sql.connection("/path/to/my/db", true);
 
 Note that to create a new database, the folder ``/path/to/my/db`` **must
 not** exist, but ``/path/to/my`` **must** exist and have write permissions for
 the current user.
+
+
+connect()
+~~~~~~~~~
+
+A shortcut for ``new Sql.connection``
+
+Example:
+
+.. code-block:: javascript
+
+	var Sql = require("rampart-sql");
+
+	/* create database if it does not exist */
+	var sql = Sql.connect("/path/to/my/db", true);
 
 
 exec()
@@ -205,7 +234,7 @@ SQL Parameters:
     corresponding to each ``?`` in the SQL statement. Alternatively parameters
     can be named in an :green:`Object` with each value in the
     :green:`Object` corresponding to each ``?key_name`` in the SQL
-    statement. 
+    statement.
 
     Example:
 
@@ -242,7 +271,7 @@ Options:
    * ``returnType`` (:green:`String`): Determines the format of the ``rows`` value
      in the return :green:`Object`.
 
-      * **default**: if ``returnType`` is not set, ``rows`` in 
+      * **default**: if ``returnType`` is not set, ``rows`` in
 	the return value of ``select`` statements will be an :green:`Array`
         of :green:`Objects`, as if ``"object"`` below was set.  For
         ``delete``, ``update`` and ``insert`` statements, ``rows`` will
@@ -254,15 +283,15 @@ Options:
         corresponding column and its values set to the field value of the
         corresponding row for the named column.
 
-      * ``"array"``: An :green:`Array` of :green:`Arrays`. The outer :green:`Array` 
+      * ``"array"``: An :green:`Array` of :green:`Arrays`. The outer :green:`Array`
         members correspond to each row fetched.  The inner :green:`Array`
         members correspond to the fields returned in each row.  Note that
         column names are still available, in order, in :ref:`columns <returnval>`.
 
       * ``"novars"``: An empty :green:`Array` is returned.  The sql statement is
         still executed.  This is the default for inserts, updates and deletes
-        where the return value would normally not be used.  
-        
+        where the return value would normally not be used.
+
       * **Note**: If the values of a deleted, inserted or updated row are needed,
         ``returnType`` can be set to either ``"object"`` or ``"array"`` and
         the statement will be executed as normal with ``rows`` set as if
@@ -290,21 +319,21 @@ Options:
 Caveats for Options, maxRows and skipRows:
    *  SQL ``select`` statements are by default limited to 10
       rows (``{maxRows:10}``) unless ``maxRows`` above is set.  This default
-      can be changed by setting the special variable ``sql.selectMaxRows``. 
+      can be changed by setting the special variable ``sql.selectMaxRows``.
 
      Example:
 
      .. code-block:: javascript
-     
+
         var Sql = require("rampart-sql");
-           
+
         var sql = new Sql.init("./mytestdb");
-        
+
         sql.selectMaxRows=20;
-        
+
         var res = sql.exec("select * from mytable");
         /* expected results: 20 rows, if 20 are available from "mytable" */
-                 
+
 
    *  ``maxRows`` defaults to ``-1`` (unlimited) if not set and the
       SQL statement is not a ``select`` statement.
@@ -316,13 +345,13 @@ Caveats for Options, maxRows and skipRows:
       treated as ``skipRows``.  Also note that if ``maxRows`` and/or
       ``skipRows`` is also set in ``options`` above, the last set value will be
       used.
-      
+
       Example:
-      
+
      .. code-block:: javascript
-     
+
         var Sql = require("rampart-sql");
-           
+
         var sql = new Sql.init("./mytestdb");
 
         var sqlopts = {maxRows: 5, returnType: "array"};
@@ -338,7 +367,7 @@ Caveats for Options, maxRows and skipRows:
 
         var res = sql.exec("select * from mytable", sqlopts, 20, 10);
         /* expected results: 20 rows, skipping the first 10,
-           if 30 are available from "mytable".  The parameter 20 is 
+           if 30 are available from "mytable".  The parameter 20 is
            specified last, so maxRows is overwritten and 20 is used     */
 
 Callback:
@@ -353,10 +382,10 @@ Callback:
 
    * ``columns``: an :green:`Array` corresponding to the column names or
      aliases selected and returned in results.
-   
+
    * ``countInfo``: an :green:`Object` as described below in `countinfo`_ if the
      ``includeCounts`` option is set ``true``.  Otherwise it will be
-     ``undefined``. 
+     ``undefined``.
 
    * ``user_argument``: a variable that is supplied to the callback after
      being set in the :ref:`options <execopts>` ``argument``
@@ -364,7 +393,7 @@ Callback:
      fifth argument.
 
    * Note: Regardless of ``maxRows`` setting , returning ``false`` from the
-     ``callback`` will cancel the retrieval of any remaining rows. 
+     ``callback`` will cancel the retrieval of any remaining rows.
      Returning ``undefined`` or any other value will allow the next row to be
      retrieved up to ``maxRows`` rows.
 
@@ -403,9 +432,9 @@ Return Value:
 	:green:`Number`/:green:`Object`.
 
         With no callback, an :green:`Object` is returned.  The :green:`Object` contains
-	three or four key/value pairs.  
+	three or four key/value pairs.
 	
-	Key: ``rows``; Value: an :green:`Array` of :green:`Objects`. 
+	Key: ``rows``; Value: an :green:`Array` of :green:`Objects`.
 	Each :green:`Object` corresponds to a row in the database and will
 	have keys set to the corresponding column names and the values set
 	to the corresponding field of the retrieved row.  If ``returnType``
@@ -423,34 +452,34 @@ Return Value:
 
   Key: ``countInfo``; Value: if option ``includeCounts`` is set
   ``true``, information regarding the number of total possible matches
-  is set.  Otherwise ``countInfo`` is undefined.  When performing a 
+  is set.  Otherwise ``countInfo`` is undefined.  When performing a
   `text search <https://docs.thunderstone.com/site/texisman/intelligent_text_search.html>`_
   the ``countInfo`` :green:`Object` contains the following:
 
    * ``indexCount`` (:green:`Number`): a single value estimating the number
      of matching rows.
 
-   * ``rowsMatchedMin`` (:green:`Number`): Minimum number of rows matched **before** 
-     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , 
-     :ref:`sql-set:likeprows`, 
+   * ``rowsMatchedMin`` (:green:`Number`): Minimum number of rows matched **before**
+     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ ,
+     :ref:`sql-set:likeprows`,
      :`aggregates <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , or
      :ref:`sql-set:multivaluetomultirow` are applied.
 
-   * ``rowsMatchedMax`` (:green:`Number`): Maximum number of rows matched **before** 
-     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , 
-     :ref:`sql-set:likeprows`, 
+   * ``rowsMatchedMax`` (:green:`Number`): Maximum number of rows matched **before**
+     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ ,
+     :ref:`sql-set:likeprows`,
      :`aggregates <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , or
      :ref:`sql-set:multivaluetomultirow` are applied.
 
-   * ``rowsReturnedMin`` (:green:`Number`): Minimum number of rows matched **after** 
-     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , 
-     :ref:`sql-set:likeprows`, 
+   * ``rowsReturnedMin`` (:green:`Number`): Minimum number of rows matched **after**
+     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ ,
+     :ref:`sql-set:likeprows`,
      :`aggregates <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , or
      :ref:`sql-set:multivaluetomultirow` are applied.
 
-   * ``rowsReturnedMax`` (:green:`Number`): Maximum number of rows matched **after** 
-     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , 
-     :ref:`sql-set:likeprows`, 
+   * ``rowsReturnedMax`` (:green:`Number`): Maximum number of rows matched **after**
+     any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ ,
+     :ref:`sql-set:likeprows`,
      :`aggregates <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , or
      :ref:`sql-set:multivaluetomultirow` are applied.
 
@@ -466,7 +495,7 @@ Return Value:
 Error Messages:
    Errors may or may not throw a JavaScript exception depending on the
    error.  If the syntax is correct but the statement cannot be executed, no
-   exception is thrown and ``sql.errMsg`` will contain the error message. 
+   exception is thrown and ``sql.errMsg`` will contain the error message.
    Otherwise an exception is thrown, ``sql.errMsg`` is set and the error may
    be caught with ``catch(error)``.
 
@@ -475,24 +504,24 @@ Error Messages:
 .. code-block:: javascript
 
    var Sql = require("rampart-sql");
-   
+
    /* create database if it does not exist */
    var sql = new Sql.init("./mytestdb",true);
-            
+
    /* create a table */
    sql.exec("create table testtb (text varchar(16), number double)");
-   
+
    /* create a unique index on number */
    sql.exec("create unique index testtb_number_ux on testtb(number)");
 
    /* insert a row */
    sql.exec("insert into testtb values ('A B C', 123)");
-   
+
    /* attempt to insert a duplicate */
    sql.exec("insert into testtb values ('D E F', 123)");
 
    console.log(sql.errMsg);
-   /* output = 
+   /* output =
       "178 Trying to insert duplicate value (123) in index
       ./mytestdb/testtb_number_ux.btr"
    */
@@ -501,8 +530,8 @@ Error Messages:
    	sql.exec("insert into testtb values ('D E F', 456, 789)");
    } catch (e) {
    	console.log(e);
-   }   
-   /* output = 
+   }
+   /* output =
        "Error: sql prep error: 100 More Values Than Fields in the function: Insert
         000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare"
       sql.errMsg is similar.
@@ -779,12 +808,12 @@ Below is a full example of ``exec()`` functionality:
        console.log(res); /* {newpath:"one/two/three/four/five"} */
 
     can be more easily written as:
-        
+
     .. code-block:: javascript
 
        var Sql = require("rampart-sql");
        var sql = new Sql.init("/path/to/my/db", true);
-       
+
        var res = sql.eval("joinpath('one', 'two/', '/three/four', 'five') newpath");
        console.log(res); /* {newpath:"one/two/three/four/five"} */
 
@@ -813,7 +842,7 @@ This allows:
    /* row = { email : "user@example.com" } */
 
 to be more easily written as:
-    
+
 .. code-block:: javascript
 
    var row = sql.one("select email from Users where user=?user",{user:user_name});
@@ -837,11 +866,11 @@ corresponding values set to a :green:`String`, :green:`Number`, :green:`Array` o
 ``true``/``false`` are equivalent to setting ``1``/``0``
 as described in :ref:`sql-set:Server Properties`.
 
-Normally there is no return value (``undefined``).  
+Normally there is no return value (``undefined``).
 
 However if :ref:`sql-set:lstexp`,
 :ref:`sql-set:lstindextmp`, :ref:`sql-set:listPrefix`,
-:ref:`sql-set:listSuffix`, :ref:`sql-set:listSuffixEquivs`,  and/or 
+:ref:`sql-set:listSuffix`, :ref:`sql-set:listSuffixEquivs`,  and/or
 :ref:`sql-set:listNoise` is set ``true``, an :green:`Object` is
 returned with corresponding keys ``expressionsList``, ``indexTempList``,
 ``prefixList``, ``suffixList``, ``suffixEquivsList`` and/or
@@ -866,14 +895,14 @@ Example:
 		listIndextemp: true,
 		listExpressions: true
 	});
-	/* 
-	   lists = 
+	/*
+	   lists =
 	   {
 	   	noiseList:        ["a","about",...,"you","your"],
 	   	indexTempList:    ["/tmp","/var/tmp"],
 	   	expressionsList:  ["\\alnum{2,99}", "[\\alnum\\x80-\xff]+", "[\\alnum\\x80-\xff,']+"]
 	   }
-	*/		                        	 
+	*/		                        	
 
 reset()
 ~~~~~~~
@@ -900,14 +929,14 @@ importCsvFile()
 ~~~~~~~~~~~~~~~
 
 The importCsvFile :green:`Function` is similar to the
-:ref:`rampart.import.csvFile <rampart-main:csvFile>` :green:`Function` 
+:ref:`rampart.import.csvFile <rampart-main:csvFile>` :green:`Function`
 except that it imports csv data from a file directly
 into a SQL table.  It takes a :green:`String` containing a file name, an
 :green:`Object` of options, optionally an :green:`Array` specifying the
 order of columns and optionally a callback :green:`Function`.  The
 parameters may be specified in any order.
 
-Usage: 
+Usage:
 
 .. code-block:: javascript
 
@@ -967,7 +996,7 @@ options:
         character of string as a column delimiter (e.g ``\t``).
 
       * ``timeFormat`` -  :green:`String` (default ``"%Y-%m-%d %H:%M:%S"``):
-        Set the format for parsing a date/time. See manpage for 
+        Set the format for parsing a date/time. See manpage for
         `strptime() <https://man7.org/linux/man-pages/man3/strptime.3p.html>`_.
 
       * ``hasHeaderRow`` - -  :green:`Boolean` (default ``false``): Whether
@@ -980,7 +1009,7 @@ options:
         type of that column.  It then casts all the members of that column
         to the majority type, or set it to ``null`` if it is
         unable to do so. If ``false``, each cell is individually normalized.
-	NOTE: unlike the 
+	NOTE: unlike the
 	:ref:`rampart.import.csvFile <rampart-main:csvFile>` :green:`Function`,
 	the default is ``true``.
 
@@ -997,7 +1026,7 @@ options:
 
 ordering:
    An :green:`Array` of :green:`Strings` or :green:`Numbers` corresponding
-   to the csv columns, listed in the order of insertion into the table. 
+   to the csv columns, listed in the order of insertion into the table.
    Example: If ``[0,3,4]`` is specified, the first, fourth and fifth column
    in the csv will be inserted into the first, second and third column of
    SQL table.  ``-1`` can be used to insert a ``0`` or blank string (``""``)
@@ -1048,7 +1077,7 @@ Example:
    1000
    2000
    ...
-   9000                                                                         
+   9000
    total=10000
    */
 
@@ -1065,7 +1094,7 @@ Example:
    var Sql=require("rampart-sql");
    var sql= new Sql.init("/path/mytestdb");
 
-   var csv = 
+   var csv =
    "Dept,       item1 Quantity, item1 Description, item1 Value, item2 Quantity, item2 Description, item2 Value\n" +
    "accounting, 5,              Macbook Pro,       1200.0,      300,            Pencils,           0.1\n" +
    "marketing,  20,             Dell XPS 15,       1150.0,      350,            Pens,              0.5\n" +
@@ -1084,7 +1113,7 @@ Example:
           tableName: "company_assets",
           hasHeaderRow: true
       },
-      /* 
+      /*
          order of insertion. Can be column name or column number
          "" or -1 means insert a null value (0, 0.0 or "")
       */
@@ -1093,7 +1122,7 @@ Example:
          "item1 Quantity", "item1 Description", "item1 Value", -1,
          "item2 Quantity", "item2 Description", "item2 Value", -1,
           -1
-      ]  
+      ]
    );
 
    /* update rows that defaulted to 0*/
@@ -1130,7 +1159,7 @@ addTable()
 
 Add a table to the current database.
 
-Usage: 
+Usage:
 
 .. code-block:: javascript
 
@@ -1138,7 +1167,7 @@ Usage:
 
    sql.addTable(path);
 
-Where ``path`` is the path to the ``*.tbl`` file from another database. 
+Where ``path`` is the path to the ``*.tbl`` file from another database.
 This file should be a copy and upon adding, may not exist in more than one
 database.  The file will not be copied and used as is from ``path``.
 
@@ -1165,7 +1194,7 @@ scan of every entry.  In this way, an index is much like an index found in
 the back of a reference manual or encyclopedia.
 
 In Rampart, Regular Indexes, once created, are automatically maintained.
-There are several versions and variations of Regular Indexes, as listed 
+There are several versions and variations of Regular Indexes, as listed
 below.
 
 Non-Unique Index
@@ -1180,16 +1209,16 @@ The syntax for creating an index is as follows:
 
     CREATE INDEX index-name
     ON table-name (column-name [DESC] [, column-name [DESC]] ...)
-    [WITH option-name [value] [option-name [value] ...]] 
- 
+    [WITH option-name [value] [option-name [value] ...]]
+
 Where:
 
 * ``index-name`` is an arbitrary name for the index.
 * ``table-name`` is the name of the table being indexed.
 * ``column-name`` is a column in the current table.
 * ``DESC`` is an optional flag in wich to order the index.  This speeds
-  up SQL queries with the ``ORDER BY`` phrase where the order is decending. 
-* ``option-name`` is an optional option. See 
+  up SQL queries with the ``ORDER BY`` phrase where the order is decending.
+* ``option-name`` is an optional option. See
   `Texis Documentation <https://docs.thunderstone.com/site/texisman/available_options.html>`_
   for more information.
 
@@ -1197,25 +1226,25 @@ Thus if you have a table created with:
 
 .. code-block:: sql
 
-   create table employees (Classification varchar(8), 
+   create table employees (Classification varchar(8),
    Name varchar(16), Age int, Salary int, Title varchar(16),
    Start_date date, Bio varchar(128));
 
-An index that would allow efficient lookup by name when executing 
+An index that would allow efficient lookup by name when executing
 ``select * from employees where Name = 'Rusty Grump'`` could be achieved
 by creating an index with the following command:
 
 .. code-block:: sql
 
-    create index employees_Name_x on employees(Name); 
+    create index employees_Name_x on employees(Name);
 
 If the employees table is large, the progress of index creation can be
 monitored with the ``option-name`` ``indexmeter`` as such:
 
 .. code-block:: sql
 
-    create index employees_Name_x on employees(Name) with indexmeter 'on'; 
-   
+    create index employees_Name_x on employees(Name) with indexmeter 'on';
+
 This will print a progress meter to ``stdout`` as the index is being
 created.
 
@@ -1231,7 +1260,7 @@ The syntax for creating a unique index is as follows:
 
     CREATE UNIQUE INDEX index-name
     ON table-name (column-name [DESC] [, column-name [DESC]] ...)
-    [WITH option-name [value] [option-name [value] ...]] 
+    [WITH option-name [value] [option-name [value] ...]]
 
 The following example illustrates the properties of a unique index:
 
@@ -1259,7 +1288,7 @@ The following example illustrates the properties of a unique index:
     /* output:
 
        First insert: {rows:[],rowCount:1}
-       Error Msg: 
+       Error Msg:
        Second Insert: {rows:[],rowCount:0}
        Error Msg: 178 Trying to insert duplicate value (John Doe) in index /home/rampart/testdb/people_Name_ux.btr
     */
@@ -1268,7 +1297,7 @@ Inverted Index
 """"""""""""""
 
 An Inverted Index may be used on ``UNSIGNED INT`` or ``DATE`` fields to speed up
-``ORDER BY`` operations.  See 
+``ORDER BY`` operations.  See
 `this section <https://docs.thunderstone.com/site/texisman/creating_an_inverted_index.html>`_
 of the `Texis Manual <https://docs.thunderstone.com/site/texisman/>`_ for more information.
 
@@ -1279,15 +1308,15 @@ Fulltext indexes are indexes on text fields which speed up full text searches
 using the ``WHERE column-name likep 'keyword keyword'`` syntax.
 
 A Fulltext index is also known as a "Metamorph Inverted Index".
-More information can be found 
+More information can be found
 `here <https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html>`_
-and 
+and
 `here <https://docs.thunderstone.com/site/vortexman/create_index_with_options.html>`_\ .
 
 Unlike Regular Indexes, Fulltext indexes do not automatically update when
 inserting, deleting or updating rows.  Though the ``likep`` search will
 still function as normal, new and updated rows will be linearly scanned in
-order to find matches.  
+order to find matches.
 
 A Fulltext index may be manually updated at any time
 and while the database and index is in use.  See `Updating A Fulltext
@@ -1302,7 +1331,7 @@ The syntax for creating a Fulltext index is as follows:
 
     CREATE FULLTEXT INDEX index-name
     ON table-name (column-name [DESC] [, column-name [DESC]] ...)
-    [WITH option-name [value] [option-name [value] ...]] 
+    [WITH option-name [value] [option-name [value] ...]]
 
 
 Assuming the field ``Bio`` in the employees table example above
@@ -1329,25 +1358,25 @@ Note that in Rampart Javascript, the backslash (``\``) needs to be escaped:
 Variations of Fulltext Indexes
 """"""""""""""""""""""""""""""
 
-Though a ``LIKEP`` search on a ``FULLTEXT`` index (created as described above) 
-is the most common and most capable version, there are two other versions 
-of text indexes and 
+Though a ``LIKEP`` search on a ``FULLTEXT`` index (created as described above)
+is the most common and most capable version, there are two other versions
+of text indexes and
 `LIKE <https://docs.thunderstone.com/site/texisman/search_condition_using_like.html>`_
 searches which are available:
 
-* Fulltext Index: - Default ``FULLTEXT`` or ``METAMORPH`` index - best used with 
-  `LIKEP <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ - 
+* Fulltext Index: - Default ``FULLTEXT`` or ``METAMORPH`` index - best used with
+  `LIKEP <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ -
   see `Texis Documentation for Metamorph Inverted Indexes <https://docs.thunderstone.com/site/texisman/inverted.html>`_\ .
 
-* Compact Index - best used with 
+* Compact Index - best used with
   `LIKER <https://docs.thunderstone.com/site/texisman/relevance_ranking_using_liker.html>`_ and
   `LIKE3 <https://docs.thunderstone.com/site/texisman/using_like3_for_index_only.html>`_\ .
-  Created with ``create fulltext index ... WITH WORDPOSITIONS 'off';``. 
+  Created with ``create fulltext index ... WITH WORDPOSITIONS 'off';``.
   see `Texis Documentation for Metamorph Compact Indexes <https://docs.thunderstone.com/site/texisman/compact.html>`_ \.
 
 * Counter Index - best used with
   `LIKEIN <https://docs.thunderstone.com/site/texisman/query_searching_using_likein.html>`_ .
-  Created with ``create fulltext index ... WITH COUNTS 'on';``.  
+  Created with ``create fulltext index ... WITH COUNTS 'on';``.
   see `Texis Documentation for Metamorph Counter Indexes <https://docs.thunderstone.com/site/texisman/counter.html>`_ \.
 
 Updating A Fulltext Index
@@ -1415,7 +1444,7 @@ using the default word expression would be sufficient.
 
 However to have a "pthread_mutex_t" entry in the index, the ``_`` character needs
 to be added to the expression.  Further, for maximum flexibility, the index can
-contain both versions to index all desired permutations (i.e., "pthread", "mutex" 
+contain both versions to index all desired permutations (i.e., "pthread", "mutex"
 and "pthread_mutex_t") by using two expressions:
 
 .. code-block:: sql
@@ -1476,7 +1505,7 @@ The following could be used to create a Compound Index on the appropriate fields
 .. code-block:: sql
 
     CREATE FULLTEXT INDEX employees_NameBio_Start_date_cx ON
-    employees(Name\Bio, Start_date); 
+    employees(Name\Bio, Start_date);
 
 Removing Indexes
 ~~~~~~~~~~~~~~~~
@@ -1490,7 +1519,7 @@ If an index is no longer needed, it may be removed using the following syntax:
 Further Reading
 ~~~~~~~~~~~~~~~
 
-Detailed information about indexing and options can be found on the 
+Detailed information about indexing and options can be found on the
 `Texis Documentation Website <https://docs.thunderstone.com/site/texisman/indexing_for_increased.html>`_\ .
 
 
@@ -1502,7 +1531,7 @@ text handling :green:`Functions` which Rampart exposes for use in JavaScript.
 stringFormat()
 ~~~~~~~~~~~~~~
 
-The ``stringFormat()`` :green:`Function` is identical to the 
+The ``stringFormat()`` :green:`Function` is identical to the
 :ref:`server function <sql-server-funcs:Server functions>`
 :ref:`sql-server-funcs:stringformat`, except that it is not limited to five
 arguments.
@@ -1544,8 +1573,8 @@ Standard Formats
 """"""""""""""""
 
 A format code is a ``%`` (percent sign), followed by zero or more flag characters,
-an optional width and/or precision size, and the format character itself. The 
-standard format codes, which are the same as in printf(), and how they print 
+an optional width and/or precision size, and the format character itself. The
+standard format codes, which are the same as in printf(), and how they print
 their arguments are:
 
 *   ``%d`` or ``%i`` Integer number.
@@ -1560,10 +1589,10 @@ their arguments are:
 *   ``%e`` or ``%E`` Exponential floating-point number (e.g. 1.23e+05). Upper-case
     exponent if upper-case E.
 
-*   ``%g`` or ``%G`` Either ``%f`` or ``%e`` format, whichever is shorter. Upper-case 
+*   ``%g`` or ``%G`` Either ``%f`` or ``%e`` format, whichever is shorter. Upper-case
     exponent if upper-case G.
 
-*   ``%s`` A text string. The ``j`` flag may be given for newline 
+*   ``%s`` A text string. The ``j`` flag may be given for newline
     translation.
 
 *   ``%c`` A single character. If the argument is a decimal, hexadecimal
@@ -1572,7 +1601,7 @@ their arguments are:
     prints the decimal ASCII code for the first character of the argument.
 
 *   ``%%`` A percent-sign; no argument and no flags are given. This
-    is for printing out a literal ``%`` in the format :green:`String`, which 
+    is for printing out a literal ``%`` in the format :green:`String`, which
     otherwise would be interpreted as a format code.
 
 A simple example (with its output):
@@ -1586,20 +1615,20 @@ A simple example (with its output):
 
 Standard Flags
 """"""""""""""
-After the ``%`` sign (and before the format code letter), zero or more of the 
+After the ``%`` sign (and before the format code letter), zero or more of the
 following flags may appear:
 
 ..
   Warning: the ``⠀`` line below is not a space, it is a U+2800 Braille Pattern Blank
   the only way I could get a literal string containing one single white space character.
 
-*   ``#`` (pound sign) Specifies that the value should be printed using an 
+*   ``#`` (pound sign) Specifies that the value should be printed using an
     "alternate format", depending on the format code.  For format code(s):
 
    *   ``%o`` A non-zero result will be prepended with 0 (zero) in the output.
    *   ``%x``, %X A non-zero result will be prepended with ``0x`` or ``0X``.
 
-   *   ``%e``, ``%E``, ``%f``, ``%g``, ``%G`` The result will always contain 
+   *   ``%e``, ``%E``, ``%f``, ``%g``, ``%G`` The result will always contain
        a decimal point, even if no digits follow it (normally, a decimal
        point appears in the results of those conversions only if a digit
        follows).  For ``%g`` and ``%G`` conversions, trailing zeros are not
@@ -1610,10 +1639,10 @@ following flags may appear:
 *   ``0`` (digit zero) Specifies zero padding. For all numeric formats,
     the output is padded on the left with zeros instead of spaces.
 
-*   ``-`` (minus sign) Indicates that the result is to be left 
+*   ``-`` (minus sign) Indicates that the result is to be left
     adjusted in the output field instead of right.  A ``-`` overrides a
     ``0`` flag if both are present.
-    
+
     For the ``%L`` extended code, this flag indicates the argument is a
     latitude.)
 
@@ -1621,10 +1650,10 @@ following flags may appear:
     number produced by a signed format (e.g.  ``%d``, ``%i``, ``%e``,
     ``%E``, ``%f``, ``%g``, or ``%G``).
 
-*   ``+`` (plus sign) If given with a numeric code, indicates that a sign 
+*   ``+`` (plus sign) If given with a numeric code, indicates that a sign
     always be placed before a number produced by a signed format.  A ``+``
     overrides a space if both are used.
-    
+
     For the ``%L`` extended code, a ``+`` flag indicates the argument is a
     location with latitude and longitude, or a geocode.
 
@@ -1680,13 +1709,13 @@ Examples:
    var output = Sql.stringFormat("Error number %5.3d:", 5);
    /* output = "Error number   005:" */
 
-   output = Sql.stringFormat("The %1.6s is %4.2f.", 
+   output = Sql.stringFormat("The %1.6s is %4.2f.",
       "answering machine", 123.456789);
    /* output="The answer is 123.46." */
 
 The field width or precision, or both, may be given as a parameter instead
 of a digit string by using an * (asterisk) character instead.  In this case,
-the width or precision will be taken from the next (integer) argument. 
+the width or precision will be taken from the next (integer) argument.
 Example (note spacing):
 
 .. code-block:: javascript
@@ -1703,20 +1732,20 @@ are for compatibility with the C function printf(), and are not generally
 needed.
 
 Printing Date/Time Values
-""""""""""""""""""""""""" 
+"""""""""""""""""""""""""
 
-Dates can be printed with ``stringFormat()`` by using the ``%at`` format. 
+Dates can be printed with ``stringFormat()`` by using the ``%at`` format.
 The ``t`` code indicates a time is being printed, and the a flag indicates
 that the next argument is a strftime()-style format string.  Following that
 is a time argument.
 
-Example: 
+Example:
 
 .. code-block:: javascript
 
    var output=Sql.stringFormat("%at", "%B", "now");
-   /* "%B" is the strftime()-style string 
-      (indicating the month should be printed) */  
+   /* "%B" is the strftime()-style string
+      (indicating the month should be printed) */
 
 A capital ``T`` may be used insteadof lower-case ``t`` to change the timezone to
 Universal Time (GMT/UTC) instead of local time for output.  These strftime()
@@ -1764,11 +1793,11 @@ style "February 20, 1997" (assuming the id field is a Texis counter data type):
             {q:query},
             function(res) {
                console.log(
-               	Sql.stringFormat("%at %s", "%B %d, %Y", res.id, res.Title) 
+               	Sql.stringFormat("%at %s", "%B %d, %Y", res.id, res.Title)
                );
             }
    );
-   
+
 To use a default strftime() format, eliminate the ``a`` flag and its corresponding strftime() format argument:
 
 .. code-block:: javascript
@@ -1805,9 +1834,9 @@ subformat is provided:
     expected, and a default subformat is used.
 
 Latitude, longitude and location arguments should be in one of the formats
-supported by the 
-:ref:`parselatitude() <sql-server-funcs:parselatitude, parselongitude>`, 
-:ref:`parselongitude() <sql-server-funcs:parselatitude, parselongitude>`, 
+supported by the
+:ref:`parselatitude() <sql-server-funcs:parselatitude, parselongitude>`,
+:ref:`parselongitude() <sql-server-funcs:parselatitude, parselongitude>`,
 or :ref:`latlon2geocode() <sql-server-funcs:latlon2geocode, latlon2geocodearea>`
 (with single arg) SQL functions, as appropriate.  If the ``a`` flag is given,
 the subformat string may contain the following codes:
@@ -1893,7 +1922,7 @@ In addition to the standard printf() formatting codes, other
     codes where needed to make the string "safe" for HTML output (``"``,
     ``&``, ``<``, ``>``, ``DEL`` and control chars less than 32 except
     ``TAB``, ``LF``, ``FF`` and ``CR`` are escaped).  With the ``!`` flag,
-    decodes instead (to ISO-8859-1); see also the ``l`` (el) flag, here. 
+    decodes instead (to ISO-8859-1); see also the ``l`` (el) flag, here.
     The ``j`` flag (here) may be given for newline translation.  When
     decoding with ``!``, out-of-ISO-8859-1-range characters are output as
     ``?``; to decode HTML to UTF-8 instead, use ``%hV``.
@@ -1902,7 +1931,7 @@ In addition to the standard printf() formatting codes, other
     %-codes.  With the !  flag, decodes instead.  With the p (path) flag,
     spaces are encoded as ``%20`` instead of ``+``.  With the ``q`` flag,
     ``/`` (slash) and ``@`` (at-sign) are encoded as well (or only
-    unreserved/safe chars are decoded, if ``!``  too).  
+    unreserved/safe chars are decoded, if ``!``  too).
     See `Extended Flags`_.
 
 *   ``%V`` (upper-case vee) Prints its string argument, encoding 8-bit
@@ -1913,12 +1942,12 @@ In addition to the standard printf() formatting codes, other
     translation.
 
 *   ``%v`` (lower-case vee) Prints its UTF-8 string argument, encoding to
-    UTF-16.  With the ``!`` flag (here), decodes to UTF-8 instead. 
+    UTF-16.  With the ``!`` flag (here), decodes to UTF-8 instead.
     Illegal, truncated, or out-of-range sequences are translated as ``?``
     (question-marks).  This can be modified with the ``h`` flag.  The ``<``
     (less-than) flag forces UTF-16LE (little-endian) output (encode) or
     treats input as little-endian (decode).  The ``>`` flag forces UTF-16BE
-    (big-endian) output (encode) or treats input as big-endian (decode). 
+    (big-endian) output (encode) or treats input as big-endian (decode).
     The default endian-ness is big-endian; for decode, a leading
     byte-order-mark character (hex 0xFEFF) will determine endian-ness if
     present.  The ``_`` (underscore) flag skips printing a leading
@@ -1928,10 +1957,10 @@ In addition to the standard printf() formatting codes, other
 
 *   ``%B`` Prints its string argument, encoding to base64.  If a non-zero
     field width is given, a newline is output after every "width" bytes output
-    (absolute value, rounded up to 4) and at the end of the base64 output. 
+    (absolute value, rounded up to 4) and at the end of the base64 output.
     Thus "%64B" would format with no more than 64 bytes per line.  This is
-    useful for encoding into a MIME mail message with line length restraints. 
-    A ``!`` flag indicates that the string is to be decoded instead of encoded. 
+    useful for encoding into a MIME mail message with line length restraints.
+    A ``!`` flag indicates that the string is to be decoded instead of encoded.
     The ``j`` flag (here) may be given to set the newline style, though it only
     applies to soft (output) newlines; input CR/LF bytes are never modified
     since base64 is a binary encoding.
@@ -1967,7 +1996,7 @@ In addition to the standard printf() formatting codes, other
     words, separated by newline-space.
 
 *   ``%z`` Prints its argument, encoded (compressed) in the gzip deflate
-    format.  The ``!`` flag will decode (decompress) the argument instead. 
+    format.  The ``!`` flag will decode (decompress) the argument instead.
     A precision value will limit the output to that many bytes, as with
     ``%s``; this can be used to "peek" at the start of compressed data
     without decoding all of it (and consuming memory to do so).
@@ -1988,7 +2017,7 @@ In addition to the standard printf() formatting codes, other
 *   ``%R`` Uppercase Roman numeral output of an integer.
 
 All the standard flags, as well as the extended flags (below), can be given
-to these codes, where applicable.  
+to these codes, where applicable.
 
 Examples:
 
@@ -2025,7 +2054,7 @@ printf() flags described above:
     thus space padding would be lost.
 
 *   ``!`` (exclamation point) When used with ``%H``, ``%U``, ``%V``, ``%B``,
-    ``%c``, ``%W`` or ``%z``, decode appropriately instead of encoding. 
+    ``%c``, ``%W`` or ``%z``, decode appropriately instead of encoding.
     (Note that for ``%H``, only ampersand-escaped entities are decoded)
 
 *   ``_`` (underscore) Use decimal ASCII value 160 instead of 32 (space)
@@ -2065,7 +2094,7 @@ printf() flags described above:
     input encoding to be represented natively in the output encoding.  For
     ``%V``, ``%!V``, ``%v``, ``%!v``, ``%W`` and ``%!W``, if given twice
     (e.g.  ``hh``), also HTML-escapes low (7-bit) values (e.g.  control
-    chars, ``<``, ``>``) in the output.  If given three times (e.g. 
+    chars, ``<``, ``>``) in the output.  If given three times (e.g.
     ``hhh``), just HTML-escapes 7-bit values; does not also decode HTML
     entities in the input.  Note that the ``h`` flag is also used in another
     context as a sub-flag for `Metamorph Hit Mark-up`_.
@@ -2082,7 +2111,7 @@ printf() flags described above:
     used as the output sequence.  If both ``c`` and ``l`` are given (in
     either order), CRLF is used.  The ``c`` and ``l`` subflags allow a
     non-native system's newline convention to be used, e.g.  by a web
-    application that is adapting to browsers of varying operating systems. 
+    application that is adapting to browsers of varying operating systems.
     Note that for the ``%B`` format code, input CR/LF bytes are never
     translated (since it is a binary encoding); ``j`` and its subflags only
     affect the output of "soft" line-wrap newlines that do not correspond to
@@ -2153,7 +2182,7 @@ elsewhere:
 
 *   ``P`` same as ``p``, but use (next additional argument) REX expression to
     match paragraph breaks.  If given twice (``PP``), use another additional
-    argument after REX expression as replacement string, instead of "<p/>". 
+    argument after REX expression as replacement string, instead of "<p/>".
 
 *   ``c`` to continue hit count into next query call
 *   ``N`` to mark up NOT terms as well
@@ -2164,7 +2193,7 @@ elsewhere:
 
    *   ``e`` to mark up the exact query (no queryfixupmode/NOT processing)
 
-Examples: 
+Examples:
 
 To highlight query terms from ``query`` in the text contained in
 ``text`` in different colors, insert paragraph breaks, and escape the output
@@ -2210,9 +2239,9 @@ to be HTML-safe, use:
 :ref:`sql-set:Server Properties` may be given inline.  For example, in the
 above example, if you did not want to match "formatting" from the query term
 "format" but still wanted to highlight "javascript" where "format" is not
-present (``@0`` for zero intersections; see 
-`this section <https://docs.thunderstone.com/site/texisman/specifying_fewer_intersections.html>`_ 
-of the Texis documentation for full explanation), 
+present (``@0`` for zero intersections; see
+`this section <https://docs.thunderstone.com/site/texisman/specifying_fewer_intersections.html>`_
+of the Texis documentation for full explanation),
 the following could be used:
 
 
@@ -2241,7 +2270,7 @@ parameters as SQL queries.  These can be changed as described
 
 If a width is given for the format code, it indicates the character offset
 in the string argument to begin the query and printing (0 is the first
-character).  Thus a large text argument can be marked up in several chunks. 
+character).  Thus a large text argument can be marked up in several chunks.
 Note that this differs from the normal behavior of the width, which is to
 specify the overall width of the field to print in.  The precision is the
 same - it gives the maximum number of characters of the input string to
@@ -2271,7 +2300,7 @@ to illustrate what terms are highlighted and how.  The ``n`` and ``e`` flags
 are also implicitly enabled when ``q`` is given.  Note that settings given
 inline with the query (e.g.  "@suffixproc=0") will not be highlighted since
 they do not themselves ever find or match any terms - this helps avoid
-misleading the user that such "terms" will ever be found in the text. 
+misleading the user that such "terms" will ever be found in the text.
 However, since they are still considered separate query sets - because their
 order in the query is significant, as they only affect following sets - a
 class/style is "reserved" (i.e.  not used) for them in the querycyclenum
@@ -2287,7 +2316,7 @@ already.)
 The ``p`` and ``P`` flags do paragraph formatting as documented previously.
 
 The ``c`` flag indicates that the hit count should be continued for the next
-query.  By default, the last hit marked up is linked back to the first hit. 
+query.  By default, the last hit marked up is linked back to the first hit.
 Therefore, each ``%``-code query markup is self-contained: if multiple calls are
 made, the hit count (and resulting HREFs) will start over for each call,
 which may not be desired.  If the ``c`` flag is given, the last hit in the
@@ -2296,7 +2325,7 @@ query will start numbering hits at N+1 instead of 1.  Thus, all but the last
 query markup call by a script should use the ``c`` flag.
 
 .. Need help with this-
-   The ``e`` flag indicates that the query should be used exactly as given. 
+   The ``e`` flag indicates that the query should be used exactly as given.
    Normally, queryfixupmode (here) and ``N`` flag processing is done to the query,
    which might cause more terms to be highlighted than are actually found by
    the query (e.g.  highlighting of sets in the query that are not needed to
@@ -2337,7 +2366,7 @@ The abstract function generates an abstract of a given portion of text.
          max: max,
          style: style,
          query: query
-      }; 
+      };
    var abstract = Sql.abstract(text, options);
 
 **or**
@@ -2397,7 +2426,7 @@ argument as well, which is a Metamorph search query:
 
 If no ``query`` is given with a ``query*`` mode (``querysingle``,
 ``querymultiple`` or ``querybest``), it falls back to ``dumb`` mode.
-If a ``query`` is given with anything other than a ``query*`` mode 
+If a ``query`` is given with anything other than a ``query*`` mode
 (``dumb``/``smart``), the mode is promoted to ``querybest``.  The current locale
 and index expressions also have an effect on the abstract in the ``query*``
 modes, so that it more closely reflects an index-obtained hit.
@@ -2433,7 +2462,7 @@ Example:
    "perish from the earth.\n";
 
    var abstract = Sql.abstract(gba);
-   /* abstract = 
+   /* abstract =
       Four score and seven years ago our fathers brought forth on this
       continent, a new nation, conceived in Liberty, and dedicated to the
       proposition that all men are created equal.  Now we are engaged in a
@@ -2447,13 +2476,13 @@ Example:
    */
 
    abstract = Sql.abstract(gba, {
-       max:250, 
-       style: "querybest", 
-       query: "unfinished work", 
+       max:250,
+       style: "querybest",
+       query: "unfinished work",
        markup: "%mCH"
    });
-   /* abstract = 
-      The world will little note, nor long remember what we say here, but it can 
+   /* abstract =
+      The world will little note, nor long remember what we say here, but it can
       never forget what they did here. <span class="query">It is for us the living,
       rather, to be dedicated here to the <span class="queryset1">unfinished</span>
       <span class="queryset2">work</span> which they who fought here have thus far
@@ -2490,7 +2519,7 @@ replacement :green:`Strings` for the extra search values.
 |rexargs |:green:`Array` of :green:`Arrays` - search/replace pairs| pairs of expr and replace strings                 |
 +--------+--------------------------------------------------------+---------------------------------------------------+
 |data    |:green:`String`/:green:`Array` of :green:`Strings`      | string(s) as input for search and replace         |
-+--------+--------------------------------------------------------+---------------------------------------------------+ 
++--------+--------------------------------------------------------+---------------------------------------------------+
 
 
 Return Value:
@@ -2503,7 +2532,7 @@ Return Value:
 Replacement Strings:
 """"""""""""""""""""
 
-   *   The characters ``?`` ``#`` ``{`` ``}`` ``+`` and ``\`` are special. 
+   *   The characters ``?`` ``#`` ``{`` ``}`` ``+`` and ``\`` are special.
        To use them literally, precede them with the escapement character
        ``\``.
 
@@ -2616,7 +2645,7 @@ containing the following information:
    [
       {
          match:"match1",
-         expressionIndex:matchedExpressionNo, 
+         expressionIndex:matchedExpressionNo,
          submatches:
             [
                "array",
@@ -2639,11 +2668,11 @@ containing the following information:
     empty :green:`String` ("").
 
 See `Callback`_ below for callback() parameters where ``submatches`` is set
-``true`` or ``false``. 
+``true`` or ``false``.
 
 The ``exclude`` option is used for when there are multiple expressions (as
 provided by an :green:`Array` of :green:`Strings` for the ``expr`` argument) that might match
-the same portion of text.  
+the same portion of text.
 
 *   ``none`` returns all possible matches, even if the portion of text that
     matches is the same or overlaps with another.
@@ -2678,18 +2707,18 @@ Callback:
 
 .. code-block:: javascript
 
-   var ret = Sql.rex(search, txt, 
+   var ret = Sql.rex(search, txt,
       function(match, submatches, index)
       {
-      	console.log(index,  'matched string "' + match +'"')   
+      	console.log(index,  'matched string "' + match +'"')
       	console.log("    ", 'submatches: ', submatches);
       }
    );
 
-   var ret = Sql.rex(search, txt, {submatches:false}, 
+   var ret = Sql.rex(search, txt, {submatches:false},
       function(match, index)
       {
-      	console.log(index, 'matched string "' + match +'"')   
+      	console.log(index, 'matched string "' + match +'"')
       }
    );
 
@@ -2705,7 +2734,7 @@ Callback:
 Return Value:
    Depending on the ``submatches`` option, an :green:`Array` of matching :green:`Strings` or
    an :green:`Array` of :green:`Objects` with matching :green:`String` and submatch information.
-   
+
    If a callback function is specified, a :green:`Number`, the number of matches is returned.
 
 Expressions
@@ -2955,7 +2984,7 @@ Regular Expression users are:
 1.  Repetition operators are always applied to strings, rather than
     single characters.
 
-2.  There must be at least one sub-expression that has one or more 
+2.  There must be at least one sub-expression that has one or more
     repetitions.
 
 3.  No matched sub-expression will be located as part of another.
@@ -2966,7 +2995,7 @@ Rule 1 example:
 
 Rule 2 example:
 
-   ``abc*def*``  *can not* be located because it matches every 
+   ``abc*def*``  *can not* be located because it matches every
    position within the text.
 
 Rule 3 example:
@@ -2975,7 +3004,7 @@ Rule 3 example:
 
 Note that when using ``\`` escapes in JavaScript :green:`Strings`, they must be
 double escaped as javascript interprets the ``\`` before it is passed on to
-the ``rex`` function (.e.g.  ``Sql.rex("\\n=[^\\n]+", text)``). 
+the ``rex`` function (.e.g.  ``Sql.rex("\\n=[^\\n]+", text)``).
 However the following **unsupported** syntax can also be used in limited cases:
 ``Sql.rex(/\n=[^\n]+/, text)``.  This may be useful for quick
 scripting, but as the ``/pattern/`` is compiled by javascript, and then
@@ -3002,7 +3031,7 @@ Example:
    var ret = Sql.rex('<img=!<...*>>alt=\\space*\\==\\space*"\\P=[^"]+', html );
    /* ret == [ "my image", "second img" ] */
 	
-Note that this example is not robust and would also match 
+Note that this example is not robust and would also match
 ``<img src="/img.gif"><a alt="alt">link text</a>``.  A more robust solution would be
 as follows:
 
@@ -3026,7 +3055,7 @@ as follows:
 re2()
 ~~~~~
 
-The ``re2`` function operates identically to the ``rex`` function 
+The ``re2`` function operates identically to the ``rex`` function
 except that it uses Perl Regular Expressions and no submatch information
 is returned (empty :green:`Array`).  See `rex()`_ above.
 
@@ -3079,7 +3108,7 @@ Where:
 
 *  ``query`` is a :green:`String` containing the terms used for the search.
 
-*  ``filename`` is a :green:`String` specifying the file to be searched. 
+*  ``filename`` is a :green:`String` specifying the file to be searched.
 
 *  ``options`` is an :green:`Object` containing optional search settings.
    The following can be set (see :ref:`sql-set:Server Properties` for
@@ -3108,9 +3137,9 @@ Example:
       "gettysburg.txt",
       { minwordlen:3 }
    );
-            
+
    rampart.utils.printf("%3J\n", res);
-            
+
    /* expected output:
    [
       {
@@ -3131,7 +3160,7 @@ Example:
 searchText()
 ~~~~~~~~~~~~
 
-The same as the ``searchFile`` function except the text to be searched is given in a 
+The same as the ``searchFile`` function except the text to be searched is given in a
 :green:`String` or :green:`Buffer` and returns the matching portions of that :green:`String` or
 :green:`Buffer`.
 

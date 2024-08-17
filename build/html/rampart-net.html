@@ -130,7 +130,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-functions">Resolve functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#new-net-resolve">new net.Resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#new-net-resolver">new net.Resolver()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-resolve">resolver.resolve()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-reverse">resolver.reverse()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-on">resolver.on()</a></li>
@@ -156,6 +156,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
 </ul>
 
@@ -573,7 +574,7 @@ before <code class="docutils literal notranslate"><span class="pre">socket.conne
 (<code class="docutils literal notranslate"><span class="pre">ipv4</span></code> or <code class="docutils literal notranslate"><span class="pre">ipv6</span></code>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> - <span class="green">Number</span>. Same as <code class="docutils literal notranslate"><span class="pre">remotePort</span></code></li>
 <li><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Object</span>. Host address used for this connection
-returned from a call to <a class="reference internal" href="#new-net-resolve">new net.Resolve()</a> by <a class="reference internal" href="#socket-connect">socket.connect()</a> internally.</li>
+returned from a call to <a class="reference internal" href="#new-net-resolver">new net.Resolver()</a> by <a class="reference internal" href="#socket-connect">socket.connect()</a> internally.</li>
 <li><code class="docutils literal notranslate"><span class="pre">sslCipher</span></code> - <span class="green">String</span>.  If <code class="docutils literal notranslate"><span class="pre">tls</span></code> is true, the name of the
 openssl cipher being used for this connection.</li>
 </ul>
@@ -1010,14 +1011,14 @@ default of <code class="docutils literal notranslate"><span class="pre">511</spa
 <blockquote>
 <div>The following functions are used to resolve a host name to one or more
 ip addresses.</div></blockquote>
-<div class="section" id="new-net-resolve">
-<h3>new net.Resolve()<a class="headerlink" href="#new-net-resolve" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="new-net-resolver">
+<h3>new net.Resolver()<a class="headerlink" href="#new-net-resolver" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Create a new resolve object.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -1029,7 +1030,7 @@ ip addresses.</div></blockquote>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
 <span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">host</span><span class="p">[,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
 </pre></div>
@@ -1049,7 +1050,7 @@ each time an <strong>anonymous</strong> function is provided as the
 once per event.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
 <span class="cm">/* console.log is run once per lookup */</span>
 
@@ -1061,7 +1062,7 @@ once per event.</p>
 <p>In contrast:</p>
 <div class="last highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
 <span class="cm">/* console.log is run TWICE per lookup since two different</span>
 <span class="cm"> * functions call it.                                       */</span>
@@ -1082,7 +1083,7 @@ once per event.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
 <span class="nx">resolver</span><span class="p">.</span><span class="nx">reverse</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">[,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
 </pre></div>
@@ -1103,14 +1104,18 @@ event callback.</li>
 <h3>resolver.on()<a class="headerlink" href="#resolver-on" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Register a callback function for a resolver event.  Currently, the only
-event is <code class="docutils literal notranslate"><span class="pre">lookup</span></code>.</p>
+events are <code class="docutils literal notranslate"><span class="pre">lookup</span></code> and <code class="docutils literal notranslate"><span class="pre">error</span></code>.</p>
 <p>Usage example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolve</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
 <span class="nx">resolver</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;lookup&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">hobj</span><span class="p">){</span>
-    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">hobj</span><span class="p">);</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">hobj</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">emsg</span><span class="p">){</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Resolver error: %s\n&quot;</span><span class="p">,</span> <span class="nx">emsg</span><span class="p">);</span>
 <span class="p">});</span>
 
 <span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;rampart.dev&quot;</span><span class="p">);</span>
@@ -1314,7 +1319,7 @@ above):</p>
 <div class="section" id="net-resolve-async">
 <h3>net.resolve_async()<a class="headerlink" href="#net-resolve-async" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolve()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.resolve()</span></code>.</p>
+<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolver()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.resolve()</span></code>.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
@@ -1344,7 +1349,7 @@ function.</li>
 <div class="section" id="net-reverse-async">
 <h3>net.reverse_async()<a class="headerlink" href="#net-reverse-async" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolve()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.reverse()</span></code>.</p>
+<div><p>Short cut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">net.Resolver()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolver.reverse()</span></code>.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 

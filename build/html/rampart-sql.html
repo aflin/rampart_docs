@@ -100,6 +100,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#loading-the-javascript-module">Loading the Javascript Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#database-functions">Database Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#init-constructor">init() constructor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connection-constructor">connection() constructor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connect">connect()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#exec">exec()</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#exec-full-example">Exec Full Example</a></li>
 </ul>
@@ -180,6 +182,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
 </ul>
 
@@ -315,16 +318,20 @@ of using the <code class="docutils literal notranslate"><span class="pre">requir
 <div class="section" id="database-functions">
 <h1>Database Functions<a class="headerlink" href="#database-functions" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="init-constructor">
-<span id="initconst"></span><h2>init() constructor<a class="headerlink" href="#init-constructor" title="Permalink to this headline">¶</a></h2>
+<h2>init() constructor<a class="headerlink" href="#init-constructor" title="Permalink to this headline">¶</a></h2>
+<p>DEPRICATED: see connection() below.</p>
+</div>
+<div class="section" id="connection-constructor">
+<span id="initconst"></span><h2>connection() constructor<a class="headerlink" href="#connection-constructor" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> constructor function takes a <span class="green">String</span>, the path to the database
 and an optional <span class="green">Boolean</span> as parameters. It returns an <span class="green">Object</span> representing a
 new connection to the specified database.  The return <span class="green">Object</span> includes the
 following <span class="green">Functions</span>: <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, <code class="docutils literal notranslate"><span class="pre">one()</span></code>, <code class="docutils literal notranslate"><span class="pre">set()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">reset()</span></code>, <code class="docutils literal notranslate"><span class="pre">importCsvFile()</span></code>, <code class="docutils literal notranslate"><span class="pre">importCsv</span></code> and <code class="docutils literal notranslate"><span class="pre">close()</span></code>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span><span class="nx">create</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span><span class="nx">create</span><span class="p">]);</span>
        <span class="cm">/* or */</span>
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </div>
 <table border="1" class="docutils">
@@ -367,6 +374,15 @@ add any table files that are in <code class="docutils literal notranslate"><span
 but are not in the database.  If path
 does not contain a database, create one first.
 Implies <cite>force</cite>. See <a class="reference internal" href="#addtable">addTable()</a> below.</li>
+<li><code class="docutils literal notranslate"><span class="pre">user</span></code> - <span class="green">String</span> - The database user
+name for this connection.
+Default is <code class="docutils literal notranslate"><span class="pre">&quot;PUBLIC&quot;</span></code>.  For normal usage
+this should be left unset.</li>
+<li><code class="docutils literal notranslate"><span class="pre">pass</span></code> - <span class="green">String</span> - The password
+for above <code class="docutils literal notranslate"><span class="pre">user</span></code>.  Default is <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</li>
+<li><strong>DO NOT USE</strong> the sql command <code class="docutils literal notranslate"><span class="pre">GRANT</span></code>, and/or
+<code class="docutils literal notranslate"><span class="pre">user</span></code> and <code class="docutils literal notranslate"><span class="pre">pass</span></code> above to implement
+security for your application.</li>
 </ul>
 </td>
 </tr>
@@ -395,12 +411,23 @@ Implies <cite>force</cite>. See <a class="reference internal" href="#addtable">a
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
 <span class="cm">/* create database if it does not exist */</span>
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Note that to create a new database, the folder <code class="docutils literal notranslate"><span class="pre">/path/to/my/db</span></code> <strong>must
 not</strong> exist, but <code class="docutils literal notranslate"><span class="pre">/path/to/my</span></code> <strong>must</strong> exist and have write permissions for
 the current user.</p>
+</div>
+<div class="section" id="connect">
+<h2>connect()<a class="headerlink" href="#connect" title="Permalink to this headline">¶</a></h2>
+<p>A shortcut for <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection</span></code></p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="cm">/* create database if it does not exist */</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="exec">
 <h2>exec()<a class="headerlink" href="#exec" title="Permalink to this headline">¶</a></h2>

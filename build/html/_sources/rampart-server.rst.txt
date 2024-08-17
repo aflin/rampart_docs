@@ -140,6 +140,14 @@ Where:
       file will be closed and re-opened upon sending the rampart executable
       a ``USR1`` signal, which allows log rotation.
 
+    * ``logIpFromHeader``: A :green:`String`, a header name to use for logging
+      the ip address of the request.  In cases where the server is behind a proxy
+      such as nginx, instead of logging ``127.0.0.1``, setting, e.g. 
+      ``proxy_set_header Remote_address $remote_addr;`` in the appropriate section
+      of ``/etc/nginx/nginx.conf``, and setting ``logIpFromHeader: "Remote_address"``
+      here will log the ip address of the client connecting to nginx, rather the
+      ip address of the nginx proxy server.
+
     * ``daemon``: A :green:`Boolean`, whether to fork and detach from the
       controlling terminal.  If ``true``, the ``start()`` function will return
       the pid of the server. Otherwise the pid of the current process is
@@ -248,6 +256,10 @@ Where:
     * ``compressMinSize``: A :green:`Number`. The minimum size in bytes any file or
       script output must be in order for the content to be compressed.  The default,
       if not specified, is ``1000``.
+
+    * ``appendProcTitle``: A :green:`Boolean`. Whether to append the process
+      title (as seen in utilities like ``ps``) with the ip address and port
+      number of the server.  The default if not specified is ``false``.
 
     * ``mimeMap``: An :green:`Object`, additions or changes to the standard extension
       to mime mappings.  Normally, if, e.g., ``return { "m4v": mymovie };``

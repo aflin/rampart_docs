@@ -395,7 +395,7 @@ Other socket properties
     * ``_hostPort`` - :green:`Number`. Same as ``remotePort``
 
     * ``_hostAddrs`` - :green:`Object`. Host address used for this connection
-      returned from a call to `new net.Resolve()`_ by `socket.connect()`_ internally.
+      returned from a call to `new net.Resolver()`_ by `socket.connect()`_ internally.
 
     * ``sslCipher`` - :green:`String`.  If ``tls`` is true, the name of the
       openssl cipher being used for this connection.
@@ -839,8 +839,8 @@ Resolve functions
     The following functions are used to resolve a host name to one or more
     ip addresses.
 
-new net.Resolve()
-~~~~~~~~~~~~~~~~~
+new net.Resolver()
+~~~~~~~~~~~~~~~~~~
 
     Create a new resolve object.
 
@@ -850,7 +850,7 @@ new net.Resolve()
 
         var net = require("rampart-net");
 
-        var resolver = new net.Resolve();
+        var resolver = new net.Resolver();
 
 resolver.resolve()
 ~~~~~~~~~~~~~~~~~~
@@ -863,7 +863,7 @@ resolver.resolve()
 
         var net = require("rampart-net");
 
-        var resolver = new net.Resolve();
+        var resolver = new net.Resolver();
 
         resolver.resolve(host[, lookup_callback]);
 
@@ -885,7 +885,7 @@ resolver.resolve()
 
             var net = require("rampart-net");
 
-            var resolver = new net.Resolve();
+            var resolver = new net.Resolver();
 
             /* console.log is run once per lookup */
             
@@ -899,7 +899,7 @@ resolver.resolve()
 
             var net = require("rampart-net");
 
-            var resolver = new net.Resolve();
+            var resolver = new net.Resolver();
 
             /* console.log is run TWICE per lookup since two different
              * functions call it.                                       */
@@ -919,7 +919,7 @@ resolver.reverse()
 
         var net = require("rampart-net");
 
-        var resolver = new net.Resolve();
+        var resolver = new net.Resolver();
 
         resolver.reverse(ip_addr[, lookup_callback]);
 
@@ -938,7 +938,7 @@ resolver.on()
 ~~~~~~~~~~~~~
 
     Register a callback function for a resolver event.  Currently, the only
-    event is ``lookup``.
+    events are ``lookup`` and ``error``.
 
     Usage example:
 
@@ -946,10 +946,14 @@ resolver.on()
 
         var net = require("rampart-net");
 
-        var resolver = new net.Resolve();
+        var resolver = new net.Resolver();
 
         resolver.on("lookup", function(hobj){
-            printf("%3J\n", hobj);
+            rampart.utils.printf("%3J\n", hobj);
+        });
+
+        resolver.on("error", function(emsg){
+            rampart.utils.printf("Resolver error: %s\n", emsg);
         });
 
         resolver.resolve("rampart.dev");
@@ -1164,7 +1168,7 @@ net.createServer()
 net.resolve_async()
 ~~~~~~~~~~~~~~~~~~~
 
-    Short cut for ``new net.Resolve()`` and ``resolver.resolve()``.
+    Short cut for ``new net.Resolver()`` and ``resolver.resolve()``.
 
     Usage:
 
@@ -1199,7 +1203,7 @@ net.resolve_async()
 net.reverse_async()
 ~~~~~~~~~~~~~~~~~~~
 
-    Short cut for ``new net.Resolve()`` and ``resolver.reverse()``.
+    Short cut for ``new net.Resolver()`` and ``resolver.reverse()``.
 
     Usage:
 
