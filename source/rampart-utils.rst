@@ -327,10 +327,75 @@ Example:
    😊
    */
 
+stringToNumber
+''''''''''''''
+
+Convert various plain English :green:`Strings` to a :green:`Number` or 
+:green:`Number` range.
+
+Usage:
+
+.. code-block:: javascript
+
+   var buf = rampart.utils.stringToNumber(nstr [, retObj ]);
+
+Where ``nstr`` is a :green:`String` and optional ``retObj`` is a :green:`Boolean`.
+
+Examples:
+
+.. code-block:: javascript
+
+   rampart.globalize(rampart.utils);
+
+   var res = strintToNumber("five");
+   // res = 5
+
+   res = stringToNumber("three and a half");
+   // res = 3.5
+
+   res = stringToNumber("four score and seven");
+   // res = 87
+
+   res = stringToNumber("five dozen");
+   // res = 60
+
+   res = stringToNumber("a gazillion");
+   // res = NaN
+
+   res = stringToNumber("five dozen", true);
+   /* res = {
+         "value": 60,
+         "op": "=",
+         "rem": ""
+      }  */
+
+   res = stringToNumber("five dozen cookies",true);
+   /* res = {
+         "value": 60,
+         "op": "=",
+         "rem": "cookies"
+      }  */
+
+   res = stringToNumber("less than twenty",true);
+   /* res = {
+         "value": 20,
+         "op": "<",
+         "rem": ""
+      }  */
+
+   res = stringToNumber("less than twenty greater than one half is our range",true);
+   /* res = {
+         "value": 20,
+         "min": 0.5,
+         "max": 20,
+         "rem": "is our range"
+      }  */
+
+
 stringToBuffer
 ''''''''''''''
 
-Performs a byte-for-byte copy of :green:`String` into a :green:`Buffer`.
+Performs a byte-for-byte copy of a :green:`String` into a :green:`Buffer`.
 Also convert one :green:`Buffer` to a :green:`Buffer` of another type.
 See ``duk_to_buffer()`` in the
 `Duktape documentation <https://wiki.duktape.org/howtobuffers2x#string-to-buffer-conversion>`_
@@ -438,9 +503,9 @@ Caveats:
 
 *  If ``json`` was used, numeric values will be preserved as :green:`Numbers`.
 
-*  If the querystring contains object like notation (e.g.
-   ``?myvar[mykey]=myval&myvar[mykey2]=myval2``), it will be converted into
-   an :green:`Object`;
+*  If the query string contains object like notation (e.g.
+   ``"myvar[mykey]=myval&myvar[mykey2]=myval2"``), it will be converted into
+   an :green:`Object` (``{myvar: {mykey:"myval", mykey2:"myval2"} }``).
 
 Example:
 
@@ -457,11 +522,11 @@ Example:
    for (var i=0; i<4; i++) {
        var qs = rampart.utils.objectToQuery(obj, type[i] );
        var qsobj = rampart.utils.queryToObject(qs);
-       rampart.utils.printf("qToO(\n     '%s'\n    ) = \n%s\n", qs, JSON.stringify(qsobj,null,3));
+       rampart.utils.printf("queryToObject(\n     '%s'\n    ) = \n%3J\n", qs, qsobj);
    }
 
    /* expected output:
-   qToO(
+   queryToObject(
         'key1=null&key2=1&key2=2&key2=3&key3=val1&key3=val2'
        ) =
    {
@@ -476,7 +541,7 @@ Example:
          "val2"
       ]
    }
-   qToO(
+   queryToObject(
 
    'key1=null&key2%5B%5D=1&key2%5B%5D=2&key2%5B%5D=3&key3%5B%5D=val1&key3%5B%5D=val2'
        ) =
@@ -492,7 +557,7 @@ Example:
          "val2"
       ]
    }
-   qToO(
+   queryToObject(
         'key1=null&key2=1,2,3&key3=val1,val2'
        ) =
    {
@@ -500,7 +565,7 @@ Example:
       "key2": "1,2,3",
       "key3": "val1,val2"
    }
-   qToO(
+   queryToObject(
         'key1=null&key2=%5b1%2c2%2c3%5d&key3=%5b%22val1%22%2c%22val2%22%5d'
        ) =
    {

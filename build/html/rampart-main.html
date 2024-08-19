@@ -123,6 +123,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#argv">argv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installpath">installPath</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installpathbin">installPathBin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modulespath">modulesPath</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scriptpath">scriptPath</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scriptname">scriptName</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#script">script</a></li>
@@ -181,6 +182,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -272,13 +274,13 @@ for the excellent code.</p>
 <div class="section" id="what-does-it-do">
 <h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
 <p>Rampart uses a low memory footprint JavaScript interpreter to bring together
-several high performance tools and useful utilities for use in Web
-and information management applications.  At its core is the Duktape
-JavaScript library and added to it is a SQL database, full text search
-engine, a fast and innovative NOSQL Mmap database, a fast multi-threaded
-webserver, client functionality via the Curl and crypto functions via
-OpenSSL.  It attempts to provide performance, maximum flexibility and
-ease of use through the marriage of C code and JavaScript scripting.</p>
+several high performance tools and useful utilities for use in Web and
+information management applications.  At its core is the Duktape JavaScript
+library and added to it is a SQL database, full text search engine, a memory
+map NOSQL database, a fast multi-threaded webserver, client functionality
+via the Curl, crypto functions via OpenSSL and more.  It attempts to provide
+performance, maximum flexibility and ease of use through the marriage of C
+code and JavaScript scripting.</p>
 </div>
 </div>
 <div class="section" id="features">
@@ -332,14 +334,14 @@ JavaScript transpiler.</li>
 <div class="section" id="rampart-philosophy">
 <h2>Rampart philosophy<a class="headerlink" href="#rampart-philosophy" title="Permalink to this headline">¶</a></h2>
 <p>Rampart uses the Duktape JavaScript Engine and API as a gateway for high
-performance functions written in C.
-JavaScript execution with Duktape is more memory efficient, but far slower than with, e.g.,
-node.js.  However, the functionality and speed of the available C functions provide
-comparable efficacy, excellent performance and are a viable alternative to
+performance functions written in C.  JavaScript execution with Duktape is
+more memory efficient, but interpertation is slower than with, e.g., node.js.
+However, the functionality and speed of the available C functions provide
+comparable efficacy, excellent performance and is a viable alternative to
 <a class="reference external" href="https://en.wikipedia.org/wiki/LAMP_(software_bundle)">LAMP</a>,
-<a class="reference external" href="https://en.wikipedia.org/wiki/MEAN_(solution_stack)">MEAN</a> or other stacks, all
-in a single product, while consuming considerably less resources than the
-aforementioned.</p>
+<a class="reference external" href="https://en.wikipedia.org/wiki/MEAN_(solution_stack)">MEAN</a> or other stacks,
+all in a single product, while consuming considerably less resources than
+the aforementioned.</p>
 </div>
 <div class="section" id="rampart-global-variable-and-functions">
 <h2>Rampart Global Variable and Functions<a class="headerlink" href="#rampart-global-variable-and-functions" title="Permalink to this headline">¶</a></h2>
@@ -397,16 +399,19 @@ the named properties will be copied.</td>
 <div class="section" id="rampart-utils">
 <h3>rampart.utils<a class="headerlink" href="#rampart-utils" title="Permalink to this headline">¶</a></h3>
 <p>A collection of utility functions.
-See <a class="reference internal" href="rampart-utils.html#rampart-utils"><span class="std std-ref">this page</span></a>
+See <a class="reference internal" href="rampart-utils.html#rampart-utils"><span class="std std-ref">Rampart Utility Functions</span></a>
 for full description of functions.</p>
 </div>
 <div class="section" id="rampart-event">
 <h3>rampart.event<a class="headerlink" href="#rampart-event" title="Permalink to this headline">¶</a></h3>
 <p>Rampart can execute functions from within its event loop using its own
-event-on-trigger syntax.</p>
+event-on-trigger syntax.  When used across
+<a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">threads</span></a>, a
+registered function is executed in the thread in which it was registered and
+may be triggered from any thread.</p>
 <div class="section" id="rampart-event-on">
 <h4>rampart.event.on()<a class="headerlink" href="#rampart-event-on" title="Permalink to this headline">¶</a></h4>
-<p>Insert a named function to be run upon triggering a named event.  If the named
+<p>Register a named function to be run upon triggering a named event.  If the named
 event does not exist, it will be created.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">event</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">eventName</span><span class="p">,</span> <span class="nx">funcName</span><span class="p">,</span> <span class="nx">callback</span><span class="p">,</span> <span class="nx">callbackUserVar</span><span class="p">);</span>
@@ -416,7 +421,8 @@ event does not exist, it will be created.</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">eventName</span></code> is an arbitrary <span class="green">String</span> used to identify, trigger
-and remove the event using the <a class="reference internal" href="#rampart-event-remove">rampart.event.remove()</a> function below.</li>
+and remove the event using the <a class="reference internal" href="#rampart-event-trigger">rampart.event.trigger()</a> and
+<a class="reference internal" href="#rampart-event-remove">rampart.event.remove()</a> function below.</li>
 <li><code class="docutils literal notranslate"><span class="pre">funcName</span></code> is an arbitrary <span class="green">String</span> used to identify and remove
 the callback function using the <a class="reference internal" href="#rampart-event-off">rampart.event.off()</a> function below.</li>
 <li><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> to be executed when the event is triggered.
@@ -817,6 +823,12 @@ and other files used by rampart. See <a class="reference internal" href="#module
 <p>The value of <code class="docutils literal notranslate"><span class="pre">process.installPathBin</span></code> is a <span class="green">String</span> containing the
 canonical path of the directory containing the rampart executable.</p>
 </div>
+<div class="section" id="modulespath">
+<h3>modulesPath<a class="headerlink" href="#modulespath" title="Permalink to this headline">¶</a></h3>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> is a <span class="green">String</span> containing the
+canonical path (directory) in which the standard installed modules can
+be found.</p>
+</div>
 <div class="section" id="scriptpath">
 <h3>scriptPath<a class="headerlink" href="#scriptpath" title="Permalink to this headline">¶</a></h3>
 <p>The value of <code class="docutils literal notranslate"><span class="pre">process.scriptPath</span></code> is a <span class="green">String</span> containing the
@@ -991,11 +1003,13 @@ for a detailed listing of available Duktape C API functions.</p>
 If absolute and not found, the search stops there.</li>
 <li>If included from within a module, in the module’s path.</li>
 <li>In <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
-<li>In the directory or <code class="docutils literal notranslate"><span class="pre">modules/</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
+<li>In the directory or <code class="docutils literal notranslate"><span class="pre">modules/</span></code> or <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
 <li>In the <code class="docutils literal notranslate"><span class="pre">~/.rampart/modules</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> directory of current user’s home directory
-as provided by the <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> environment variable.</li>
+as provided by the <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> environment variable.  If <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> is not
+set, <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> is used.</li>
 <li>If set, in the directory as provided by the <code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> environment variable.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">modules</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
+<li>In <a class="reference internal" href="#modulespath"><span class="std std-ref">process.modulesPath</span></a>, i.e. the <code class="docutils literal notranslate"><span class="pre">modules</span></code> or
+<code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
 </ol>
 </div>
 </div>
@@ -1020,7 +1034,7 @@ experimentally (unsupported) and is limited in scope.</p>
 </div>
 <div class="section" id="template-literals">
 <h3>Template Literals<a class="headerlink" href="#template-literals" title="Permalink to this headline">¶</a></h3>
-<p>These may be uses much as expected:</p>
+<p>These may be used in the same manner as in standard ES6 JavaScript:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">type</span><span class="p">,</span> <span class="nx">color</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class="sb">`I&#39;m a </span><span class="si">${</span><span class="nx">color</span><span class="o">?</span> <span class="nx">color</span><span class="o">:</span> <span class="sb">`black`</span><span class="si">}</span><span class="sb"> </span><span class="si">${</span> <span class="nx">type</span> <span class="o">?</span> <span class="sb">`</span><span class="si">${</span><span class="nx">type</span><span class="si">}</span><span class="sb"> `</span> <span class="o">:</span> <span class="sb">`tea`</span><span class="si">}</span><span class="sb">pot`</span><span class="p">;</span>
@@ -1035,7 +1049,7 @@ experimentally (unsupported) and is limited in scope.</p>
 </div>
 <div class="section" id="tagged-functions">
 <h3>Tagged Functions<a class="headerlink" href="#tagged-functions" title="Permalink to this headline">¶</a></h3>
-<p>These may be used much as expected:</p>
+<p>These may be used in the same manner as in standard ES6 JavaScript:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">aboutMe</span><span class="p">(</span><span class="nx">strings</span><span class="p">)</span> <span class="p">{</span>
    <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">values</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">strings</span><span class="p">);</span>

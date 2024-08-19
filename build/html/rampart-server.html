@@ -93,6 +93,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#acknowledgment">Acknowledgment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-does-it-do">What does it do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-i-quickly-start-a-webserver">How can I quickly start a webserver?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-does-it-work">How does it work?</a></li>
 </ul>
 </li>
@@ -225,6 +226,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -318,6 +320,22 @@ are both provided under a
 which is started from, configured in and maps urls to Rampart JavaScript functions.
 It also can be configured to serve files from the filesystem.</p>
 </div>
+<div class="section" id="how-can-i-quickly-start-a-webserver">
+<h3>How can I quickly start a webserver?<a class="headerlink" href="#how-can-i-quickly-start-a-webserver" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code> module is very flexible and can accommodate many different
+configurations.  However to use the server with the recommended layout, refer to the
+<a class="reference internal" href="rampart-extras.html#usage-from-a-configuration-file"><span class="std std-ref">rampart-webserver.js module</span></a> page.
+After getting the server started, the following sections will fill in the details:</p>
+<ul class="simple">
+<li>The <a class="reference internal" href="#standard-server-layout">Standard Server Layout</a> to understand where files go.</li>
+<li><a class="reference internal" href="#the-request-object">The Request Object</a> and <a class="reference internal" href="#the-return-object">The Return Object</a>
+to start writing modules which may be placed in the <code class="docutils literal notranslate"><span class="pre">apps/</span></code> directory.</li>
+<li>The <a class="reference internal" href="#websockets">Websockets</a> Section to write websocket applications, which may be placed
+in the <code class="docutils literal notranslate"><span class="pre">wsapps</span></code> directory.</li>
+</ul>
+<p>If customization beyond what is available using the Standard Server Layout is required, the
+details in the documentation below can be used as a reference.</p>
+</div>
 <div class="section" id="how-does-it-work">
 <h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
 <p>Once the module is loaded and configuration parameters are passed to the
@@ -331,17 +349,10 @@ restarted for the changes to take effect.</p>
 <p>The server can operate from a pool of threads, taking advantage of systems
 with multiple CPUs.  As JavaScript is inherently single-threaded, when the
 server is started in multi-threaded mode, a new JavaScript stack, heap and
-context is created for each thread.  Global variables, global functions
-and mapped functions passed to <a class="reference internal" href="#start">start()</a> are automatically copied to each
-context and each runs independently.  Modules are likewise loaded from
-within each thread and checked for changes upon each request.</p>
-<p>It is worth noting that rampart-sql and rampart-python functions are not
-thread safe.  When SQL or Python functions are executed from within a
-function or module, rampart may create a fork, one per thread, in order to
-handle such functions.</p>
-<p>A timeout for script execution may also be set.  Should the script timeout,
-the serving thread will cancel the request and re-initialize the JavaScript
-context in order to serve new requests.</p>
+context is created for each thread.  Global variables, global functions and
+mapped functions passed to <a class="reference internal" href="#start">start()</a> are automatically copied to each
+context and each runs independently.  App modules/scripts are likewise
+loaded from within each thread and checked for changes upon each request.</p>
 </div>
 </div>
 <div class="section" id="loading-and-using-the-module">
@@ -2047,19 +2058,18 @@ layout for the server tree:</p>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/</span></code>                    - the main web server directory</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/web_server_conf.js</span></code>  - the web server start script, with
 options at the top of the file.</li>
-<li><code class="docutils literal notranslate"><span class="pre">web_server/start_server.sh</span></code>     - a bash script to start the web server.</li>
-<li><code class="docutils literal notranslate"><span class="pre">web_server/stop_server.sh</span></code>      - a bash script to stop the web server.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/apps</span></code>                - the standard location for server modules.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/wsapps</span></code>              - the standard location for modules
 that serve websocket connections.</li>
-<li><code class="docutils literal notranslate"><span class="pre">web_server/data</span></code>                - a location for databases.</li>
+<li><code class="docutils literal notranslate"><span class="pre">web_server/data</span></code>                - a location for app related databases.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/html</span></code>                - the standard location for static files.</li>
 <li><code class="docutils literal notranslate"><span class="pre">web_server/logs</span></code>                - the standard location for access and
 error log files.</li>
 </ul>
-<p>See the <code class="docutils literal notranslate"><span class="pre">serverConf</span></code> variable near the top of <code class="docutils literal notranslate"><span class="pre">web_server/web_server_conf.js</span></code>
-for possible settings. The global <code class="docutils literal notranslate"><span class="pre">serverConf</span></code> will be available to
-all server module scripts.</p>
+<p>See the <code class="docutils literal notranslate"><span class="pre">conf</span></code> configuration <span class="green">Object</span> near the top of
+<code class="docutils literal notranslate"><span class="pre">web_server/web_server_conf.js</span></code> for possible settings. The global
+<code class="docutils literal notranslate"><span class="pre">serverConf</span></code> will be created from this and be available to all server
+module scripts.</p>
 <p>This layout translates as:</p>
 <ul class="simple">
 <li>Access to, e.g. <code class="docutils literal notranslate"><span class="pre">http://example.com/index.html</span></code> will return the
@@ -2077,7 +2087,7 @@ except that a <span class="green">Function</span> or mapped <span class="green">
 to handle <a class="reference internal" href="#websockets">Websockets</a> connections.</li>
 </ul>
 <p>Although any layout is possible, it is highly recommended that this layout
-is adapted and used for ease of use and organization.</p>
+is utilized for ease of use and organization.</p>
 </div>
 <div class="section" id="c-api">
 <h2>C-API<a class="headerlink" href="#c-api" title="Permalink to this headline">¶</a></h2>
@@ -2144,7 +2154,7 @@ server modules are stored in a custom setup).</p>
 <h3>Typedefs<a class="headerlink" href="#typedefs" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="rpserv">
 <h4>rpserv<a class="headerlink" href="#rpserv" title="Permalink to this headline">¶</a></h4>
-<p>Handle for all functions and macros below.</p>
+<p>The Server Handle for all functions and macros below.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
     <span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">;</span>
     <span class="kt">void</span> <span class="o">*</span><span class="n">dhs</span><span class="p">;</span>

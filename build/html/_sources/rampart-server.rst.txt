@@ -31,6 +31,24 @@ The rampart-server module provides a multithreaded and flexible http/https webse
 which is started from, configured in and maps urls to Rampart JavaScript functions.
 It also can be configured to serve files from the filesystem.
 
+How can I quickly start a webserver?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``rampart-server`` module is very flexible and can accommodate many different
+configurations.  However to use the server with the recommended layout, refer to the
+:ref:`rampart-webserver.js module <rampart-extras:Usage from a configuration file>` page.
+After getting the server started, the following sections will fill in the details:
+
+* The `Standard Server Layout`_ to understand where files go.
+
+* `The Request Object`_ and `The Return Object`_
+  to start writing modules which may be placed in the ``apps/`` directory.
+
+* The `Websockets`_ Section to write websocket applications, which may be placed
+  in the ``wsapps`` directory.
+
+If customization beyond what is available using the Standard Server Layout is required, the 
+details in the documentation below can be used as a reference.
 
 How does it work?
 ~~~~~~~~~~~~~~~~~
@@ -47,19 +65,10 @@ restarted for the changes to take effect.
 The server can operate from a pool of threads, taking advantage of systems
 with multiple CPUs.  As JavaScript is inherently single-threaded, when the
 server is started in multi-threaded mode, a new JavaScript stack, heap and
-context is created for each thread.  Global variables, global functions
-and mapped functions passed to `start()`_ are automatically copied to each
-context and each runs independently.  Modules are likewise loaded from
-within each thread and checked for changes upon each request.
-
-It is worth noting that rampart-sql and rampart-python functions are not
-thread safe.  When SQL or Python functions are executed from within a
-function or module, rampart may create a fork, one per thread, in order to
-handle such functions.
-
-A timeout for script execution may also be set.  Should the script timeout,
-the serving thread will cancel the request and re-initialize the JavaScript
-context in order to serve new requests.
+context is created for each thread.  Global variables, global functions and
+mapped functions passed to `start()`_ are automatically copied to each
+context and each runs independently.  App modules/scripts are likewise
+loaded from within each thread and checked for changes upon each request.
 
 Loading and Using the Module
 ----------------------------
@@ -1886,25 +1895,22 @@ layout for the server tree:
 * ``web_server/web_server_conf.js``  - the web server start script, with
   options at the top of the file.
 
-* ``web_server/start_server.sh``     - a bash script to start the web server.
-
-* ``web_server/stop_server.sh``      - a bash script to stop the web server.
-
 * ``web_server/apps``                - the standard location for server modules.
 
 * ``web_server/wsapps``              - the standard location for modules
   that serve websocket connections.
 
-* ``web_server/data``                - a location for databases.
+* ``web_server/data``                - a location for app related databases.
 
 * ``web_server/html``                - the standard location for static files.
 
 * ``web_server/logs``                - the standard location for access and
   error log files.
 
-See the ``serverConf`` variable near the top of ``web_server/web_server_conf.js``
-for possible settings. The global ``serverConf`` will be available to
-all server module scripts.
+See the ``conf`` configuration :green:`Object` near the top of 
+``web_server/web_server_conf.js`` for possible settings. The global 
+``serverConf`` will be created from this and be available to all server 
+module scripts.
 
 This layout translates as:
 
@@ -1924,7 +1930,7 @@ This layout translates as:
   to handle `Websockets`_ connections.
 
 Although any layout is possible, it is highly recommended that this layout
-is adapted and used for ease of use and organization.
+is utilized for ease of use and organization.
 
 C-API
 -----
@@ -2002,7 +2008,7 @@ Typedefs
 rpserv
 """"""
 
-Handle for all functions and macros below.
+The Server Handle for all functions and macros below.
 
 .. code-block:: c
 

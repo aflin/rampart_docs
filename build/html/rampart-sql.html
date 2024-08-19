@@ -106,6 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#exec-full-example">Exec Full Example</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#query">query()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#one">one()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#set">set()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reset">reset()</a></li>
@@ -127,7 +128,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#variations-of-fulltext-indexes">Variations of Fulltext Indexes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#updating-a-fulltext-index">Updating A Fulltext Index</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#word-expressions">Word Expressions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#automatic-maintenance">Automatic Maintenance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#text-index-maintenance">Text Index Maintenance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scheduleupdate">scheduleUpdate()</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#compound-indexes">Compound Indexes</a></li>
@@ -181,6 +183,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -585,7 +588,7 @@ can be changed by setting the special variable <code class="docutils literal not
 <div><p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">);</span>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">selectMaxRows</span><span class="o">=</span><span class="mi">20</span><span class="p">;</span>
 
@@ -611,7 +614,7 @@ used.</p>
 <blockquote class="last">
 <div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">sqlopts</span> <span class="o">=</span> <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">returnType</span><span class="o">:</span> <span class="s2">&quot;array&quot;</span><span class="p">};</span>
 
@@ -741,7 +744,7 @@ values as arguments in the following order: <code class="docutils literal notran
 not a text search, the values of the properties of <code class="docutils literal notranslate"><span class="pre">countInfo</span></code> will be
 negative.</p>
 </div></blockquote>
-<dl class="docutils">
+<dl class="docutils" id="errormsgs">
 <dt>Error Messages:</dt>
 <dd><p class="first">Errors may or may not throw a JavaScript exception depending on the
 error.  If the syntax is correct but the statement cannot be executed, no
@@ -754,7 +757,7 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
 <span class="cm">/* create database if it does not exist */</span>
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span>
 
 <span class="cm">/* create a table */</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table testtb (text varchar(16), number double)&quot;</span><span class="p">);</span>
@@ -784,6 +787,21 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 <span class="cm">     000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare&quot;</span>
 <span class="cm">   sql.errMsg is similar.</span>
 <span class="cm">*/</span>
+
+<span class="k">try</span> <span class="p">{</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;select Nonexistent from testtb&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="nx">i</span><span class="p">){</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">row</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/* output =</span>
+<span class="cm">   Error: sql prep error: 115 Field `Nonexistent&#39; non-existent</span>
+<span class="cm">   115 Field non-existent or type error in `Nonexistent&#39;</span>
+<span class="cm">   000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare</span>
+<span class="cm">   sql.errMsg is similar.</span>
+<span class="cm">*/</span>
 </pre></div>
 </div>
 <div class="section" id="exec-full-example">
@@ -792,7 +810,7 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
 <span class="cm">/* create database if it does not exist */</span>
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span>
 
 <span class="cm">/* check if table exists */</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
@@ -1034,6 +1052,68 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 </div>
 </div>
 </div>
+<div class="section" id="query">
+<h2>query()<a class="headerlink" href="#query" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">sql.query()</span></code> performs in the same manner as <a class="reference internal" href="#exec">exec()</a>, except it will not throw JavaScript errors
+when there are sql errors that would otherwise do so in <a class="reference internal" href="#exec">exec()</a> (see <a class="reference external" href="rampart-sql.html#errormsgs">Error Messages</a>
+above).
+Instead, the errors are only reported in <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code>.  Note that when opening a database,
+or using other sql functions, Javascript errors still may be thrown and other non-error messages
+might appear in <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code>.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="cm">/* create database if it does not exist, creation message written */</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">,</span><span class="kc">true</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* create a table, no error */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;create table testtb (text varchar(16), number double)&quot;</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;err =&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* create a unique index on number, no error */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;create unique index testtb_number_ux on testtb(number)&quot;</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;err =&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* insert a row, no error */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;insert into testtb values (&#39;A B C&#39;, 123)&quot;</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;err =&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* attempt to insert a duplicate, sql.errMsg will be set */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;insert into testtb values (&#39;D E F&#39;, 123)&quot;</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;err =&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* attempt to insert 3 values into two columns, sql.errMsg will be set */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;insert into testtb values (&#39;D E F&#39;, 456, 789)&quot;</span><span class="p">);</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;err =&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+<span class="cm">/* attempt to select a non-existent column, returns -1 and sql.errMsg will be set */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s2">&quot;select Nonexistent from testtb&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="nx">i</span><span class="p">){</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">row</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;res =&quot;</span><span class="p">,</span><span class="nx">res</span><span class="p">)</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;err =&quot;</span><span class="p">,</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+
+
+<span class="cm">/* output =</span>
+<span class="cm">   100 User _SYSTEM has been added to database ./mytestdb without a password</span>
+<span class="cm">   100 User PUBLIC has been added to database ./mytestdb without a password</span>
+
+<span class="cm">   err = 178 Trying to insert duplicate value (123) in index ./mytestdb/testtb_number_ux.btr</span>
+
+<span class="cm">   err = 100 More Values Than Fields in the function: Insert</span>
+<span class="cm">   000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare</span>
+
+<span class="cm">   res = -1</span>
+<span class="cm">   err = 115 Field `Nonexistent&#39; non-existent</span>
+<span class="cm">   115 Field non-existent or type error in `Nonexistent&#39;</span>
+<span class="cm">   000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare</span>
+
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="one">
 <h2>one()<a class="headerlink" href="#one" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">one</span></code> <span class="green">Function</span> is a shortcut for executing sql
@@ -1110,7 +1190,7 @@ returned with corresponding keys <code class="docutils literal notranslate"><spa
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">);</span>
 
 <span class="p">...</span>
 
@@ -1282,7 +1362,7 @@ of rows in the csv file.</p>
 <span class="green">Buffer</span> containing the csv data is passed as a parameter.</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/mytestdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/mytestdb&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">csv</span> <span class="o">=</span>
 <span class="s2">&quot;Dept,       item1 Quantity, item1 Description, item1 Value, item2 Quantity, item2 Description, item2 Value\n&quot;</span> <span class="o">+</span>
@@ -1349,7 +1429,7 @@ in the same manner as when the “connection” was first opened.</p>
 <h2>addTable()<a class="headerlink" href="#addtable" title="Permalink to this headline">¶</a></h2>
 <p>Add a table to the current database.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s1">&#39;/path/to/db&#39;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s1">&#39;/path/to/db&#39;</span><span class="p">);</span>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">addTable</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
 </pre></div>
@@ -1434,7 +1514,7 @@ cannot be inserted into the table.</p>
 <p>The following example illustrates the properties of a unique index:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./testdb&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;./testdb&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table people (Name varchar(16), Age int);&quot;</span><span class="p">);</span>
 
@@ -1594,8 +1674,8 @@ cannot be added upon optimizing the Fulltext index with a <code class="docutils 
 statement.</dd>
 </dl>
 </div>
-<div class="section" id="automatic-maintenance">
-<h3>Automatic Maintenance<a class="headerlink" href="#automatic-maintenance" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="text-index-maintenance">
+<h3>Text Index Maintenance<a class="headerlink" href="#text-index-maintenance" title="Permalink to this headline">¶</a></h3>
 <p>If a Fulltext index is large, the time and CPU resources it takes to update
 the index may be more than is desirable during active use of the database.
 If many rows are being added and deleted in an application, choosing an
@@ -1607,13 +1687,79 @@ new rows rather than update the index.  A script (named, e.g.,
 than 1000 rows have been changed.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/to/employee_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/to/employee_db&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;alter index employees_NameBio_text optimize having COUNT(NewRows) &gt; 1000;&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Then adding a crontab entry like the following would execute the script at 2 am every night:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">00</span> <span class="m">02</span> * * * /usr/local/bin/rampart /path/to/update-index.js
+</pre></div>
+</div>
+</div>
+<div class="section" id="scheduleupdate">
+<h3>scheduleUpdate()<a class="headerlink" href="#scheduleupdate" title="Permalink to this headline">¶</a></h3>
+<p>Auto Maintenance (currently expirimental) of a text index is accomplished by scheduling a time
+for an index update using <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate()</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/to/db&quot;</span><span class="p">);</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">scheduleUpdate</span><span class="p">(</span><span class="nx">indexName</span><span class="p">,</span> <span class="nx">startTime</span><span class="p">,</span> <span class="nx">Interval</span> <span class="p">[,</span><span class="nx">minRows</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">indexName</span></code> is a <span class="green">String</span>, the name of the index to be updated.</li>
+<li><code class="docutils literal notranslate"><span class="pre">startTime</span></code> is a <span class="green">String</span> passed to <a class="reference internal" href="rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>,
+The start time of the first update/check.  Note that times are system local time unless a timezone
+offset or abbreviation is given.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Interval</span></code> is a <span class="green">Number</span> or <span class="green">String</span>, the time between update checks.
+If a <span class="green">Number</span>, the number of seconds between checks (i.e. <code class="docutils literal notranslate"><span class="pre">86400</span></code> for one day).
+If a <span class="green">String</span>, it will parse plain English values in minutes, hours, days or weeks.
+(i.e. “every third day” or “120 minutes”);</li>
+<li><code class="docutils literal notranslate"><span class="pre">minRows</span></code>, is an optional <span class="green">Number</span>, the threshold number of changed, deleted or added rows
+needed to trigger an index rebuild when checked.</li>
+</ul>
+</div></blockquote>
+<p>Return Value:</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">Undefined</span></code>.</div></blockquote>
+<p>Note:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is run again with the same index name, the old value is replaced.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">startTime</span></code> is set to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, the record for the index is deleted.</li>
+<li>The index schedule is saved in a new table <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> in th database in question.</li>
+<li>The first time an index is scheduled for update on a database, a index monitor process is launched.</li>
+<li>The monitor for a database is also checked and relaunched if necessary everytime <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection(database)</span></code>
+is called.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is never run for a text index, the index will not be touched by
+the  monitor process (i.e. in cases where the table/index is never or rarely updated, or
+another method such as a cron job is used instead).</li>
+<li>Status and progress can be viewed in the relevant row in <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> table. Columns <code class="docutils literal notranslate"><span class="pre">PREVIOUS</span></code>
+and <code class="docutils literal notranslate"><span class="pre">LAST</span></code> show the times of the next and previous start times (seconds from UNIX EPOCH).
+<code class="docutils literal notranslate"><span class="pre">PROGRESS</span></code> is a <code class="docutils literal notranslate"><span class="pre">double</span></code> with value of <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>.  <code class="docutils literal notranslate"><span class="pre">STATUS</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code> for not currently
+updating and <code class="docutils literal notranslate"><span class="pre">1</span></code> to <code class="docutils literal notranslate"><span class="pre">3</span></code> for the three stages needed to update a text index.  Indexing is complete
+when <code class="docutils literal notranslate"><span class="pre">STATUS</span></code> is <code class="docutils literal notranslate"><span class="pre">3</span></code> and <code class="docutils literal notranslate"><span class="pre">PROGRESS</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, at which time <code class="docutils literal notranslate"><span class="pre">STATUS</span></code> will be reset to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+</div></blockquote>
+<p>Example viewing progress:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>tsql -d wdb <span class="s2">&quot;select convert(PREVIOUS, &#39;date&#39;) LAST, convert(NEXT, &#39;date&#39;) NEXT, STATUS, PROGRESS from SYSUPDATE where NAME=&#39;wtext_Text_ftx&#39;&quot;</span>
+
+    LAST         NEXT        STATUS      PROGRESS
+------------+------------+------------+------------+
+<span class="m">2024</span>-08-10 <span class="m">00</span>:00:02 <span class="m">2024</span>-08-11 <span class="m">00</span>:00:00            <span class="m">2</span>     <span class="m">0</span>.759494
+
+<span class="c1">#when done:</span>
+
+tsql -d wdb <span class="s2">&quot;select convert(PREVIOUS, &#39;date&#39;) LAST, convert(NEXT, &#39;date&#39;) NEXT, STATUS, PROGRESS from SYSUPDATE where NAME=&#39;wtext_Text_ftx&#39;&quot;</span>
+
+    LAST         NEXT        STATUS      PROGRESS
+------------+------------+------------+------------+
+<span class="m">2024</span>-08-11 <span class="m">00</span>:00:32 <span class="m">2024</span>-08-12 <span class="m">00</span>:00:00            <span class="m">0</span>     <span class="m">1</span>
 </pre></div>
 </div>
 </div>

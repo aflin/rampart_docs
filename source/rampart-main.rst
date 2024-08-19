@@ -27,14 +27,15 @@ for the excellent code.
 
 What does it do?
 """"""""""""""""
+
 Rampart uses a low memory footprint JavaScript interpreter to bring together
-several high performance tools and useful utilities for use in Web
-and information management applications.  At its core is the Duktape
-JavaScript library and added to it is a SQL database, full text search
-engine, a fast and innovative NOSQL Mmap database, a fast multi-threaded 
-webserver, client functionality via the Curl and crypto functions via
-OpenSSL.  It attempts to provide performance, maximum flexibility and 
-ease of use through the marriage of C code and JavaScript scripting.
+several high performance tools and useful utilities for use in Web and
+information management applications.  At its core is the Duktape JavaScript
+library and added to it is a SQL database, full text search engine, a memory
+map NOSQL database, a fast multi-threaded webserver, client functionality
+via the Curl, crypto functions via OpenSSL and more.  It attempts to provide
+performance, maximum flexibility and ease of use through the marriage of C
+code and JavaScript scripting.
 
 
 
@@ -106,14 +107,14 @@ Rampart philosophy
 ~~~~~~~~~~~~~~~~~~ 
 
 Rampart uses the Duktape JavaScript Engine and API as a gateway for high
-performance functions written in C.
-JavaScript execution with Duktape is more memory efficient, but far slower than with, e.g., 
-node.js.  However, the functionality and speed of the available C functions provide 
-comparable efficacy, excellent performance and are a viable alternative to 
+performance functions written in C.  JavaScript execution with Duktape is
+more memory efficient, but interpertation is slower than with, e.g., node.js. 
+However, the functionality and speed of the available C functions provide
+comparable efficacy, excellent performance and is a viable alternative to
 `LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_, 
-`MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_ or other stacks, all
-in a single product, while consuming considerably less resources than the
-aforementioned.
+`MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_ or other stacks, 
+all in a single product, while consuming considerably less resources than
+the aforementioned.
 
 Rampart Global Variable and Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -164,19 +165,22 @@ rampart.utils
 """""""""""""
 
 A collection of utility functions.  
-See :ref:`this page<rampart-utils:rampart.utils>` 
+See :ref:`Rampart Utility Functions <rampart-utils:rampart.utils>` 
 for full description of functions.
 
 rampart.event
 """""""""""""
 
 Rampart can execute functions from within its event loop using its own
-event-on-trigger syntax.
+event-on-trigger syntax.  When used across 
+:ref:`threads <rampart-thread:rampart thread functions>`, a
+registered function is executed in the thread in which it was registered and
+may be triggered from any thread.
 
 rampart.event.on()
 ''''''''''''''''''
 
-Insert a named function to be run upon triggering a named event.  If the named
+Register a named function to be run upon triggering a named event.  If the named
 event does not exist, it will be created.
 
 Usage:
@@ -188,7 +192,8 @@ Usage:
 Where:
 
    * ``eventName`` is an arbitrary :green:`String` used to identify, trigger
-     and remove the event using the `rampart.event.remove()`_ function below.
+     and remove the event using the `rampart.event.trigger()`_ and 
+     `rampart.event.remove()`_ function below.
 
    * ``funcName`` is an arbitrary :green:`String` used to identify and remove
      the callback function using the `rampart.event.off()`_ function below.
@@ -625,6 +630,13 @@ installPathBin
 The value of ``process.installPathBin`` is a :green:`String` containing the
 canonical path of the directory containing the rampart executable.
 
+modulesPath
+"""""""""""
+
+The value of ``process.modulesPath`` is a :green:`String` containing the
+canonical path (directory) in which the standard installed modules can 
+be found.
+
 scriptPath
 """"""""""
 
@@ -840,14 +852,16 @@ Modules are searched for in the following order:
 
 #. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
 
-#. In the directory or ``modules/`` or ``/lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+#. In the directory or ``modules/`` or ``lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
 
 #. In the ``~/.rampart/modules`` or ``/lib/rampart_modules/`` directory of current user's home directory 
-   as provided by the ``$HOME`` environment variable.
+   as provided by the ``$HOME`` environment variable.  If ``$HOME`` is not
+   set, ``/tmp`` is used.
 
 #. If set, in the directory as provided by the ``$RAMPART_PATH`` environment variable.
 
-#. In the ``modules`` or ``/lib/rampart_modules/`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
+#. In :ref:`process.modulesPath <rampart-main:modulesPath>`\ , i.e. the ``modules`` or 
+   ``/lib/rampart_modules/`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
 
 
 Extra JavaScript Functionality
@@ -876,7 +890,7 @@ Return an :green:`Array` containing the values of an object.
 Template Literals
 """""""""""""""""
 
-These may be uses much as expected:
+These may be used in the same manner as in standard ES6 JavaScript:
 
 .. code-block:: javascript
 
@@ -894,7 +908,7 @@ These may be uses much as expected:
 Tagged Functions
 """"""""""""""""
 
-These may be used much as expected:
+These may be used in the same manner as in standard ES6 JavaScript:
 
 .. code-block:: javascript
 

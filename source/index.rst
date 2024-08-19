@@ -20,6 +20,7 @@ Welcome to Rampart's documentation.
    The rampart-python module <rampart-python>
    The rampart-robots module <rampart-robots>
    The rampart-cmark module <rampart-cmark>
+   The rampart-almanac module <rampart-almanac>
    The rampart-url module <rampart-url>
    Extras <rampart-extras>
    Tutorials <tutorialtoc>

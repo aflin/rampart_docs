@@ -327,7 +327,7 @@ Caveats for Options, maxRows and skipRows:
 
         var Sql = require("rampart-sql");
 
-        var sql = new Sql.init("./mytestdb");
+        var sql = new Sql.connection("./mytestdb");
 
         sql.selectMaxRows=20;
 
@@ -352,7 +352,7 @@ Caveats for Options, maxRows and skipRows:
 
         var Sql = require("rampart-sql");
 
-        var sql = new Sql.init("./mytestdb");
+        var sql = new Sql.connection("./mytestdb");
 
         var sqlopts = {maxRows: 5, returnType: "array"};
 
@@ -492,6 +492,8 @@ Return Value:
   not a text search, the values of the properties of ``countInfo`` will be
   negative.
 
+.. _errormsgs:
+
 Error Messages:
    Errors may or may not throw a JavaScript exception depending on the
    error.  If the syntax is correct but the statement cannot be executed, no
@@ -506,7 +508,7 @@ Error Messages:
    var Sql = require("rampart-sql");
 
    /* create database if it does not exist */
-   var sql = new Sql.init("./mytestdb",true);
+   var sql = new Sql.connection("./mytestdb",true);
 
    /* create a table */
    sql.exec("create table testtb (text varchar(16), number double)");
@@ -537,6 +539,23 @@ Error Messages:
       sql.errMsg is similar.
    */
 
+   try {
+       sql.exec("select Nonexistent from testtb", function(row,i){
+           console.log(i, row);
+       });
+   } catch (e) {
+        console.log(e);
+   }
+
+   /* output =
+      Error: sql prep error: 115 Field `Nonexistent' non-existent
+      115 Field non-existent or type error in `Nonexistent'
+      000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare
+      sql.errMsg is similar.
+   */
+
+
+
 Exec Full Example
 """""""""""""""""
 
@@ -547,7 +566,7 @@ Below is a full example of ``exec()`` functionality:
    var Sql = require("rampart-sql");
 
    /* create database if it does not exist */
-   var sql = new Sql.init("./mytestdb",true);
+   var sql = new Sql.connection("./mytestdb",true);
 
    /* check if table exists */
    var res = sql.exec(
@@ -786,6 +805,71 @@ Below is a full example of ``exec()`` functionality:
       Total: 2
    */
 
+query()
+~~~~~~~
+
+``sql.query()`` performs in the same manner as `exec()`_\ , except it will not throw JavaScript errors
+when there are sql errors that would otherwise do so in `exec()`_ (see `Error Messages <rampart-sql.html#errormsgs>`_
+above).
+Instead, the errors are only reported in ``sql.errMsg``.  Note that when opening a database, 
+or using other sql functions, Javascript errors still may be thrown and other non-error messages 
+might appear in ``sql.errMsg``.
+
+Example:
+
+.. code-block:: javascript
+
+   var Sql = require("rampart-sql");
+
+   /* create database if it does not exist, creation message written */
+   var sql = Sql.connect("./mytestdb",true);
+   if(sql.errMsg.length) console.log(sql.errMsg);
+
+   /* create a table, no error */
+   sql.query("create table testtb (text varchar(16), number double)");
+   if(sql.errMsg.length) console.log("err =", sql.errMsg);
+
+   /* create a unique index on number, no error */
+   sql.query("create unique index testtb_number_ux on testtb(number)");
+   if(sql.errMsg.length) console.log("err =", sql.errMsg);
+
+   /* insert a row, no error */
+   sql.query("insert into testtb values ('A B C', 123)");
+   if(sql.errMsg.length) console.log("err =", sql.errMsg);
+
+   /* attempt to insert a duplicate, sql.errMsg will be set */
+   sql.query("insert into testtb values ('D E F', 123)");
+   if(sql.errMsg.length) console.log("err =", sql.errMsg);
+
+   /* attempt to insert 3 values into two columns, sql.errMsg will be set */
+   sql.query("insert into testtb values ('D E F', 456, 789)");
+   if(sql.errMsg.length) console.log("err =", sql.errMsg);
+
+   /* attempt to select a non-existent column, returns -1 and sql.errMsg will be set */
+   var res = sql.query("select Nonexistent from testtb", function(row,i){
+       console.log(i, row);
+   });
+
+   console.log("res =",res)
+   console.log("err =", sql.errMsg);
+
+
+   /* output = 
+      100 User _SYSTEM has been added to database ./mytestdb without a password
+      100 User PUBLIC has been added to database ./mytestdb without a password
+
+      err = 178 Trying to insert duplicate value (123) in index ./mytestdb/testtb_number_ux.btr
+
+      err = 100 More Values Than Fields in the function: Insert
+      000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare
+
+      res = -1
+      err = 115 Field `Nonexistent' non-existent
+      115 Field non-existent or type error in `Nonexistent'
+      000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare
+
+   */
+
 
 .. remove this?
     eval()
@@ -801,7 +885,7 @@ Below is a full example of ``exec()`` functionality:
 
        var Sql = require("rampart-sql");
 
-       var sql = new Sql.init("/path/to/my/db", true);
+       var sql = new Sql.connection("/path/to/my/db", true);
 
        var res1 = sql.exec("select joinpath('one', 'two/', '/three/four', 'five') newpath");
        var res=rows1.rows[0];
@@ -812,7 +896,7 @@ Below is a full example of ``exec()`` functionality:
     .. code-block:: javascript
 
        var Sql = require("rampart-sql");
-       var sql = new Sql.init("/path/to/my/db", true);
+       var sql = new Sql.connection("/path/to/my/db", true);
 
        var res = sql.eval("joinpath('one', 'two/', '/three/four', 'five') newpath");
        console.log(res); /* {newpath:"one/two/three/four/five"} */
@@ -915,7 +999,7 @@ Example:
 
    var Sql = require("rampart-sql");
 
-   var sql = new Sql.init("/path/to/my/db");
+   var sql = new Sql.connection("/path/to/my/db");
 
    ...
 
@@ -1092,7 +1176,7 @@ Example:
 .. code-block:: javascript
 
    var Sql=require("rampart-sql");
-   var sql= new Sql.init("/path/mytestdb");
+   var sql= new Sql.connection("/path/mytestdb");
 
    var csv =
    "Dept,       item1 Quantity, item1 Description, item1 Value, item2 Quantity, item2 Description, item2 Value\n" +
@@ -1163,7 +1247,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var sql = new Sql.init('/path/to/db');
+   var sql = new Sql.connection('/path/to/db');
 
    sql.addTable(path);
 
@@ -1268,7 +1352,7 @@ The following example illustrates the properties of a unique index:
 
     var Sql = require("rampart-sql");
 
-    var sql = new Sql.init("./testdb", true);
+    var sql = new Sql.connection("./testdb", true);
 
     sql.exec("create table people (Name varchar(16), Age int);");
 
@@ -1458,8 +1542,8 @@ NOTE:
    statement.
 
 
-Automatic Maintenance
-"""""""""""""""""""""
+Text Index Maintenance
+""""""""""""""""""""""
 
 If a Fulltext index is large, the time and CPU resources it takes to update
 the index may be more than is desirable during active use of the database.
@@ -1476,7 +1560,7 @@ than 1000 rows have been changed.
 
     var Sql = require("rampart-sql");
 
-    var sql = new Sql.init("/path/to/employee_db", true);
+    var sql = new Sql.connection("/path/to/employee_db", true);
 
     sql.exec("alter index employees_NameBio_text optimize having COUNT(NewRows) > 1000;");
 
@@ -1485,6 +1569,84 @@ Then adding a crontab entry like the following would execute the script at 2 am 
 .. code-block:: bash
 
     00 02 * * * /usr/local/bin/rampart /path/to/update-index.js
+
+
+scheduleUpdate()
+""""""""""""""""
+
+Auto Maintenance (currently expirimental) of a text index is accomplished by scheduling a time
+for an index update using ``sql.scheduleUpdate()``.
+
+Usage:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+
+    var sql = new Sql.connection("/path/to/db");
+
+    sql.scheduleUpdate(indexName, startTime, Interval [,minRows]);
+
+Where:
+
+    * ``indexName`` is a :green:`String`, the name of the index to be updated.
+
+    * ``startTime`` is a :green:`String` passed to :ref:`autoScanDate <rampart-utils:autoScanDate>`,
+      The start time of the first update/check.  Note that times are system local time unless a timezone
+      offset or abbreviation is given.
+
+    * ``Interval`` is a :green:`Number` or :green:`String`, the time between update checks.
+      If a :green:`Number`, the number of seconds between checks (i.e. ``86400`` for one day).
+      If a :green:`String`, it will parse plain English values in minutes, hours, days or weeks.
+      (i.e. "every third day" or "120 minutes");
+
+    * ``minRows``, is an optional :green:`Number`, the threshold number of changed, deleted or added rows
+      needed to trigger an index rebuild when checked.
+
+Return Value:
+
+    ``Undefined``.
+
+Note:
+
+    * If ``sql.scheduleUpdate`` is run again with the same index name, the old value is replaced.
+
+    * If ``startTime`` is set to ``-1``, the record for the index is deleted.
+
+    * The index schedule is saved in a new table ``SYSUPDATE`` in th database in question.
+
+    * The first time an index is scheduled for update on a database, a index monitor process is launched.
+      
+    * The monitor for a database is also checked and relaunched if necessary everytime ``new Sql.connection(database)``
+      is called.
+
+    * If ``sql.scheduleUpdate`` is never run for a text index, the index will not be touched by
+      the  monitor process (i.e. in cases where the table/index is never or rarely updated, or 
+      another method such as a cron job is used instead).
+
+    * Status and progress can be viewed in the relevant row in ``SYSUPDATE`` table. Columns ``PREVIOUS``
+      and ``LAST`` show the times of the next and previous start times (seconds from UNIX EPOCH).
+      ``PROGRESS`` is a ``double`` with value of ``0`` to ``1``.  ``STATUS`` is ``0`` for not currently
+      updating and ``1`` to ``3`` for the three stages needed to update a text index.  Indexing is complete
+      when ``STATUS`` is ``3`` and ``PROGRESS`` is ``1``, at which time ``STATUS`` will be reset to ``0``.
+
+Example viewing progress:
+
+.. code-block:: shell
+
+   tsql -d wdb "select convert(PREVIOUS, 'date') LAST, convert(NEXT, 'date') NEXT, STATUS, PROGRESS from SYSUPDATE where NAME='wtext_Text_ftx'"
+
+       LAST         NEXT        STATUS      PROGRESS  
+   ------------+------------+------------+------------+
+   2024-08-10 00:00:02 2024-08-11 00:00:00            2     0.759494
+
+   #when done:
+
+   tsql -d wdb "select convert(PREVIOUS, 'date') LAST, convert(NEXT, 'date') NEXT, STATUS, PROGRESS from SYSUPDATE where NAME='wtext_Text_ftx'"
+
+       LAST         NEXT        STATUS      PROGRESS  
+   ------------+------------+------------+------------+
+   2024-08-11 00:00:32 2024-08-12 00:00:00            0     1
 
 Compound Indexes
 ~~~~~~~~~~~~~~~~
