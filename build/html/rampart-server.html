@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-server HTTP module &mdash; Rampart 0.2.1 documentation</title>
+  <title>The rampart-server HTTP module &mdash; Rampart 0.5.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.2.1 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.5.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-net module" href="rampart-net.html"/>
         <link rel="prev" title="The rampart-sql Command Line Utilities" href="sql-utils.html"/> 
 
@@ -1745,7 +1745,8 @@ and is set to the current 0 based chunk index.</p>
 
 <span class="kd">function</span> <span class="nx">sendpic</span><span class="p">(</span><span class="nx">req</span><span class="p">){</span>
 
-    <span class="nx">msg</span><span class="o">=</span><span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://jpg.nyctmc.org/5&#39;</span><span class="p">,{</span><span class="nx">insecure</span><span class="o">:</span><span class="kc">true</span><span class="p">});</span>
+    <span class="c1">// from https://webcams.nyctmc.org/map</span>
+    <span class="nx">msg</span><span class="o">=</span><span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://webcams.nyctmc.org/api/cameras/d8122408-7092-41ba-a9db-ef8847edeaef/image&#39;</span><span class="p">,{</span><span class="nx">insecure</span><span class="o">:</span><span class="kc">true</span><span class="p">});</span>
 
     <span class="nx">req</span><span class="p">.</span><span class="nx">chunkSend</span><span class="p">(</span>
         <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n%s&quot;</span><span class="p">,</span>
@@ -1753,9 +1754,9 @@ and is set to the current 0 based chunk index.</p>
     <span class="p">);</span>
 <span class="p">}</span>
 
-<span class="cm">/* we don&#39;t need a chunk delay, the fetch takes a bit of time. */</span>
+<span class="cm">/* image updates about every 2 secs on remote server, and the fetch takes a bit of time. */</span>
 <span class="kd">function</span> <span class="nx">mjpeg</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="nx">sendpic</span><span class="p">,</span> <span class="nx">chunk</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span> <span class="nx">headers</span><span class="o">:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="nx">sendpic</span><span class="p">,</span> <span class="nx">chunk</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span> <span class="nx">chunkDelay</span><span class="o">:</span> <span class="mi">1500</span><span class="p">,</span> <span class="nx">headers</span><span class="o">:</span>
         <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="o">:</span> <span class="s2">&quot;multipart/x-mixed-replace;boundary=myboundary&quot;</span><span class="p">}</span>
     <span class="p">};</span>
 <span class="p">}</span>
@@ -1783,20 +1784,10 @@ and is set to the current 0 based chunk index.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
 <span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
-
 <span class="kd">function</span> <span class="nx">sendpic_wcam</span><span class="p">(</span><span class="nx">req</span><span class="p">){</span>
-    <span class="kd">var</span> <span class="nx">file</span><span class="p">;</span>
-
-    <span class="c1">//skip the first callback if first jpeg is not ready.</span>
-    <span class="k">try</span> <span class="p">{</span> <span class="nx">file</span> <span class="o">=</span> <span class="nx">trim</span><span class="p">(</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;test.list&quot;</span><span class="p">,</span><span class="mi">0</span> <span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="kc">true</span><span class="p">));</span> <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">){}</span>
-
-    <span class="k">if</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="nx">req</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;--myboundary\r\nContent-Type: image/jpeg\r\n\r\n&quot;</span><span class="p">);</span> <span class="c1">//write header</span>
-        <span class="nx">req</span><span class="p">.</span><span class="nx">chunkSend</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="o">+</span><span class="nx">file</span><span class="p">);</span> <span class="c1">//send jpeg directly from file</span>
-    <span class="p">}</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;--myboundary\r\nContent-Type: image/jpeg\r\n\r\n&quot;</span><span class="p">);</span> <span class="c1">//write header</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">chunkSend</span><span class="p">(</span><span class="s1">&#39;@output.jpg&#39;</span><span class="p">);</span> <span class="c1">//send jpeg directly from file</span>
 <span class="p">}</span>
-
 
 <span class="kd">function</span> <span class="nx">start_ffmpeg</span><span class="p">(){</span>
     <span class="kd">var</span> <span class="nx">pid</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
@@ -1812,17 +1803,11 @@ and is set to the current 0 based chunk index.</p>
         <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">background</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span>
         <span class="s1">&#39;-hide_banner&#39;</span><span class="p">,</span>
         <span class="s1">&#39;-loglevel&#39;</span><span class="p">,</span>           <span class="s1">&#39;error&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-f&#39;</span><span class="p">,</span>                  <span class="s1">&#39;video4linux2&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-i&#39;</span><span class="p">,</span>                  <span class="s1">&#39;/dev/video0&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-vf&#39;</span><span class="p">,</span>                 <span class="s1">&#39;fps=10&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-q:v&#39;</span><span class="p">,</span>                <span class="s1">&#39;8&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-f&#39;</span><span class="p">,</span>                  <span class="s1">&#39;segment&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-segment_time&#39;</span><span class="p">,</span>       <span class="s1">&#39;0.0001&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-segment_format&#39;</span><span class="p">,</span>     <span class="s1">&#39;singlejpeg&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-segment_wrap&#39;</span><span class="p">,</span>       <span class="s1">&#39;4&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-segment_list&#39;</span><span class="p">,</span>       <span class="s1">&#39;test.list&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;-segment_list_size&#39;</span><span class="p">,</span>  <span class="s1">&#39;1&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;test%02d.jpg&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;-f&#39;</span><span class="p">,</span>  <span class="s1">&#39;v4l2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="s1">&#39;/dev/video0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;-update&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="s1">&#39;10&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;output.jpg&#39;</span><span class="p">,</span>
         <span class="s1">&#39;-y&#39;</span>
     <span class="p">);</span>
     <span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;./ffmpeg.pid&quot;</span><span class="p">,</span> <span class="s2">&quot;%d&quot;</span><span class="p">,</span> <span class="nx">ret</span><span class="p">.</span><span class="nx">pid</span><span class="p">);</span>
@@ -3204,7 +3189,7 @@ from the filesystem which end in <code class="docutils literal notranslate"><spa
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2023, Moat Crossing Systems.
+        &copy; Copyright 2024, Moat Crossing Systems.
 
     </p>
   </div>
@@ -3226,7 +3211,7 @@ from the filesystem which end in <code class="docutils literal notranslate"><spa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.1',
+            VERSION:'0.5.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

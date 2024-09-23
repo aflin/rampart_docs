@@ -30,7 +30,7 @@ solely refer to the text search engine.
 The convention used in this document is ``var Sql`` with a capital
 "S" for the return :green:`Object` of the loaded module and ``var sql`` with a
 lower-case "s" for the instance of a connection to a database made with the
-JavaScript :ref:`init() constructor <initconst>` :green:`Function`.
+JavaScript :ref:`connection() constructor <connection_const>` :green:`Function`.
 
 Further Reading
 ~~~~~~~~~~~~~~~
@@ -57,7 +57,7 @@ Return value:
 .. code-block:: none
 
     {
-        init:          {_func:true},
+        connection:    {_func:true},
         stringFormat:  {_func:true},
         abstract:      {_func:true},
         sandr:         {_func:true},
@@ -81,12 +81,12 @@ init() constructor
 
 DEPRICATED: see connection() below.
 
-.. _initconst:
+.. _connection_const:
 
 connection() constructor
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``init`` constructor function takes a :green:`String`, the path to the database
+The ``connection`` constructor function takes a :green:`String`, the path to the database
 and an optional :green:`Boolean` as parameters. It returns an :green:`Object` representing a
 new connection to the specified database.  The return :green:`Object` includes the
 following :green:`Functions`: ``exec()``, ``one()``, ``set()``,
@@ -189,7 +189,7 @@ exec()
 ~~~~~~
 
 The exec :green:`Function` executes a sql statement on the database opened
-with :ref:`init() <initconst>`.  It takes a :green:`String` containing a sql
+with :ref:`connection() <connection_const>`.  It takes a :green:`String` containing a sql
 statement and an optional :green:`Object` or :green:`Array` of sql
 parameters, an optional :green:`Object` of options and an optional callback
 :green:`Function`.  The parameters may be specified in any order.
@@ -495,11 +495,8 @@ Return Value:
 .. _errormsgs:
 
 Error Messages:
-   Errors may or may not throw a JavaScript exception depending on the
-   error.  If the syntax is correct but the statement cannot be executed, no
-   exception is thrown and ``sql.errMsg`` will contain the error message.
-   Otherwise an exception is thrown, ``sql.errMsg`` is set and the error may
-   be caught with ``catch(error)``.
+   All errors throw a JavaScript exception.  Errors are also copied to
+   the special variable ``sql.errMsg``.
 
    Error Message Example:
 
@@ -512,21 +509,6 @@ Error Messages:
 
    /* create a table */
    sql.exec("create table testtb (text varchar(16), number double)");
-
-   /* create a unique index on number */
-   sql.exec("create unique index testtb_number_ux on testtb(number)");
-
-   /* insert a row */
-   sql.exec("insert into testtb values ('A B C', 123)");
-
-   /* attempt to insert a duplicate */
-   sql.exec("insert into testtb values ('D E F', 123)");
-
-   console.log(sql.errMsg);
-   /* output =
-      "178 Trying to insert duplicate value (123) in index
-      ./mytestdb/testtb_number_ux.btr"
-   */
 
    try {
    	sql.exec("insert into testtb values ('D E F', 456, 789)");
@@ -548,9 +530,9 @@ Error Messages:
    }
 
    /* output =
-      Error: sql prep error: 115 Field `Nonexistent' non-existent
-      115 Field non-existent or type error in `Nonexistent'
-      000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare
+        Error: sql prep error: 115 Field `Nonexistent' non-existent
+        115 Field non-existent or type error in `Nonexistent'
+        000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare
       sql.errMsg is similar.
    */
 
@@ -909,7 +891,8 @@ one()
 
 The ``one`` :green:`Function` is a shortcut for executing sql
 where only one row is desired and the extra information normally
-returned from `exec()`_ is not needed.
+returned from `exec()`_ is not needed.  It throws a JavaScript
+exception in the same manner as `exec()`_\ .
 
 Usage:
 

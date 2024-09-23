@@ -82,6 +82,8 @@ following:
 
 * Full Text Search and SQL databasing via ``rampart-sql``.
 
+* Generic threading, locking and variable sharing via ``rampart.thread``.
+
 * Multi-threaded http(s) server from libevhtp_ws via ``rampart-server``.
 
 * HTTP, FTP, etc. client functionality via ``rampart-curl``.

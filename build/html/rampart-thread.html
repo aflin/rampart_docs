@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rampart Thread Functions &mdash; Rampart 0.2.1 documentation</title>
+  <title>Rampart Thread Functions &mdash; Rampart 0.5.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.2.1 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.5.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-sql module" href="sqltoc.html"/>
         <link rel="prev" title="rampart.utils" href="rampart-utils.html"/> 
 
@@ -101,6 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-getcurrentid">rampart.thread.getCurrentId()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-thread-onget">rampart.thread.onGet()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-del">rampart.thread.del()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-waitfor">rampart.thread.waitfor()</a></li>
 </ul>
@@ -488,6 +489,103 @@ not affect the retrieved version.</dd>
 </div>
 </div></blockquote>
 </div>
+<div class="section" id="rampart-thread-onget">
+<h3>rampart.thread.onGet()<a class="headerlink" href="#rampart-thread-onget" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Continually listen for changes to a variable on the clipboard.  Run
+a callback for each change.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myev</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">onGet</span><span class="p">([</span><span class="nx">varName</span><span class="o">|</span><span class="nx">varGlob</span><span class="p">],</span> <span class="nx">callback</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">varName</span></code> is a <span class="green">String</span>, the key used in
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">varGlob</span></code> is a <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">*</span></code> to match any key used in
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> or <code class="docutils literal notranslate"><span class="pre">pref*</span></code> to perform a substring
+match for keys beginning with <code class="docutils literal notranslate"><span class="pre">pref</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> as such:
+<code class="docutils literal notranslate"><span class="pre">function(key,val,match)</span></code> - where <code class="docutils literal notranslate"><span class="pre">key</span></code> is the same as
+the key used in <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>, <code class="docutils literal notranslate"><span class="pre">val</span></code> is the updated value
+of the corresponding <code class="docutils literal notranslate"><span class="pre">key</span></code> and <code class="docutils literal notranslate"><span class="pre">match</span></code> is the <code class="docutils literal notranslate"><span class="pre">varName</span></code> or <code class="docutils literal notranslate"><span class="pre">varGlob</span></code>
+set above.</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span>, representing the event, and with the function <code class="docutils literal notranslate"><span class="pre">remove()</span></code>, which
+when called will remove the event.  Note that this <span class="green">Object</span> is bound to <code class="docutils literal notranslate"><span class="pre">this</span></code>
+in the callback.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">thread</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">thread</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="c1">//x is not copied to thread.</span>
+
+<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="c1">// Function is run in thread &quot;thr&quot;.</span>
+    <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Set event to match any key that is updated</span>
+        <span class="c1">// with thread.put() and begins with &#39;m&#39;.</span>
+        <span class="kd">var</span> <span class="nx">ev</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">onGet</span><span class="p">(</span><span class="s2">&quot;m*&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="nx">val</span><span class="p">,</span><span class="nx">match</span><span class="p">){</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;1 got %s=%s, match=%s extra=&#39;%s&#39;\n&quot;</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span><span class="nx">val</span><span class="p">,</span><span class="nx">match</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">extra</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">val</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">)</span> <span class="c1">//stop watching</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span> <span class="c1">//this == ev</span>
+        <span class="p">});</span>
+
+        <span class="c1">// Add some extra data available to the above onGet callback</span>
+        <span class="nx">ev</span><span class="p">.</span><span class="nx">extra</span> <span class="o">=</span> <span class="s2">&quot;my extra data&quot;</span><span class="p">;</span>
+
+        <span class="c1">// Match only if &quot;myvar&quot; is updated with thread.put(&quot;myvar&quot;, val)</span>
+        <span class="kd">var</span> <span class="nx">ev2</span><span class="o">=</span><span class="nx">thread</span><span class="p">.</span><span class="nx">onGet</span><span class="p">(</span><span class="s2">&quot;myvar&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="nx">val</span><span class="p">,</span><span class="nx">match</span><span class="p">){</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;2 got %s=%s, match=%s\n&quot;</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span><span class="nx">val</span><span class="p">,</span><span class="nx">match</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">val</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span>
+                <span class="nx">ev2</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span> <span class="c1">//ev2 == this</span>
+        <span class="p">});</span>
+        <span class="c1">// Two events are now registered in this thread. Return and run</span>
+        <span class="c1">// function below in main thread.</span>
+    <span class="p">},</span>
+
+    <span class="c1">// This function run in main thread after above function returns.</span>
+    <span class="kd">function</span><span class="p">(){</span>
+        <span class="kd">var</span> <span class="nx">iv</span><span class="o">=</span><span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+            <span class="c1">// whenever thread.put is called, it triggers the &quot;onGet&quot; event</span>
+            <span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;myvar&quot;</span><span class="p">,</span><span class="o">++</span><span class="nx">x</span><span class="p">);</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;put %d\n&quot;</span><span class="p">,</span> <span class="nx">x</span><span class="p">);</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">x</span><span class="o">&gt;</span><span class="mi">5</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;done\n&quot;</span><span class="p">);</span>
+                <span class="nx">clearInterval</span><span class="p">(</span><span class="nx">iv</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">},</span> <span class="mi">100</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+<span class="cm">/* output:</span>
+<span class="cm">   put 1</span>
+<span class="cm">   2 got myvar=1, match=myvar</span>
+<span class="cm">   1 got myvar=1, match=m* extra=&#39;my extra data&#39;</span>
+<span class="cm">   put 2</span>
+<span class="cm">   2 got myvar=2, match=myvar</span>
+<span class="cm">   1 got myvar=2, match=m* extra=&#39;my extra data&#39;</span>
+<span class="cm">   put 3</span>
+<span class="cm">   1 got myvar=3, match=m* extra=&#39;my extra data&#39;</span>
+<span class="cm">   put 4</span>
+<span class="cm">   1 got myvar=4, match=m* extra=&#39;my extra data&#39;</span>
+<span class="cm">   put 5</span>
+<span class="cm">   put 6</span>
+<span class="cm">   done</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 <div class="section" id="rampart-thread-del">
 <h3>rampart.thread.del()<a class="headerlink" href="#rampart-thread-del" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -636,7 +734,8 @@ if not.</dd>
 <li>A mutex locked in a thread must be unlocked in the same thread.</li>
 <li>A <code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code> must be created as a global variable before the
 threads in which it will be used are created so that the <code class="docutils literal notranslate"><span class="pre">thrlock</span></code>
-variable is copied to each thread.</li>
+variable is copied to each thread.  Alternatively a <code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code>
+can be passed as a <code class="docutils literal notranslate"><span class="pre">threadArg</span></code> to <a class="reference internal" href="#thr-exec">thr.exec()</a>.</li>
 <li>Normal operations do not require explicit locking using
 <code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code>.  However updating variables on the clipboard might
 require using a lock.</li>
@@ -718,7 +817,7 @@ require using a lock.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2023, Moat Crossing Systems.
+        &copy; Copyright 2024, Moat Crossing Systems.
 
     </p>
   </div>
@@ -740,7 +839,7 @@ require using a lock.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.1',
+            VERSION:'0.5.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

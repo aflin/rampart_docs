@@ -1560,7 +1560,8 @@ Sending mjpeg, simple:
 
     function sendpic(req){
 
-        msg=curl.fetch('https://jpg.nyctmc.org/5',{insecure:true});
+        // from https://webcams.nyctmc.org/map
+        msg=curl.fetch('https://webcams.nyctmc.org/api/cameras/d8122408-7092-41ba-a9db-ef8847edeaef/image',{insecure:true});
 
         req.chunkSend(
             sprintf("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n%s",
@@ -1568,9 +1569,9 @@ Sending mjpeg, simple:
         );
     }
 
-    /* we don't need a chunk delay, the fetch takes a bit of time. */
+    /* image updates about every 2 secs on remote server, and the fetch takes a bit of time. */
     function mjpeg(req) {
-        return {"data":sendpic, chunk:true, headers:
+        return {"data":sendpic, chunk:true, chunkDelay: 1500, headers:
             {"Content-Type": "multipart/x-mixed-replace;boundary=myboundary"}
         };
     }
@@ -1600,20 +1601,10 @@ Sending mjpeg, using ffmpeg and a webcam on Linux:
     var server=require("rampart-server");
     rampart.globalize(rampart.utils);
 
-
     function sendpic_wcam(req){
-        var file;
-
-        //skip the first callback if first jpeg is not ready.
-        try { file = trim(readFile("test.list",0 ,0, true)); } catch(e){}
-
-        if(file)
-        {
-            req.printf("--myboundary\r\nContent-Type: image/jpeg\r\n\r\n"); //write header
-            req.chunkSend('@'+file); //send jpeg directly from file
-        }
+        req.printf("--myboundary\r\nContent-Type: image/jpeg\r\n\r\n"); //write header
+        req.chunkSend('@output.jpg'); //send jpeg directly from file
     }
-
 
     function start_ffmpeg(){
         var pid=0;
@@ -1629,17 +1620,11 @@ Sending mjpeg, using ffmpeg and a webcam on Linux:
             "ffmpeg", {background:true},
             '-hide_banner',
             '-loglevel',           'error',
-            '-f',                  'video4linux2',
-            '-i',                  '/dev/video0',
-            '-vf',                 'fps=10',
-            '-q:v',                '8',
-            '-f',                  'segment',
-            '-segment_time',       '0.0001',
-            '-segment_format',     'singlejpeg',
-            '-segment_wrap',       '4',
-            '-segment_list',       'test.list',
-            '-segment_list_size',  '1',
-            'test%02d.jpg',
+            '-f',  'v4l2',
+            '-i', '/dev/video0',
+            '-update', '1',
+            '-r', '10',
+            'output.jpg',
             '-y'
         );
         fprintf("./ffmpeg.pid", "%d", ret.pid);

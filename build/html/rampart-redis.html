@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-redis module &mdash; Rampart 0.2.1 documentation</title>
+  <title>The rampart-redis module &mdash; Rampart 0.5.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.2.1 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.5.0 documentation" href="index.html"/>
         <link rel="next" title="The rampart-python module" href="rampart-python.html"/>
         <link rel="prev" title="The rampart-lmdb module" href="rampart-lmdb.html"/> 
 
@@ -304,7 +304,7 @@ as listed below.</p>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">paramX</span></code> is one or more parameters, required or optional for the given Redis command.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">callback_function</span></code> is an optional (if synchronous) or required (if
-asynchronous) function which takes a single parameter.</p>
+asynchronous) function which takes a <code class="docutils literal notranslate"><span class="pre">function(res,err)</span></code>.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> with the following optional
 properties:</p>
@@ -325,7 +325,12 @@ Rampart event loop.  If <code class="docutils literal notranslate"><span class="
 </div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>See below.</dd>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code> if there is a callback. <code class="docutils literal notranslate"><span class="pre">Null</span></code> if error.
+Otherwise, on success see <a class="reference external" href="rampart-redis.html#return-values-from-supported-commands">return values</a>
+below.</dd>
+<dt>Errors:</dt>
+<dd>Error messages are written to <code class="docutils literal notranslate"><span class="pre">rcl.errMsg</span></code>.  For calls with a callback function, it is
+also passed to the function as the second parameter.</dd>
 <dt>Note:</dt>
 <dd><p class="first">All commands are by default synchronous commands, except
 for shortcut commands which end in <code class="docutils literal notranslate"><span class="pre">*_async</span></code> and for the
@@ -438,11 +443,16 @@ values returned from redis are each members of the <span class="green">Array</sp
 <div class="section" id="xread-auto-async">
 <h3>xread_auto_async<a class="headerlink" href="#xread-auto-async" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>This is equivalent to <code class="docutils literal notranslate"><span class="pre">xread_block_async</span></code> above, except that the
+<div><p>This is equivalent to <code class="docutils literal notranslate"><span class="pre">xread_block_async</span></code> above, except that the
 returned IDs are tracked and the <code class="docutils literal notranslate"><span class="pre">XREAD</span> <span class="pre">BLOCK</span></code> command is reissued
 with the proper IDs each time a new Stream Message is received.  In this
 way it acts more like <code class="docutils literal notranslate"><span class="pre">subscribe</span></code> and continually accepts new streamed
-messages similar to a PUB/SUB model.</div></blockquote>
+messages similar to a PUB/SUB model.</p>
+<p>For more information, see the redis <a class="reference external" href="https://redis.io/docs/latest/commands/xread/">xread command</a>
+and <a class="reference internal" href="tutorial-wschat.html#chat-with-history-using-redis"><span class="std std-ref">this section</span></a> of
+the tutorials, as well as #12 in the <a class="reference external" href="rampart-redis.html#return-values-from-supported-commands">return values</a>
+section below.</p>
+</div></blockquote>
 </div>
 </div>
 <div class="section" id="supported-commands">
@@ -934,7 +944,7 @@ not work as intended.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2023, Moat Crossing Systems.
+        &copy; Copyright 2024, Moat Crossing Systems.
 
     </p>
   </div>
@@ -956,7 +966,7 @@ not work as intended.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.1',
+            VERSION:'0.5.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

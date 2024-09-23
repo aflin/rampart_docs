@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preface &mdash; Rampart 0.2.1 documentation</title>
+  <title>Preface &mdash; Rampart 0.5.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.2.1 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.5.0 documentation" href="index.html"/>
         <link rel="up" title="The rampart-sql module" href="sqltoc.html"/>
         <link rel="next" title="Server Functions" href="sql-server-funcs.html"/>
         <link rel="prev" title="The rampart-sql module" href="sqltoc.html"/> 
@@ -278,7 +278,7 @@ solely refer to the text search engine.</p>
 <p>The convention used in this document is <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">Sql</span></code> with a capital
 “S” for the return <span class="green">Object</span> of the loaded module and <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">sql</span></code> with a
 lower-case “s” for the instance of a connection to a database made with the
-JavaScript <a class="reference internal" href="#initconst"><span class="std std-ref">init() constructor</span></a> <span class="green">Function</span>.</p>
+JavaScript <a class="reference internal" href="#connection-const"><span class="std std-ref">connection() constructor</span></a> <span class="green">Function</span>.</p>
 </div>
 <div class="section" id="further-reading">
 <h2>Further Reading<a class="headerlink" href="#further-reading" title="Permalink to this headline">¶</a></h2>
@@ -301,7 +301,7 @@ of using the <code class="docutils literal notranslate"><span class="pre">requir
 </div>
 <p>Return value:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{
-    init:          {_func:true},
+    connection:    {_func:true},
     stringFormat:  {_func:true},
     abstract:      {_func:true},
     sandr:         {_func:true},
@@ -325,8 +325,8 @@ of using the <code class="docutils literal notranslate"><span class="pre">requir
 <p>DEPRICATED: see connection() below.</p>
 </div>
 <div class="section" id="connection-constructor">
-<span id="initconst"></span><h2>connection() constructor<a class="headerlink" href="#connection-constructor" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> constructor function takes a <span class="green">String</span>, the path to the database
+<span id="connection-const"></span><h2>connection() constructor<a class="headerlink" href="#connection-constructor" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">connection</span></code> constructor function takes a <span class="green">String</span>, the path to the database
 and an optional <span class="green">Boolean</span> as parameters. It returns an <span class="green">Object</span> representing a
 new connection to the specified database.  The return <span class="green">Object</span> includes the
 following <span class="green">Functions</span>: <code class="docutils literal notranslate"><span class="pre">exec()</span></code>, <code class="docutils literal notranslate"><span class="pre">one()</span></code>, <code class="docutils literal notranslate"><span class="pre">set()</span></code>,
@@ -435,7 +435,7 @@ the current user.</p>
 <div class="section" id="exec">
 <h2>exec()<a class="headerlink" href="#exec" title="Permalink to this headline">¶</a></h2>
 <p>The exec <span class="green">Function</span> executes a sql statement on the database opened
-with <a class="reference internal" href="#initconst"><span class="std std-ref">init()</span></a>.  It takes a <span class="green">String</span> containing a sql
+with <a class="reference internal" href="#connection-const"><span class="std std-ref">connection()</span></a>.  It takes a <span class="green">String</span> containing a sql
 statement and an optional <span class="green">Object</span> or <span class="green">Array</span> of sql
 parameters, an optional <span class="green">Object</span> of options and an optional callback
 <span class="green">Function</span>.  The parameters may be specified in any order.</p>
@@ -746,11 +746,8 @@ negative.</p>
 </div></blockquote>
 <dl class="docutils" id="errormsgs">
 <dt>Error Messages:</dt>
-<dd><p class="first">Errors may or may not throw a JavaScript exception depending on the
-error.  If the syntax is correct but the statement cannot be executed, no
-exception is thrown and <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code> will contain the error message.
-Otherwise an exception is thrown, <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code> is set and the error may
-be caught with <code class="docutils literal notranslate"><span class="pre">catch(error)</span></code>.</p>
+<dd><p class="first">All errors throw a JavaScript exception.  Errors are also copied to
+the special variable <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code>.</p>
 <p class="last">Error Message Example:</p>
 </dd>
 </dl>
@@ -761,21 +758,6 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 
 <span class="cm">/* create a table */</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table testtb (text varchar(16), number double)&quot;</span><span class="p">);</span>
-
-<span class="cm">/* create a unique index on number */</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create unique index testtb_number_ux on testtb(number)&quot;</span><span class="p">);</span>
-
-<span class="cm">/* insert a row */</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into testtb values (&#39;A B C&#39;, 123)&quot;</span><span class="p">);</span>
-
-<span class="cm">/* attempt to insert a duplicate */</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into testtb values (&#39;D E F&#39;, 123)&quot;</span><span class="p">);</span>
-
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sql</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
-<span class="cm">/* output =</span>
-<span class="cm">   &quot;178 Trying to insert duplicate value (123) in index</span>
-<span class="cm">   ./mytestdb/testtb_number_ux.btr&quot;</span>
-<span class="cm">*/</span>
 
 <span class="k">try</span> <span class="p">{</span>
      <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into testtb values (&#39;D E F&#39;, 456, 789)&quot;</span><span class="p">);</span>
@@ -797,9 +779,9 @@ be caught with <code class="docutils literal notranslate"><span class="pre">catc
 <span class="p">}</span>
 
 <span class="cm">/* output =</span>
-<span class="cm">   Error: sql prep error: 115 Field `Nonexistent&#39; non-existent</span>
-<span class="cm">   115 Field non-existent or type error in `Nonexistent&#39;</span>
-<span class="cm">   000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare</span>
+<span class="cm">     Error: sql prep error: 115 Field `Nonexistent&#39; non-existent</span>
+<span class="cm">     115 Field non-existent or type error in `Nonexistent&#39;</span>
+<span class="cm">     000 SQLPrepare() failed with -1: An error occurred in the function: texis_prepare</span>
 <span class="cm">   sql.errMsg is similar.</span>
 <span class="cm">*/</span>
 </pre></div>
@@ -1118,7 +1100,8 @@ might appear in <code class="docutils literal notranslate"><span class="pre">sql
 <h2>one()<a class="headerlink" href="#one" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">one</span></code> <span class="green">Function</span> is a shortcut for executing sql
 where only one row is desired and the extra information normally
-returned from <a class="reference internal" href="#exec">exec()</a> is not needed.</p>
+returned from <a class="reference internal" href="#exec">exec()</a> is not needed.  It throws a JavaScript
+exception in the same manner as <a class="reference internal" href="#exec">exec()</a>.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="nx">statement</span> <span class="p">[,</span> <span class="nx">sql_parameters</span><span class="p">]);</span>
 </pre></div>
@@ -3306,7 +3289,7 @@ match).</dd>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2023, Moat Crossing Systems.
+        &copy; Copyright 2024, Moat Crossing Systems.
 
     </p>
   </div>
@@ -3328,7 +3311,7 @@ match).</dd>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.1',
+            VERSION:'0.5.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

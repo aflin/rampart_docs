@@ -301,6 +301,107 @@ rampart.thread.get()
            which the callbackFunc runs starts at the end of the script.
         */
 
+rampart.thread.onGet()
+~~~~~~~~~~~~~~~~~~~~~~
+
+    Continually listen for changes to a variable on the clipboard.  Run
+    a callback for each change.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var myev = rampart.thread.onGet([varName|varGlob], callback );
+
+    Where:
+
+        * ``varName`` is a :green:`String`, the key used in
+          `rampart.thread.put()`_\ .
+
+        * ``varGlob`` is a :green:`String`, ``*`` to match any key used in
+          `rampart.thread.put()`_ or ``pref*`` to perform a substring
+          match for keys beginning with ``pref``.
+
+        * ``callback`` is a :green:`Function` as such: 
+          ``function(key,val,match)`` - where ``key`` is the same as 
+          the key used in `rampart.thread.put()`_\ , ``val`` is the updated value
+          of the corresponding ``key`` and ``match`` is the ``varName`` or ``varGlob``
+          set above.
+
+    Return Value:
+        An :green:`Object`, representing the event, and with the function ``remove()``, which
+        when called will remove the event.  Note that this :green:`Object` is bound to ``this``
+        in the callback.
+
+    Example:
+
+    .. code-block:: javascript
+
+      rampart.globalize(rampart.utils)
+
+      var thread = rampart.thread;
+
+      var thr = new thread();
+      var x=0; //x is not copied to thread.
+
+      thr.exec(
+          // Function is run in thread "thr".
+          function() {
+
+              // Set event to match any key that is updated 
+              // with thread.put() and begins with 'm'.
+              var ev=thread.onGet("m*", function(key,val,match){
+                  printf("1 got %s=%s, match=%s extra='%s'\n", key,val,match, this.extra);
+                  if(val>3) //stop watching
+                      this.remove(); //this == ev
+              });
+
+              // Add some extra data available to the above onGet callback
+              ev.extra = "my extra data";
+
+              // Match only if "myvar" is updated with thread.put("myvar", val)
+              var ev2=thread.onGet("myvar", function(key,val,match){
+                  printf("2 got %s=%s, match=%s\n", key,val,match);
+                  if(val>1)
+                      ev2.remove(); //ev2 == this
+              });
+              // Two events are now registered in this thread. Return and run
+              // function below in main thread.
+          },
+
+          // This function run in main thread after above function returns.
+          function(){
+              var iv=setInterval(function(){
+                  // whenever thread.put is called, it triggers the "onGet" event
+                  thread.put("myvar",++x);
+                  printf("put %d\n", x);
+
+                  if(x>5)
+                  {
+                      printf("done\n");
+                      clearInterval(iv);
+                  }
+              }, 100);
+          }
+      );
+      /* output:
+         put 1
+         2 got myvar=1, match=myvar
+         1 got myvar=1, match=m* extra='my extra data'
+         put 2
+         2 got myvar=2, match=myvar
+         1 got myvar=2, match=m* extra='my extra data'
+         put 3
+         1 got myvar=3, match=m* extra='my extra data'
+         put 4
+         1 got myvar=4, match=m* extra='my extra data'
+         put 5
+         put 6
+         done
+      */
+
+
+
 rampart.thread.del()
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -446,7 +547,8 @@ Lock Caveats
 
     * A ``rampart.lock`` must be created as a global variable before the
       threads in which it will be used are created so that the ``thrlock``
-      variable is copied to each thread.
+      variable is copied to each thread.  Alternatively a ``rampart.lock``
+      can be passed as a ``threadArg`` to `thr.exec()`_\ .
 
     * Normal operations do not require explicit locking using
       ``rampart.lock``.  However updating variables on the clipboard might

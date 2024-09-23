@@ -1002,6 +1002,12 @@ Example:
 
    }
 
+daemon
+''''''
+
+Same as `fork`_ above, except it double forks, detaches and creates its own session.  Thus the child process
+will continue to run after the parent and the controlling terminal exit.
+
 forkpty
 '''''''
 
@@ -2144,14 +2150,14 @@ Usage:
 
    var filename = "/home/user/myfile.txt";
 
-   var output = rampart.utils.fopen(filename, mode);
+   var outputLen = rampart.utils.fopen(filename, mode);
    rampart.utils.fprintf(output, fmt, ...);
    rampart.utils.fclose(output);
 
    /* or */
 
    var output = filename;
-   rampart.utils.fprintf(output, [, append], fmt, ...);
+   var outputLen = rampart.utils.fprintf(output, [, append], fmt, ...);
    /* file is automatically closed after function returns */
 
 Where:
@@ -2160,8 +2166,8 @@ Where:
 
 * ``fmt`` is a :green:`String`, a `printf`_\ () format.
 
-* ``append`` is an optional :green:`Boolean` - if ``true`` and output is a file name, append instead of
-  overwrite an existing file.
+* ``append`` is an optional :green:`Boolean` only used when output is a filename- if ``true`` 
+  the file will be appended instead of overwritten.
 
 Return Value:
    A :green:`Number`. The length in bytes of the printed string.
@@ -2346,7 +2352,7 @@ Usage:
 
     var data = rampart.utils.fgets([handle|file] [, max_size]);
 
-Read data from file, up to ``max_size`` bytes (default ``1``), stopping at the
+Read data from file, up to ``max_size`` bytes (default ``1``), stopping at
 and including the first ``\n`` or the end of the file.
 
 Return Value:

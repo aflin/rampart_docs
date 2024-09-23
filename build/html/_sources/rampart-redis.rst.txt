@@ -116,7 +116,7 @@ Client Commands
         *  ``paramX`` is one or more parameters, required or optional for the given Redis command.
 
         *  ``callback_function`` is an optional (if synchronous) or required (if
-           asynchronous) function which takes a single parameter.
+           asynchronous) function which takes a ``function(res,err)``.
         
         *  ``options`` is an optional :green:`Object` with the following optional
            properties:
@@ -133,7 +133,13 @@ Client Commands
               ``strings`` and ``bulk strings`` will be returned in :green:`Buffers`.
 
     Return Value:
-        See below.
+        ``undefined`` if there is a callback. ``Null`` if error.  
+        Otherwise, on success see `return values <rampart-redis.html#return-values-from-supported-commands>`_
+        below.
+
+    Errors:
+        Error messages are written to ``rcl.errMsg``.  For calls with a callback function, it is
+        also passed to the function as the second parameter.
 
     Note: 
         All commands are by default synchronous commands, except
@@ -250,6 +256,11 @@ xread_auto_async
     with the proper IDs each time a new Stream Message is received.  In this
     way it acts more like ``subscribe`` and continually accepts new streamed
     messages similar to a PUB/SUB model.
+
+    For more information, see the redis `xread command <https://redis.io/docs/latest/commands/xread/>`_
+    and :ref:`this section <tutorial-wschat:Chat with History using Redis>` of
+    the tutorials, as well as #12 in the `return values <rampart-redis.html#return-values-from-supported-commands>`_
+    section below.
 
 Supported Commands
 ------------------
