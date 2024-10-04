@@ -1,0 +1,806 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The rampart-url module &mdash; Rampart 0.5.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.5.0 documentation" href="index.html"/>
+        <link rel="next" title="Tutorials" href="tutorialtoc.html"/>
+        <link rel="prev" title="The rampart-url module" href="rampart-url.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Extras</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-in-this-section">What is in this section?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-webserver-js-module">rampart-webserver.js Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading-the-module">Loading the module.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#standard-server-layout">Standard Server Layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage-from-a-configuration-file">Usage from a configuration file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building-a-command-line-utility">Building a command line utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-with-letsencrypt">Use with Letsencrypt</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-c-module-template-maker-utility">The c_module_template_maker utility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-c-module-template">Creating a C Module template</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-usage-to-create-a-module">Example usage to create a module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#graphicsmagick-module">GraphicsMagick Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#websocket-client">websocket_client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The rampart-url module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rampart-extras.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-rampart-url-module">
+<h1>The rampart-url module<a class="headerlink" href="#the-rampart-url-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="what-is-in-this-section">
+<h3>What is in this section?<a class="headerlink" href="#what-is-in-this-section" title="Permalink to this headline">¶</a></h3>
+<p>This section of the documentation is intended to document feature (supported
+or not) that do not neatly fit into other sections.</p>
+</div>
+</div>
+<div class="section" id="rampart-webserver-js-module">
+<h2>rampart-webserver.js Module<a class="headerlink" href="#rampart-webserver-js-module" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart-webserver.js</span></code> module is a JavaScript module that aims to
+simplify the functionality of
+<a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">the rampart-server module</span></a>.
+It is part of the complete rampart distribution and lives in the
+<code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> directory.</p>
+<div class="section" id="loading-the-module">
+<h3>Loading the module.<a class="headerlink" href="#loading-the-module" title="Permalink to this headline">¶</a></h3>
+<p>The module can be loaded in the normal manner.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">wserv</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-webserver&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="standard-server-layout">
+<h3>Standard Server Layout<a class="headerlink" href="#standard-server-layout" title="Permalink to this headline">¶</a></h3>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">rampart-webserver</span></code> module assumes a standard layout for
+static and dynamic web content.  Refer to the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/web_server">example webserver</a>
+for a view of the expected location of content and scripts.</p>
+</div>
+<div class="section" id="usage-from-a-configuration-file">
+<h3>Usage from a configuration file<a class="headerlink" href="#usage-from-a-configuration-file" title="Permalink to this headline">¶</a></h3>
+<p>The easiest method of starting the rampart webserver is to copy the
+example webserver <a class="reference external" href="https://github.com/aflin/rampart/tree/main/web_server">https://github.com/aflin/rampart/tree/main/web_server</a>
+directory and edit the settings found in the <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code> script.</p>
+<p>After editing, the server can be used as follows:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ rampart /path/to/web_server/web_server_conf.js start
+Server has been started.
+
+rampart@machine:~&gt;$ rampart /path/to/web_server/web_server_conf.js help
+usage:
+  rampart web_server_conf.js [start|stop|restart|letssetup|status|dump|help]
+      start     -- start the http(s) server
+      stop      -- stop the http(s) server
+      restart   -- stop and restart the http(s) server
+      letssetup -- start http only to allow letsencrypt verification
+      status    -- show status of server processes
+      dump      -- dump the config object used for server.start()
+      help      -- show this message
+</pre></div>
+</div>
+<p>The usable settings in <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code> include all the possible settings
+applicable to the <a class="reference internal" href="rampart-server.html#start"><span class="std std-ref">server.start()</span></a> function
+as well as extras to simplify the process and add extra functionality.</p>
+<p>Notable extras:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">bindAll</span></code>      - <span class="green">Boolean</span>, if true, bind the server to <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">[::]</span></code> ip addresses</li>
+<li><code class="docutils literal notranslate"><span class="pre">port</span></code>         - <span class="green">Number</span>, use this value to set <code class="docutils literal notranslate"><span class="pre">ipPort</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ipv6Port</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">redirPort</span></code>    - <span class="green">Number</span>, when launching a secure <code class="docutils literal notranslate"><span class="pre">https</span></code>
+server, also launch a <code class="docutils literal notranslate"><span class="pre">http</span></code> server using this port to redirect
+requests to the https server (assuming default port <code class="docutils literal notranslate"><span class="pre">443</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">redir</span></code>        - <span class="green">Boolean</span>, if true, set <code class="docutils literal notranslate"><span class="pre">redirPort</span></code> to
+<code class="docutils literal notranslate"><span class="pre">80</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rotateLogs</span></code>   - <span class="green">Boolean</span>, if true, launch a monitor process
+to rotate the access and error log files at a given time. Default is
+<code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rotateStart</span></code>  - <span class="green">String</span>, the time to start rotating the
+logs.  Default is <code class="docutils literal notranslate"><span class="pre">00:00</span></code> (for localtime, midnight).</li>
+<li><code class="docutils literal notranslate"><span class="pre">rotateInterval</span></code> - <span class="green">Number</span>, how often to rotate the logs.
+Default is <code class="docutils literal notranslate"><span class="pre">86400</span></code> (for every 24 hours).  It may also be given as
+the <span class="green">Strings</span> <code class="docutils literal notranslate"><span class="pre">&quot;hourly&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;daily&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;weekly&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">letsencrypt</span></code>  - <span class="green">String</span>, for secure serving, the directory
+where the letsencrypt certificates can be found.  Set to <code class="docutils literal notranslate"><span class="pre">&quot;example.com</span></code>
+would therefore look for certificates in the
+<code class="docutils literal notranslate"><span class="pre">/etc/letsencrypt/live/example.com/</span></code> directory.  See
+<a class="reference internal" href="#use-with-letsencrypt">Use with Letsencrypt</a> below.</li>
+<li><code class="docutils literal notranslate"><span class="pre">serverRoot</span></code>   - <span class="green">String</span>, the root directory (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;/path/to/my/web_server&quot;</span></code>. Default is the current working
+directory.</li>
+<li><code class="docutils literal notranslate"><span class="pre">map</span></code>          - <span class="green">Object</span>, replace the map and only use this <span class="green">Object</span>
+to pass to the <a class="reference internal" href="rampart-server.html#start"><span class="std std-ref">server.start()</span></a> function.</li>
+<li><code class="docutils literal notranslate"><span class="pre">appendMap</span></code>    - <span class="green">Object</span>, append default mappings
+passed to the <a class="reference internal" href="rampart-server.html#start"><span class="std std-ref">server.start()</span></a> function.</li>
+<li><code class="docutils literal notranslate"><span class="pre">monitor</span></code>      - <span class="green">Boolean</span>, if true, launch a monitor process
+to continuously check that the server is running (every 10 seconds)
+and that the root index.html file can be reached (every 60 seconds).
+Default is false.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stop</span></code>         - <span class="green">Boolean</span>, if true, stop the server, along
+with the redirect server and monitor processs if either was launched.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="building-a-command-line-utility">
+<h3>Building a command line utility<a class="headerlink" href="#building-a-command-line-utility" title="Permalink to this headline">¶</a></h3>
+<p>To aid in starting a server from the command line without having to
+configure it from a JavaScript script, a small script such as the following
+can be used:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">wserv</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-webserver&quot;</span><span class="p">);</span>
+<span class="nx">webserv</span><span class="p">.</span><span class="nx">cmdLine</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">webserv.cmdLine(2);</span></code> function will process options
+from command line arguments, starting with the second one (skipping
+argv[0] (<code class="docutils literal notranslate"><span class="pre">rampart</span></code>) and argv[1] (<code class="docutils literal notranslate"><span class="pre">script_name.js</span></code>).  It will
+then launch a server using the processed options.</p>
+<p>The same functionality is also available from the main rampart executable and can be used
+as such:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ rampart --server ~/web_server/
+Server has been started.
+rampart@machine:~&gt;$ rampart --server --stop ~/web_server/
+server stopped
+rampart@machine:~&gt;$ rampart --server --help
+rampart built-in server help:
+
+Usage: rampart --[quick]server [options] [root_dir]
+    --server        - run as a full server
+    --quickserver   - run as a test server
+    --help, -h      - this help message
+    --lsopts        - print details on all options
+    --showdefaults  - print the list of default settings for --server or --quickserver
+    --OPTION [val]  - where OPTION is one of options listed from &#39;--lsopts&#39;
+
+If root_dir is not specified, the current directory will be used
+
+rampart@machine:~&gt;$ rampart --server --lsopts
+--ipAddr             String. The ipv4 address to bind
+--ipv6Addr           String. The ipv6 address to bind
+--bindAll            Bool.   Set ipAddr and ipv6Addr to &#39;0.0.0.0&#39; and &#39;[::]&#39; respectively
+--ipPort             Number. Set ipv4 port
+--ipv6Port           Number. Set ipv6 port
+--port               Number. Set both ipv4 and ipv6 port
+--redirPort          Number. Launch http-&gt;https redirect server and set port
+--redir              Bool.   Launch http-&gt;https redirect server and set to port 80
+--htmlRoot           String. Root directory from which to serve files
+--appsRoot           String. Root directory from which to serve apps
+--wsappsRoot         String. Root directory from which to serve wsapps
+--dataRoot           String. Setting for user scripts
+--logRoot            String. Log directory
+--accessLog          String. Log file name. &quot;&quot; for stdout
+--errorLog           String. error log file name. &quot;&quot; for stderr
+--log                Bool.   Whether to log requests and errors
+--rotateLogs         Bool.   Whether to rotate the logs
+--rotateInterval     Number. Interval between log rotations in seconds
+--rotateStart        String. Time to start log rotations
+--user               String. If started as root, switch to this user
+--threads            Number. Limit the number of threads used by the server.
+                     Default (-1) is the number of cores on the system
+--sslKeyFile         String. If https, the ssl/tls key file location
+--sslCertFile        String. If https, the ssl/tls cert file location
+--secure             Bool.   Whether to use https.  If true sslKeyFile and sslCertFile must be set
+--developerMode      Bool.   Whether script errors result in 500 and return a stack trace.  Otherwise 404
+--letsencrypt        String. If using letsencrypt, the &#39;domain.tld&#39; name for automatic setup of https
+                     (assumes --secure true and looks for &#39;/etc/letsencrypt/live/domain.tld/&#39; directory)
+                     (if redir is set, also map ./letsencrypt-wd/.well-known/ --&gt; http://mydom.com/.well-known/)
+                     (if set to &quot;setup&quot;, don\&#39;t start https server, but do map &quot;.well-known/&quot; for http)
+                     (sets port:443 unless set otherwise)
+--rootScripts        Bool.   Whether to treat *.js files in htmlRoot as apps (not secure)
+--directoryFunc      Bool.   Whether to provide a directory listing if no index.html is found
+--daemon             Bool.   whether to detach from terminal
+--monitor            fork and run a monitor as a daemon which restarts server w/in 10 seconds if it dies
+--scriptTimeout      Number  Max time to wait for a script module to return a reply in seconds (default 20)
+--connectTimeout     Number  Max time to wait for client send request in seconds (default 20)
+-d                   alias for &#39;--daemon true&#39;
+--detach             alias for &#39;--daemon true&#39;
+--stop               stop the server.  Also stop the monitor and log rotation, if started
+</pre></div>
+</div>
+<p>The default settings, whether used from the command line or with a script
+such as the included <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code> script are visible with the
+following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ rampart --server --showdefaults ~/web_server
+Defaults for --server:
+{
+   &quot;ipAddr&quot;: &quot;127.0.0.1&quot;,
+   &quot;ipv6Addr&quot;: &quot;[::1]&quot;,
+   &quot;bindAll&quot;: false,
+   &quot;ipPort&quot;: 8088,
+   &quot;ipv6Port&quot;: 8088,
+   &quot;port&quot;: -1,
+   &quot;redirPort&quot;: -1,
+   &quot;redir&quot;: false,
+   &quot;htmlRoot&quot;: &quot;/home/rampart/web_server/html&quot;,
+   &quot;appsRoot&quot;: &quot;/home/rampart/web_server/apps&quot;,
+   &quot;wsappsRoot&quot;: &quot;/home/rampart/web_server/wsapps&quot;,
+   &quot;dataRoot&quot;: &quot;/home/rampart/web_server/data&quot;,
+   &quot;logRoot&quot;: &quot;/home/rampart/web_server/logs&quot;,
+   &quot;accessLog&quot;: &quot;/home/rampart/web_server/logs/access.log&quot;,
+   &quot;errorLog&quot;: &quot;/home/rampart/web_server/logs/error.log&quot;,
+   &quot;log&quot;: true,
+   &quot;rotateLogs&quot;: false,
+   &quot;rotateInterval&quot;: 86400,
+   &quot;rotateStart&quot;: &quot;00:00&quot;,
+   &quot;user&quot;: &quot;nobody&quot;,
+   &quot;threads&quot;: -1,
+   &quot;sslKeyFile&quot;: &quot;&quot;,
+   &quot;sslCertFile&quot;: &quot;&quot;,
+   &quot;secure&quot;: false,
+   &quot;developerMode&quot;: true,
+   &quot;letsencrypt&quot;: &quot;&quot;,
+   &quot;rootScripts&quot;: false,
+   &quot;directoryFunc&quot;: false,
+   &quot;monitor&quot;: false,
+   &quot;daemon&quot;: true,
+   &quot;scriptTimeout&quot;: 20,
+   &quot;connectTimeout&quot;: 20,
+   &quot;quickserver&quot;: false,
+   &quot;appendProcTitle&quot;: false,
+   &quot;serverRoot&quot;: &quot;/home/rampart/web_server&quot;,
+   &quot;fullServer&quot;: 1
+}
+
+rampart@machine:~/dir_with_files&gt;$ rampart --quickserver --showdefaults
+Defaults for --quickserver:
+{
+   &quot;ipAddr&quot;: &quot;127.0.0.1&quot;,
+   &quot;ipv6Addr&quot;: &quot;[::1]&quot;,
+   &quot;bindAll&quot;: false,
+   &quot;ipPort&quot;: 8088,
+   &quot;ipv6Port&quot;: 8088,
+   &quot;port&quot;: -1,
+   &quot;redirPort&quot;: -1,
+   &quot;htmlRoot&quot;: &quot;/home/rampart/dir_with_files/&quot;,
+   &quot;appsRoot&quot;: &quot;&quot;,
+   &quot;wsappsRoot&quot;: &quot;&quot;,
+   &quot;dataRoot&quot;: &quot;&quot;,
+   &quot;logRoot&quot;: &quot;/home/rampart/dir_with_files/logs&quot;,
+   &quot;accessLog&quot;: &quot;&quot;,
+   &quot;errorLog&quot;: &quot;&quot;,
+   &quot;log&quot;: false,
+   &quot;rotateLogs&quot;: false,
+   &quot;rotateInterval&quot;: 86400,
+   &quot;rotateStart&quot;: &quot;00:00&quot;,
+   &quot;user&quot;: &quot;nobody&quot;,
+   &quot;threads&quot;: 1,
+   &quot;sslKeyFile&quot;: &quot;&quot;,
+   &quot;sslCertFile&quot;: &quot;&quot;,
+   &quot;secure&quot;: false,
+   &quot;developerMode&quot;: true,
+   &quot;letsencrypt&quot;: &quot;&quot;,
+   &quot;rootScripts&quot;: false,
+   &quot;directoryFunc&quot;: true,
+   &quot;monitor&quot;: false,
+   &quot;daemon&quot;: false,
+   &quot;scriptTimeout&quot;: 20,
+   &quot;connectTimeout&quot;: 20,
+   &quot;quickserver&quot;: true,
+   &quot;appendProcTitle&quot;: false,
+   &quot;serverRoot&quot;: &quot;/home/rampart/dir_with_files&quot;,
+   &quot;fullServer&quot;: 0
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="use-with-letsencrypt">
+<h3>Use with Letsencrypt<a class="headerlink" href="#use-with-letsencrypt" title="Permalink to this headline">¶</a></h3>
+<p>A shortcut for setting up a secure server with <a class="reference external" href="https://letsencrypt.org/">letsencrypt</a>
+is available via the <code class="docutils literal notranslate"><span class="pre">letsencrypt</span></code> keys in <code class="docutils literal notranslate"><span class="pre">web_server_conf</span></code> or using
+<code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--server</span> <span class="pre">--letsencrypt</span> <span class="pre">example.com</span></code>.  Setting the value to
+the appropriate domain name (e.g. <code class="docutils literal notranslate"><span class="pre">example.com</span></code>) will set the following
+keys automatically:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;secure&quot;</span><span class="o">:</span>        <span class="kc">true</span><span class="p">,</span>
+    <span class="s2">&quot;sslKeyFile&quot;</span><span class="o">:</span>    <span class="s2">&quot;/etc/letsencrypt/live/example.com/privkey.pem&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sslCertFile&quot;</span><span class="o">:</span>   <span class="s2">&quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Obtaining a key via the letsencrypt <code class="docutils literal notranslate"><span class="pre">certbot</span></code> utility requires access to
+<code class="docutils literal notranslate"><span class="pre">http://example.com:80/.well-known/</span></code> and the corresponding mapped
+directory on the filesystem.  If the <code class="docutils literal notranslate"><span class="pre">redir</span></code> or <code class="docutils literal notranslate"><span class="pre">redirPort</span></code> setting is
+set along with the <code class="docutils literal notranslate"><span class="pre">letsencrypt:&quot;example.com&quot;</span></code>, the directory
+<code class="docutils literal notranslate"><span class="pre">/path/to/my/web_server/letsencrypt_wd/.well-known</span></code> will automatically be
+created and mapped to <code class="docutils literal notranslate"><span class="pre">http://example.com:80/.well-known/</span></code>.</p>
+<p>In addition, the <code class="docutils literal notranslate"><span class="pre">letsencrypt</span></code> key may be set to <code class="docutils literal notranslate"><span class="pre">&quot;setup&quot;</span></code>
+(or by doing <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">./web_server_conf.js</span> <span class="pre">letssetup</span></code>) to prevent
+starting the secure server when the certificates have not yet been
+issued by letsencrypt.</p>
+<p>A full example of obtaining a certificate using <code class="docutils literal notranslate"><span class="pre">certbot</span></code>, substituting
+the desired domain name with <code class="docutils literal notranslate"><span class="pre">example.com</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># work must be performed as root</span>
+~&gt;$ sudo bash
+
+<span class="c1"># install the certbot using appropriate package manager</span>
+root@example.com:~# apt install certbot
+
+<span class="c1"># change to the location of your web_server.</span>
+root@example.com:~# <span class="nb">cd</span> /path/to/my/web_server
+
+<span class="c1"># edit web_server_conf.js file and set ``&quot;letsencrypt&quot;: &quot;example.com&quot;``</span>
+root@example.com:/path/to/my/web_server# vi ./web_server_conf.js
+
+<span class="c1"># start the http webserver in letsencrypt setup mode (don&#39;t start https)</span>
+root@example.com:/path/to/my/web_server# rampart ./web_server_conf.js letssetup
+
+<span class="c1"># verify redirect server has mapped .well-known/</span>
+root@example.com:/path/to/my/web_server# ls -a letsencrypt_wd/
+.  ..  .well-known
+
+<span class="c1"># request a certificate (this machine must be reachable at [www.]example.com)</span>
+root@example.com:/path/to/my/web_server# certbot certonly --webroot <span class="se">\</span>
+--webroot-path /path/to/my/web_server/letsencrypt_wd <span class="se">\</span>
+-d example.com,www.example.com
+
+<span class="c1"># if certs were issued without error, the server can now be restarted</span>
+<span class="c1"># with https enabled</span>
+root@example.com:/path/to/my/web_server# rampart ./web_server_conf.js restart
+</pre></div>
+</div>
+<p>A root crontab entry will keep the certificate up to date:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 5 * * * /usr/bin/certbot renew --quiet --renew-hook &quot;rampart /path/to/my/web_server/web_server_conf.js restart&quot; 2&gt;/dev/null
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="the-c-module-template-maker-utility">
+<h2>The c_module_template_maker utility<a class="headerlink" href="#the-c-module-template-maker-utility" title="Permalink to this headline">¶</a></h2>
+<p>Included in the rampart unsupported extras is a utility script to help with
+the creation of rampart modules written in C.  It can be found in
+the <a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/c_module_template_maker">unsupported_extras/c_module_template_maker</a>
+directory of the rampart distribution.</p>
+<div class="section" id="creating-a-c-module-template">
+<h3>Creating a C Module template<a class="headerlink" href="#creating-a-c-module-template" title="Permalink to this headline">¶</a></h3>
+<p>The first step is to copy the <code class="docutils literal notranslate"><span class="pre">make_cmod_template.js</span></code> into a new directory
+for the project.  After copying, it can be run as such:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ mkdir my_module
+rampart@machine:~&gt;$ cd my_module
+rampart@machine:~/my_module&gt;$ cp /usr/local/rampart/unsupported_extras/c_module_template_maker/make_cmod_template.js  ./
+rampart@machine:~/my_module&gt;$ rampart make_cmod_template.js -- --help
+usage:
+    make_cmod_template.js -h
+        or
+    make_cmod_template.js c_file_name [-f function_args] [-m make_file_name] [-t test_file_name]
+
+where:
+
+    c_file_name     - The c template file to write.
+
+    make_file_name  - The name of the makefile to write (default &quot;Makefile&quot;)
+
+    test_file_name  - The name of the JavaScript test file (default c_file_name-test.js)
+
+    function_args   - Create c functions that will be exported to JavaScript.
+                    - May be specified more than once.
+                    - Format: cfunc_name:jsfunc_name[:nargs[:input_types]]
+
+    function_args format (each argument seperated by a &#39;:&#39;):
+
+        cfunc_name:  The name of the c function.
+
+        jsfunc_name: The name of the javascript function to export.
+
+        nargs: The number of arguments the javascript function can take (-1 for variadic)
+
+        input_types: Require a variable type for javascript options:
+            A character for each argument. [n|i|u|s|b|B|o|a|f].
+            Corresponding to require
+             [  number|number(as int)|number(as int&gt;-1)|string|
+                boolean|buffer|object|array|function             ]
+
+A ready to compile, testable module will be produced if both &quot;nargs&quot; and &quot;input_types&quot; are provided.
+
+Example to create a module that exports two functions which each take a String and Number:
+
+rampart make_cmod_template example.c -f my_func:myFunc:2:sn -f my_func2:myFunc2:2:sn
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-usage-to-create-a-module">
+<h3>Example usage to create a module<a class="headerlink" href="#example-usage-to-create-a-module" title="Permalink to this headline">¶</a></h3>
+<p>The following is an example of how to make a simple C module that
+capitalizes a string.</p>
+<p>First, run the script with appropriate options to create the template files.
+In this case it is used to create a module named <code class="docutils literal notranslate"><span class="pre">&quot;myutil.so&quot;</span></code> which will
+export an <span class="green">Object</span> with the function <code class="docutils literal notranslate"><span class="pre">&quot;capitalize&quot;</span></code>.  Calling this
+function from JavaScript will run a C function named
+<code class="docutils literal notranslate"><span class="pre">my_capitalization_func</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~/my_module&gt;$ rampart make_cmod_template.js myutil -f my_capitalize_func:capitalize:1:s
+rampart@machine:~/my_module&gt;$ ls
+make_cmod_template.js  Makefile  myutil.c  myutil-test.js
+rampart@machine:~/my_module&gt;$ make
+cc -Wall -g -O2 -std=c99 -I/usr/local/rampart/include  -fPIC -shared -Wl,-soname,myutil.so -o myutil.so myutil.c
+myutil.c: In function ‘my_capitalize_func’:
+myutil.c:5:18: warning: unused variable ‘js_arg1’ [-Wunused-variable]
+    5 |     const char * js_arg1 = REQUIRE_STRING(ctx, 0, &quot;capitalize: argument 1 must be a string&quot;);
+      |                  ^~~~~~~
+</pre></div>
+</div>
+<p>At this stage, the function does not actually do anything (hence the warning
+above).  But it is a fully functioning module which can now be edited to add
+actual functionality. The <code class="docutils literal notranslate"><span class="pre">myutil.c</span></code> file will contain the following:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;/usr/local/rampart/include/rampart.h&quot;</span><span class="cp"></span>
+
+<span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">my_capitalize_func</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">js_arg1</span> <span class="o">=</span> <span class="n">REQUIRE_STRING</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;capitalize: argument 1 must be a string&quot;</span><span class="p">);</span>
+
+    <span class="cm">/* YOUR CODE GOES HERE */</span>
+
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/* **************************************************</span>
+<span class="cm">   Initialize module</span>
+<span class="cm">   ************************************************** */</span>
+<span class="n">duk_ret_t</span> <span class="nf">duk_open_module</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* the return object when var mod=require(&quot;myutil&quot;) is called. */</span>
+    <span class="n">duk_push_object</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+
+
+    <span class="cm">/* js function is mod.capitalize and it calls my_capitalize_func */</span>
+    <span class="n">duk_push_c_function</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">my_capitalize_func</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">duk_put_prop_string</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;capitalize&quot;</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We can add the needed <code class="docutils literal notranslate"><span class="pre">#includes</span></code> and replace the <code class="docutils literal notranslate"><span class="pre">/*</span> <span class="pre">YOUR</span> <span class="pre">CODE</span> <span class="pre">GOES</span> <span class="pre">HERE</span> <span class="pre">*/</span></code> with the following:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">//for linux and strdup and -std=c99</span>
+<span class="cp">#define _DEFAULT_SOURCE</span>
+<span class="cp">#include</span> <span class="cpf">&lt;ctype.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&quot;/usr/local/rampart/include/rampart.h&quot;</span><span class="cp"></span>
+
+<span class="k">static</span> <span class="n">duk_ret_t</span> <span class="nf">my_capitalize_func</span><span class="p">(</span><span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">js_arg1</span> <span class="o">=</span> <span class="n">REQUIRE_STRING</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;capitalize: argument 1 must be a string&quot;</span><span class="p">);</span>
+
+    <span class="kt">char</span> <span class="o">*</span><span class="n">capped</span> <span class="o">=</span> <span class="n">strdup</span><span class="p">(</span><span class="n">js_arg1</span><span class="p">),</span> <span class="o">*</span><span class="n">s</span><span class="o">=</span><span class="n">capped</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span><span class="p">(</span><span class="n">s</span><span class="o">++</span><span class="p">)</span><span class="o">=</span><span class="n">toupper</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="p">);</span>
+    <span class="n">duk_push_string</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">capped</span><span class="p">);</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">capped</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Then recompile:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~/my_module&gt;$ make
+</pre></div>
+</div>
+<p>Also created is a script to test the new module named <code class="docutils literal notranslate"><span class="pre">mymod-test.js</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">myutil</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;myutil&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">testFeature</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="nx">test</span><span class="p">,</span><span class="nx">error</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">test</span> <span class="o">==</span><span class="s1">&#39;function&#39;</span><span class="p">){</span>
+        <span class="k">try</span> <span class="p">{</span>
+            <span class="nx">test</span><span class="o">=</span><span class="nx">test</span><span class="p">();</span>
+        <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">error</span><span class="o">=</span><span class="nx">e</span><span class="p">;</span>
+            <span class="nx">test</span><span class="o">=</span><span class="kc">false</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;testing %-50s - &quot;</span><span class="p">,</span> <span class="nx">name</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">test</span><span class="p">)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;passed\n&quot;</span><span class="p">)</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;&gt;&gt;&gt;&gt;&gt; FAILED &lt;&lt;&lt;&lt;&lt;\n&quot;</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;%J\n&#39;</span><span class="p">,</span><span class="nx">error</span><span class="p">);</span>
+        <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="nx">testFeature</span><span class="p">(</span><span class="s2">&quot;myutil.capitalize basic functionality&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">lastarg</span> <span class="o">=</span> <span class="s2">&quot;String&quot;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">lastarg</span> <span class="o">==</span> <span class="nx">myutil</span><span class="p">.</span><span class="nx">capitalize</span><span class="p">(</span><span class="nx">lastarg</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Next step is to modify the <code class="docutils literal notranslate"><span class="pre">testFeature()</span></code> call in <code class="docutils literal notranslate"><span class="pre">mymod-test.js</span></code> to verify
+the new function works as expected:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">testFeature</span><span class="p">(</span><span class="s2">&quot;myutil.capitalize basic functionality&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">mystring</span> <span class="o">=</span> <span class="s2">&quot;String&quot;</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">expected</span> <span class="o">=</span> <span class="s2">&quot;STRING&quot;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">expected</span> <span class="o">==</span> <span class="nx">myutil</span><span class="p">.</span><span class="nx">capitalize</span><span class="p">(</span><span class="nx">mystring</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Running the test script results in the following output:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~/my_module&gt;$ rampart myutil-test.js
+testing myutil.capitalize basic functionality              - passed
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="graphicsmagick-module">
+<h2>GraphicsMagick Module<a class="headerlink" href="#graphicsmagick-module" title="Permalink to this headline">¶</a></h2>
+<p>Included in the rampart unsupported extras is a module to perform
+transformations on images using the <code class="docutils literal notranslate"><span class="pre">graphicsMagick</span></code> library.</p>
+<p>Because it relies on an external library, it is unsupported and
+must be compiled from the souce.</p>
+<p>Details on usage and how to compile can be found in the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/graphicsmagick">unsupported_extras/graphicsmagick</a>
+directory of the rampart distribution.</p>
+</div>
+<div class="section" id="websocket-client">
+<h2>websocket_client<a class="headerlink" href="#websocket-client" title="Permalink to this headline">¶</a></h2>
+<p>A command line websocket client and rampart module can be found in the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/websocket_client">unsupported_extras/websocket_client</a>
+directory of the rampart distribution.</p>
+<p>It can be used from the command line as such:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ /rampart/unsupported_extras/websocket_client&gt;$ rampart wsclient.js
+wsclient.js [ -h header] [-s] url:
+    url    where scheme is ws:// or wss://
+    -H     header is a header to be added (&#39;headername=headerval&#39;). May be used more than once.
+    -s     show raw http request to server on connect
+</pre></div>
+</div>
+<p>Once connected, text entered will be sent to the server while sent messages
+will appear in the terminal.  There are also commands that can be run from
+the prompt:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">.save</span> <span class="pre">filename</span></code> - save the last binary message sent by the server.
+to a file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">.send</span> <span class="pre">filename</span></code> - send a file as a binary message to the server.</li>
+<li><code class="docutils literal notranslate"><span class="pre">.close</span></code>         - close the connection and quit.</li>
+</ul>
+</div></blockquote>
+<p>More information is in the <a class="reference external" href="https://github.com/aflin/rampart/blob/main/unsupported_extras/websocket_client/wsclient.js">file itself</a>.</p>
+</div>
+<div class="section" id="forkpty-term">
+<h2>forkpty-term<a class="headerlink" href="#forkpty-term" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://github.com/aflin/rampart/blob/main/unsupported_extras/forkpty-term">unsupported_extras/forkpty-term</a>
+directory of the rampart distribution contains a sample web terminal emulator
+that uses the <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code> module, <a class="reference internal" href="rampart-server.html#websockets"><span class="std std-ref">websockets</span></a>
+and the <a class="reference internal" href="rampart-utils.html#forkpty"><span class="std std-ref">rampart.utils.forkpty()</span></a> on
+the server side, and <a class="reference external" href="https://xtermjs.org/">xterm.js</a> on the client to
+create a fully functioning xterm in the browser.</p>
+<p>The relevant files may be copied directly into the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/web_server">example webserver</a>
+directory.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorialtoc.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rampart-url.html" class="btn btn-neutral" title="The rampart-url module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2024, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.5.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

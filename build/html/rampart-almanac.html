@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The rampart-almanac module &mdash; Rampart 0.5.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.5.0 documentation" href="index.html"/>
+        <link rel="next" title="The rampart-url module" href="rampart-url.html"/>
+        <link rel="prev" title="The rampart-cmark module" href="rampart-cmark.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The rampart-almanac module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-does-it-do">What does it do?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading">Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#celestial-positions">Celestial Positions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#almanac-suntimes">almanac.suntimes()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#almanac-moontimes">almanac.moontimes()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#almanac-celestials">almanac.celestials()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#almanac-seasons">almanac.seasons()</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#holidays">Holidays</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-almanac-holiday">new almanac.Holiday()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The rampart-almanac module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rampart-almanac.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-rampart-almanac-module">
+<h1>The rampart-almanac module<a class="headerlink" href="#the-rampart-almanac-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-almanac module uses
+<a class="reference external" href="https://github.com/cosinekitty/astronomy">astronomy.c library</a>
+and the <a class="reference external" href="https://github.com/commenthol/date-holidays">date-holidays JavaScript module</a>
+The authors of Rampart extend our thanks to authors of these libraries.</p>
+</div>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+<p>The astronomy.c library is licensed under the
+<a class="reference external" href="https://github.com/cosinekitty/astronomy/blob/master/LICENSE">MIT license</a>.
+The date-holidays Javascript module is licensed under an
+<a class="reference external" href="https://github.com/commenthol/date-holidays/blob/master/LICENSE">ISC license</a>
+and includes other licenses therein.</p>
+</div>
+<div class="section" id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-astronomy module calculates Sun, Moon and Planet rise, set and positions
+given a date and time, and latitude and longitude, and seasons given a year.  It also includes
+rampart-date-holidays.js which calculates holidays for a particular locale and year.</p>
+</div>
+</div>
+<div class="section" id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code> function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="celestial-positions">
+<h2>Celestial Positions<a class="headerlink" href="#celestial-positions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="almanac-suntimes">
+<h3>almanac.suntimes()<a class="headerlink" href="#almanac-suntimes" title="Permalink to this headline">¶</a></h3>
+<p>Calculate sun position times for a given day, longitude and latitude.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">suntimes</span><span class="p">(</span><span class="nx">date</span><span class="p">,</span> <span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">date</span></code> is a JavaScript <span class="green">Date</span> or a <span class="green">String</span> (which is converted using
+<a class="reference internal" href="rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a <span class="green">Number</span> (negative for south).</li>
+<li><code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a <span class="green">Number</span> (negative for west).</li>
+</ul>
+<p>Return Value: An <span class="green">Object</span> with the relevant information.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">suntimes</span><span class="p">(</span><span class="s2">&quot;2024-01-01 -0700&quot;</span><span class="p">,</span> <span class="mf">37.77</span><span class="p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="cm">/* times =</span>
+<span class="cm">   {</span>
+<span class="cm">       &quot;daylightHours&quot;: 9.605555555555556,</span>
+<span class="cm">       &quot;civilTwilightHours&quot;: 10.580555555555556,</span>
+<span class="cm">       &quot;nauticalTwilightHours&quot;: 11.674444444444445,</span>
+<span class="cm">       &quot;astronomicalTwilightHours&quot;: 12.7375,</span>
+<span class="cm">       &quot;solarNoon&quot;: &quot;2024-01-01T20:13:08.000Z&quot;,</span>
+<span class="cm">       &quot;sunrise&quot;: &quot;2024-01-01T15:25:03.000Z&quot;,</span>
+<span class="cm">       &quot;sunset&quot;: &quot;2024-01-02T01:01:23.000Z&quot;,</span>
+<span class="cm">       &quot;civilTwilightStart&quot;: &quot;2024-01-01T14:55:47.000Z&quot;,</span>
+<span class="cm">       &quot;civilTwilightEnd&quot;: &quot;2024-01-02T01:30:37.000Z&quot;,</span>
+<span class="cm">       &quot;nauticalTwilightStart&quot;: &quot;2024-01-01T14:22:59.000Z&quot;,</span>
+<span class="cm">       &quot;nauticalTwilightEnd&quot;: &quot;2024-01-02T02:03:27.000Z&quot;,</span>
+<span class="cm">       &quot;astronomicalTwilightStart&quot;: &quot;2024-01-01T13:51:05.000Z&quot;,</span>
+<span class="cm">       &quot;astronomicalTwilightEnd&quot;: &quot;2024-01-02T02:35:18.000Z&quot;,</span>
+<span class="cm">       &quot;sunriseAzimuth&quot;: 118.89538324193013,</span>
+<span class="cm">       &quot;sunsetAzimuth&quot;: 241.1489255497421</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
+<span class="cm">/* get sunrise as a local time by using &#39;%z&#39; */</span>
+<span class="kd">var</span> <span class="nx">sunrise</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c %z\n&quot;</span><span class="p">,</span> <span class="nx">times</span><span class="p">.</span><span class="nx">sunrise</span><span class="p">);</span>
+<span class="cm">/* sunrise = &quot;Mon Jan  1 07:25:03 2024 -0800&quot; */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="almanac-moontimes">
+<h3>almanac.moontimes()<a class="headerlink" href="#almanac-moontimes" title="Permalink to this headline">¶</a></h3>
+<p>Calculate moon position times for a given day, longitude and latitude.
+Also return dates of the next moon phases.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">suntimes</span><span class="p">(</span><span class="nx">date</span><span class="p">,</span> <span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">date</span></code> is a JavaScript <span class="green">Date</span> or a <span class="green">String</span> (which is converted using
+<a class="reference internal" href="rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a <span class="green">Number</span> (negative for south).</li>
+<li><code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a <span class="green">Number</span> (negative for west).</li>
+</ul>
+<p>Return Value: An <span class="green">Object</span> with the relevant information.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">moontimes</span><span class="p">(</span><span class="s2">&quot;2024-01-01 -0700&quot;</span><span class="p">,</span> <span class="mf">37.77</span><span class="p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="cm">/*  times =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;moonrise&quot;: &quot;2024-01-01T05:39:21.000Z&quot;,</span>
+<span class="cm">       &quot;moonset&quot;: &quot;2024-01-01T19:02:42.000Z&quot;,</span>
+<span class="cm">       &quot;newMoon&quot;: &quot;2024-01-11T11:57:54.000Z&quot;,</span>
+<span class="cm">       &quot;firstQuarter&quot;: &quot;2024-01-18T03:53:09.000Z&quot;,</span>
+<span class="cm">       &quot;fullMoon&quot;: &quot;2024-01-25T17:54:41.000Z&quot;,</span>
+<span class="cm">       &quot;lastQuarter&quot;: &quot;2024-01-04T03:31:09.000Z&quot;,</span>
+<span class="cm">       &quot;moonriseAzimuth&quot;: 75.56532169981396,</span>
+<span class="cm">       &quot;moonsetAzimuth&quot;: 280.6774632262042,</span>
+<span class="cm">       &quot;moonPhase&quot;: 0.6554114447709545,</span>
+<span class="cm">       &quot;moonIllumination&quot;: 0.779971673366036</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="almanac-celestials">
+<h3>almanac.celestials()<a class="headerlink" href="#almanac-celestials" title="Permalink to this headline">¶</a></h3>
+<p>Calculate sun, moon and planet times for a given day, longitude and latitude.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">celestials</span><span class="p">(</span><span class="nx">date</span><span class="p">,</span> <span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">date</span></code> is a JavaScript <span class="green">Date</span> or a <span class="green">String</span> (which is converted using
+<a class="reference internal" href="rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a <span class="green">Number</span> (negative for south).</li>
+<li><code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a <span class="green">Number</span> (negative for west).</li>
+</ul>
+<p>Return Value: An <span class="green">Object</span> with the relevant information.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">celestials</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="mf">37.77</span><span class="p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="cm">/*  times =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;sun&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 18.70381774294387,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -23.082972736894366,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 231.2447789386162,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 9.200955835755252,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T15:25:03.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-02T01:01:23.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;moon&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 10.585655630489418,</span>
+<span class="cm">          &quot;currentDeclination&quot;: 12.06431630189065,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 358.2427660196457,</span>
+<span class="cm">          &quot;currentAltitude&quot;: -39.911128386544675,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T05:39:21.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-01T19:02:42.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;mercury&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 17.42857713438222,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -20.134230004864982,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 245.65820797921364,</span>
+<span class="cm">          &quot;currentAltitude&quot;: -1.1285066854169088,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T13:56:35.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-01T23:48:43.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;venus&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 16.04024593585745,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -18.703696660954833,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 258.8170836590166,</span>
+<span class="cm">          &quot;currentAltitude&quot;: -16.054068589788287,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T12:31:52.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-01T22:35:04.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;mars&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 17.77925369534947,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -23.951999465047503,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 239.58535957726625,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 0.013586371580359469,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T14:34:09.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-01T23:59:15.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;jupiter&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 2.224206624688085,</span>
+<span class="cm">          &quot;currentDeclination&quot;: 12.150270854695547,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 101.66782757086347,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 34.25711749414994,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T20:58:35.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-02T10:19:59.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;saturn&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 22.363992244102082,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -11.961562816580198,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 182.50892699669285,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 40.37470253011248,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T18:23:44.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-02T05:13:29.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;uranus&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 3.1122566235436486,</span>
+<span class="cm">          &quot;currentDeclination&quot;: 17.187443780343074,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 88.20667075806635,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 26.70533930046701,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T21:34:37.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-02T11:30:03.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;neptune&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 23.711146313700397,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -3.221011807290628,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 153.3716388125294,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 45.795412016162715,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T19:16:31.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-02T07:01:13.000Z&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;pluto&quot;: {</span>
+<span class="cm">          &quot;currentRightAscension&quot;: 20.118773598789403,</span>
+<span class="cm">          &quot;currentDeclination&quot;: -23.058689775023026,</span>
+<span class="cm">          &quot;currentAzimuth&quot;: 214.92988354299945,</span>
+<span class="cm">          &quot;currentAltitude&quot;: 20.68436892218172,</span>
+<span class="cm">          &quot;nextRise&quot;: &quot;2024-01-01T16:48:25.000Z&quot;,</span>
+<span class="cm">          &quot;nextSet&quot;: &quot;2024-01-02T02:19:56.000Z&quot;</span>
+<span class="cm">       }</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="almanac-seasons">
+<h3>almanac.seasons()<a class="headerlink" href="#almanac-seasons" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the start of seasons for a given year.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">seasons</span><span class="p">(</span><span class="nx">year</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">date</span></code> is a <span class="green">Number</span>, the year to calculate.</li>
+</ul>
+<p>Return Value: An <span class="green">Object</span> with dates for each season.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">seasons</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">seasons</span><span class="p">(</span><span class="mi">2025</span><span class="p">);</span>
+<span class="cm">/*  seasons =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;spring&quot;: &quot;2025-03-20T09:01:26.000Z&quot;,</span>
+<span class="cm">       &quot;summer&quot;: &quot;2025-06-21T02:42:17.000Z&quot;,</span>
+<span class="cm">       &quot;autumn&quot;: &quot;2025-09-22T18:19:33.000Z&quot;,</span>
+<span class="cm">       &quot;winter&quot;: &quot;2025-12-21T15:03:03.000Z&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;Happy Nowruz! %c %z&quot;</span><span class="p">,</span> <span class="nx">seasons</span><span class="p">.</span><span class="nx">spring</span><span class="p">)</span> <span class="p">);</span>
+    <span class="cm">/* Happy Nowruz! Thu Mar 20 02:01:26 2025 -0700 */</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="holidays">
+<h2>Holidays<a class="headerlink" href="#holidays" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-almanac-holiday">
+<h3>new almanac.Holiday()<a class="headerlink" href="#new-almanac-holiday" title="Permalink to this headline">¶</a></h3>
+<p>Create a new <code class="docutils literal notranslate"><span class="pre">Holidays</span></code> object.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-almanac&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">hd</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">Holidays</span><span class="p">();</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">hd</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">Holidays</span><span class="p">(</span><span class="nx">countryCode</span> <span class="p">[,</span> <span class="nx">LocaleCode</span> <span class="p">[,</span> <span class="nx">LocaleCode</span><span class="p">]]);</span>
+
+<span class="nx">hd</span><span class="p">.</span><span class="nx">getHolidays</span><span class="p">(</span><span class="nx">year</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>More information, and this example (slightly modified) can be found <a class="reference external" href="https://www.npmjs.com/package/date-holidays#Usage">here</a>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-almanac&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Holidays</span> <span class="o">=</span> <span class="nx">almanac</span><span class="p">.</span><span class="nx">holidays</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">printf</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">hd</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Holidays</span><span class="p">();</span>
+
+<span class="c1">// get supported countries</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class="nx">getCountries</span><span class="p">();</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;AD&quot;: &quot;Andorra&quot;,</span>
+<span class="cm">       &quot;AE&quot;: &quot;دولة الإمارات العربية المتحدة&quot;,</span>
+<span class="cm">       &quot;AG&quot;: &quot;Antigua &amp; Barbuda&quot;,</span>
+<span class="cm">        ...</span>
+<span class="cm">       &quot;ZM&quot;: &quot;Zambia&quot;,</span>
+<span class="cm">       &quot;ZW&quot;: &quot;Zimbabwe&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// get supported states e.g. for US</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class="nx">getStates</span><span class="p">(</span><span class="s1">&#39;US&#39;</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       al: &#39;Alabama&#39;,</span>
+<span class="cm">       ...</span>
+<span class="cm">       wy: &#39;Wyoming&#39;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// get supported regions e.g. for US, Lousiana</span>
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class="nx">getRegions</span><span class="p">(</span><span class="s1">&#39;US&#39;</span><span class="p">,</span> <span class="s1">&#39;la&#39;</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;NO&quot;: &quot;New Orleans&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// initialize holidays for US, Lousiana, New Orleans</span>
+<span class="nx">hd</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s1">&#39;US&#39;</span><span class="p">,</span> <span class="s1">&#39;la&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">);</span>
+
+<span class="cm">/* or using a new instance */</span>
+<span class="c1">//hd = new Holidays(&#39;US&#39;, &#39;la&#39;, &#39;no&#39;);</span>
+
+<span class="c1">// get all holidays for the year 2016</span>
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class="nx">getHolidays</span><span class="p">(</span><span class="mi">2016</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;date&quot;: &quot;2016-01-01 00:00:00&quot;,</span>
+<span class="cm">       &quot;start&quot;: &quot;2016-01-01T06:00:00.000Z&quot;,</span>
+<span class="cm">       &quot;end&quot;: &quot;2016-01-02T06:00:00.000Z&quot;,</span>
+<span class="cm">       &quot;name&quot;: &quot;New Year&#39;s Day&quot;,</span>
+<span class="cm">       &quot;type&quot;: &quot;public&quot;,</span>
+<span class="cm">       &quot;rule&quot;: &quot;01-01 and if sunday then next monday if saturday then previous friday&quot;</span>
+<span class="cm">    },</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;date&quot;: &quot;2016-01-18 00:00:00&quot;,</span>
+<span class="cm">       &quot;start&quot;: &quot;2016-01-18T06:00:00.000Z&quot;,</span>
+<span class="cm">       &quot;end&quot;: &quot;2016-01-19T06:00:00.000Z&quot;,</span>
+<span class="cm">       &quot;name&quot;: &quot;Martin Luther King Jr. Day&quot;,</span>
+<span class="cm">       &quot;type&quot;: &quot;public&quot;,</span>
+<span class="cm">       &quot;rule&quot;: &quot;3rd monday in January&quot;</span>
+<span class="cm">    },</span>
+<span class="cm">    ...</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;date&quot;: &quot;2016-12-31 00:00:00&quot;,</span>
+<span class="cm">       &quot;start&quot;: &quot;2016-12-31T06:00:00.000Z&quot;,</span>
+<span class="cm">       &quot;end&quot;: &quot;2017-01-01T06:00:00.000Z&quot;,</span>
+<span class="cm">       &quot;name&quot;: &quot;New Year&#39;s Eve&quot;,</span>
+<span class="cm">       &quot;type&quot;: &quot;observance&quot;,</span>
+<span class="cm">       &quot;rule&quot;: &quot;12-31&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// check if date is a holiday while respecting timezones</span>
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class="nx">isHoliday</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2016-02-09 00:00:00&#39;</span><span class="p">));</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="c1">// res = false</span>
+
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class="nx">isHoliday</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">autoScanDate</span><span class="p">(</span><span class="s1">&#39;2016-02-09 00:00:00 -0600&#39;</span><span class="p">).</span><span class="nx">date</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    [</span>
+<span class="cm">       {</span>
+<span class="cm">          &quot;date&quot;: &quot;2016-02-09 00:00:00&quot;,</span>
+<span class="cm">          &quot;start&quot;: &quot;2016-02-09T06:00:00.000Z&quot;,</span>
+<span class="cm">          &quot;end&quot;: &quot;2016-02-10T06:00:00.000Z&quot;,</span>
+<span class="cm">          &quot;name&quot;: &quot;Mardi Gras&quot;,</span>
+<span class="cm">          &quot;type&quot;: &quot;public&quot;</span>
+<span class="cm">       }</span>
+<span class="cm">    ]</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rampart-url.html" class="btn btn-neutral float-right" title="The rampart-url module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rampart-cmark.html" class="btn btn-neutral" title="The rampart-cmark module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2024, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.5.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

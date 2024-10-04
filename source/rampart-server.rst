@@ -238,6 +238,11 @@ Where:
       public", if not set or set ``true``.  If set ``false``, no header is
       sent.
 
+    * ``defaultRangeMBytes``: a :green:`Number` (range 0.01 to 1000).  Set the 
+      default range size when sending a ``206 Partial Content`` response to an
+      open ended request (e.g. ``range: 0-``), specified in megabytes.
+      The default value is ``8`` for eight megabytes.
+
     * ``compressFiles``: A :green:`Boolean` or :green:`Array`.  Whether to
       use gzip compression for files served from the filesystem.  Default is
       ``false``.  If an :green:`Array`. is given, it is a list of file
@@ -269,6 +274,83 @@ Where:
     * ``appendProcTitle``: A :green:`Boolean`. Whether to append the process
       title (as seen in utilities like ``ps``) with the ip address and port
       number of the server.  The default if not specified is ``false``.
+
+    * ``beginFunc``: A :green:`Boolean`, :green:`Object` or :green:`Function`.  
+      A function to run at the beginning of each JavaScript function or on
+      file load as specified in ``map`` below.  This can be a global
+      function (i.e.  ``beginFunc: myglobalbeginfunc``), an inline function
+      (i.e.  ``beginFunc: function(req){...}``), or an object (i.e. 
+      ``{module: working_directory+'/apps/beginfunc.js'}``) specifying the
+      path of a module.
+      The function, like all server callback function is passed ``req``, which if
+      altered will be reflected in the call of the normal callback for the
+      requested page.  Returning false will skip the normal callback and
+      send a 404 Not Found page.  Returning an :green:`Object` (i.e. ``{html:myhtml}``)
+      will skip the normal callback and send the content from that :green:`Object`.
+      When the provided function is called before the loading of a file, the
+      ``req`` :green:`Object` ``fsPath`` property will be set to the file being 
+      retrieved.  If ``req.fsPath`` is set to a new path and the function returns
+      true, the updated file will be sent instead.
+      For websocket connections, it is run only befor the first connect 
+      (i.e., when ``req.count == 0``, see `Websockets`_ below).
+      Default value is ``false``.
+
+    * ``beginFuncOnFile``: A :green:`Boolean`.  Whether to run the begin
+      function before serving a file (-i.e.  files from a mapped location such
+      as the ``web_server/html/`` directory),  Default value is ``false``.
+                           
+    * ``endFunc``: A :green:`Boolean`, :green:`Object` or :green:`Function`.  
+      A function to run after the completion of a JavaScript function
+      callback from ``map`` below.
+      Like ``beginFunc`` It will also receive the `req` object.  In
+      addition, `req.reply` will be set to the return value of the normal
+      server callback function mapped in ``map`` below and req.reply can be
+      modified before it is sent.
+      For websocket connections, it is run after websockets disconnects and
+      after the req.wsOnDisconnect callback, if any.  `req.reply` is an
+      empty object, modifying it has no effect and return value from endFunc
+      has not effect. End function is never run on file requests. The default
+      value is ``false``.
+                           
+
+    * ``logFunc``: A :green:`Boolean`, :green:`Object` or :green:`Function`.  
+      A function to run after data has been written to the client and in place of
+      normal logging (``log`` above must be ``true``).  The callback function
+      will be passed two parameters (i.e. ``myloggingfunc (logdata, logline)``)
+      where the first is an :green:`Object` with the following properties:
+      ``addr``, ``dateStr``, ``method``, ``path``, ``query``, ``protocol`` and
+      ``code``.  All are strings, except ``code``, which is a number (i.e. ``200``);
+      The second parameter is the log line that would normally be written but for this
+      function.  The filehandles ``rampart.utils.accessLog`` and ``rampart.utils.errorLog``
+      can be used to write to the ``accessLog`` and ``errorLog`` set above, or if unset
+      to ``stdout`` and ``stderr``.
+
+      Examples:
+
+      .. code-block:: javascript
+
+        function myloggingfunc (logdata, logline) {
+            if(logdata.code != 200)
+                rampart.utils.fprintf(rampart.utils.accessLog,
+                    '%s %s "%s %s%s%s %d"\n',
+                    logdata.addr, logdata.dateStr, logdata.method,
+                    logdata.path, logdata.query?"?":"", logdata.query,
+                    logdata.code );
+            else
+                rampart.utils.fprintf(rampart.utils.accessLog,
+                    "%s\n", logline); 
+        }
+
+        // example logging func - skip logging for connections from localhost
+        function myloggingfunc_alt (logdata, logline) {
+            if(logdata.addr=="127.0.0.1" || logdata.addr=="::1")
+                return;
+            rampart.utils.fprintf(rampart.utils.accessLog,
+                "%s\n", logline);
+        }
+
+
+      Default value is ``false``.
 
     * ``mimeMap``: An :green:`Object`, additions or changes to the standard extension
       to mime mappings.  Normally, if, e.g., ``return { "m4v": mymovie };``

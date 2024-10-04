@@ -1583,7 +1583,7 @@ Where:
       If a :green:`String`, it will parse plain English values in minutes, hours, days or weeks.
       (i.e. "every third day" or "120 minutes");
 
-    * ``minRows``, is an optional :green:`Number`, the threshold number of changed, deleted or added rows
+    * ``minRows``, is an optional :green:`Number` (default ``1000``), the threshold number of changed, deleted or added rows
       needed to trigger an index rebuild when checked.
 
 Return Value:
@@ -1634,7 +1634,7 @@ Example viewing progress:
 Compound Indexes
 ~~~~~~~~~~~~~~~~
 
-As noted in the syntax above, an index may be made on multiple fields.  If a
+As noted in the syntax `above <#creating-a-fulltext-index>`_\ , an index may be made on multiple fields.  If a
 search will always be performed by matching more than one column, it may be
 advantageous to create a compound index.
 
