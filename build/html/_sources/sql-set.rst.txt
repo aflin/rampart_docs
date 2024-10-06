@@ -42,7 +42,7 @@ function, Booleans are set using the JavaScript Booleans ``true`` or ``false``.
 NOTE:
    In Rampart Javascript, it is possible to use ``sql.exec("SET property = value;")``.  
    However doing so will set the property for every open ``sql`` handle
-   opened with ``new Sql.init()`` and not allow settings to be automatically
+   opened with ``new Sql.connection()`` and not allow settings to be automatically
    reapplied when using multiple ``sql`` handles.  Thus one should always
    use ``sql.set()`` in order to maintain distinct settings per handle.
 
@@ -790,7 +790,9 @@ useEquiv
     equivalences will be searched for unless the term is preceded with a
     ``~``.  If it is ``false`` then only the query word is searched for
     (unless the term is preceded with a ``~``).  Default is ``false``.  Note
-    `alEquivs`_ must be set ``true`` for any thesaurus lookup to occur.
+    `alEquivs`_ must be set ``true`` for any thesaurus lookup to occur when
+    using ``set keepeqvs=1`` syntax.  It is automatically set ``true`` when
+    setting ``keepEqvs`` from ``sql.set()``.
 
 .. possibly include this later or in a more appropriate section
     inc\_sdexp
@@ -1688,7 +1690,7 @@ indexAccess
 
        var db=process.scriptPath + '/path/to/my/wikidb';
 
-       var sql=new Sql.init(db);
+       var sql=new Sql.connection(db);
 
        /* allow access to index as a table */
        sql.set({
@@ -2074,7 +2076,7 @@ paramChk
 
          var Sql = require("rampart-sql");
 
-         var sql = new Sql.init("./mytestdb");
+         var sql = new Sql.connection("./mytestdb");
 
          sql.exec("create table kvs (Keys varchar(8), Vals varchar(8));");
 
@@ -2536,7 +2538,7 @@ Example:
 
    var Sql = require("rampart-sql");
 
-   var sql = new Sql.init("/path/to/my/db");
+   var sql = new Sql.connection("/path/to/my/db");
 
    ...
 

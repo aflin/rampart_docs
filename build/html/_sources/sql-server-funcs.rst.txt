@@ -396,7 +396,7 @@ Example:
 
    var Sql = require("rampart-sql");
 
-   var sql = new Sql.init("./testdb", true);
+   var sql = new Sql.connection("./testdb", true);
 
    // ignore error if table doesn't exists
    try {
@@ -569,7 +569,7 @@ Full example in Rampart JavaScript:
 
    var Sql=require("rampart-sql");
 
-   var sql=new Sql.init("./testdb");
+   var sql=new Sql.connection("./testdb");
 
    // ignore error if table doesn't exists
    try {
@@ -2433,7 +2433,7 @@ varchar field in the place of multiple columns:
     var Sql = require("rampart-sql");
 
     /* create database if it does not exist */
-    var sql = new Sql.init("./mytestdb",true);
+    var sql = new Sql.connection("./mytestdb",true);
 
     /* check if table exists */
     var res = sql.exec(

@@ -319,7 +319,7 @@ Where:
       will be passed two parameters (i.e. ``myloggingfunc (logdata, logline)``)
       where the first is an :green:`Object` with the following properties:
       ``addr``, ``dateStr``, ``method``, ``path``, ``query``, ``protocol`` and
-      ``code``.  All are strings, except ``code``, which is a number (i.e. ``200``);
+      ``code``.  All are :green:`Strings`, except ``code``, which is a :green:`Number` (i.e. ``200``);
       The second parameter is the log line that would normally be written but for this
       function.  The filehandles ``rampart.utils.accessLog`` and ``rampart.utils.errorLog``
       can be used to write to the ``accessLog`` and ``errorLog`` set above, or if unset

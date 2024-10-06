@@ -354,7 +354,7 @@ function, Booleans are set using the JavaScript Booleans <code class="docutils l
 <dt>NOTE:</dt>
 <dd>In Rampart Javascript, it is possible to use <code class="docutils literal notranslate"><span class="pre">sql.exec(&quot;SET</span> <span class="pre">property</span> <span class="pre">=</span> <span class="pre">value;&quot;)</span></code>.
 However doing so will set the property for every open <code class="docutils literal notranslate"><span class="pre">sql</span></code> handle
-opened with <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.init()</span></code> and not allow settings to be automatically
+opened with <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection()</span></code> and not allow settings to be automatically
 reapplied when using multiple <code class="docutils literal notranslate"><span class="pre">sql</span></code> handles.  Thus one should always
 use <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> in order to maintain distinct settings per handle.</dd>
 </dl>
@@ -941,7 +941,9 @@ the meaning of <code class="docutils literal notranslate"><span class="pre">~</s
 equivalences will be searched for unless the term is preceded with a
 <code class="docutils literal notranslate"><span class="pre">~</span></code>.  If it is <code class="docutils literal notranslate"><span class="pre">false</span></code> then only the query word is searched for
 (unless the term is preceded with a <code class="docutils literal notranslate"><span class="pre">~</span></code>).  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  Note
-<a class="reference internal" href="#alequivs">alEquivs</a> must be set <code class="docutils literal notranslate"><span class="pre">true</span></code> for any thesaurus lookup to occur.</div></blockquote>
+<a class="reference internal" href="#alequivs">alEquivs</a> must be set <code class="docutils literal notranslate"><span class="pre">true</span></code> for any thesaurus lookup to occur when
+using <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">keepeqvs=1</span></code> syntax.  It is automatically set <code class="docutils literal notranslate"><span class="pre">true</span></code> when
+setting <code class="docutils literal notranslate"><span class="pre">keepEqvs</span></code> from <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>.</div></blockquote>
 </div>
 <div class="section" id="intersects">
 <h3>intersects<a class="headerlink" href="#intersects" title="Permalink to this headline">¶</a></h3>
@@ -1603,7 +1605,7 @@ word will be returned.</p>
 
 <span class="kd">var</span> <span class="nx">db</span><span class="o">=</span><span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span> <span class="o">+</span> <span class="s1">&#39;/path/to/my/wikidb&#39;</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">db</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="nx">db</span><span class="p">);</span>
 
 <span class="cm">/* allow access to index as a table */</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
@@ -1875,7 +1877,7 @@ that should take effect on the query.</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;./mytestdb&quot;</span><span class="p">);</span>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table kvs (Keys varchar(8), Vals varchar(8));&quot;</span><span class="p">);</span>
 
@@ -2307,7 +2309,7 @@ one of the following:</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/to/my/db&quot;</span><span class="p">);</span>
 
 <span class="p">...</span>
 

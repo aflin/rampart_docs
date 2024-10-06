@@ -414,7 +414,7 @@ rampart.call
 
 
 rampart.triggerEvent
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
     A registered event in a thread may be triggered from within rampart
 
@@ -492,7 +492,7 @@ Example Use Importing Data
         var printf = rampart.utils.printf;
 
         /* create the rampart sql db*/
-        var sql = new Sql.init("./pytest-sql", true);
+        var sql = new Sql.connection("./pytest-sql", true);
 
         /* the sqlite db */
         var dbfile="./test.db";
