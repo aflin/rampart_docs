@@ -40,11 +40,12 @@ Boolean, Array or String.  A Boolean value is either an integer  – ``0`` is fa
 function, Booleans are set using the JavaScript Booleans ``true`` or ``false``.
 
 NOTE:
-   In Rampart Javascript, it is possible to use ``sql.exec("SET property = value;")``.  
-   However doing so will set the property for every open ``sql`` handle
-   opened with ``new Sql.connection()`` and not allow settings to be automatically
-   reapplied when using multiple ``sql`` handles.  Thus one should always
-   use ``sql.set()`` in order to maintain distinct settings per handle.
+   In Rampart JavaScript, it is technically legal to use ``sql.exec("SET property = value;")``.
+   However, it should never be used.  Using ``sql.set()`` will apply the
+   settings and those settings will be preserved and scoped to the current ``sql`` handle,
+   whereas ``SET property=value`` may be overwritten or applied in the wrong
+   context.  Therefore, ``sql.set()`` should always be used when in
+   JavaScript.
 
 
 Search and optimization parameters
@@ -791,8 +792,8 @@ useEquiv
     ``~``.  If it is ``false`` then only the query word is searched for
     (unless the term is preceded with a ``~``).  Default is ``false``.  Note
     `alEquivs`_ must be set ``true`` for any thesaurus lookup to occur when
-    using ``set keepeqvs=1`` syntax.  It is automatically set ``true`` when
-    setting ``keepEqvs`` from ``sql.set()``.
+    using ``set keepeqvs=1`` syntax.  Also note that `alEquivs`_ is automatically 
+    set ``true`` when setting ``useEquiv`` from ``sql.set()``.
 
 .. possibly include this later or in a more appropriate section
     inc\_sdexp
@@ -2349,12 +2350,14 @@ at the risk of higher load for special searches.
 
 alEquivs 
 """"""""
-  Boolean, ``false`` by default.  If ``true``, allows equivalences in queries.  If
-  ``false``, only the actual terms in a query will be searched for; no
-  equivalences will be used.  This is regardless of ``~`` usage or the
-  setting of `useEquiv`_.  Note that the equivalence file will still be used to
-  check for phrases in the query, however.  Turning this on allows greater
-  search flexibility, as equivalent words to a term can be searched for, but
+  Boolean, ``false`` by default.  If ``true``, allows equivalences (via
+  thesaurus lookups) in queries.  If ``false``, only the actual terms in a
+  query will be searched for; no equivalences will be used.  This is
+  regardless of ``~`` usage or the setting of `useEquiv`_ (though note that
+  setting `useEquiv`_ to ``true`` with ``sql.set()`` will turn on
+  ``alEquivs``).  Note that the equivalence file will still be used to check
+  for phrases in the query, however.  Turning this on allows greater search
+  flexibility, as equivalent words to a term can be searched for, but
   decreases search speed.
 
 alIntersects

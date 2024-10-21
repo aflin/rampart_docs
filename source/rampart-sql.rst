@@ -123,7 +123,7 @@ Usage:
 |        |                  |   add any table files that are in ``path``        |
 |        |                  |   but are not in the database.  If path           |
 |        |                  |   does not contain a database, create one first.  |
-|        |                  |   Implies `force`. See `addTable()`_ below.       |
+|        |                  |   Implies ``force``. See `addTable()`_ below.     |
 |        |                  | * ``user`` - :green:`String` - The database user  |
 |        |                  |   name for this connection.                       |
 |        |                  |   Default is ``"PUBLIC"``.  For normal usage      |
@@ -974,7 +974,7 @@ Example:
 reset()
 ~~~~~~~
 
-Reset all settings set with `set()`_ above to their original values.
+Reset all settings set with `set()`_ above to their original default values.
 
 Example:
 
@@ -995,9 +995,8 @@ Example:
 importCsvFile()
 ~~~~~~~~~~~~~~~
 
-The importCsvFile :green:`Function` is similar to the
-:ref:`rampart.import.csvFile <rampart-main:csvFile>` :green:`Function`
-except that it imports csv data from a file directly
+The importCsvFile :green:`Function` imports data from a csv
+formatted file 
 into a SQL table.  It takes a :green:`String` containing a file name, an
 :green:`Object` of options, optionally an :green:`Array` specifying the
 order of columns and optionally a callback :green:`Function`.  The
@@ -1110,7 +1109,7 @@ Return Value:
 	:green:`Number`. The return value is set to number of rows in the
 	csv file.
 
-Note: In the callback, the loop can cancell the import at any point by returning
+Note: In the callback, the loop can cancel the import at any point by returning
 ``false``.  The return value (number of rows) will still be the total number
 of rows in the csv file.
 
@@ -1242,7 +1241,7 @@ Note:
    Any existing indexes on the added table that existed in the old database
    will need to be recreated.
 
-See also: :ref:`The importfile command line utility <sql-utils:The addtable Command Line Utility>`.
+See also: :ref:`The addtable command line utility <sql-utils:The addtable Command Line Utility>`.
 
 Database Indexing
 -----------------
@@ -1260,8 +1259,8 @@ allow the matching row or rows to be found without having to do a full, linear
 scan of every entry.  In this way, an index is much like an index found in
 the back of a reference manual or encyclopedia.
 
-In Rampart, Regular Indexes, once created, are automatically maintained.
-There are several versions and variations of Regular Indexes, as listed
+In Rampart, `Regular Indexes`, once created, are automatically maintained.
+There are several versions and variations of `Regular Indexes`, as listed
 below.
 
 Non-Unique Index
@@ -1283,8 +1282,8 @@ Where:
 * ``index-name`` is an arbitrary name for the index.
 * ``table-name`` is the name of the table being indexed.
 * ``column-name`` is a column in the current table.
-* ``DESC`` is an optional flag in wich to order the index.  This speeds
-  up SQL queries with the ``ORDER BY`` phrase where the order is decending.
+* ``DESC`` is an optional flag used to create the index in descending order.  This speeds
+  up SQL queries with the ``ORDER BY`` phrase where the order is descending.
 * ``option-name`` is an optional option. See
   `Texis Documentation <https://docs.thunderstone.com/site/texisman/available_options.html>`_
   for more information.
@@ -1381,7 +1380,7 @@ and
 `here <https://docs.thunderstone.com/site/vortexman/create_index_with_options.html>`_\ .
 
 Unlike Regular Indexes, Fulltext indexes do not automatically update when
-inserting, deleting or updating rows.  Though the ``likep`` search will
+inserting, deleting or updating rows.  However, the ``likep`` search will
 still function as normal, new and updated rows will be linearly scanned in
 order to find matches.
 
@@ -1492,7 +1491,7 @@ the ``CREATE INDEX`` and the ``WITH`` syntax:
     CREATE FULLTEXT employees_Bio_text ON employees(Bio)
     WITH WORDEXPRESSIONS ('[\alnum\x80-\xFF]{2,99}');
 
-The above will match all UTF-8 encoded words.  It will exclude ASCII white space
+The above will match all UTF-8 encoded characters. It will exclude ASCII white space
 and punctuation.
 
 In some cases, there may be datasets where the matching of a limited amount
@@ -1596,7 +1595,7 @@ Note:
 
     * If ``startTime`` is set to ``-1``, the record for the index is deleted.
 
-    * The index schedule is saved in a new table ``SYSUPDATE`` in th database in question.
+    * The index schedule is saved in a new table ``SYSUPDATE`` in the database in question.
 
     * The first time an index is scheduled for update on a database, a index monitor process is launched.
       

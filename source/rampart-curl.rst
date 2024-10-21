@@ -132,7 +132,7 @@ fetch() Results
     Other possible properties of the results :green:`Object` are (not all
     apply to non-http requests):
     
-    * ``text`` - a :green:`String` copy of the ``body`` contents if
+    * ``text`` - a :green:`String`, copy of the ``body`` contents if
       ``returnText`` is set ``true`` in `Curl Options`_.  It is set to the
       value equivalent to ``rampart.utils.bufferToString(result.body)``.  Note, internally
       this requires a copy of data, whereas the ``body`` :green:`Buffer` is
@@ -444,6 +444,11 @@ Additional options
 The following are additional options provided by the JavaScript module and
 have no corresponding setting in the `curl command line tool <https://linux.die.net/man/1/curl>`_.
 Note that `examples`_ are provided below.
+
+    * ``returnText`` - a :green:`Boolean`, whether to include the
+      ``text`` :green:`String` in the return value of a fetch/submit.
+      If ``true`` (the default), a copy of the ``body`` :green:`Buffer`
+      will be provided in the return :green:`Object`.
 
     * ``arrayType`` - :green:`String` - How to translate arrays into
       parameters for ``get`` and ``post`` below.  See
@@ -769,7 +774,7 @@ links from the ``index.html`` page on a sample website (using
 
     var curl = require("rampart-curl");
 
-    var http = require("rampart-http");
+    var html = require("rampart-html");
 
     /* use an object to keep a list of unique urls */
     var fetched = { "http://localhost:8088/" : true };

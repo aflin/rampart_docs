@@ -1174,13 +1174,14 @@ be copied into the new Buffer.</p>
 asynchronous calling of functions from within Rampart’s event loop in the same
 manner as <code class="docutils literal notranslate"><span class="pre">setTimeout</span></code> in <code class="docutils literal notranslate"><span class="pre">node.js</span></code> or a browser such as Firefox or Chrome.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">timeOut</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">timeOut</span><span class="p">[,</span> <span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">argn</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> to be run when the elapsed time is reached.</li>
 <li><code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is the amount of time in milliseconds to wait before the <code class="docutils literal notranslate"><span class="pre">callback</span></code> function is called.</li>
+<li><code class="docutils literal notranslate"><span class="pre">argX</span></code> are arguments to be passed to the callback function.</li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -1227,13 +1228,14 @@ function returns.  At that time, the clock will have expired and the
 <p>Similar to <a class="reference internal" href="#settimeout">setTimeout()</a> except it repeats every <code class="docutils literal notranslate"><span class="pre">interval</span></code> milliseconds
 until canceled via <a class="reference internal" href="#clearinterval">clearInterval()</a>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">interval</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">setInterval</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">interval</span><span class="p">[,</span> <span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">argn</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> to be run when the elapsed time is reached.</li>
 <li><code class="docutils literal notranslate"><span class="pre">interval</span></code> is the amount of time in milliseconds between calls to <code class="docutils literal notranslate"><span class="pre">callback</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">argX</span></code> are arguments to be passed to the callback function.</li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -1279,13 +1281,14 @@ as close to the scheduled time as possible, possibly skipping intervals
 (aims for the absolute value of <code class="docutils literal notranslate"><span class="pre">starttime</span> <span class="pre">+</span> <span class="pre">count</span> <span class="pre">*</span> <span class="pre">interval</span></code> and skips
 if past that time).</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">setMetronome</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">interval</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">setMetronome</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">interval</span><span class="p">[,</span> <span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">argn</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> to be run when the elapsed time is reached.</li>
 <li><code class="docutils literal notranslate"><span class="pre">interval</span></code> is the amount of time in milliseconds between calls to <code class="docutils literal notranslate"><span class="pre">callback</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">argX</span></code> are arguments to be passed to the callback function.</li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -1441,7 +1444,8 @@ for more information on possible options.</p>
 <p>Note that babel does not actually do any type checking.  See
 <a class="reference external" href="https://babeljs.io/docs/en/babel-plugin-transform-typescript#caveats">this caveat</a>.</p>
 <p>For a list of tested and supported syntax, see the
-<code class="docutils literal notranslate"><span class="pre">/usr/local/rampart/tests/babel-test.js</span></code> file.</p>
+<code class="docutils literal notranslate"><span class="pre">/usr/local/rampart/tests/babel-test.js</span></code> file (also available
+<a class="reference external" href="https://github.com/aflin/rampart/blob/main/test/babel-test.js">here</a>.</p>
 </div>
 <div class="section" id="how-it-works">
 <h3>How it works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h3>

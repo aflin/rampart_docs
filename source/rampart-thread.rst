@@ -43,14 +43,16 @@ new rampart.thread()
 
     .. code-block:: javascript
 
-        var thr = new rampart.thread([keepOpen]);
+        var thr = new rampart.thread([persist]);
 
-    Where ``keepOpen`` is a :green:`Boolean`, whether to keep the thread
-    open when the thread's event loop is empty and a parent thread is
-    ready to exit.  Normally at the end of a script, the main thread's
-    event loop waits for any child threads to finish pending events and
-    allow it to exit.  This option thus requires an explicit `thr.close()`_
-    for a parent thread to completely exit.
+    Where ``persist`` is a :green:`Boolean`, whether to create a
+    `persistent` thread that will keep the thread open when the thread's
+    event loop is empty and a parent thread is otherwise ready to exit. 
+
+    Normally at the end of a script, the main thread's event loop waits for
+    any child threads to finish pending events and allow it to exit.  This
+    option thus requires an explicit `thr.close()`_ for a parent thread to
+    completely exit.
 
     Return Value:
         An :green:`Object` with two functions: `exec` and `close`.
@@ -86,18 +88,17 @@ thr.exec()
 
         * ``callbackFunc`` - a :green:`Function` that will be executed in the
           current event loop (in the thread in which ``new rampart.thread()``
-          was called).  It will be passed two parameter
+          was called).  It will be passed two parameters
           (``function(value,error){...}``) where either ``value`` (the
-          return value of ``threadFunc``) or ``error`` (any errors in thrown
-          in ``threadFunc``).
+          return value of ``threadFunc``, if any) or ``error`` (any errors in thrown
+          in ``threadFunc``) may be defined.
 
         * ``threadDelay`` - a delay, similar to the :ref:`setTimeout() function <rampart-main:setTimeout()>`\ ,
           measured in milliseconds.  If omitted, the ``threadFunc`` :green:`Function`
           will execute immediately.
 
     Note:
-       If no ``callbackFunc`` is provided, errors in ``threadFunc`` wil be printed to stderr.
-
+       If no ``callbackFunc`` is provided, errors thrown in ``threadFunc`` wil be printed to stderr.
 
     Example:
 
@@ -112,6 +113,9 @@ thr.exec()
         function thrfunc(myarg) {
             /* var iscopied is available, var notcopied is not */
             console.log("from inside the thread:", myarg);
+            console.log("iscopied =", iscopied)
+            console.log("notcopied = ", notcopied);
+
             return myarg + 1;
         }
 
@@ -133,9 +137,15 @@ thr.exec()
 
         // thr.exec(thrfunc, 3, callback, 1000);
 
+        console.log("end of main, start event loop");
+
         /*
-            after one second, output will be:
+            output will be:
+                end of main, start event loop
+                < one second delay >
                 from inside the thread: 3
+                iscopied = true
+                notcopied =  undefined
                 back in the main thread with myarg = 4
         */
 
@@ -146,6 +156,10 @@ thr.exec()
 
         * Threads may be created in inside threads, but they must be called
           from within the thread in which they were created.
+
+        * :ref:`rampart.utils.fork <rampart-utils:fork>` and
+          :ref:`rampart.utils.daemon <rampart-utils:daemon>` will throw an error
+          if called while threads are open.
 
         * Only global variables are copied to threads at the time of
           creation.  The variable ``iscopied`` in the example above will be copied and
@@ -162,31 +176,34 @@ thr.close()
 
     .. code-block:: javascript
 
-        var thr = new rampart.thread();
+      var thr = new rampart.thread(true);
 
-        function thrfunc(myarg) {
-            console.log("from inside the thread:", myarg);
-            return myarg + 1;
-        }
+      /* function to be run in child thread */
+      function thrfunc(myarg) {
+          console.log("from inside the thread:", myarg);
+          return myarg + 1;
+      }
 
-        function callback(myarg) {
-            console.log("back in the main thread:", myarg);
-        }
+      /* callback function to be run in main thread */
+      function callback(myarg) {
+          console.log("back in the main thread:", myarg);
+          // terminate the persistent child thread
+          thr.close();
+      }
 
-        thr.exec(thrfunc, 3, callback, 1000);
+      thr.exec(thrfunc, 3, callback, 1000);
 
-        /*
-            after one second, output will be:
-                from inside the thread: 3
-                back in the main thread: 4
-        */
+      /*
+          after one second, output will be:
+              from inside the thread: 3
+              back in the main thread: 4
 
-        thr.close();
-
-        /* in this case, the thread will stay open until its event loop
-           is empty.  Thus there will be no difference in the output.
-           However in a long lived script, closing a thread when no longer
-           in use can free up significant resources                       */
+          Since thr was created as a persistent thread
+          with "thr = rampart.thread(true)"
+          it needs to be manually closed.  If not closed
+          manually, the main thread will wait forever.
+          
+      */
 
     Return Value:
         ``undefined``.

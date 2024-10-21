@@ -376,7 +376,7 @@ contain a db). This option implies <code class="docutils literal notranslate"><s
 add any table files that are in <code class="docutils literal notranslate"><span class="pre">path</span></code>
 but are not in the database.  If path
 does not contain a database, create one first.
-Implies <cite>force</cite>. See <a class="reference internal" href="#addtable">addTable()</a> below.</li>
+Implies <code class="docutils literal notranslate"><span class="pre">force</span></code>. See <a class="reference internal" href="#addtable">addTable()</a> below.</li>
 <li><code class="docutils literal notranslate"><span class="pre">user</span></code> - <span class="green">String</span> - The database user
 name for this connection.
 Default is <code class="docutils literal notranslate"><span class="pre">&quot;PUBLIC&quot;</span></code>.  For normal usage
@@ -1169,7 +1169,7 @@ returned with corresponding keys <code class="docutils literal notranslate"><spa
 </div>
 <div class="section" id="reset">
 <h2>reset()<a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h2>
-<p>Reset all settings set with <a class="reference internal" href="#set">set()</a> above to their original values.</p>
+<p>Reset all settings set with <a class="reference internal" href="#set">set()</a> above to their original default values.</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 
@@ -1187,9 +1187,8 @@ returned with corresponding keys <code class="docutils literal notranslate"><spa
 </div>
 <div class="section" id="importcsvfile">
 <h2>importCsvFile()<a class="headerlink" href="#importcsvfile" title="Permalink to this headline">¶</a></h2>
-<p>The importCsvFile <span class="green">Function</span> is similar to the
-<a class="reference internal" href="rampart-main.html#csvfile"><span class="std std-ref">rampart.import.csvFile</span></a> <span class="green">Function</span>
-except that it imports csv data from a file directly
+<p>The importCsvFile <span class="green">Function</span> imports data from a csv
+formatted file
 into a SQL table.  It takes a <span class="green">String</span> containing a file name, an
 <span class="green">Object</span> of options, optionally an <span class="green">Array</span> specifying the
 order of columns and optionally a callback <span class="green">Function</span>.  The
@@ -1303,7 +1302,7 @@ option <code class="docutils literal notranslate"><span class="pre">callbackStep
 <dd><span class="green">Number</span>. The return value is set to number of rows in the
 csv file.</dd>
 </dl>
-<p>Note: In the callback, the loop can cancell the import at any point by returning
+<p>Note: In the callback, the loop can cancel the import at any point by returning
 <code class="docutils literal notranslate"><span class="pre">false</span></code>.  The return value (number of rows) will still be the total number
 of rows in the csv file.</p>
 <p>Example:</p>
@@ -1425,7 +1424,7 @@ database.  The file will not be copied and used as is from <code class="docutils
 <dd>Any existing indexes on the added table that existed in the old database
 will need to be recreated.</dd>
 </dl>
-<p>See also: <a class="reference internal" href="sql-utils.html#the-addtable-command-line-utility"><span class="std std-ref">The importfile command line utility</span></a>.</p>
+<p>See also: <a class="reference internal" href="sql-utils.html#the-addtable-command-line-utility"><span class="std std-ref">The addtable command line utility</span></a>.</p>
 </div>
 </div>
 <div class="section" id="database-indexing">
@@ -1440,8 +1439,8 @@ look up rows by a particular column, placing an index on that column will
 allow the matching row or rows to be found without having to do a full, linear
 scan of every entry.  In this way, an index is much like an index found in
 the back of a reference manual or encyclopedia.</p>
-<p>In Rampart, Regular Indexes, once created, are automatically maintained.
-There are several versions and variations of Regular Indexes, as listed
+<p>In Rampart, <cite>Regular Indexes</cite>, once created, are automatically maintained.
+There are several versions and variations of <cite>Regular Indexes</cite>, as listed
 below.</p>
 <div class="section" id="non-unique-index">
 <h3>Non-Unique Index<a class="headerlink" href="#non-unique-index" title="Permalink to this headline">¶</a></h3>
@@ -1458,8 +1457,8 @@ of a table in order to speed up lookup.</p>
 <li><code class="docutils literal notranslate"><span class="pre">index-name</span></code> is an arbitrary name for the index.</li>
 <li><code class="docutils literal notranslate"><span class="pre">table-name</span></code> is the name of the table being indexed.</li>
 <li><code class="docutils literal notranslate"><span class="pre">column-name</span></code> is a column in the current table.</li>
-<li><code class="docutils literal notranslate"><span class="pre">DESC</span></code> is an optional flag in wich to order the index.  This speeds
-up SQL queries with the <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> phrase where the order is decending.</li>
+<li><code class="docutils literal notranslate"><span class="pre">DESC</span></code> is an optional flag used to create the index in descending order.  This speeds
+up SQL queries with the <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> phrase where the order is descending.</li>
 <li><code class="docutils literal notranslate"><span class="pre">option-name</span></code> is an optional option. See
 <a class="reference external" href="https://docs.thunderstone.com/site/texisman/available_options.html">Texis Documentation</a>
 for more information.</li>
@@ -1542,7 +1541,7 @@ More information can be found
 and
 <a class="reference external" href="https://docs.thunderstone.com/site/vortexman/create_index_with_options.html">here</a>.</p>
 <p>Unlike Regular Indexes, Fulltext indexes do not automatically update when
-inserting, deleting or updating rows.  Though the <code class="docutils literal notranslate"><span class="pre">likep</span></code> search will
+inserting, deleting or updating rows.  However, the <code class="docutils literal notranslate"><span class="pre">likep</span></code> search will
 still function as normal, new and updated rows will be linearly scanned in
 order to find matches.</p>
 <p>A Fulltext index may be manually updated at any time
@@ -1630,7 +1629,7 @@ the <code class="docutils literal notranslate"><span class="pre">CREATE</span> <
 <span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span><span class="s1">&#39;[\alnum\x80-\xFF]{2,99}&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The above will match all UTF-8 encoded words.  It will exclude ASCII white space
+<p>The above will match all UTF-8 encoded characters. It will exclude ASCII white space
 and punctuation.</p>
 <p>In some cases, there may be datasets where the matching of a limited amount
 of punctuation is desirable.</p>
@@ -1715,7 +1714,7 @@ needed to trigger an index rebuild when checked.</li>
 <div><ul class="simple">
 <li>If <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is run again with the same index name, the old value is replaced.</li>
 <li>If <code class="docutils literal notranslate"><span class="pre">startTime</span></code> is set to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, the record for the index is deleted.</li>
-<li>The index schedule is saved in a new table <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> in th database in question.</li>
+<li>The index schedule is saved in a new table <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> in the database in question.</li>
 <li>The first time an index is scheduled for update on a database, a index monitor process is launched.</li>
 <li>The monitor for a database is also checked and relaunched if necessary everytime <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection(database)</span></code>
 is called.</li>

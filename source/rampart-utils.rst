@@ -815,8 +815,10 @@ Where:
       value is ignored.
 
    *  ``env`` - :green:`Object`. Key/value pairs to be used as environment variables for the executed process.
+      Default, if not provided is :ref:`process.env <rampart-main:env>`.  An empty :green:`Object`
+      (``{}``) removes all environment variables.
 
-   *  ``appendEnv`` - :green:`Boolean`.  Only valid if ``env`` is provided.  If ``false`` (the default),
+   *  ``appendEnv`` - :green:`Boolean`.  If ``false`` (the default),
       only the environment variables given in ``env`` will be available.  If
       ``true``, variables provided in ``env`` will be appended to :ref:`process.env <rampart-main:env>`.
       Duplicate keys in :ref:`process.env <rampart-main:env>` are replaced with the value from ``env``.
@@ -901,7 +903,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var pid = rampart.utils.fork([pipe [,pipe [,...] ] ]);
+   var pid = rampart.utils.fork([pipe, pipe2, ..., pipen]);
 
    if(pid=-1)
       rampart.utils.fprintf(rampart.utils.stderr, "error piping\n");
@@ -912,7 +914,7 @@ Usage:
       //child
    }
 
-Where ``pipe`` is one or several pipes created with `newPipe`_ below.
+Where ``pipeX`` is one or several pipes created with `newPipe`_ below.
 
 Return Value:
    A :green:`Number` - The pid of the child in the parent process, ``0`` in
@@ -1028,8 +1030,10 @@ Where:
 *  ``options`` - :green:`Object`. Containing the following properties:
 
    *  ``env`` - :green:`Object`. Key/value pairs to be used as environment variables for the executed process.
+      Default, if not provided is :ref:`process.env <rampart-main:env>`.  An empty :green:`Object`
+      (``{}``) removes all environment variables.
 
-   *  ``appendEnv`` - :green:`Boolean`.  Only valid if ``env`` is provided.  If ``false`` (the default),
+   *  ``appendEnv`` - :green:`Boolean`.  If ``false`` (the default),
       only the environment variables given in ``env`` will be available.  If
       ``true``, variables provided in ``env`` will be appended to :ref:`process.env <rampart-main:env>`.
       Duplicate keys in :ref:`process.env <rampart-main:env>` are replaced with the value from ``env``.
@@ -1122,7 +1126,7 @@ Where:
      known signal such as ``"SIGTERM"`` or ``"SIGUSR1"``.
 
    * ``throwOnError`` - :green:`Boolean` - whether to throw an error with a specified
-     reason upon failure.
+     reason upon failure.  Default is ``false``.
 
 Return Value:
    :green:`Boolean`.  ``true`` if the signal was successfully sent.  If ``throwOnError``
@@ -1496,10 +1500,10 @@ Return Value:
   An :green:`Object` with the following functions: ``findZone()``, ``findAbbr()`` and ``dump()``.
 
 * ``tz.findZone(tzname)`` - Return an :green:`Object` with timezone information.  If the timezone 
-  does not exist, returns undefined.
+  does not exist, returns ``undefined``.
 
 * ``tz.findAbbr(abbrname)`` - Return an :green:`Object` with a list of timezones that match the given
-  abbreviation.  If the abbreviation does not exist, returns undefined.
+  abbreviation.  If the abbreviation does not exist, returns ``undefined``.
 
 * ``tz.dump()`` - Return an :green:`Object` with the entire database organized by timezones and 
   abbreviations.
@@ -1697,7 +1701,7 @@ Return Value:
 autoScanDate
 ''''''''''''
 
-Attempt to match a date from a string using various formats.
+Attempt to match a date from a :green:`String` using various formats.
 
 Usage:
 
@@ -2008,7 +2012,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var handle = rampart.utils.fopen(filename, mode[, sdtRedir]);
+   var handle = rampart.utils.fopen(filename, mode[, stdRedir]);
 
 Where ``filename`` is a :green:`String` containing the file to be opened.
 
@@ -2483,11 +2487,11 @@ Usage:
 
       /* or */
 
-   var rn = rampart.utils.rand(max);
+   var rn = rampart.utils.irand(max);
 
       /* or */
 
-   var rn = rampart.utils.rand([max[min,max]],callback);
+   rampart.utils.irand([max[min,max]],callback);
 
 Where ``min`` is the floor and ``max``
 is the ceiling (INCLUSIVE) of the range of the random integers to produce.
@@ -2495,14 +2499,14 @@ If not provided, ``min`` and ``max`` default to ``0`` and
 ``99`` respectively.
 
 If provided, ``callback`` is a :green:`Function` ``callback(r,i)`` where
-``r`` is the random integer and i is the loop count. The :green:`Function`
+``r`` is the random integer and ``i`` is the loop count. The :green:`Function`
 will be called repeatedly until it returns ``false``.
 
 Return Value:
    A :green:`Number` - the generated random integer as a number. If
    a function is provided, returns ``undefined``.
 
-Note that if srand has not been called before use, the random number generator
+Note that if `srand`_ has not been called before use, the random number generator
 will be automatically seeded.
 
 Note also because of JavaScript :green:`Number` precision, the maximum and
@@ -2544,7 +2548,7 @@ standard deviation of ``0.2``.
 srand
 '''''
 
-Seed the random number generator for use with `rand`_\ () above.
+Seed the random number generator for use with the random functions above.
 
 Usage:
 
@@ -2612,10 +2616,10 @@ Usage:
 Where:
 
 * ``name`` is an arbitrary :green:`String`.  It may be called again with the same ``name``
-  in order to retrieve the same `hll object`.
+  in order to retrieve the same `hll` :green:`Object`.
 
 * ``hllBufferData`` is a :green:`Buffer` - The raw `hll` buffer to initialize the new
-  ``hll`` :green:`Object` with data previously extracted using
+  `hll` :green:`Object` with data previously extracted using
   :ref:`getBuffer <rampart-utils:hll.getBuffer>` below.
 
 * ``merge_hll1``, ``merge_hll2``, etc. are `hll` :green:`Objects` created with ``new rampart.utils.hll(name)``
@@ -2627,7 +2631,7 @@ Return Value:
    and ``getBuffer``.
 
 Note that an `hll` can be referred to from different threads in the
-:ref:`Rampart Server <rampart-server:The rampart-server HTTP module>`. Each server
+:ref:`Rampart Server <rampart-server:The rampart-server HTTP module>` or inside :ref:`Rampart threads <rampart-thread:Rampart Thread Functions>`. Each
 thread may specify the same `hll` by using the same name.  In addition, the below
 functions are thread-safe.
 

@@ -996,8 +996,10 @@ or <code class="docutils literal notranslate"><span class="pre">false</span></co
 <li><code class="docutils literal notranslate"><span class="pre">background</span></code> - <span class="green">Boolean</span>.  Whether to execute detached and return
 immediately.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> below will be set to <code class="docutils literal notranslate"><span class="pre">null</span></code>.  Any <code class="docutils literal notranslate"><span class="pre">timeout</span></code>
 value is ignored.</li>
-<li><code class="docutils literal notranslate"><span class="pre">env</span></code> - <span class="green">Object</span>. Key/value pairs to be used as environment variables for the executed process.</li>
-<li><code class="docutils literal notranslate"><span class="pre">appendEnv</span></code> - <span class="green">Boolean</span>.  Only valid if <code class="docutils literal notranslate"><span class="pre">env</span></code> is provided.  If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default),
+<li><code class="docutils literal notranslate"><span class="pre">env</span></code> - <span class="green">Object</span>. Key/value pairs to be used as environment variables for the executed process.
+Default, if not provided is <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a>.  An empty <span class="green">Object</span>
+(<code class="docutils literal notranslate"><span class="pre">{}</span></code>) removes all environment variables.</li>
+<li><code class="docutils literal notranslate"><span class="pre">appendEnv</span></code> - <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default),
 only the environment variables given in <code class="docutils literal notranslate"><span class="pre">env</span></code> will be available.  If
 <code class="docutils literal notranslate"><span class="pre">true</span></code>, variables provided in <code class="docutils literal notranslate"><span class="pre">env</span></code> will be appended to <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a>.
 Duplicate keys in <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a> are replaced with the value from <code class="docutils literal notranslate"><span class="pre">env</span></code>.</li>
@@ -1068,7 +1070,7 @@ passed to bash and <code class="docutils literal notranslate"><span class="pre">
 <h3>fork<a class="headerlink" href="#fork" title="Permalink to this headline">¶</a></h3>
 <p>Fork the current process.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fork</span><span class="p">([</span><span class="nx">pipe</span> <span class="p">[,</span><span class="nx">pipe</span> <span class="p">[,...]</span> <span class="p">]</span> <span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fork</span><span class="p">([</span><span class="nx">pipe</span><span class="p">,</span> <span class="nx">pipe2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">pipen</span><span class="p">]);</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error piping\n&quot;</span><span class="p">);</span>
@@ -1080,7 +1082,7 @@ passed to bash and <code class="docutils literal notranslate"><span class="pre">
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">pipe</span></code> is one or several pipes created with <a class="reference internal" href="#newpipe">newPipe</a> below.</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">pipeX</span></code> is one or several pipes created with <a class="reference internal" href="#newpipe">newPipe</a> below.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>A <span class="green">Number</span> - The pid of the child in the parent process, <code class="docutils literal notranslate"><span class="pre">0</span></code> in
@@ -1183,8 +1185,10 @@ performed asynchronously in the event loop of the current thread.</p>
 <li><code class="docutils literal notranslate"><span class="pre">command</span></code> - <span class="green">String</span>. An absolute path to an executable or the name of
 an executable that may be found in the current <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable.</li>
 <li><code class="docutils literal notranslate"><span class="pre">options</span></code> - <span class="green">Object</span>. Containing the following properties:<ul>
-<li><code class="docutils literal notranslate"><span class="pre">env</span></code> - <span class="green">Object</span>. Key/value pairs to be used as environment variables for the executed process.</li>
-<li><code class="docutils literal notranslate"><span class="pre">appendEnv</span></code> - <span class="green">Boolean</span>.  Only valid if <code class="docutils literal notranslate"><span class="pre">env</span></code> is provided.  If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default),
+<li><code class="docutils literal notranslate"><span class="pre">env</span></code> - <span class="green">Object</span>. Key/value pairs to be used as environment variables for the executed process.
+Default, if not provided is <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a>.  An empty <span class="green">Object</span>
+(<code class="docutils literal notranslate"><span class="pre">{}</span></code>) removes all environment variables.</li>
+<li><code class="docutils literal notranslate"><span class="pre">appendEnv</span></code> - <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default),
 only the environment variables given in <code class="docutils literal notranslate"><span class="pre">env</span></code> will be available.  If
 <code class="docutils literal notranslate"><span class="pre">true</span></code>, variables provided in <code class="docutils literal notranslate"><span class="pre">env</span></code> will be appended to <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a>.
 Duplicate keys in <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a> are replaced with the value from <code class="docutils literal notranslate"><span class="pre">env</span></code>.</li>
@@ -1274,7 +1278,7 @@ page for kill(1) for a list of signals, which may vary by platform.  Setting
 process identified by <code class="docutils literal notranslate"><span class="pre">pid</span></code>. <code class="docutils literal notranslate"><span class="pre">signal</span></code> may also be a <span class="green">String</span>, a well
 known signal such as <code class="docutils literal notranslate"><span class="pre">&quot;SIGTERM&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;SIGUSR1&quot;</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">throwOnError</span></code> - <span class="green">Boolean</span> - whether to throw an error with a specified
-reason upon failure.</li>
+reason upon failure.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
 </ul>
 </dd>
 <dt>Return Value:</dt>
@@ -1587,9 +1591,9 @@ is <code class="docutils literal notranslate"><span class="pre">&quot;/usr/share
 </dl>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">tz.findZone(tzname)</span></code> - Return an <span class="green">Object</span> with timezone information.  If the timezone
-does not exist, returns undefined.</li>
+does not exist, returns <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">tz.findAbbr(abbrname)</span></code> - Return an <span class="green">Object</span> with a list of timezones that match the given
-abbreviation.  If the abbreviation does not exist, returns undefined.</li>
+abbreviation.  If the abbreviation does not exist, returns <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">tz.dump()</span></code> - Return an <span class="green">Object</span> with the entire database organized by timezones and
 abbreviations.</li>
 </ul>
@@ -1773,7 +1777,7 @@ The default is <code class="docutils literal notranslate"><span class="pre">0</s
 </div>
 <div class="section" id="autoscandate">
 <h3>autoScanDate<a class="headerlink" href="#autoscandate" title="Permalink to this headline">¶</a></h3>
-<p>Attempt to match a date from a string using various formats.</p>
+<p>Attempt to match a date from a <span class="green">String</span> using various formats.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">dateRes</span> <span class="o">=</span> <span class="nx">autoScanDate</span><span class="p">(</span><span class="nx">dateString</span><span class="p">);</span>
 </pre></div>
@@ -2047,7 +2051,7 @@ Example:</p>
 the above functions.</dd>
 </dl>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span> <span class="nx">mode</span><span class="p">[,</span> <span class="nx">sdtRedir</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span> <span class="nx">mode</span><span class="p">[,</span> <span class="nx">stdRedir</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span> containing the file to be opened.</p>
@@ -2524,11 +2528,11 @@ will be automatically seeded.</p>
 
    <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">rn</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="nx">max</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">rn</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">irand</span><span class="p">(</span><span class="nx">max</span><span class="p">);</span>
 
    <span class="cm">/* or */</span>
 
-<span class="kd">var</span> <span class="nx">rn</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">rand</span><span class="p">([</span><span class="nx">max</span><span class="p">[</span><span class="nx">min</span><span class="p">,</span><span class="nx">max</span><span class="p">]],</span><span class="nx">callback</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">irand</span><span class="p">([</span><span class="nx">max</span><span class="p">[</span><span class="nx">min</span><span class="p">,</span><span class="nx">max</span><span class="p">]],</span><span class="nx">callback</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">min</span></code> is the floor and <code class="docutils literal notranslate"><span class="pre">max</span></code>
@@ -2536,14 +2540,14 @@ is the ceiling (INCLUSIVE) of the range of the random integers to produce.
 If not provided, <code class="docutils literal notranslate"><span class="pre">min</span></code> and <code class="docutils literal notranslate"><span class="pre">max</span></code> default to <code class="docutils literal notranslate"><span class="pre">0</span></code> and
 <code class="docutils literal notranslate"><span class="pre">99</span></code> respectively.</p>
 <p>If provided, <code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> <code class="docutils literal notranslate"><span class="pre">callback(r,i)</span></code> where
-<code class="docutils literal notranslate"><span class="pre">r</span></code> is the random integer and i is the loop count. The <span class="green">Function</span>
+<code class="docutils literal notranslate"><span class="pre">r</span></code> is the random integer and <code class="docutils literal notranslate"><span class="pre">i</span></code> is the loop count. The <span class="green">Function</span>
 will be called repeatedly until it returns <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>A <span class="green">Number</span> - the generated random integer as a number. If
 a function is provided, returns <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
-<p>Note that if srand has not been called before use, the random number generator
+<p>Note that if <a class="reference internal" href="#srand">srand</a> has not been called before use, the random number generator
 will be automatically seeded.</p>
 <p>Note also because of JavaScript <span class="green">Number</span> precision, the maximum and
 minimum <code class="docutils literal notranslate"><span class="pre">max</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> that may be provided is <code class="docutils literal notranslate"><span class="pre">9007199254740991</span></code> and
@@ -2576,7 +2580,7 @@ standard deviation of <code class="docutils literal notranslate"><span class="pr
 </div>
 <div class="section" id="srand">
 <h3>srand<a class="headerlink" href="#srand" title="Permalink to this headline">¶</a></h3>
-<p>Seed the random number generator for use with <a class="reference internal" href="#rand">rand</a>() above.</p>
+<p>Seed the random number generator for use with the random functions above.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">srand</span><span class="p">([</span><span class="nx">random_num</span><span class="p">]);</span>
 </pre></div>
@@ -2636,9 +2640,9 @@ a 16384 byte buffer to calculate a distinct count of items added.</p>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">name</span></code> is an arbitrary <span class="green">String</span>.  It may be called again with the same <code class="docutils literal notranslate"><span class="pre">name</span></code>
-in order to retrieve the same <cite>hll object</cite>.</li>
+in order to retrieve the same <cite>hll</cite> <span class="green">Object</span>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">hllBufferData</span></code> is a <span class="green">Buffer</span> - The raw <cite>hll</cite> buffer to initialize the new
-<code class="docutils literal notranslate"><span class="pre">hll</span></code> <span class="green">Object</span> with data previously extracted using
+<cite>hll</cite> <span class="green">Object</span> with data previously extracted using
 <a class="reference internal" href="#hll-getbuffer"><span class="std std-ref">getBuffer</span></a> below.</li>
 <li><code class="docutils literal notranslate"><span class="pre">merge_hll1</span></code>, <code class="docutils literal notranslate"><span class="pre">merge_hll2</span></code>, etc. are <cite>hll</cite> <span class="green">Objects</span> created with <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.utils.hll(name)</span></code>
 to be merged into the new (blank) return <cite>hll</cite> <span class="green">Object</span> in the same manner as
@@ -2650,7 +2654,7 @@ to be merged into the new (blank) return <cite>hll</cite> <span class="green">Ob
 and <code class="docutils literal notranslate"><span class="pre">getBuffer</span></code>.</dd>
 </dl>
 <p>Note that an <cite>hll</cite> can be referred to from different threads in the
-<a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">Rampart Server</span></a>. Each server
+<a class="reference internal" href="rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">Rampart Server</span></a> or inside <a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">Rampart threads</span></a>. Each
 thread may specify the same <cite>hll</cite> by using the same name.  In addition, the below
 functions are thread-safe.</p>
 </div>

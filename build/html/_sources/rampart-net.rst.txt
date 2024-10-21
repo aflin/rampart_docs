@@ -82,7 +82,7 @@ socket.connect()
 
         /* or */
 
-        socket.connect(port[, host][, connect_callback]); 
+        socket.connect(port[, host][, options][, connect_callback]); 
 
     Where:
     
@@ -97,6 +97,9 @@ socket.connect()
 
     * ``options`` is an :green:`Object` with the following optional
       properties:
+
+        * ``host`` - The hostname or ip address of the server.  Default is
+          ``127.0.0.1``.
 
         * ``port`` - Required.  A :green:`Number`.  The port of the server
           to which a connection will be attempted.

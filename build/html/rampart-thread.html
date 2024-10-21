@@ -229,15 +229,16 @@ interpreter.</p>
 <blockquote>
 <div><p>Calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code> function creates the new thread.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">([</span><span class="nx">keepOpen</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">([</span><span class="nx">persist</span><span class="p">]);</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">keepOpen</span></code> is a <span class="green">Boolean</span>, whether to keep the thread
-open when the thread’s event loop is empty and a parent thread is
-ready to exit.  Normally at the end of a script, the main thread’s
-event loop waits for any child threads to finish pending events and
-allow it to exit.  This option thus requires an explicit <a class="reference internal" href="#thr-close">thr.close()</a>
-for a parent thread to completely exit.</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">persist</span></code> is a <span class="green">Boolean</span>, whether to create a
+<cite>persistent</cite> thread that will keep the thread open when the thread’s
+event loop is empty and a parent thread is otherwise ready to exit.</p>
+<p>Normally at the end of a script, the main thread’s event loop waits for
+any child threads to finish pending events and allow it to exit.  This
+option thus requires an explicit <a class="reference internal" href="#thr-close">thr.close()</a> for a parent thread to
+completely exit.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>An <span class="green">Object</span> with two functions: <cite>exec</cite> and <cite>close</cite>.</dd>
@@ -269,10 +270,10 @@ thread.</li>
 the <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> <span class="green">Function</span> as its sole parameter.</li>
 <li><code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> - a <span class="green">Function</span> that will be executed in the
 current event loop (in the thread in which <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code>
-was called).  It will be passed two parameter
+was called).  It will be passed two parameters
 (<code class="docutils literal notranslate"><span class="pre">function(value,error){...}</span></code>) where either <code class="docutils literal notranslate"><span class="pre">value</span></code> (the
-return value of <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>) or <code class="docutils literal notranslate"><span class="pre">error</span></code> (any errors in thrown
-in <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>).</li>
+return value of <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>, if any) or <code class="docutils literal notranslate"><span class="pre">error</span></code> (any errors in thrown
+in <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code>) may be defined.</li>
 <li><code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> - a delay, similar to the <a class="reference internal" href="rampart-main.html#settimeout"><span class="std std-ref">setTimeout() function</span></a>,
 measured in milliseconds.  If omitted, the <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> <span class="green">Function</span>
 will execute immediately.</li>
@@ -280,7 +281,7 @@ will execute immediately.</li>
 </div></blockquote>
 <dl class="docutils">
 <dt>Note:</dt>
-<dd>If no <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> is provided, errors in <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> wil be printed to stderr.</dd>
+<dd>If no <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> is provided, errors thrown in <code class="docutils literal notranslate"><span class="pre">threadFunc</span></code> wil be printed to stderr.</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">iscopied</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
@@ -292,6 +293,9 @@ will execute immediately.</li>
 <span class="kd">function</span> <span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
     <span class="cm">/* var iscopied is available, var notcopied is not */</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;iscopied =&quot;</span><span class="p">,</span> <span class="nx">iscopied</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;notcopied = &quot;</span><span class="p">,</span> <span class="nx">notcopied</span><span class="p">);</span>
+
     <span class="k">return</span> <span class="nx">myarg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -313,9 +317,15 @@ will execute immediately.</li>
 
 <span class="c1">// thr.exec(thrfunc, 3, callback, 1000);</span>
 
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;end of main, start event loop&quot;</span><span class="p">);</span>
+
 <span class="cm">/*</span>
-<span class="cm">    after one second, output will be:</span>
+<span class="cm">    output will be:</span>
+<span class="cm">        end of main, start event loop</span>
+<span class="cm">        &lt; one second delay &gt;</span>
 <span class="cm">        from inside the thread: 3</span>
+<span class="cm">        iscopied = true</span>
+<span class="cm">        notcopied =  undefined</span>
 <span class="cm">        back in the main thread with myarg = 4</span>
 <span class="cm">*/</span>
 </pre></div>
@@ -329,6 +339,9 @@ will execute immediately.</li>
 <div><ul class="simple">
 <li>Threads may be created in inside threads, but they must be called
 from within the thread in which they were created.</li>
+<li><a class="reference internal" href="rampart-utils.html#fork"><span class="std std-ref">rampart.utils.fork</span></a> and
+<a class="reference internal" href="rampart-utils.html#daemon"><span class="std std-ref">rampart.utils.daemon</span></a> will throw an error
+if called while threads are open.</li>
 <li>Only global variables are copied to threads at the time of
 creation.  The variable <code class="docutils literal notranslate"><span class="pre">iscopied</span></code> in the example above will be copied and
 available to the thread as a global variable.  The variable
@@ -343,15 +356,19 @@ created.</li>
 <blockquote>
 <div><p>Close a thread, releasing its resources.</p>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
 
+<span class="cm">/* function to be run in child thread */</span>
 <span class="kd">function</span> <span class="nx">thrfunc</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;from inside the thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
     <span class="k">return</span> <span class="nx">myarg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 
+<span class="cm">/* callback function to be run in main thread */</span>
 <span class="kd">function</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">myarg</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;back in the main thread:&quot;</span><span class="p">,</span> <span class="nx">myarg</span><span class="p">);</span>
+    <span class="c1">// terminate the persistent child thread</span>
+    <span class="nx">thr</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
 <span class="p">}</span>
 
 <span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">thrfunc</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nx">callback</span><span class="p">,</span> <span class="mi">1000</span><span class="p">);</span>
@@ -360,14 +377,13 @@ created.</li>
 <span class="cm">    after one second, output will be:</span>
 <span class="cm">        from inside the thread: 3</span>
 <span class="cm">        back in the main thread: 4</span>
+
+<span class="cm">    Since thr was created as a persistent thread</span>
+<span class="cm">    with &quot;thr = rampart.thread(true)&quot;</span>
+<span class="cm">    it needs to be manually closed.  If not closed</span>
+<span class="cm">    manually, the main thread will wait forever.</span>
+
 <span class="cm">*/</span>
-
-<span class="nx">thr</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
-
-<span class="cm">/* in this case, the thread will stay open until its event loop</span>
-<span class="cm">   is empty.  Thus there will be no difference in the output.</span>
-<span class="cm">   However in a long lived script, closing a thread when no longer</span>
-<span class="cm">   in use can free up significant resources                       */</span>
 </pre></div>
 </div>
 <dl class="docutils">

@@ -1099,12 +1099,13 @@ Usage:
 
 .. code-block:: javascript
 
-   var id = setTimeout(callback, timeOut);
+   var id = setTimeout(callback, timeOut[, arg1, arg2, ..., argn]);
 
 Where:
 
 * ``callback`` is a :green:`Function` to be run when the elapsed time is reached.
 * ``timeOut`` is the amount of time in milliseconds to wait before the ``callback`` function is called.
+* ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
     An id which may be used with `clearTimeout()`_\ .
@@ -1161,12 +1162,13 @@ Usage:
 
 .. code-block:: javascript
 
-   var id = setInterval(callback, interval);
+   var id = setInterval(callback, interval[, arg1, arg2, ..., argn]);
 
 Where:
 
 * ``callback`` is a :green:`Function` to be run when the elapsed time is reached.
 * ``interval`` is the amount of time in milliseconds between calls to ``callback``.
+* ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
     An id which may be used with `clearInterval()`_\ .
@@ -1219,12 +1221,13 @@ Usage:
 
 .. code-block:: javascript
 
-   var id = setMetronome(callback, interval);
+   var id = setMetronome(callback, interval[, arg1, arg2, ..., argn]);
 
 Where:
 
 * ``callback`` is a :green:`Function` to be run when the elapsed time is reached.
 * ``interval`` is the amount of time in milliseconds between calls to ``callback``.
+* ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
     An id which may be used with `clearMetronome()`_\ .
@@ -1399,7 +1402,8 @@ Note that babel does not actually do any type checking.  See
 `this caveat <https://babeljs.io/docs/en/babel-plugin-transform-typescript#caveats>`_.
 
 For a list of tested and supported syntax, see the 
-``/usr/local/rampart/tests/babel-test.js`` file.
+``/usr/local/rampart/tests/babel-test.js`` file (also available
+`here <https://github.com/aflin/rampart/blob/main/test/babel-test.js>`_\ .
 
 How it works
 """"""""""""

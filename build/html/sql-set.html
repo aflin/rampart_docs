@@ -352,11 +352,12 @@ Boolean, Array or String.  A Boolean value is either an integer  – <code class
 function, Booleans are set using the JavaScript Booleans <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 <dl class="docutils">
 <dt>NOTE:</dt>
-<dd>In Rampart Javascript, it is possible to use <code class="docutils literal notranslate"><span class="pre">sql.exec(&quot;SET</span> <span class="pre">property</span> <span class="pre">=</span> <span class="pre">value;&quot;)</span></code>.
-However doing so will set the property for every open <code class="docutils literal notranslate"><span class="pre">sql</span></code> handle
-opened with <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection()</span></code> and not allow settings to be automatically
-reapplied when using multiple <code class="docutils literal notranslate"><span class="pre">sql</span></code> handles.  Thus one should always
-use <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> in order to maintain distinct settings per handle.</dd>
+<dd>In Rampart JavaScript, it is technically legal to use <code class="docutils literal notranslate"><span class="pre">sql.exec(&quot;SET</span> <span class="pre">property</span> <span class="pre">=</span> <span class="pre">value;&quot;)</span></code>.
+However, it should never be used.  Using <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> will apply the
+settings and those settings will be preserved and scoped to the current <code class="docutils literal notranslate"><span class="pre">sql</span></code> handle,
+whereas <code class="docutils literal notranslate"><span class="pre">SET</span> <span class="pre">property=value</span></code> may be overwritten or applied in the wrong
+context.  Therefore, <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> should always be used when in
+JavaScript.</dd>
 </dl>
 <div class="section" id="search-and-optimization-parameters">
 <h2>Search and optimization parameters<a class="headerlink" href="#search-and-optimization-parameters" title="Permalink to this headline">¶</a></h2>
@@ -942,8 +943,8 @@ equivalences will be searched for unless the term is preceded with a
 <code class="docutils literal notranslate"><span class="pre">~</span></code>.  If it is <code class="docutils literal notranslate"><span class="pre">false</span></code> then only the query word is searched for
 (unless the term is preceded with a <code class="docutils literal notranslate"><span class="pre">~</span></code>).  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  Note
 <a class="reference internal" href="#alequivs">alEquivs</a> must be set <code class="docutils literal notranslate"><span class="pre">true</span></code> for any thesaurus lookup to occur when
-using <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">keepeqvs=1</span></code> syntax.  It is automatically set <code class="docutils literal notranslate"><span class="pre">true</span></code> when
-setting <code class="docutils literal notranslate"><span class="pre">keepEqvs</span></code> from <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>.</div></blockquote>
+using <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">keepeqvs=1</span></code> syntax.  Also note that <a class="reference internal" href="#alequivs">alEquivs</a> is automatically
+set <code class="docutils literal notranslate"><span class="pre">true</span></code> when setting <code class="docutils literal notranslate"><span class="pre">useEquiv</span></code> from <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>.</div></blockquote>
 </div>
 <div class="section" id="intersects">
 <h3>intersects<a class="headerlink" href="#intersects" title="Permalink to this headline">¶</a></h3>
@@ -2126,12 +2127,14 @@ at the risk of higher load for special searches.</p>
 <div class="section" id="alequivs">
 <h3>alEquivs<a class="headerlink" href="#alequivs" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>Boolean, <code class="docutils literal notranslate"><span class="pre">false</span></code> by default.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, allows equivalences in queries.  If
-<code class="docutils literal notranslate"><span class="pre">false</span></code>, only the actual terms in a query will be searched for; no
-equivalences will be used.  This is regardless of <code class="docutils literal notranslate"><span class="pre">~</span></code> usage or the
-setting of <a class="reference internal" href="#useequiv">useEquiv</a>.  Note that the equivalence file will still be used to
-check for phrases in the query, however.  Turning this on allows greater
-search flexibility, as equivalent words to a term can be searched for, but
+<div>Boolean, <code class="docutils literal notranslate"><span class="pre">false</span></code> by default.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, allows equivalences (via
+thesaurus lookups) in queries.  If <code class="docutils literal notranslate"><span class="pre">false</span></code>, only the actual terms in a
+query will be searched for; no equivalences will be used.  This is
+regardless of <code class="docutils literal notranslate"><span class="pre">~</span></code> usage or the setting of <a class="reference internal" href="#useequiv">useEquiv</a> (though note that
+setting <a class="reference internal" href="#useequiv">useEquiv</a> to <code class="docutils literal notranslate"><span class="pre">true</span></code> with <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> will turn on
+<code class="docutils literal notranslate"><span class="pre">alEquivs</span></code>).  Note that the equivalence file will still be used to check
+for phrases in the query, however.  Turning this on allows greater search
+flexibility, as equivalent words to a term can be searched for, but
 decreases search speed.</div></blockquote>
 </div>
 <div class="section" id="alintersects">
