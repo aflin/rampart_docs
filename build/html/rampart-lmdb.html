@@ -257,7 +257,7 @@ automatically.</p>
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
 <p>Within LMDB, a “database environment” is a single file which lives in its own
 directory, and has an accompanying lock file.  Within that file, data may be
-partitioned into “databases”.  Thus an LMDB “database environment” is
+partitioned into “databases”.  Thus, an LMDB “database environment” is
 organizationally similar to a SQL database and an LMDB “database” is similar
 to a SQL table.</p>
 </div>
@@ -277,7 +277,7 @@ follows:</p>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">create</span></code> is a <span class="green">Boolean</span>, whether to create a new database
 environment, if it doesn’t exist.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">options</span></code> is a <span class="green">Object</span>, a list of options for opening a new
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span>, a list of options for opening a new
 database environment.  Options include:</p>
 <blockquote>
 <div><ul class="simple">
@@ -299,12 +299,12 @@ stored as is.  Output values (<a class="reference internal" href="#get">get</a>)
 or a <span class="green">Buffer</span> and are stored as is.  Output values
 (<a class="reference internal" href="#get">get</a>) will be a <span class="green">String</span>.  If the output value
 includes NULL characters, the <span class="green">String</span> will be truncated.</li>
-<li><code class="docutils literal notranslate"><span class="pre">JSON</span></code> - Input values (<a class="reference internal" href="#put">put</a>) can be any type
+<li><code class="docutils literal notranslate"><span class="pre">JSON</span></code> - Input values (<a class="reference internal" href="#put">put</a>) can be any type,
 except a <span class="green">Buffer</span> or an <span class="green">Object</span> that contains a
 <span class="green">Buffer</span>.  Output values (<a class="reference internal" href="#get">get</a>) will be the same as
 the input value.</li>
 <li><code class="docutils literal notranslate"><span class="pre">CBOR</span></code> - Input values
-(<a class="reference internal" href="#put">put</a>) can be any type including a <span class="green">Buffer</span> or
+(<a class="reference internal" href="#put">put</a>) can be any type, including a <span class="green">Buffer</span> or
 <span class="green">Objects</span> that contains a <span class="green">Buffers</span>.  Output
 values (<a class="reference internal" href="#get">get</a>) will be the same as the input value. See
 <a class="reference external" href="https://duktape.org/guide.html#builtin-cbor">CBOR encoding description</a>
@@ -321,7 +321,7 @@ optimization means a system crash can corrupt the database or lose
 the last transactions if buffers are not yet flushed to disk.  The
 risk is governed by how often the system flushes dirty buffers to
 disk and how often <a class="reference internal" href="#sync">sync</a> is manually called.  However, if the
-filesystem preserves write order and the <code class="docutils literal notranslate"><span class="pre">writeMap</span></code> setting
+file system preserves write order and the <code class="docutils literal notranslate"><span class="pre">writeMap</span></code> setting
 below is not set or set <code class="docutils literal notranslate"><span class="pre">false</span></code>, transactions exhibit ACI
 (atomicity, consistency, isolation) properties and only lose D
 (durability).  This means database integrity is maintained, but a
@@ -337,7 +337,7 @@ may undo the last committed transaction.</li>
 <code class="docutils literal notranslate"><span class="pre">noSync</span></code>, a system crash can then corrupt the database or lose
 the last transactions. Calling <a class="reference internal" href="#sync">sync</a> below ensures on-disk
 database integrity.</li>
-<li><code class="docutils literal notranslate"><span class="pre">noReadAhead</span></code> - a <span class="green">Boolean</span>, whether LMDB should Turn off
+<li><code class="docutils literal notranslate"><span class="pre">noReadAhead</span></code> - a <span class="green">Boolean</span>, whether LMDB should turn off
 readahead. Most operating systems perform readahead on read
 requests by default. This option turns it off if the OS supports
 it. Turning it off may help random read performance when the DB is
@@ -346,6 +346,13 @@ larger than RAM and system RAM is full.</li>
 to LMDB’s memory map of the database environment. This is faster
 and uses fewer mallocs, but loses protection from application bugs
 like wild pointer writes and other bad updates into the database.</li>
+<li><code class="docutils literal notranslate"><span class="pre">growOnPut</span></code> - a <span class="green">Boolean</span>, whether to automatically close
+and reopen the database with a larger <code class="docutils literal notranslate"><span class="pre">mapSize</span></code> when a <code class="docutils literal notranslate"><span class="pre">lmdb.put</span></code>
+would otherwise throw a <code class="docutils literal notranslate"><span class="pre">MAP_FULL</span></code> error.  The database will be
+reopened with a map 1.5 times its previous size.  This setting has
+no effect on <a class="reference internal" href="#lmdb-transaction-functions">LMDB Transaction Functions</a> below and
+<code class="docutils literal notranslate"><span class="pre">txn.put</span></code>/<code class="docutils literal notranslate"><span class="pre">txn.commit</span></code> will throw an error if the database
+environment is full. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
 </ul>
 </div></blockquote>
 </li>
@@ -422,7 +429,8 @@ before any transaction is opened (before calling <code class="docutils literal n
 <p>Where:</p>
 <blockquote>
 <div><ul>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a> or a
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
+(to open the default database) or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, an error will be thrown.</p>
 </li>
@@ -478,7 +486,8 @@ into a given database, indexed by the key(s).</p>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a> or a
+<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
+(to open the default database) or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, it will be created.</li>
 <li><code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is an <span class="green">Object</span> with each <span class="green">Object</span> key
@@ -527,7 +536,8 @@ items in the database along with the database itself.</p>
 <p>Where:</p>
 <blockquote>
 <div><ul>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a> or a
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
+(to select the defaut database) or a
 <span class="green">String</span>, the name of the database to be dropped.</p>
 <p>To drop the default database, pass an empty string or <code class="docutils literal notranslate"><span class="pre">null</span></code>:
 <code class="docutils literal notranslate"><span class="pre">lmdb.drop(null);</span></code>.</p>
@@ -542,7 +552,7 @@ items in the database along with the database itself.</p>
 to any other function after executing <code class="docutils literal notranslate"><span class="pre">lmdb.drop()</span></code>.  It, however,
 may be recreated calling <code class="docutils literal notranslate"><span class="pre">openDb(dbname,</span> <span class="pre">true)</span></code> again.</dd>
 <dt>Note:</dt>
-<dd>Dropping the default database will delete the its contents,
+<dd>Dropping the default database will delete its contents,
 however it will not be removed and the named database metadata
 will remain.</dd>
 </dl>
@@ -575,7 +585,8 @@ is set in order to manually sync data to the disk.</p>
 </div>
 <p>Where:</p>
 <blockquote>
-<div><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a> or a
+<div><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
+(to open the default database) or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, an error will be thrown.</div></blockquote>
 <dl class="docutils">
@@ -791,11 +802,11 @@ database does not exist, it will be created.  If omitted, the
 lmdb default database for the current database environment will
 be use.  This database will be the default for all operations
 below.  However, more than one database may be used per transaction.</li>
-<li><code class="docutils literal notranslate"><span class="pre">open_rw</span></code> is an <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code>, open the transaction
+<li><code class="docutils literal notranslate"><span class="pre">open_rw</span></code> is a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code>, open the transaction
 for read/write.  This is needed if any data will be added or deleted
 from a database.  If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default), the transaction will be
 read only.</li>
-<li><code class="docutils literal notranslate"><span class="pre">commit_by_default</span></code> is an <span class="green">Boolean</span>.  When a transaction is
+<li><code class="docutils literal notranslate"><span class="pre">commit_by_default</span></code> is a <span class="green">Boolean</span>.  When a transaction is
 opened, it must be eventually closed using either <a class="reference internal" href="#txn-commit">txn.commit</a> or
 <a class="reference internal" href="#txn-abort">txn.abort</a>.  If the script exits or <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">txn</span></code> goes out of
 scope (e.g. the function in which <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">txn</span></code> was declared returns) without
@@ -976,7 +987,7 @@ be automatically decoded.</li>
 </div>
 <div class="section" id="txn-del">
 <h3>txn.del<a class="headerlink" href="#txn-del" title="Permalink to this headline">¶</a></h3>
-<p>Delete an the item with the given key.</p>
+<p>Delete an item with the given key.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
@@ -1081,7 +1092,7 @@ key and value of the retrieved item (e.g.
 <div class="section" id="txn-cursorput">
 <h3>txn.cursorPut<a class="headerlink" href="#txn-cursorput" title="Permalink to this headline">¶</a></h3>
 <p>Put (store) value in a given into a database, indexed
-by the the given key.  Move cursor to the items location.</p>
+by the given key.  Move cursor to the item’s location.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Lmdb</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-lmdb&quot;</span><span class="p">);</span>
 
@@ -1170,10 +1181,10 @@ database specified in <code class="docutils literal notranslate"><span class="pr
 <li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
 database does not exist, it will be created.  If omitted, the
 database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
-<li><code class="docutils literal notranslate"><span class="pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>
+<li><code class="docutils literal notranslate"><span class="pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
 the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be converted to a <span class="green">String</span>.
 If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default) the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be a <span class="green">Buffer</span>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code> the returned
+<li><code class="docutils literal notranslate"><span class="pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned
 <code class="docutils literal notranslate"><span class="pre">value</span></code> will be converted to a <span class="green">String</span>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code>
 (the default) <code class="docutils literal notranslate"><span class="pre">value</span></code> will be a <span class="green">Buffer</span>.</li>
 </ul>
@@ -1246,10 +1257,10 @@ is at the last item (in which case <code class="docutils literal notranslate"><s
 <li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
 database does not exist, it will be created.  If omitted, the
 database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
-<li><code class="docutils literal notranslate"><span class="pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>
+<li><code class="docutils literal notranslate"><span class="pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
 the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be converted to a <span class="green">String</span>.
 If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default) the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be a <span class="green">Buffer</span>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code> the returned
+<li><code class="docutils literal notranslate"><span class="pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the returned
 <code class="docutils literal notranslate"><span class="pre">value</span></code> will be converted to a <span class="green">String</span>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code>
 (the default) <code class="docutils literal notranslate"><span class="pre">value</span></code> will be a <span class="green">Buffer</span>.</li>
 </ul>

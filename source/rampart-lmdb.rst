@@ -56,7 +56,7 @@ Terminology
 
 Within LMDB, a "database environment" is a single file which lives in its own
 directory, and has an accompanying lock file.  Within that file, data may be
-partitioned into "databases".  Thus an LMDB "database environment" is
+partitioned into "databases".  Thus, an LMDB "database environment" is
 organizationally similar to a SQL database and an LMDB "database" is similar
 to a SQL table.
 
@@ -78,7 +78,7 @@ Where:
     *  ``create`` is a :green:`Boolean`, whether to create a new database
        environment, if it doesn't exist.
 
-    * ``options`` is a :green:`Object`, a list of options for opening a new 
+    * ``options`` is an :green:`Object`, a list of options for opening a new 
       database environment.  Options include:
 
         * ``mapSize`` - a :green:`Number`, an integer to set the size of the memory map
@@ -103,13 +103,13 @@ Where:
             (`get`_\ ) will be a :green:`String`.  If the output value
             includes NULL characters, the :green:`String` will be truncated.
 
-          * ``JSON`` - Input values (`put`_\ ) can be any type 
+          * ``JSON`` - Input values (`put`_\ ) can be any type, 
             except a :green:`Buffer` or an :green:`Object` that contains a
             :green:`Buffer`.  Output values (`get`_\ ) will be the same as
             the input value.
 
           * ``CBOR`` - Input values
-            (`put`_\ ) can be any type including a :green:`Buffer` or
+            (`put`_\ ) can be any type, including a :green:`Buffer` or
             :green:`Objects` that contains a :green:`Buffers`.  Output
             values (`get`_\ ) will be the same as the input value. See
             `CBOR encoding description <https://duktape.org/guide.html#builtin-cbor>`_
@@ -126,7 +126,7 @@ Where:
           the last transactions if buffers are not yet flushed to disk.  The
           risk is governed by how often the system flushes dirty buffers to
           disk and how often `sync`_ is manually called.  However, if the
-          filesystem preserves write order and the ``writeMap`` setting
+          file system preserves write order and the ``writeMap`` setting
           below is not set or set ``false``, transactions exhibit ACI
           (atomicity, consistency, isolation) properties and only lose D
           (durability).  This means database integrity is maintained, but a
@@ -145,7 +145,7 @@ Where:
           the last transactions. Calling `sync`_ below ensures on-disk
           database integrity.
 
-        * ``noReadAhead`` - a :green:`Boolean`, whether LMDB should Turn off
+        * ``noReadAhead`` - a :green:`Boolean`, whether LMDB should turn off
           readahead. Most operating systems perform readahead on read
           requests by default. This option turns it off if the OS supports
           it. Turning it off may help random read performance when the DB is
@@ -155,6 +155,14 @@ Where:
           to LMDB's memory map of the database environment. This is faster
           and uses fewer mallocs, but loses protection from application bugs
           like wild pointer writes and other bad updates into the database. 
+
+	* ``growOnPut`` - a :green:`Boolean`, whether to automatically close
+	  and reopen the database with a larger ``mapSize`` when a ``lmdb.put`` 
+	  would otherwise throw a ``MAP_FULL`` error.  The database will be
+	  reopened with a map 1.5 times its previous size.  This setting has
+	  no effect on `LMDB Transaction Functions`_ below and
+	  ``txn.put``/``txn.commit`` will throw an error if the database 
+	  environment is full. Default is ``false``.
 
 Return Value:
         A set of functions to operate on the database environment.  See below.
@@ -237,7 +245,8 @@ Usage:
 
 Where:
 
-    * ``dbase`` is ``dbi object`` returned from `openDb`_ or a 
+    * ``dbase`` is ``dbi object`` returned from `openDb`_\ , a ``null``
+      (to open the default database) or a 
       :green:`String`, the name of the database to be accessed.  If the
       database does not exist, an error will be thrown.
 
@@ -293,7 +302,8 @@ Usage:
 
 Where:
 
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_ or a 
+    * ``dbase`` is ``dbi object`` returned from `openDb`_\ , a ``null``
+      (to open the default database) or a 
       :green:`String`, the name of the database to be accessed.  If the
       database does not exist, it will be created.
 
@@ -348,7 +358,8 @@ items in the database along with the database itself.
 
 Where:
 
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_ or a
+    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ , a ``null``
+      (to select the defaut database) or a
       :green:`String`, the name of the database to be dropped.
 
       To drop the default database, pass an empty string or ``null``:
@@ -364,7 +375,7 @@ Note:
     may be recreated calling ``openDb(dbname, true)`` again.
 
 Note:
-    Dropping the default database will delete the its contents, 
+    Dropping the default database will delete its contents, 
     however it will not be removed and the named database metadata
     will remain.
 
@@ -403,10 +414,10 @@ Usage:
 
 Where:
 
-    ``dbase`` is ``dbi object`` returned from `openDb`_ or a 
+    ``dbase`` is ``dbi object`` returned from `openDb`_\ , a ``null``
+    (to open the default database) or a 
     :green:`String`, the name of the database to be accessed.  If the
     database does not exist, an error will be thrown.
-
 
 Return Value:
     A :green:`Number`, the number of items in the database.
@@ -640,12 +651,12 @@ Where:
       be use.  This database will be the default for all operations
       below.  However, more than one database may be used per transaction.
 
-    * ``open_rw`` is an :green:`Boolean`, if ``true``, open the transaction
+    * ``open_rw`` is a :green:`Boolean`, if ``true``, open the transaction
       for read/write.  This is needed if any data will be added or deleted
       from a database.  If ``false`` (the default), the transaction will be
       read only.
 
-    * ``commit_by_default`` is an :green:`Boolean`.  When a transaction is
+    * ``commit_by_default`` is a :green:`Boolean`.  When a transaction is
       opened, it must be eventually closed using either `txn.commit`_ or
       `txn.abort`_\ .  If the script exits or ``var txn`` goes out of
       scope (e.g. the function in which ``var txn`` was declared returns) without
@@ -836,7 +847,7 @@ Return Value:
 txn.del
 ~~~~~~~
 
-Delete an the item with the given key.
+Delete an item with the given key.
 
 Usage:
 
@@ -947,7 +958,7 @@ txn.cursorPut
 ~~~~~~~~~~~~~
 
 Put (store) value in a given into a database, indexed
-by the the given key.  Move cursor to the items location.
+by the given key.  Move cursor to the item's location.
 
 Usage:
 
@@ -1041,11 +1052,11 @@ Where:
       database does not exist, it will be created.  If omitted, the 
       database specified in ``new lmdb.transaction`` will be used.
 
-    * ``key_is_string`` is a :green:`Boolean`. If ``true``
+    * ``key_is_string`` is a :green:`Boolean`. If ``true``,
       the return ``key`` will be converted to a :green:`String`.
       If ``false`` (the default) the return ``key`` will be a :green:`Buffer`.
 
-    * ``val_is_string`` is a :green:`Boolean`. If ``true`` the returned
+    * ``val_is_string`` is a :green:`Boolean`. If ``true``, the returned
       ``value`` will be converted to a :green:`String`.  If ``false``
       (the default) ``value`` will be a :green:`Buffer`.
 
@@ -1124,11 +1135,11 @@ Where:
       database does not exist, it will be created.  If omitted, the 
       database specified in ``new lmdb.transaction`` will be used.
 
-    * ``key_is_string`` is a :green:`Boolean`. If ``true`` 
+    * ``key_is_string`` is a :green:`Boolean`. If ``true``, 
       the return ``key`` will be converted to a :green:`String`.
       If ``false`` (the default) the return ``key`` will be a :green:`Buffer`.
 
-    * ``val_is_string`` is a :green:`Boolean`. If ``true`` the returned
+    * ``val_is_string`` is a :green:`Boolean`. If ``true``, the returned
       ``value`` will be converted to a :green:`String`.  If ``false``
       (the default) ``value`` will be a :green:`Buffer`.
 
