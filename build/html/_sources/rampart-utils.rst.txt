@@ -1936,6 +1936,79 @@ Examples:
       line 5:    |}
    */
 
+deepCopy
+''''''''
+
+Make a deep copy of one or more :green:`Objects`.
+
+Usage:
+
+.. code-block:: javascript
+
+   var target = rampart.utils.deepCopy([appendArrays,] target, obj1[, obj2, obj3, ...]);
+
+Where:
+
+    * ``appendArrays`` - a :green:`Boolean`, whether to append an :green:`Array` with the same key
+    instead of replace it with the source :green:`Array`.
+
+    * ``target`` - an :green:`Object` into which the subsequent :green:`Object` parameters will be copied.
+
+    * ``objn``- Source :green:`Objects` to copy from, with later :green:`Objects` overwriting duplicate keys in earlier ones.
+
+
+Example:
+
+.. code-block:: javascript
+
+    var target, 
+        source1 = {
+            account: {
+                firstName: "John"
+            },
+            links: [
+                'http://example.com/jsmith1.html'
+            ]
+        },
+        source2 = {
+            account: {
+                lastName: "Smith"
+            },
+            links: [
+                'http://example.com/jsmith_about.html'
+            ]
+        };
+
+    target = rampart.utils.deepCopy({}, source1, source2);
+    rampart.utils.printf("%3J\n", target);
+    /* expected output:
+        {
+           "account": {
+              "firstName": "John",
+              "lastName": "Smith"
+           },
+           "links": [
+              "http://example.com/jsmith_about.html"
+           ]
+        }
+    */
+
+    // true == append the "links" array
+    target = rampart.utils.deepCopy(true, {}, source1, source2);
+    rampart.utils.printf("%3J\n", target);
+    /* expected output:
+        {
+           "account": {
+              "firstName": "John",
+              "lastName": "Smith"
+           },
+           "links": [
+              "http://example.com/jsmith1.html",
+              "http://example.com/jsmith_about.html"
+           ]
+        }
+    */
+
 
 File Handle Utilities
 """""""""""""""""""""

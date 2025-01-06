@@ -806,6 +806,117 @@ Example:
     );
     /* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */ 
 
+Password
+--------
+
+passwd
+~~~~~~
+
+Compute a salt/password entry using a standard algorithm. 
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var pwentry = crypto.passwd(pass[, salt[, algo]]);
+
+Where
+
+    * ``pass`` is a :green:`String`, the password to be hashed.
+
+    * ``salt`` is a :green:`String`, the salt to use to create the hash, or
+      ``null`` to generate a salt.
+
+    * ``algo`` is a :green:`String`, one of ``sha512`` (default),
+      ``sha256``, ``md5``, ``apr1``, ``aixmd5``, or ``crypt``.
+
+Return Value:
+    An :green:`Object` with keys ``line``, ``salt``, ``hash`` and ``mode``.
+
+See example below in `passwdCheck`_\ .
+
+passwdComponents
+~~~~~~~~~~~~~~~~
+
+Given a hash entry from a file such as ``/etc/passwd`` or ``/etc/shadow``,
+return the components.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var components = crypto.passwdComponents(line);
+
+Return Value:
+    Same as `passwd`_ above.
+
+passwdCheck
+~~~~~~~~~~~
+
+Given a hash entry and a password, check if they match.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var passok = crypto.passwdCheck(line, passwd);
+
+Where:
+
+    * ``line`` is a :green:`String`, the ``line`` property from the return of `passwd`_ or a
+      hash entry from a file such as ``/etc/passwd`` or ``/etc/shadow``.
+
+    * ``passwd`` is a :green:`String`, the password to check.
+
+Return Value:
+    a :green:`Boolean`, ``true`` if the password matches the hash.  Otherwise ``false``.
+
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+    var pw = crypto.passwd("mypasswd", null, "md5");
+    rampart.utils.printf("%3J\n", pw);
+
+    /* Sample Output:
+        {
+           "line": "$1$YR/UxoNq$cSEfWsMQH5OC7xY/AYM8S1",
+           "salt": "YR/UxoNq",
+           "hash": "cSEfWsMQH5OC7xY/AYM8S1",
+           "mode": "md5"
+        }
+    */
+
+    var line="$1$epCdp7c5$QROtiBBauvN/HPi5e22ty1";
+    var components = crypto.passwdComponents(line);
+    rampart.utils.printf("%3J\n", components);
+
+    /* Expected Output:
+        {
+           "line": "$1$epCdp7c5$QROtiBBauvN/HPi5e22ty1",
+           "salt": "epCdp7c5",
+           "hash": "QROtiBBauvN/HPi5e22ty1",
+           "mode": "md5"
+        }
+    */
+
+
+    if(crypto.passwdCheck(line, "mypasswd"))
+        console.log("password ok");
+    else
+        console.log("password fail");
+
+    /* Expected Output:
+        password ok
+    */
 
 Hashing
 -------

@@ -1035,12 +1035,15 @@ ip addresses.</div></blockquote>
 
 <span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
-<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">host</span><span class="p">[,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">host</span><span class="p">[,</span> <span class="nx">nameserver</span><span class="p">][,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">host</span></code> is a <span class="green">String</span> - the host name to be resolved.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nameserver</span></code> is a <span class="green">String</span> - the ip address of the DNS server
+to query (default is system specified nameservers in, e.g.
+<cite>/etc/resolv.conf</cite>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">lookup_callback</span></code> is a <span class="green">Function</span> - an optional “lookup”
 event callback.</li>
 </ul>
@@ -1088,12 +1091,15 @@ once per event.</p>
 
 <span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Resolver</span><span class="p">();</span>
 
-<span class="nx">resolver</span><span class="p">.</span><span class="nx">reverse</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">[,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
+<span class="nx">resolver</span><span class="p">.</span><span class="nx">reverse</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">[,</span> <span class="nx">nameserver</span><span class="p">][,</span> <span class="nx">lookup_callback</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">ip_addr</span></code> is a <span class="green">String</span> - the ip address to look up.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nameserver</span></code> is a <span class="green">String</span> - the ip address of the DNS server
+to query (default is system specified nameservers in, e.g.
+<cite>/etc/resolv.conf</cite>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">lookup_callback</span></code> is a <span class="green">Function</span> - an optional “lookup”
 event callback.</li>
 </ul>
@@ -1326,12 +1332,15 @@ above):</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve_async</span><span class="p">(</span><span class="nx">host</span><span class="p">,</span> <span class="nx">lookup_callback</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve_async</span><span class="p">(</span><span class="nx">host</span><span class="p">[,</span> <span class="nx">nameserver</span><span class="p">],</span> <span class="nx">lookup_callback</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">host</span></code> is a <span class="green">String</span> - the host name to be resolved.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nameserver</span></code> is a <span class="green">String</span> - the ip address of the DNS server
+to query (default is system specified nameservers in, e.g.
+<cite>/etc/resolv.conf</cite>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">lookup_calback</span></code> is a <span class="green">Function</span> - the “lookup” event
 function.</li>
 </ul>
@@ -1356,12 +1365,15 @@ function.</li>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">reverse_async</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">,</span> <span class="nx">lookup_callback</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">resolver</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">reverse_async</span><span class="p">(</span><span class="nx">ip_addr</span><span class="p">[,</span> <span class="nx">nameserver</span><span class="p">],</span> <span class="nx">lookup_callback</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">ip_addr</span></code> is a <span class="green">String</span> - the ip address to look up.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nameserver</span></code> is a <span class="green">String</span> - the ip address of the DNS server
+to query (default is system specified nameservers in, e.g.
+<cite>/etc/resolv.conf</cite>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">lookup_calback</span></code> is a <span class="green">Function</span> - the “lookup” event
 function.</li>
 </ul>

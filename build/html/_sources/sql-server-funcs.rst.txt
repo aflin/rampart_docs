@@ -2692,3 +2692,6 @@ Note that it is more efficient and less cumbersome to place values in
 dedicated columns.  However, when the table may need to accomodate future
 fields, or where fields vary per row, using JSON fields can allow for
 greater flexibility.
+
+Note also that any index made on a JSON virtual field will be treated as
+text or a :green:`String`.  Numbers will not sort properly or be selectable based on range.

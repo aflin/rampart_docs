@@ -260,6 +260,9 @@ directory, and has an accompanying lock file.  Within that file, data may be
 partitioned into “databases”.  Thus, an LMDB “database environment” is
 organizationally similar to a SQL database and an LMDB “database” is similar
 to a SQL table.</p>
+<p>Note that LMDB has the concept of a default database.  However it is unused
+in Rampart except to retrieve the names of other named LMDB databases.  In
+Rampart, the <em>default</em> database is an LMDB database named <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code>.</p>
 </div>
 <div class="section" id="main-function-init">
 <h2>Main Function (init)<a class="headerlink" href="#main-function-init" title="Permalink to this headline">¶</a></h2>
@@ -361,6 +364,13 @@ environment is full. Default is <code class="docutils literal notranslate"><span
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>A set of functions to operate on the database environment.  See below.</dd>
+<dt>Caveat:</dt>
+<dd>The LMDB library only allows one open handle to any <em>database
+environment</em>.  Calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Lmdb.init()</span></code> again in another function
+or thread will return the previously opened handle, and newly set <code class="docutils literal notranslate"><span class="pre">options</span></code>
+from above will be ignored.  In order to apply new settings, the
+<em>database environment</em> must first be closed (see <code class="docutils literal notranslate"><span class="pre">lmdb.close</span></code>
+below).</dd>
 </dl>
 </div>
 <div class="section" id="lmdb-easy-functions">
@@ -396,7 +406,7 @@ flags are available in the return object:</p>
 <p>Where:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <span class="green">String</span>, the name of the database to be accessed.
-If <code class="docutils literal notranslate"><span class="pre">undefined</span></code> or <code class="docutils literal notranslate"><span class="pre">null</span></code>, the lmdb default database for the database
+If <code class="docutils literal notranslate"><span class="pre">undefined</span></code> or <code class="docutils literal notranslate"><span class="pre">null</span></code>, the <em>default</em> database for the database
 envirnoment will be opened.</p>
 <p><code class="docutils literal notranslate"><span class="pre">create</span></code> is a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code> openDb will be
 a write transaction which creates the database, if it does not
@@ -430,12 +440,14 @@ before any transaction is opened (before calling <code class="docutils literal n
 <blockquote>
 <div><ul>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
-(to open the default database) or a
+(to open the <em>default</em> database) or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, an error will be thrown.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">key</span></code> is a <span class="green">String</span>, the name of the key whose data
-will be retrieved.</p>
+will be retrieved.  If <code class="docutils literal notranslate"><span class="pre">endkey</span></code> or <code class="docutils literal notranslate"><span class="pre">nKeys</span></code> below is set,
+<code class="docutils literal notranslate"><span class="pre">key</span></code> may be an empty string (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) to start with the first
+entry in the database.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">nKeys</span></code> is an optional <span class="green">Number</span>, the total number of keys to
 retrieve.  If a positive number, the <code class="docutils literal notranslate"><span class="pre">key</span></code> will be returned
@@ -487,7 +499,7 @@ into a given database, indexed by the key(s).</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
-(to open the default database) or a
+(to open the <em>default</em> database) or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, it will be created.</li>
 <li><code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is an <span class="green">Object</span> with each <span class="green">Object</span> key
@@ -539,7 +551,7 @@ items in the database along with the database itself.</p>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
 (to select the defaut database) or a
 <span class="green">String</span>, the name of the database to be dropped.</p>
-<p>To drop the default database, pass an empty string or <code class="docutils literal notranslate"><span class="pre">null</span></code>:
+<p>To drop the <em>default</em> database, pass an empty string or <code class="docutils literal notranslate"><span class="pre">null</span></code>:
 <code class="docutils literal notranslate"><span class="pre">lmdb.drop(null);</span></code>.</p>
 </li>
 </ul>
@@ -552,9 +564,8 @@ items in the database along with the database itself.</p>
 to any other function after executing <code class="docutils literal notranslate"><span class="pre">lmdb.drop()</span></code>.  It, however,
 may be recreated calling <code class="docutils literal notranslate"><span class="pre">openDb(dbname,</span> <span class="pre">true)</span></code> again.</dd>
 <dt>Note:</dt>
-<dd>Dropping the default database will delete its contents,
-however it will not be removed and the named database metadata
-will remain.</dd>
+<dd>Dropping the <em>default</em> database will delete its contents,
+however it will not be removed.</dd>
 </dl>
 </div>
 <div class="section" id="sync">
@@ -586,7 +597,7 @@ is set in order to manually sync data to the disk.</p>
 <p>Where:</p>
 <blockquote>
 <div><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class="pre">null</span></code>
-(to open the default database) or a
+(to open the <em>default</em> database) or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, an error will be thrown.</div></blockquote>
 <dl class="docutils">
@@ -608,11 +619,6 @@ database does not exist, an error will be thrown.</div></blockquote>
 <dt>Return Value:</dt>
 <dd>An <span class="green">Array</span> of <span class="green">Strings</span>, the names
 of all named databases.</dd>
-<dt>Note:</dt>
-<dd>The names of named databases are stored in the default database.  To
-retrieve the names, every item in the default database must be scanned.
-When using named databases, the best practice is to not store data in
-the default database.</dd>
 </dl>
 </div>
 <div class="section" id="close">
@@ -799,7 +805,7 @@ transaction below is open.</p>
 <li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a> or a
 <span class="green">String</span>, the name of the database to be accessed.  If the
 database does not exist, it will be created.  If omitted, the
-lmdb default database for the current database environment will
+lmdb <em>default</em> database for the current database environment will
 be use.  This database will be the default for all operations
 below.  However, more than one database may be used per transaction.</li>
 <li><code class="docutils literal notranslate"><span class="pre">open_rw</span></code> is a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code>, open the transaction
@@ -850,7 +856,7 @@ transactions should be closed as soon as all writes are finished.</p>
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">([</span><span class="nx">dbase</span> <span class="p">,]</span> <span class="nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -858,9 +864,6 @@ transactions should be closed as soon as all writes are finished.</p>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span>, the key of the item
 to be retrieved.</li>
 <li><code class="docutils literal notranslate"><span class="pre">return_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code> the return value
@@ -884,7 +887,7 @@ will be a <span class="green">Buffer</span>.</li>
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">([</span><span class="nx">dbase</span> <span class="p">,]</span> <span class="nx">key</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
 
 <span class="cm">/* use res here */</span>
 
@@ -896,9 +899,6 @@ will be a <span class="green">Buffer</span>.</li>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span>, the key of the item
 to be retrieved.</li>
 </ul>
@@ -954,11 +954,11 @@ by the <span class="green">Object’s</span> keys.</p>
 <span class="cm">/* open read write */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">kvpairs</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">kvpairs</span><span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -966,9 +966,6 @@ by the <span class="green">Object’s</span> keys.</p>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is an <span class="green">Object</span> with each <span class="green">Object</span> key
 corresponding to a database key to be used and each <span class="green">Object</span>
 value corresponding to the database value to be stored.</li>
@@ -996,7 +993,7 @@ be automatically decoded.</li>
 <span class="cm">/* open read write */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1004,9 +1001,6 @@ be automatically decoded.</li>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key</span></code> is the key of the item to be deleted.</li>
 </ul>
 </div></blockquote>
@@ -1036,7 +1030,7 @@ return the key and value of the item at the cursor’s new position.</p>
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span> <span class="p">,]</span> <span class="nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1044,10 +1038,6 @@ return the key and value of the item at the cursor’s new position.</p>
 <p>Where:</p>
 <blockquote>
 <div><ul>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</p>
-</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">op</span></code> is a flag, which specifies the operation mode and is one of the following:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1101,7 +1091,7 @@ by the given key.  Move cursor to the item’s location.</p>
 <span class="cm">/* open read write */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1109,9 +1099,6 @@ by the given key.  Move cursor to the item’s location.</p>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span>, the key of a single key:value pair.</li>
 <li><code class="docutils literal notranslate"><span class="pre">value</span></code> is a <span class="green">String</span> <span class="green">Buffer</span>, or <span class="green">Object</span>. The value of a single key:value pair.
 If <code class="docutils literal notranslate"><span class="pre">value</span></code> is an <span class="green">Object</span>, it will be automatically converted
@@ -1140,19 +1127,11 @@ be automatically decoded.</li>
 <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_set</span><span class="p">,</span> <span class="nx">key</span><span class="p">);</span>
 
 <span class="cm">/* delete item at cursor position */</span>
-<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">();</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>Where:</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
-</ul>
-</div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
@@ -1170,7 +1149,7 @@ database specified in <code class="docutils literal notranslate"><span class="pr
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at next item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="p">[</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">([</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1178,9 +1157,6 @@ database specified in <code class="docutils literal notranslate"><span class="pr
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
 the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be converted to a <span class="green">String</span>.
 If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default) the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be a <span class="green">Buffer</span>.</li>
@@ -1198,7 +1174,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at next item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1211,7 +1187,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="s2">&quot;mydb&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
 
@@ -1246,7 +1222,7 @@ is at the last item (in which case <code class="docutils literal notranslate"><s
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at previous item*/</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="p">[</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">([</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
@@ -1254,9 +1230,6 @@ is at the last item (in which case <code class="docutils literal notranslate"><s
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class="pre">object</span></code> returned from <a class="reference internal" href="#opendb">openDb</a>. If the
-database does not exist, it will be created.  If omitted, the
-database specified in <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
 the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be converted to a <span class="green">String</span>.
 If <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default) the return <code class="docutils literal notranslate"><span class="pre">key</span></code> will be a <span class="green">Buffer</span>.</li>
@@ -1271,7 +1244,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="s2">&quot;mydb&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
 
 <span class="cm">/* position the cursor at previous item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_prev</span><span class="p">);</span>
@@ -1287,7 +1260,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <span class="kd">var</span> <span class="nx">lmdb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Lmdb</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="nx">create</span><span class="p">,</span><span class="nx">options</span><span class="p">);</span>
 
 <span class="cm">/* open read only if only reading in this transaction */</span>
-<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="kc">false</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="s2">&quot;mydb&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
 
@@ -1419,7 +1392,7 @@ significantly improved.</p>
     <span class="nx">entry</span> <span class="o">=</span> <span class="nx">makeAddr</span><span class="p">(</span><span class="nx">entry</span><span class="p">);</span>
     <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">full</span> <span class="o">+</span> <span class="s2">&quot; from &quot;</span> <span class="o">+</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">zip</span><span class="p">;</span>
     <span class="cm">/* since entry is an object, it will be converted to CBOR */</span>
-    <span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">entry</span><span class="p">);</span>
+    <span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">entry</span><span class="p">);</span>
 <span class="p">}</span>
 <span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 
@@ -1433,7 +1406,7 @@ significantly improved.</p>
 <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span><span class="kc">false</span><span class="p">);</span> <span class="c1">//read only</span>
 
 <span class="cm">/* get first entry, make the key a string, leave value as a buffer */</span>
-<span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_setRange</span><span class="p">,</span> <span class="s2">&quot;Sofía&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_setRange</span><span class="p">,</span> <span class="s2">&quot;Sofía&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
 <span class="cm">/* process first entry and loop to get entries after */</span>
@@ -1451,7 +1424,7 @@ significantly improved.</p>
                 <span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">streetno</span><span class="p">,</span>
                 <span class="nx">entry</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">street</span>
               <span class="p">);</span>
-<span class="p">}</span> <span class="k">while</span><span class="p">(</span><span class="nx">entry</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="kc">true</span><span class="p">));</span>
+<span class="p">}</span> <span class="k">while</span><span class="p">(</span><span class="nx">entry</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">(</span><span class="kc">true</span><span class="p">));</span>
 
 <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;There are %d Sofías out of %d entries in the database.\n&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">total</span><span class="p">);</span>
 

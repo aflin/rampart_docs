@@ -2786,6 +2786,7 @@ from the filesystem which end in ``.jpeg`` or ``.jpg``.
     "env"       ->    "application/x-envoy"
     "eot"       ->    "application/vnd.ms-fontobject"
     "eps"       ->    "application/postscript"
+    "epub"      ->    "application/epub+zip"
     "es"        ->    "application/x-esrehber"
     "etx"       ->    "text/x-setext"
     "evy"       ->    "application/x-envoy"

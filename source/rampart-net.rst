@@ -868,11 +868,15 @@ resolver.resolve()
 
         var resolver = new net.Resolver();
 
-        resolver.resolve(host[, lookup_callback]);
+        resolver.resolve(host[, nameserver][, lookup_callback]);
 
     Where: 
 
     * ``host`` is a :green:`String` - the host name to be resolved.
+
+    * ``nameserver`` is a :green:`String` - the ip address of the DNS server
+      to query (default is system specified nameservers in, e.g.
+      `/etc/resolv.conf`).
 
     * ``lookup_callback`` is a :green:`Function` - an optional "lookup"
       event callback.
@@ -924,11 +928,15 @@ resolver.reverse()
 
         var resolver = new net.Resolver();
 
-        resolver.reverse(ip_addr[, lookup_callback]);
+        resolver.reverse(ip_addr[, nameserver][, lookup_callback]);
 
     Where: 
 
     * ``ip_addr`` is a :green:`String` - the ip address to look up.
+
+    * ``nameserver`` is a :green:`String` - the ip address of the DNS server
+      to query (default is system specified nameservers in, e.g.
+      `/etc/resolv.conf`).
 
     * ``lookup_callback`` is a :green:`Function` - an optional "lookup"
       event callback.
@@ -1179,11 +1187,15 @@ net.resolve_async()
 
         var net = require("rampart-net");
 
-        var resolver = net.resolve_async(host, lookup_callback);
+        var resolver = net.resolve_async(host[, nameserver], lookup_callback);
 
     Where:
 
     * ``host`` is a :green:`String` - the host name to be resolved.
+
+    * ``nameserver`` is a :green:`String` - the ip address of the DNS server
+      to query (default is system specified nameservers in, e.g.
+      `/etc/resolv.conf`).
 
     * ``lookup_calback`` is a :green:`Function` - the "lookup" event
       function.
@@ -1214,11 +1226,15 @@ net.reverse_async()
 
         var net = require("rampart-net");
 
-        var resolver = net.reverse_async(ip_addr, lookup_callback);
+        var resolver = net.reverse_async(ip_addr[, nameserver], lookup_callback);
 
     Where:
 
     * ``ip_addr`` is a :green:`String` - the ip address to look up.
+
+    * ``nameserver`` is a :green:`String` - the ip address of the DNS server
+      to query (default is system specified nameservers in, e.g.
+      `/etc/resolv.conf`).
 
     * ``lookup_calback`` is a :green:`Function` - the "lookup" event
       function.

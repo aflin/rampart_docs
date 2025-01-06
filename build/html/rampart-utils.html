@@ -133,6 +133,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#use">use</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#load">load</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#errorconfig">errorConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deepcopy">deepCopy</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#file-handle-utilities">File Handle Utilities</a><ul>
@@ -1984,6 +1985,75 @@ an even number, it will be incremented up to the next odd number.</li>
 <span class="cm">   line 3:    |function myfunc(myvar) {</span>
 <span class="cm">   line 4: -&gt; |    console.log(myvar.x);</span>
 <span class="cm">   line 5:    |}</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="deepcopy">
+<h3>deepCopy<a class="headerlink" href="#deepcopy" title="Permalink to this headline">¶</a></h3>
+<p>Make a deep copy of one or more <span class="green">Objects</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">deepCopy</span><span class="p">([</span><span class="nx">appendArrays</span><span class="p">,]</span> <span class="nx">target</span><span class="p">,</span> <span class="nx">obj1</span><span class="p">[,</span> <span class="nx">obj2</span><span class="p">,</span> <span class="nx">obj3</span><span class="p">,</span> <span class="p">...]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">appendArrays</span></code> - a <span class="green">Boolean</span>, whether to append an <span class="green">Array</span> with the same key</li>
+</ul>
+<p>instead of replace it with the source <span class="green">Array</span>.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">target</span></code> - an <span class="green">Object</span> into which the subsequent <span class="green">Object</span> parameters will be copied.</li>
+<li><code class="docutils literal notranslate"><span class="pre">objn</span></code>- Source <span class="green">Objects</span> to copy from, with later <span class="green">Objects</span> overwriting duplicate keys in earlier ones.</li>
+</ul>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">target</span><span class="p">,</span>
+    <span class="nx">source1</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">account</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">firstName</span><span class="o">:</span> <span class="s2">&quot;John&quot;</span>
+        <span class="p">},</span>
+        <span class="nx">links</span><span class="o">:</span> <span class="p">[</span>
+            <span class="s1">&#39;http://example.com/jsmith1.html&#39;</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="nx">source2</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">account</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">lastName</span><span class="o">:</span> <span class="s2">&quot;Smith&quot;</span>
+        <span class="p">},</span>
+        <span class="nx">links</span><span class="o">:</span> <span class="p">[</span>
+            <span class="s1">&#39;http://example.com/jsmith_about.html&#39;</span>
+        <span class="p">]</span>
+    <span class="p">};</span>
+
+<span class="nx">target</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">deepCopy</span><span class="p">({},</span> <span class="nx">source1</span><span class="p">,</span> <span class="nx">source2</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">target</span><span class="p">);</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;account&quot;: {</span>
+<span class="cm">          &quot;firstName&quot;: &quot;John&quot;,</span>
+<span class="cm">          &quot;lastName&quot;: &quot;Smith&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;links&quot;: [</span>
+<span class="cm">          &quot;http://example.com/jsmith_about.html&quot;</span>
+<span class="cm">       ]</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// true == append the &quot;links&quot; array</span>
+<span class="nx">target</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">deepCopy</span><span class="p">(</span><span class="kc">true</span><span class="p">,</span> <span class="p">{},</span> <span class="nx">source1</span><span class="p">,</span> <span class="nx">source2</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">target</span><span class="p">);</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;account&quot;: {</span>
+<span class="cm">          &quot;firstName&quot;: &quot;John&quot;,</span>
+<span class="cm">          &quot;lastName&quot;: &quot;Smith&quot;</span>
+<span class="cm">       },</span>
+<span class="cm">       &quot;links&quot;: [</span>
+<span class="cm">          &quot;http://example.com/jsmith1.html&quot;,</span>
+<span class="cm">          &quot;http://example.com/jsmith_about.html&quot;</span>
+<span class="cm">       ]</span>
+<span class="cm">    }</span>
 <span class="cm">*/</span>
 </pre></div>
 </div>

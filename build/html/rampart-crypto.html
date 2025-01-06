@@ -121,6 +121,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#gen-csr">gen_csr</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#password">Password</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#passwd">passwd</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#passwdcomponents">passwdComponents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#passwdcheck">passwdCheck</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#hashing">Hashing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#hash">hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#alias-functions">alias functions</a></li>
@@ -1048,6 +1054,109 @@ should be used, particularly where the requested certificate will cover more tha
     <span class="cm">/* , &quot;password&quot; */</span>
 <span class="p">);</span>
 <span class="cm">/* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="password">
+<h2>Password<a class="headerlink" href="#password" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="passwd">
+<h3>passwd<a class="headerlink" href="#passwd" title="Permalink to this headline">¶</a></h3>
+<p>Compute a salt/password entry using a standard algorithm.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">pwentry</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passwd</span><span class="p">(</span><span class="nx">pass</span><span class="p">[,</span> <span class="nx">salt</span><span class="p">[,</span> <span class="nx">algo</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">pass</span></code> is a <span class="green">String</span>, the password to be hashed.</li>
+<li><code class="docutils literal notranslate"><span class="pre">salt</span></code> is a <span class="green">String</span>, the salt to use to create the hash, or
+<code class="docutils literal notranslate"><span class="pre">null</span></code> to generate a salt.</li>
+<li><code class="docutils literal notranslate"><span class="pre">algo</span></code> is a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">sha512</span></code> (default),
+<code class="docutils literal notranslate"><span class="pre">sha256</span></code>, <code class="docutils literal notranslate"><span class="pre">md5</span></code>, <code class="docutils literal notranslate"><span class="pre">apr1</span></code>, <code class="docutils literal notranslate"><span class="pre">aixmd5</span></code>, or <code class="docutils literal notranslate"><span class="pre">crypt</span></code>.</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with keys <code class="docutils literal notranslate"><span class="pre">line</span></code>, <code class="docutils literal notranslate"><span class="pre">salt</span></code>, <code class="docutils literal notranslate"><span class="pre">hash</span></code> and <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</dd>
+</dl>
+<p>See example below in <a class="reference internal" href="#passwdcheck">passwdCheck</a>.</p>
+</div>
+<div class="section" id="passwdcomponents">
+<h3>passwdComponents<a class="headerlink" href="#passwdcomponents" title="Permalink to this headline">¶</a></h3>
+<p>Given a hash entry from a file such as <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> or <code class="docutils literal notranslate"><span class="pre">/etc/shadow</span></code>,
+return the components.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">components</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passwdComponents</span><span class="p">(</span><span class="nx">line</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>Same as <a class="reference internal" href="#passwd">passwd</a> above.</dd>
+</dl>
+</div>
+<div class="section" id="passwdcheck">
+<h3>passwdCheck<a class="headerlink" href="#passwdcheck" title="Permalink to this headline">¶</a></h3>
+<p>Given a hash entry and a password, check if they match.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">passok</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passwdCheck</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="nx">passwd</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">line</span></code> is a <span class="green">String</span>, the <code class="docutils literal notranslate"><span class="pre">line</span></code> property from the return of <a class="reference internal" href="#passwd">passwd</a> or a
+hash entry from a file such as <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> or <code class="docutils literal notranslate"><span class="pre">/etc/shadow</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">passwd</span></code> is a <span class="green">String</span>, the password to check.</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>a <span class="green">Boolean</span>, <code class="docutils literal notranslate"><span class="pre">true</span></code> if the password matches the hash.  Otherwise <code class="docutils literal notranslate"><span class="pre">false</span></code>.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">pw</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passwd</span><span class="p">(</span><span class="s2">&quot;mypasswd&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;md5&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">pw</span><span class="p">);</span>
+
+<span class="cm">/* Sample Output:</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;line&quot;: &quot;$1$YR/UxoNq$cSEfWsMQH5OC7xY/AYM8S1&quot;,</span>
+<span class="cm">       &quot;salt&quot;: &quot;YR/UxoNq&quot;,</span>
+<span class="cm">       &quot;hash&quot;: &quot;cSEfWsMQH5OC7xY/AYM8S1&quot;,</span>
+<span class="cm">       &quot;mode&quot;: &quot;md5&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="kd">var</span> <span class="nx">line</span><span class="o">=</span><span class="s2">&quot;$1$epCdp7c5$QROtiBBauvN/HPi5e22ty1&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">components</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">passwdComponents</span><span class="p">(</span><span class="nx">line</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">components</span><span class="p">);</span>
+
+<span class="cm">/* Expected Output:</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;line&quot;: &quot;$1$epCdp7c5$QROtiBBauvN/HPi5e22ty1&quot;,</span>
+<span class="cm">       &quot;salt&quot;: &quot;epCdp7c5&quot;,</span>
+<span class="cm">       &quot;hash&quot;: &quot;QROtiBBauvN/HPi5e22ty1&quot;,</span>
+<span class="cm">       &quot;mode&quot;: &quot;md5&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+
+<span class="k">if</span><span class="p">(</span><span class="nx">crypto</span><span class="p">.</span><span class="nx">passwdCheck</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="s2">&quot;mypasswd&quot;</span><span class="p">))</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;password ok&quot;</span><span class="p">);</span>
+<span class="k">else</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;password fail&quot;</span><span class="p">);</span>
+
+<span class="cm">/* Expected Output:</span>
+<span class="cm">    password ok</span>
+<span class="cm">*/</span>
 </pre></div>
 </div>
 </div>

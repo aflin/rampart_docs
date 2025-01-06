@@ -450,6 +450,12 @@ Note that `examples`_ are provided below.
       If ``true`` (the default), a copy of the ``body`` :green:`Buffer`
       will be provided in the return :green:`Object`.
 
+    * ``chunkCallback`` - a :green:`Function`, a callback to handle
+      chunked responses.  Called each time there is a new chunk of
+      text.  Its sole parameter is the same ``res`` :green:`Object` as
+      used for the main callback, with the exception that  ``res.body`` 
+      will contain the current chunk of data.
+
     * ``arrayType`` - :green:`String` - How to translate arrays into
       parameters for ``get`` and ``post`` below.  See
       :ref:`rampart-utils:objectToQuery`.

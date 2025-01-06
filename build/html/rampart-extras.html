@@ -121,6 +121,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#graphicsmagick-module">GraphicsMagick Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#websocket-client">websocket_client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-converter">rampart-converter</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -729,6 +730,69 @@ create a fully functioning xterm in the browser.</p>
 <p>The relevant files may be copied directly into the
 <a class="reference external" href="https://github.com/aflin/rampart/tree/main/web_server">example webserver</a>
 directory.</p>
+</div>
+<div class="section" id="rampart-converter">
+<h2>rampart-converter<a class="headerlink" href="#rampart-converter" title="Permalink to this headline">¶</a></h2>
+<p>The included rampart-converter module uses command line utilities to convert
+various file formats into plain text suitable for indexing with the
+<a class="reference internal" href="rampart-sql.html#preface"><span class="std std-ref">sql module</span></a>.</p>
+<p>The following programs/modules should be installed and available before usage:</p>
+<blockquote>
+<div><ul class="simple">
+<li>pandoc - for docx, odt, markdown, rtf, latex, epub and docbook</li>
+<li>catdoc (linux/freebsd) or textutil (macos) - for doc</li>
+<li>pdftotext from the xpdf utils - for pdfs</li>
+<li>man - for man files (if not available, pandoc will be used)</li>
+<li>file - to identify file types</li>
+<li>head - for linux optimization identifying files</li>
+<li>gunzip - to decompress any gzipped document</li>
+<li>the rampart-html module for html and as a helper for pandoc conversions</li>
+</ul>
+</div></blockquote>
+<p>Minimally, pandoc and file must be available for this module to load.</p>
+<p>The following file formats are supported (if appropriate program
+above is available):</p>
+<blockquote>
+<div>docx, doc, odt, markdown, rtf, latex, epub, docbook, pdf &amp; man
+Also files identified as txt (text/plain) will be returned as is.</div></blockquote>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">(</span><span class="nx">defaultOptions</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">defaultOptions</span></code> is <span class="green">Undefined</span> or an <span class="green">Object</span> of command line flags for each
+of the converting programs.  Example to only include the first two pages
+for a pdf (pdftotext) and to convert a docx (pandoc) to markdown instead
+of to text:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">({</span>
+    <span class="nx">pdftotext</span><span class="o">:</span> <span class="p">{</span><span class="nx">f</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">l</span><span class="o">:</span><span class="mi">2</span><span class="p">},</span>
+    <span class="nx">pandoc</span> <span class="o">:</span>   <span class="p">{</span><span class="nx">t</span><span class="o">:</span> <span class="s1">&#39;markdown&#39;</span><span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>To convert a document:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;/path/to/my/file.ext&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="nx">or</span>
+<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">myFileBufferOrString</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">options</span></code> overrides the <code class="docutils literal notranslate"><span class="pre">defaultOptions</span></code> above and
+is either of:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>same format as defaultOptions above:
+<code class="docutils literal notranslate"><span class="pre">{pdftotext:</span> <span class="pre">{f:1,</span> <span class="pre">l:2}}</span></code>; or</li>
+<li>options for the utility to be used:
+<code class="docutils literal notranslate"><span class="pre">{f:1,</span> <span class="pre">l:2}</span></code></li>
+</ol>
+</div></blockquote>
+<p>Full example:</p>
+<p>Command Line usage:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt; rampart /path/to/rampart-converter.js /path/to/document.ext
+</pre></div>
+</div>
 </div>
 </div>
 
