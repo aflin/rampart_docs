@@ -134,6 +134,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#load">load</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#errorconfig">errorConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deepcopy">deepCopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eventcallback">eventCallback</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#file-handle-utilities">File Handle Utilities</a><ul>
@@ -302,7 +303,9 @@ equivalent to <code class="docutils literal notranslate"><span class="pre">print
 <li>if <code class="docutils literal notranslate"><span class="pre">!</span></code> flag is present, a safe version of JSON will be printed where
 any references to inner <span class="green">Objects</span> are marked.  See second
 example below.  Note: if <code class="docutils literal notranslate"><span class="pre">!</span></code> is omitted but printing would fail
-because of cyclic references, then <code class="docutils literal notranslate"><span class="pre">!</span></code> is implied.</li>
+because of cyclic references, then <code class="docutils literal notranslate"><span class="pre">!</span></code> is implied.  Also this flag
+will print any methods of an object which would otherwise be hidden
+with values such as <code class="docutils literal notranslate"><span class="pre">myfunc:</span> <span class="pre">{&quot;_ecmascript_func&quot;:</span> <span class="pre">true}</span></code>.</li>
 </ul>
 </div></blockquote>
 </li>
@@ -1071,10 +1074,10 @@ passed to bash and <code class="docutils literal notranslate"><span class="pre">
 <h3>fork<a class="headerlink" href="#fork" title="Permalink to this headline">¶</a></h3>
 <p>Fork the current process.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fork</span><span class="p">([</span><span class="nx">pipe</span><span class="p">,</span> <span class="nx">pipe2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">pipen</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fork</span><span class="p">([</span><span class="nx">pipe</span><span class="p">,</span> <span class="nx">pipe2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">pipeX</span><span class="p">]);</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-   <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error piping\n&quot;</span><span class="p">);</span>
+   <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error forking\n&quot;</span><span class="p">);</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="p">)</span> <span class="p">{</span>
    <span class="c1">//parent</span>
@@ -1489,7 +1492,7 @@ number), but <code class="docutils literal notranslate"><span class="pre">755</s
 <p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, not necessarily in canonical form.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>A <span class="green">String</span>, the canonical form of the path.</dd>
+<dd>A <span class="green">String</span>, the canonical form of the path.  Throws an error if path does not exist.</dd>
 </dl>
 </div>
 <div class="section" id="touch">
@@ -1993,16 +1996,16 @@ an even number, it will be incremented up to the next odd number.</li>
 <h3>deepCopy<a class="headerlink" href="#deepcopy" title="Permalink to this headline">¶</a></h3>
 <p>Make a deep copy of one or more <span class="green">Objects</span>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">deepCopy</span><span class="p">([</span><span class="nx">appendArrays</span><span class="p">,]</span> <span class="nx">target</span><span class="p">,</span> <span class="nx">obj1</span><span class="p">[,</span> <span class="nx">obj2</span><span class="p">,</span> <span class="nx">obj3</span><span class="p">,</span> <span class="p">...]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">deepCopy</span><span class="p">([</span><span class="nx">appendArrays</span> <span class="p">[,</span> <span class="nx">copyBuffers</span><span class="p">]],</span> <span class="nx">target</span><span class="p">,</span> <span class="nx">obj1</span><span class="p">[,</span> <span class="nx">obj2</span><span class="p">,</span> <span class="nx">obj3</span><span class="p">,</span> <span class="p">...]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">appendArrays</span></code> - a <span class="green">Boolean</span>, whether to append an <span class="green">Array</span> with the same key</li>
-</ul>
-<p>instead of replace it with the source <span class="green">Array</span>.</p>
-<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">appendArrays</span></code> - a <span class="green">Boolean</span>, whether to append an <span class="green">Array</span> with the same key
+instead of replace it with the source <span class="green">Array</span>.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">copyBuffers</span></code> - a <span class="green">Boolean</span>, whether to copy the full binary contents of a <span class="green">Buffer</span>
+rather than its reference.  Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">target</span></code> - an <span class="green">Object</span> into which the subsequent <span class="green">Object</span> parameters will be copied.</li>
 <li><code class="docutils literal notranslate"><span class="pre">objn</span></code>- Source <span class="green">Objects</span> to copy from, with later <span class="green">Objects</span> overwriting duplicate keys in earlier ones.</li>
 </ul>
@@ -2057,6 +2060,27 @@ an even number, it will be incremented up to the next odd number.</li>
 <span class="cm">*/</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="eventcallback">
+<h3>eventCallback<a class="headerlink" href="#eventcallback" title="Permalink to this headline">¶</a></h3>
+<p>Register a callback <span class="green">Function</span> to catch warnings or errors produced by Rampart’s event loop (libevent2).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">eventCallback</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">level</span><span class="p">,</span><span class="nx">msg</span><span class="p">){</span> <span class="cm">/* handle or report here */</span> <span class="p">});</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">level</span></code> - a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">&quot;msg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;warn&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;error&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">msg</span></code> - a <span class="green">String</span>, the message from libevent2.</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>In normal usage, this function should not be necessary.  If used, the callback function must
+not call any asychronous functions.  See <a class="reference external" href="https://libevent.org/libevent-book/Ref1_libsetup.html">the libevent2 reference</a>
+for more information.</dd>
+</dl>
 </div>
 </div>
 <div class="section" id="file-handle-utilities">
@@ -2244,7 +2268,7 @@ a <span class="green">String</span> or filehandle <span class="green">Object</sp
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">filename</span> <span class="o">=</span> <span class="s2">&quot;/home/user/myfile.txt&quot;</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">outputLen</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span> <span class="nx">mode</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="nx">filename</span><span class="p">,</span> <span class="nx">mode</span><span class="p">);</span>
 <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">output</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">,</span> <span class="p">...);</span>
 <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fclose</span><span class="p">(</span><span class="nx">output</span><span class="p">);</span>
 
@@ -2460,11 +2484,14 @@ if not specified.</td>
 <div class="section" id="fgets">
 <h3>fgets<a class="headerlink" href="#fgets" title="Permalink to this headline">¶</a></h3>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fgets</span><span class="p">([</span><span class="nx">handle</span><span class="o">|</span><span class="nx">file</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">max_size</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fgets</span><span class="p">([</span><span class="nx">handle</span><span class="o">|</span><span class="nx">file</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">[,</span> <span class="nx">max_size</span><span class="p">]]);</span>
 </pre></div>
 </div>
 <p>Read data from file, up to <code class="docutils literal notranslate"><span class="pre">max_size</span></code> bytes (default <code class="docutils literal notranslate"><span class="pre">1</span></code>), stopping at
 and including the first <code class="docutils literal notranslate"><span class="pre">\n</span></code> or the end of the file.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">options</span></code> is included, it must be an <span class="green">Object</span>, where if set to <code class="docutils literal notranslate"><span class="pre">{&quot;echo&quot;:false}</span></code>, and reading from
+<code class="docutils literal notranslate"><span class="pre">stdin</span></code>, echoing typed characters on the terminal will be disabled (e.g., for entering
+passwords).</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>A <span class="green">String</span>.</dd>

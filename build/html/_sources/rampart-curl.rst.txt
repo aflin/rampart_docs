@@ -540,6 +540,15 @@ Note that `examples`_ are provided below.
         will be read from a file (e.g.  
         ``{post: "@/path/to/my/pic.jpg", header: "Content-Type: image/jpeg"}``).
 
+    * ``postJSON`` - a :green:`String`, :green:`Buffer` or  :green:`Object`.
+    
+        If an :green:`Object`, data is automatically converted and posted
+        as a JSON string converted using a method similar to
+        ``rampart.utils.printf("%J", myobject)`` (which checks for and 
+        converts cyclic references).
+        
+        Otherwise if not an :green:`Object`, data is handled the same as ``post`` above.
+
     * ``postform`` - an :green:`Object`. For POSTing with ``Content-Type: multipart/form-data``
       where each key/property sets the the name in each part of the posted data (i.e. - 
       ``Content-Disposition: form-data; name=``), and the value is a :green:`String`,

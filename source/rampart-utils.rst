@@ -63,7 +63,9 @@ Extended (non-standard) formats:
       * if ``!`` flag is present, a safe version of JSON will be printed where
         any references to inner :green:`Objects` are marked.  See second
         example below.  Note: if ``!`` is omitted but printing would fail
-        because of cyclic references, then ``!`` is implied.
+        because of cyclic references, then ``!`` is implied.  Also this flag 
+        will print any methods of an object which would otherwise be hidden
+        with values such as ``myfunc: {"_ecmascript_func": true}``.
 
    * ``%B`` - print contents of a :green:`Buffer` or :green:`String` as
      base64.
@@ -903,10 +905,10 @@ Usage:
 
 .. code-block:: javascript
 
-   var pid = rampart.utils.fork([pipe, pipe2, ..., pipen]);
+   var pid = rampart.utils.fork([pipe, pipe2, ..., pipeX]);
 
    if(pid=-1)
-      rampart.utils.fprintf(rampart.utils.stderr, "error piping\n");
+      rampart.utils.fprintf(rampart.utils.stderr, "error forking\n");
 
    if(pid) {
       //parent
@@ -1378,7 +1380,7 @@ Usage:
 Where ``path`` is a :green:`String`, not necessarily in canonical form.
 
 Return Value:
-   A :green:`String`, the canonical form of the path.
+   A :green:`String`, the canonical form of the path.  Throws an error if path does not exist.
 
 touch
 '''''
@@ -1945,12 +1947,15 @@ Usage:
 
 .. code-block:: javascript
 
-   var target = rampart.utils.deepCopy([appendArrays,] target, obj1[, obj2, obj3, ...]);
+   var target = rampart.utils.deepCopy([appendArrays [, copyBuffers]], target, obj1[, obj2, obj3, ...]);
 
 Where:
 
     * ``appendArrays`` - a :green:`Boolean`, whether to append an :green:`Array` with the same key
-    instead of replace it with the source :green:`Array`.
+      instead of replace it with the source :green:`Array`.  Default is ``false``.
+
+    * ``copyBuffers`` - a :green:`Boolean`, whether to copy the full binary contents of a :green:`Buffer`
+      rather than its reference.  Default is ``true``.
 
     * ``target`` - an :green:`Object` into which the subsequent :green:`Object` parameters will be copied.
 
@@ -2009,6 +2014,28 @@ Example:
         }
     */
 
+
+eventCallback
+'''''''''''''
+
+Register a callback :green:`Function` to catch warnings or errors produced by Rampart's event loop (libevent2).
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.eventCallback(function(level,msg){ /* handle or report here */ });
+
+Where:
+
+    * ``level`` - a :green:`String`, one of ``"msg"``, ``"warn"`` or ``"error"``.
+    * ``msg`` - a :green:`String`, the message from libevent2.
+
+Note:
+    In normal usage, this function should not be necessary.  If used, the callback function must
+    not call any asychronous functions.  See `the libevent2 reference <https://libevent.org/libevent-book/Ref1_libsetup.html>`_
+    for more information.
+    
 
 File Handle Utilities
 """""""""""""""""""""
@@ -2227,7 +2254,7 @@ Usage:
 
    var filename = "/home/user/myfile.txt";
 
-   var outputLen = rampart.utils.fopen(filename, mode);
+   var output = rampart.utils.fopen(filename, mode);
    rampart.utils.fprintf(output, fmt, ...);
    rampart.utils.fclose(output);
 
@@ -2427,10 +2454,15 @@ Usage:
 
 .. code-block:: javascript
 
-    var data = rampart.utils.fgets([handle|file] [, max_size]);
+    var data = rampart.utils.fgets([handle|file] [, options[, max_size]]);
+
 
 Read data from file, up to ``max_size`` bytes (default ``1``), stopping at
 and including the first ``\n`` or the end of the file.
+
+If ``options`` is included, it must be an :green:`Object`, where if set to ``{"echo":false}``, and reading from
+``stdin``, echoing typed characters on the terminal will be disabled (e.g., for entering
+passwords).
 
 Return Value:
     A :green:`String`.
