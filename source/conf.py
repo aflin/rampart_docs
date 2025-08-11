@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Rampart'
-copyright = '2024, Moat Crossing Systems'
+copyright = '2025, Moat Crossing Systems'
 author = 'Moat Crossing Systems'
 
 # The full version, including alpha/beta/rc tags
-release = '0.6.0'
+release = '0.6.1'
 
 
 # -- General configuration ---------------------------------------------------

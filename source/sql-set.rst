@@ -818,6 +818,37 @@ useEquiv
         End delimiter to use: a regular expression to match the start of a
         hit. The default is no delimiter.
 
+useDerivations
+""""""""""""""    
+    This is an **EXPERIMENTAL** setting.
+    
+    Load the equivalence file from
+    ``derivations/${lc}/${lc}-deriv`` in the rampart install or
+    ``~/.rampart`` director.  Only works when set via
+    ``sql.set(useDerivations: [lc|true]})``.  If set to ``true``, it will
+    load the ``derivations/en/en-deriv``.  Otherwise it will load the file
+    using the :green:`String` value set (e.g. 
+    ``sql.set({useDerivations:"fa"}``) would load the
+    ``derivations/fa/fa-deriv`` file for Farsi equivalences).
+
+    Setting to ``false`` restores the defaults of ``{useEquiv:false,
+    alEquiv:false, eqPrefix:"builtin"}``
+
+    The loaded file is made of word derivation associations so that when there is
+    a search for, e.g. ``watch superman fly``, it will look for words such
+    as ``watches``, ``supermen`` and ``flying``.  Using this setting can
+    find relevant matches which would otherwise not be found, at the
+    potential cost to performance and accuracy.
+
+    This setting implies ``useEquiv:true``, ``alEquiv:true`` and
+    ``eqPrefix:\`derivations/${lc}/${lc}-deriv\```.
+
+    More info, plus files for language other than English can be found on the
+    `rampart_lang_derivs github page <https://github.com/aflin/rampart_lang_derivs>`_\ .
+
+    This option precludes the use of the built-in thesaurus.
+
+
 intersects
 """"""""""
     Default number of intersections in Metamorph queries; overridden by

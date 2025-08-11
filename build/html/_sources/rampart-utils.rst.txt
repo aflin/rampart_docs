@@ -115,7 +115,52 @@ Extended (non-standard) formats:
 
      Requires a number, 1-4 bytes (``0``-``4294967295``, or ``0x0``-``0xffffffff``).
 
-Example:
+Extended (non-standard) flags:
+
+    * ``a`` - For all formats, accent output with color, if on a terminal
+      that supports colors and using ``printf(...)`` or ``fprintf(stderr,...)``.
+      Colors must be provided in a :green:`String` before the
+      parameter that will be colorized.  Format for the color parameter is
+      ``foregroundColor[, backgroundColor[, [option]]]`` where:
+
+        * ``ForegroundColor`` is the color of the text.
+
+        * ``backgroundColor`` is the background color.
+
+        * ``option`` is ``blink`` or ``flashing`` for blinking text.
+        
+      Color is specified in a css compatible ``rgb(x, x, x)``
+      format, by providing a `named css color <https://en.wikipedia.org/wiki/Web_colors>`_ 
+      or `named terminal color <https://plumbum.readthedocs.io/en/latest/colorlib.html#color-support>`_\ .
+
+    * ``^`` - same as ``a`` except 16 color mode is forced.
+
+    * ``A`` - same as ``a`` except 256 color mode is forced.
+
+    * ``@`` - same as ``a`` except truecolor mode is forced.
+
+Color with the ``%H``:
+
+    * Using ``%aH`` or any of the forced versions (``^``, ``A`` or ``@``) will perform the same operation as
+      with other format codes.  In addition, it will wrap the text in a span with the foreground and background
+      colors set as specified.  It will also add the ``option`` as a class name to the span.
+
+    Example:
+
+    .. code-block:: javascript
+    
+        rampart.utils.printf("%aH", "green, white, myclassname", "Text in a span");
+
+    Output would be as follows:
+
+        :green:`<span class="rp-color myclassname" style="color:Green; background-color:White;">Text in a span</span>`
+
+    If using ``sprintf`` or if not printing to the terminal, output would be as follows:
+
+        <span class="rp-color myclassname" style="color:Green; background-color:White;">Text in a span</span>
+    
+
+Basic printf example:
 
 .. code-block:: javascript
 

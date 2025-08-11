@@ -613,11 +613,78 @@ Note that <a class="reference internal" href="#examples">examples</a> are provid
 If <code class="docutils literal notranslate"><span class="pre">true</span></code> (the default), a copy of the <code class="docutils literal notranslate"><span class="pre">body</span></code> <span class="green">Buffer</span>
 will be provided in the return <span class="green">Object</span>.</p>
 </li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">callback</span></code> - a <span class="green">Function</span>, alternate syntax for
+providing a callback for the results of a fetch or submit request.</p>
+</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">chunkCallback</span></code> - a <span class="green">Function</span>, a callback to handle
 chunked responses.  Called each time there is a new chunk of
 text.  Its sole parameter is the same <code class="docutils literal notranslate"><span class="pre">res</span></code> <span class="green">Object</span> as
 used for the main callback, with the exception that  <code class="docutils literal notranslate"><span class="pre">res.body</span></code>
-will contain the current chunk of data.</p>
+will contain the current chunk of data and res.text is not present.
+This function will return chunks of data regardless of whether
+<code class="docutils literal notranslate"><span class="pre">Content-Encoding:</span> <span class="pre">chunked</span></code> is being used.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">progressCallback</span></code> - a <span class="green">Function</span>, a callback to receive
+download progress updates.  Called each time there is a new chunk of
+text.  Its sole parameter is the same <code class="docutils literal notranslate"><span class="pre">res</span></code> <span class="green">Object</span> as
+used for the main callback, with the exception that  <code class="docutils literal notranslate"><span class="pre">res.body</span></code>
+is empty,  res.text is not present, res.progress will contain the
+number of bytes received and res.expectedTotal will be the expected
+total as reported from the server header <code class="docutils literal notranslate"><span class="pre">Content-Length</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code>
+if server did not provide a <cite>Content-Length`</cite> header (as is common
+with a <code class="docutils literal notranslate"><span class="pre">chunked</span></code> response).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">skipFinalRes</span></code> - a <span class="green">Boolean</span>, if true do not accumulate a
+response in <code class="docutils literal notranslate"><span class="pre">body</span></code> of the return object or the <code class="docutils literal notranslate"><span class="pre">res</span></code> object provided
+to (body will be an empty
+buffer).  This is useful if downloading a large file and writing
+the file out in chunks using a <code class="docutils literal notranslate"><span class="pre">chunkCallback</span></code>.  Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">f</span> <span class="o">=</span> <span class="nx">fopen</span><span class="p">(</span><span class="nx">myfile</span><span class="p">,</span><span class="s1">&#39;w+&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">nchunks</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span>
+    <span class="nx">myurl</span><span class="p">,</span>
+    <span class="p">{</span>
+        <span class="nx">location</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">returnText</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">skipFinalRes</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+
+        <span class="nx">chunkCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//write to file as we receive chunks from the server</span>
+            <span class="nx">f</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s1">&#39;%s&#39;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+        <span class="p">},</span>
+
+        <span class="nx">progressCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">nchunks</span><span class="o">++</span><span class="p">;</span>
+            <span class="c1">// print progress every 100 chunks.</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">nchunks</span><span class="o">%</span><span class="mi">100</span><span class="p">)</span>
+                <span class="k">return</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">tot</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">progress</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">rate</span> <span class="o">=</span> <span class="nx">tot</span><span class="o">/</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">totalTime</span><span class="o">*</span><span class="mi">1024</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">unit</span> <span class="o">=</span> <span class="s2">&quot;Kbs&quot;</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">perc</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="nx">tot</span> <span class="o">/</span> <span class="nx">res</span><span class="p">.</span><span class="nx">expectedTotal</span><span class="p">;</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">rate</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">rate</span><span class="o">/=</span><span class="mi">1024</span><span class="p">;</span>
+                <span class="nx">unit</span> <span class="o">=</span> <span class="s2">&quot;Mbs&quot;</span>
+            <span class="p">}</span>
+            <span class="kd">var</span> <span class="nx">out</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">expectedTotal</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="nx">out</span><span class="o">=</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;    %Ad%%, %d of %d bytes, (%.2f %s)&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="nx">perc</span><span class="p">,</span> <span class="nx">tot</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">expectedTotal</span><span class="p">,</span> <span class="nx">rate</span><span class="p">,</span> <span class="nx">unit</span> <span class="p">);</span>
+            <span class="k">else</span>
+                <span class="nx">out</span><span class="o">=</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;    %d bytes&quot;</span><span class="p">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">file</span><span class="p">,</span> <span class="nx">tot</span><span class="p">);</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;%M&#39;</span><span class="p">,</span> <span class="p">[</span><span class="sb">`downloading file </span><span class="si">${</span><span class="nx">myurl</span><span class="si">}</span><span class="sb"> -&gt;`</span><span class="p">,</span> <span class="sb">`  </span><span class="si">${</span><span class="nx">myfile</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="nx">out</span><span class="p">]);</span>
+        <span class="p">},</span>
+
+        <span class="nx">callback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;done\n&quot;</span><span class="p">)</span>
+            <span class="nx">f</span><span class="p">.</span><span class="nx">fclose</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+</pre></div>
+</div>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">arrayType</span></code> - <span class="green">String</span> - How to translate arrays into
 parameters for <code class="docutils literal notranslate"><span class="pre">get</span></code> and <code class="docutils literal notranslate"><span class="pre">post</span></code> below.  See

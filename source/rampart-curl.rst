@@ -450,11 +450,80 @@ Note that `examples`_ are provided below.
       If ``true`` (the default), a copy of the ``body`` :green:`Buffer`
       will be provided in the return :green:`Object`.
 
+    * ``callback`` - a :green:`Function`, alternate syntax for
+      providing a callback for the results of a fetch or submit request.
+
     * ``chunkCallback`` - a :green:`Function`, a callback to handle
       chunked responses.  Called each time there is a new chunk of
       text.  Its sole parameter is the same ``res`` :green:`Object` as
       used for the main callback, with the exception that  ``res.body`` 
-      will contain the current chunk of data.
+      will contain the current chunk of data and res.text is not present.
+      This function will return chunks of data regardless of whether
+      ``Content-Encoding: chunked`` is being used.
+
+    * ``progressCallback`` - a :green:`Function`, a callback to receive
+      download progress updates.  Called each time there is a new chunk of
+      text.  Its sole parameter is the same ``res`` :green:`Object` as
+      used for the main callback, with the exception that  ``res.body`` 
+      is empty,  res.text is not present, res.progress will contain the
+      number of bytes received and res.expectedTotal will be the expected
+      total as reported from the server header ``Content-Length`` or ``-1``
+      if server did not provide a `Content-Length`` header (as is common
+      with a ``chunked`` response).
+
+    * ``skipFinalRes`` - a :green:`Boolean`, if true do not accumulate a 
+      response in ``body`` of the return object or the ``res`` object provided 
+      to (body will be an empty 
+      buffer).  This is useful if downloading a large file and writing
+      the file out in chunks using a ``chunkCallback``.  Example:
+
+      .. code-block:: javascript
+      
+            var f = fopen(myfile,'w+');
+            var nchunks=0;
+            curl.fetchAsync(
+                myurl, 
+                {
+                    location: true,
+                    returnText: false,
+                    skipFinalRes: true,
+
+                    chunkCallback: function(res) {
+                        //write to file as we receive chunks from the server
+                        f.fprintf('%s', res.body);
+                    },
+
+                    progressCallback: function(res) {
+                        nchunks++;
+                        // print progress every 100 chunks.
+                        if(nchunks%100)
+                            return;
+
+                        var tot = res.progress;
+                        var rate = tot/(res.totalTime*1024);
+                        var unit = "Kbs";
+                        var perc = 100 * tot / res.expectedTotal;
+
+                        if(rate > 10000) {
+                            rate/=1024;
+                            unit = "Mbs"
+                        }
+                        var out;
+                        if(res.expectedTotal != -1)
+                            out=sprintf("    %Ad%%, %d of %d bytes, (%.2f %s)",
+                                'green', perc, tot, res.expectedTotal, rate, unit );
+                        else
+                            out=sprintf("    %d bytes", o.file, tot);
+                        printf('%M', [`downloading file ${myurl} ->`, `  ${myfile}`, out]);
+                    },
+
+                    callback: function(res) {
+                        printf("done\n")
+                        f.fclose();
+                    }
+                }
+            );
+
 
     * ``arrayType`` - :green:`String` - How to translate arrays into
       parameters for ``get`` and ``post`` below.  See

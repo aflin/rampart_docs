@@ -127,6 +127,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#prefixproc">prefixProc</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#rebuild">rebuild</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#useequiv">useEquiv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usederivations">useDerivations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#intersects">intersects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#hyphenphrase">hyphenPhrase</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wordc">wordc</a></li>
@@ -945,6 +946,32 @@ equivalences will be searched for unless the term is preceded with a
 <a class="reference internal" href="#alequivs">alEquivs</a> must be set <code class="docutils literal notranslate"><span class="pre">true</span></code> for any thesaurus lookup to occur when
 using <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">keepeqvs=1</span></code> syntax.  Also note that <a class="reference internal" href="#alequivs">alEquivs</a> is automatically
 set <code class="docutils literal notranslate"><span class="pre">true</span></code> when setting <code class="docutils literal notranslate"><span class="pre">useEquiv</span></code> from <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>.</div></blockquote>
+</div>
+<div class="section" id="usederivations">
+<h3>useDerivations<a class="headerlink" href="#usederivations" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>This is an <strong>EXPERIMENTAL</strong> setting.</p>
+<p>Load the equivalence file from
+<code class="docutils literal notranslate"><span class="pre">derivations/${lc}/${lc}-deriv</span></code> in the rampart install or
+<code class="docutils literal notranslate"><span class="pre">~/.rampart</span></code> director.  Only works when set via
+<code class="docutils literal notranslate"><span class="pre">sql.set(useDerivations:</span> <span class="pre">[lc|true]})</span></code>.  If set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, it will
+load the <code class="docutils literal notranslate"><span class="pre">derivations/en/en-deriv</span></code>.  Otherwise it will load the file
+using the <span class="green">String</span> value set (e.g.
+<code class="docutils literal notranslate"><span class="pre">sql.set({useDerivations:&quot;fa&quot;}</span></code>) would load the
+<code class="docutils literal notranslate"><span class="pre">derivations/fa/fa-deriv</span></code> file for Farsi equivalences).</p>
+<p>Setting to <code class="docutils literal notranslate"><span class="pre">false</span></code> restores the defaults of <code class="docutils literal notranslate"><span class="pre">{useEquiv:false,</span>
+<span class="pre">alEquiv:false,</span> <span class="pre">eqPrefix:&quot;builtin&quot;}</span></code></p>
+<p>The loaded file is made of word derivation associations so that when there is
+a search for, e.g. <code class="docutils literal notranslate"><span class="pre">watch</span> <span class="pre">superman</span> <span class="pre">fly</span></code>, it will look for words such
+as <code class="docutils literal notranslate"><span class="pre">watches</span></code>, <code class="docutils literal notranslate"><span class="pre">supermen</span></code> and <code class="docutils literal notranslate"><span class="pre">flying</span></code>.  Using this setting can
+find relevant matches which would otherwise not be found, at the
+potential cost to performance and accuracy.</p>
+<p>This setting implies <code class="docutils literal notranslate"><span class="pre">useEquiv:true</span></code>, <code class="docutils literal notranslate"><span class="pre">alEquiv:true</span></code> and
+<code class="docutils literal notranslate"><span class="pre">eqPrefix:\`derivations/${lc}/${lc}-deriv\`</span></code>.</p>
+<p>More info, plus files for language other than English can be found on the
+<a class="reference external" href="https://github.com/aflin/rampart_lang_derivs">rampart_lang_derivs github page</a>.</p>
+<p>This option precludes the use of the built-in thesaurus.</p>
+</div></blockquote>
 </div>
 <div class="section" id="intersects">
 <h3>intersects<a class="headerlink" href="#intersects" title="Permalink to this headline">¶</a></h3>
