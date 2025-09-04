@@ -115,6 +115,23 @@ Extended (non-standard) formats:
 
      Requires a number, 1-4 bytes (``0``-``4294967295``, or ``0x0``-``0xffffffff``).
 
+   * ``%M`` - print multiline string.  Corresponding argument must be an :green:`Array`.  This
+     prints each member of the array without scrolling the terminal when called multiple
+     times.
+
+     Example:
+
+    .. code-block:: javascript
+
+        for (var i=0,j=0; i<20; i++,j+=10) {
+            rampart.utils.printf("%M", [`line 1: ${i}`, `line 2: ${j}`]);
+            rampart.utils.sleep(0.2)
+        }
+        rampart.utils.printf("done\n");
+   
+
+    
+
 Extended (non-standard) flags:
 
     * ``a`` - For all formats, accent output with color, if on a terminal
@@ -139,7 +156,7 @@ Extended (non-standard) flags:
 
     * ``@`` - same as ``a`` except truecolor mode is forced.
 
-Color with the ``%H``:
+Color with ``%H`` format:
 
     * Using ``%aH`` or any of the forced versions (``^``, ``A`` or ``@``) will perform the same operation as
       with other format codes.  In addition, it will wrap the text in a span with the foreground and background
@@ -159,6 +176,35 @@ Color with the ``%H``:
 
         <span class="rp-color myclassname" style="color:Green; background-color:White;">Text in a span</span>
     
+Colors with ``%J`` format:
+
+    * Using ``%aJ`` or any of the forced versions (``^``, ``A`` or ``@``), takes as the color argument a number (pallate number)
+      rather than a foreground and background color.  There are currently four pallates, numbered ``0-3``.  Anything not a number
+      or outside of that range will default to ``0``.
+
+    .. code-block:: javascript
+    
+        var myObj = {Number:1.23, Bool:true, String:"Hello World!", Null: null};
+        rampart.utils.printf("%a3J\n", 0, myObj);
+        rampart.utils.printf("%a3J\n", 1, myObj);
+ 
+    .. raw:: html
+
+       <div class="highlight json-custom"><pre style=padding:0.6em;">
+       {
+          <span class="nt0">Number"</span>: <span class="n0">1.23</span>,
+          <span class="nt0">"Bool"</span>: <span class="b0">true</span>,
+          <span class="nt0">"String"</span>: <span class="s0">"Hello World!"</span>,
+          <span class="nt0">"Null"</span>: <span class="N0">null</span>
+       }
+       {
+          <span class="nt1">Number"</span>: <span class="n1">1.23</span>,
+          <span class="nt1">"Bool"</span>: <span class="b1">true</span>,
+          <span class="nt1">"String"</span>: <span class="s1">"Hello World!"</span>,
+          <span class="nt1">"Null"</span>: <span class="N1">null</span>
+       }
+       </pre></div>
+
 
 Basic printf example:
 

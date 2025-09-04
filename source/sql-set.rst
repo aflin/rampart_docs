@@ -828,7 +828,7 @@ useDerivations
     ``sql.set(useDerivations: [lc|true]})``.  If set to ``true``, it will
     load the ``derivations/en/en-deriv``.  Otherwise it will load the file
     using the :green:`String` value set (e.g. 
-    ``sql.set({useDerivations:"fa"}``) would load the
+    ``sql.set({useDerivations:"fa"})`` would load the
     ``derivations/fa/fa-deriv`` file for Farsi equivalences).
 
     Setting to ``false`` restores the defaults of ``{useEquiv:false,
@@ -840,8 +840,8 @@ useDerivations
     find relevant matches which would otherwise not be found, at the
     potential cost to performance and accuracy.
 
-    This setting implies ``useEquiv:true``, ``alEquiv:true`` and
-    ``eqPrefix:\`derivations/${lc}/${lc}-deriv\```.
+    This setting implies ``{useEquiv:true``, ``alEquiv:true`` and
+    ``eqPrefix:`derivations/${lc}/${lc}-deriv```.
 
     More info, plus files for language other than English can be found on the
     `rampart_lang_derivs github page <https://github.com/aflin/rampart_lang_derivs>`_\ .
