@@ -824,7 +824,7 @@ useDerivations
     
     Load the equivalence file from
     ``derivations/${lc}/${lc}-deriv`` in the rampart install or
-    ``~/.rampart`` director.  Only works when set via
+    ``~/.rampart`` directory.  Only works when set via
     ``sql.set(useDerivations: [lc|true]})``.  If set to ``true``, it will
     load the ``derivations/en/en-deriv``.  Otherwise it will load the file
     using the :green:`String` value set (e.g. 
@@ -845,6 +845,9 @@ useDerivations
 
     More info, plus files for language other than English can be found on the
     `rampart_lang_derivs github page <https://github.com/aflin/rampart_lang_derivs>`_\ .
+
+    Prebuild derivation files for more languages can be downloaded using the
+    ``rampart/derivations/downloadLangDeriv.js`` script.
 
     This option precludes the use of the built-in thesaurus.
 

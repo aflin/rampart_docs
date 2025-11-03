@@ -1,0 +1,1118 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Rampart Vector Functions &mdash; Rampart 0.6.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.6.1 documentation" href="index.html"/>
+        <link rel="next" title="The rampart-sql module" href="sqltoc.html"/>
+        <link rel="prev" title="Rampart Thread Functions" href="rampart-thread.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rampart Vector Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#acknowledgement">Acknowledgement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-does-it-do">What does it do?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vectors-in-general">Vectors in General</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#why-use-vectors">Why use Vectors?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vector-datatypes-in-rampart">Vector Datatypes in Rampart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vector-distance-primer">Vector Distance Primer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dot-product-inner-product">Dot Product / Inner Product</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosine-similarity">Cosine Similarity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#euclidean-distance">Euclidean Distance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#l2-normalization">L2 Normalization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vector-conversion-functions">Vector Conversion Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-numberstof64">rampart.vector.numbersToF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-numberstof32">rampart.vector.numbersToF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-numberstof16">rampart.vector.numbersToF16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-numberstobf16">rampart.vector.numbersToBf16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-numberstoi8">rampart.vector.numbersToI8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-numberstou8">rampart.vector.numbersToU8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f64tonumbers">rampart.vector.f64ToNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f32tonumbers">rampart.vector.f32ToNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f16tonumbers">rampart.vector.f16ToNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-bf16tonumbers">rampart.vector.bf16ToNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-u8tonumbers">rampart.vector.u8ToNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-i8tonumbers">rampart.vector.i8ToNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f64tof32">rampart.vector.f64ToF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f64tof16">rampart.vector.f64ToF16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f64tobf16">rampart.vector.f64ToBf16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f64toi8">rampart.vector.f64ToI8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f64tou8">rampart.vector.f64ToU8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f32tof64">rampart.vector.f32ToF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f16tof64">rampart.vector.f16ToF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-bf16tof64">rampart.vector.bf16ToF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-i8tof64">rampart.vector.i8ToF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-u8tof64">rampart.vector.u8ToF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f32tof16">rampart.vector.f32ToF16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f32tobf16">rampart.vector.f32ToBf16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f32toi8">rampart.vector.f32ToI8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f32tou8">rampart.vector.f32ToU8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f16tof32">rampart.vector.f16ToF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-bf16tof32">rampart.vector.bf16ToF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-u8tof32">rampart.vector.u8ToF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-i8tof32">rampart.vector.i8ToF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f16toi8">rampart.vector.f16ToI8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-f16tou8">rampart.vector.f16ToU8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-i8tof16">rampart.vector.i8ToF16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-u8tof16">rampart.vector.u8ToF16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-l2normalizenumbers">rampart.vector.l2NormalizeNumbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-l2normalizef64">rampart.vector.l2NormalizeF64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-l2normalizef32">rampart.vector.l2NormalizeF32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-vector-l2normalizef16">rampart.vector.l2NormalizeF16</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vector-distance-function">Vector Distance Function</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Rampart Vector Functions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rampart-vector.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rampart-vector-functions">
+<h1>Rampart Vector Functions<a class="headerlink" href="#rampart-vector-functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+<p>The rampart.vector functions are built into the rampart executable
+and as such are covered under the same MIT license.</p>
+</div>
+<div class="section" id="acknowledgement">
+<h3>Acknowledgement<a class="headerlink" href="#acknowledgement" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart.vector.distance()</span></code> function uses
+<a class="reference external" href="https://github.com/ashvardanian/SimSIMD">SimSIMD</a>
+(<a class="reference external" href="https://github.com/ashvardanian/SimSIMD/blob/main/LICENSE">Apache license</a>)
+to dispatch to the fastest available distance calculation function.  The authors
+of Rampart express their appreciation for this capable library.</p>
+</div>
+<div class="section" id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+<p>The rampart.vector functions provides utility functions to pack, convert and
+compare vectors from within JavaScript.</p>
+</div>
+</div>
+<div class="section" id="vectors-in-general">
+<h2>Vectors in General<a class="headerlink" href="#vectors-in-general" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="why-use-vectors">
+<h3>Why use Vectors?<a class="headerlink" href="#why-use-vectors" title="Permalink to this headline">¶</a></h3>
+<p>Vectors have become fundamental to modern information retrieval and artificial intelligence applications,
+particularly in the realm of semantic search and similarity matching. Unlike traditional keyword-based
+search methods that rely on exact text matches, vector representations capture the semantic meaning
+of content by encoding it into high-dimensional numerical arrays. This approach enables systems to
+understand context, identify conceptually similar items, and provide more intelligent search results
+even when exact terms don’t match.</p>
+<p>The power of vector similarity lies in its ability to measure relationships between different pieces
+of information in a meaningful way. When text, images, audio, or other data types are converted into
+vectors using machine learning models (embeddings), items with similar meanings or characteristics
+naturally cluster together in vector space. This makes it possible to find documents that discuss
+the same topic using different terminology, recommend products based on conceptual similarity rather
+than just tags, or even perform cross-modal searches like finding images that match a text description.</p>
+<p>Vector operations are particularly valuable in applications such as recommendation systems, content
+classification, duplicate detection, and retrieval-augmented generation (RAG) systems. By efficiently
+computing distances between vectors, applications can quickly identify the most relevant information
+from large datasets, enabling responsive user experiences even when searching through millions of items.
+The rampart.vector functions provide the essential tools needed to work with these vector representations,
+offering both high-performance computations and flexible format conversions to suit various storage and
+processing requirements.</p>
+</div>
+<div class="section" id="vector-datatypes-in-rampart">
+<h3>Vector Datatypes in Rampart<a class="headerlink" href="#vector-datatypes-in-rampart" title="Permalink to this headline">¶</a></h3>
+<p>Rampart supports a variety of vector formats and functions
+to convert between them:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">Numbers</span></code>: a <span class="green">Array</span> of <span class="green">Numbers</span> - Useful for
+manipulating values in JavaScript. This is the standard JavaScript array
+format where each element is a full-precision 64-bit floating point number.
+While this format offers maximum flexibility for mathematical operations and
+is easiest to work with in JavaScript code, it consumes the most memory and
+may not be optimal for storage or large-scale vector operations.</li>
+<li><code class="docutils literal notranslate"><span class="pre">f64</span></code>: a <span class="green">Buffer</span> - Holds a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> c array.  Equivalent
+to <code class="docutils literal notranslate"><span class="pre">Numbers</span></code> in precision, but suitable for efficient storage in a database.
+Each element is stored as a 64-bit (8-byte) double-precision floating point value,
+providing the highest accuracy for vector operations. This format is ideal when
+precision is critical and storage space is not a primary concern. It maintains
+full numerical precision during conversions and calculations.</li>
+<li><code class="docutils literal notranslate"><span class="pre">f32</span></code>: a <span class="green">Buffer</span> - Holds a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> c array. Each element is
+stored as a 32-bit (4-byte) single-precision floating point value. This format
+reduces storage requirements by 50% compared to <code class="docutils literal notranslate"><span class="pre">f64</span></code> while maintaining
+sufficient precision for most machine learning and similarity search applications.
+It is widely used in neural networks and embedding models, offering an excellent
+balance between memory efficiency and numerical accuracy.</li>
+<li><code class="docutils literal notranslate"><span class="pre">f16</span></code>: a <span class="green">Buffer</span> - Holds a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> c array. Each element is
+stored as a 16-bit (2-byte) half-precision floating point value following the
+IEEE 754 standard. This format reduces storage by 75% compared to <code class="docutils literal notranslate"><span class="pre">f64</span></code>,
+making it suitable for applications where memory is limited or when working
+with very large vector databases. While precision is reduced, <code class="docutils literal notranslate"><span class="pre">f16</span></code> is often
+sufficient for similarity calculations and is increasingly supported by modern
+hardware accelerators.</li>
+<li><code class="docutils literal notranslate"><span class="pre">bf16</span></code>: a <span class="green">Buffer</span> - Holds a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> c array. Each element is
+stored as a 16-bit (2-byte) Brain Floating Point value. Unlike <code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>
+maintains the same exponent range as <code class="docutils literal notranslate"><span class="pre">f32</span></code> but with reduced mantissa precision.
+This format was developed by Google Brain and is particularly well-suited for
+machine learning applications, as it preserves the dynamic range of <code class="docutils literal notranslate"><span class="pre">f32</span></code> while
+using half the storage. It’s especially effective for gradient calculations and
+model training workflows.</li>
+<li><code class="docutils literal notranslate"><span class="pre">u8</span></code>: a <span class="green">Buffer</span> - Holds a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> c array. Each element is
+stored as an 8-bit (1-byte) unsigned integer with values ranging from 0 to 255.
+This format achieves an 87.5% reduction in storage compared to <code class="docutils literal notranslate"><span class="pre">f64</span></code>, making it
+ideal for very large-scale vector databases where storage and memory bandwidth are
+critical constraints. Vectors must be quantized (scaled and rounded) to fit in this
+range, but for many similarity search applications, the trade-off between precision
+and efficiency is worthwhile.</li>
+<li><code class="docutils literal notranslate"><span class="pre">i8</span></code>: a <span class="green">Buffer</span> - Holds a <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> c array. Each element is
+stored as an 8-bit (1-byte) signed integer with values ranging from -128 to 127.
+Like <code class="docutils literal notranslate"><span class="pre">u8</span></code>, this format provides maximum storage efficiency but with support
+for negative values. It’s commonly used for quantized neural network weights
+and embeddings where the distribution is centered around zero, allowing for
+efficient computation while maintaining acceptable accuracy for similarity
+comparisons.</li>
+</ul>
+</div>
+<div class="section" id="vector-distance-primer">
+<h3>Vector Distance Primer<a class="headerlink" href="#vector-distance-primer" title="Permalink to this headline">¶</a></h3>
+<p>Understanding vector distances is essential for working with vector embeddings and
+similarity search. Different distance metrics serve different purposes and can
+significantly impact the results of your application. The following sections describe
+the most common distance measures used in vector operations.</p>
+<div class="section" id="dot-product-inner-product">
+<h4>Dot Product / Inner Product<a class="headerlink" href="#dot-product-inner-product" title="Permalink to this headline">¶</a></h4>
+<p>The dot product (also called inner product) is one of the most fundamental vector
+operations. It multiplies corresponding elements of two vectors and sums the results,
+producing a scalar value. Mathematically, for vectors <strong>a</strong> and <strong>b</strong>, the dot product
+is: <strong>a</strong> · <strong>b</strong> = a₁b₁ + a₂b₂ + … + aₙbₙ.</p>
+<p>The dot product measures both the magnitude and directional alignment of vectors.
+Higher positive values indicate vectors that point in similar directions and have
+large magnitudes, while negative values indicate opposing directions. Unlike distance
+metrics, the dot product is a similarity measure rather than a distance, meaning larger
+values indicate greater similarity. It’s computationally efficient and commonly used in
+machine learning applications, particularly with normalized vectors.</p>
+<p>In practical applications, the dot product is often used with normalized embeddings
+where it becomes equivalent to cosine similarity. It’s particularly effective for
+recommendation systems and information retrieval where you want to measure the
+alignment between query and document vectors. Many neural networks also use dot
+product attention mechanisms to determine the relevance between different parts
+of their input.</p>
+</div>
+<div class="section" id="cosine-similarity">
+<h4>Cosine Similarity<a class="headerlink" href="#cosine-similarity" title="Permalink to this headline">¶</a></h4>
+<p>Cosine similarity measures the cosine of the angle between two vectors, focusing
+purely on their direction rather than magnitude. It ranges from -1 (opposite directions)
+to 1 (same direction), with 0 indicating orthogonality (perpendicularity). The formula
+is: cos(θ) = (<strong>a</strong> · <strong>b</strong>) / (||**a**|| × ||**b**||), where ||**a**|| represents
+the magnitude (length) of vector <strong>a</strong>.</p>
+<p>This metric is particularly valuable when vector magnitude doesn’t carry meaningful
+information, and you only care about orientation. In text analysis and natural language
+processing, for example, document vectors might have different lengths simply due to
+document size, but their semantic content is better captured by direction. Cosine
+similarity effectively normalizes for these magnitude differences, making it ideal
+for comparing embeddings generated by language models.</p>
+<p>An important optimization technique used with cosine similarity is L2 normalization
+(also called unit normalization). L2 normalization scales a vector so its magnitude
+becomes exactly 1 by dividing each component by the vector’s length: <strong>a</strong>’ = <strong>a</strong> / ||**a**||.
+When both vectors are L2 normalized, computing cosine similarity simplifies to just
+the dot product, since the denominator (||**a**|| × ||**b**||) equals 1. This makes
+the calculation significantly faster while producing identical results. Many embedding
+models output pre-normalized vectors specifically to enable this optimization.</p>
+<p>Cosine similarity is widely used in semantic search, document clustering, and
+recommendation systems. It’s especially effective with word embeddings and sentence
+embeddings where the magnitude of the vector may vary but the direction encodes the
+semantic meaning. Many vector databases default to cosine similarity because of its
+robustness to scale variations and its intuitive interpretation as directional alignment.</p>
+</div>
+<div class="section" id="euclidean-distance">
+<h4>Euclidean Distance<a class="headerlink" href="#euclidean-distance" title="Permalink to this headline">¶</a></h4>
+<p>Euclidean distance, also known as L2 distance, measures the straight-line distance
+between two points in vector space. It’s the most intuitive distance metric,
+corresponding to how we naturally think about distance in the physical world. The
+formula is: d(<strong>a</strong>, <strong>b</strong>) = √[(a₁-b₁)² + (a₂-b₂)² + … + (aₙ-bₙ)²].</p>
+<p>Unlike cosine similarity, Euclidean distance considers both the direction and magnitude
+of vectors. This makes it sensitive to the scale of features, which can be both an
+advantage and a disadvantage depending on your application. When vector magnitudes
+carry important information (such as in image feature vectors or certain types of
+numerical data), Euclidean distance preserves that information in the similarity
+calculation.</p>
+<p>Euclidean distance is commonly used in k-nearest neighbors algorithms, clustering
+applications like k-means, and anomaly detection. In the context of embeddings, it’s
+particularly useful when the model has been trained to produce vectors where both
+magnitude and direction are meaningful. For many pre-trained embedding models, however,
+cosine similarity or normalized dot product may be more appropriate as the models often
+normalize their outputs or are trained with that metric in mind.</p>
+</div>
+<div class="section" id="l2-normalization">
+<h4>L2 Normalization<a class="headerlink" href="#l2-normalization" title="Permalink to this headline">¶</a></h4>
+<p>L2 normalization (also called unit normalization or vector normalization) is the process
+of scaling a vector so that its length (magnitude) becomes exactly 1, while preserving
+its direction. The operation divides each component of the vector by the vector’s L2 norm
+(Euclidean length): <strong>a</strong>’ = <strong>a</strong> / ||**a**||, where ||**a**|| = √(a₁² + a₂² + … + aₙ²).
+The resulting unit vector points in the same direction as the original but has a magnitude
+of 1, making it lie on the surface of a unit hypersphere in n-dimensional space.</p>
+<p>L2 normalization is crucial for many machine learning and vector similarity applications
+because it removes magnitude as a factor in comparisons, focusing purely on directional
+relationships. When vectors are normalized, differences in scale—whether due to varying
+document lengths, feature magnitudes, or model outputs—no longer affect similarity
+measurements. This property makes normalized vectors particularly valuable for comparing
+embeddings where only the semantic direction matters, not the absolute values.</p>
+<p>The technique offers significant computational benefits when used with cosine similarity.
+Since cosine similarity divides the dot product by the product of both vectors’ magnitudes,
+normalizing both vectors beforehand (making their magnitudes equal to 1) reduces the
+calculation to a simple dot product. This optimization can speed up similarity searches
+by 50% or more, which is why many embedding models and vector databases work exclusively
+with normalized vectors. Additionally, normalized vectors enable the use of efficient
+maximum inner product search (MIPS) algorithms that can quickly find the most similar
+vectors in large datasets.</p>
+</div>
+</div>
+</div>
+<div class="section" id="vector-conversion-functions">
+<h2>Vector Conversion Functions<a class="headerlink" href="#vector-conversion-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rampart-vector-numberstof64">
+<h3>rampart.vector.numbersToF64<a class="headerlink" href="#rampart-vector-numberstof64" title="Permalink to this headline">¶</a></h3>
+<p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding a
+<code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">NumbersToF64</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">myarray</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-numberstof32">
+<h3>rampart.vector.numbersToF32<a class="headerlink" href="#rampart-vector-numberstof32" title="Permalink to this headline">¶</a></h3>
+<p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding a
+<code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">numbersToF32</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">myarr</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-numberstof16">
+<h3>rampart.vector.numbersToF16<a class="headerlink" href="#rampart-vector-numberstof16" title="Permalink to this headline">¶</a></h3>
+<p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding a
+<code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">numbersToF16</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">myarr</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-numberstobf16">
+<h3>rampart.vector.numbersToBf16<a class="headerlink" href="#rampart-vector-numberstobf16" title="Permalink to this headline">¶</a></h3>
+<p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding a
+<code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (Brain Floating Point 16).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">numbersToBf16</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">myarr</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-numberstoi8">
+<h3>rampart.vector.numbersToI8<a class="headerlink" href="#rampart-vector-numberstoi8" title="Permalink to this headline">¶</a></h3>
+<p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">numbersToI8</span><span class="p">(</span><span class="nx">myarr</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">myarr</span></code> is a an <span class="green">Array</span> of <span class="green">Numbers</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">-128</span></code> - <code class="docutils literal notranslate"><span class="pre">127</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-numberstou8">
+<h3>rampart.vector.numbersToU8<a class="headerlink" href="#rampart-vector-numberstou8" title="Permalink to this headline">¶</a></h3>
+<p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">numbersToU8</span><span class="p">(</span><span class="nx">myarr</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">myarr</span></code> is a an <span class="green">Array</span> of <span class="green">Numbers</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional positive <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">0</span></code> - <code class="docutils literal notranslate"><span class="pre">255</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="rampart-vector-f64tonumbers">
+<h3>rampart.vector.f64ToNumbers<a class="headerlink" href="#rampart-vector-f64tonumbers" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">NumbersToF64</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f32tonumbers">
+<h3>rampart.vector.f32ToNumbers<a class="headerlink" href="#rampart-vector-f32tonumbers" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f32ToNumbers</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f16tonumbers">
+<h3>rampart.vector.f16ToNumbers<a class="headerlink" href="#rampart-vector-f16tonumbers" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point) to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f16ToNumbers</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-bf16tonumbers">
+<h3>rampart.vector.bf16ToNumbers<a class="headerlink" href="#rampart-vector-bf16tonumbers" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (Brain Floating Point 16) to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">bf16ToNumbers</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-u8tonumbers">
+<h3>rampart.vector.u8ToNumbers<a class="headerlink" href="#rampart-vector-u8tonumbers" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">u8ToNumbers</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/255</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-i8tonumbers">
+<h3>rampart.vector.i8ToNumbers<a class="headerlink" href="#rampart-vector-i8tonumbers" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">i8ToNumbers</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/127.0</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f64tof32">
+<h3>rampart.vector.f64ToF32<a class="headerlink" href="#rampart-vector-f64tof32" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f64ToF32</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f64tof16">
+<h3>rampart.vector.f64ToF16<a class="headerlink" href="#rampart-vector-f64tof16" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f64ToF16</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f64tobf16">
+<h3>rampart.vector.f64ToBf16<a class="headerlink" href="#rampart-vector-f64tobf16" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (Brain Floating Point 16).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f64ToBf16</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f64toi8">
+<h3>rampart.vector.f64ToI8<a class="headerlink" href="#rampart-vector-f64toi8" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f64ToI8</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">-128</span></code> - <code class="docutils literal notranslate"><span class="pre">127</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f64tou8">
+<h3>rampart.vector.f64ToU8<a class="headerlink" href="#rampart-vector-f64tou8" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f64ToU8</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional positive <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">0</span></code> - <code class="docutils literal notranslate"><span class="pre">255</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f32tof64">
+<h3>rampart.vector.f32ToF64<a class="headerlink" href="#rampart-vector-f32tof64" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f32ToF64</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f16tof64">
+<h3>rampart.vector.f16ToF64<a class="headerlink" href="#rampart-vector-f16tof64" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point) to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f16ToF64</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-bf16tof64">
+<h3>rampart.vector.bf16ToF64<a class="headerlink" href="#rampart-vector-bf16tof64" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (Brain Floating Point 16) to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">bf16ToF64</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-i8tof64">
+<h3>rampart.vector.i8ToF64<a class="headerlink" href="#rampart-vector-i8tof64" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">i8ToF64</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/127.0</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-u8tof64">
+<h3>rampart.vector.u8ToF64<a class="headerlink" href="#rampart-vector-u8tof64" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">u8ToF64</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/255</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f32tof16">
+<h3>rampart.vector.f32ToF16<a class="headerlink" href="#rampart-vector-f32tof16" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f32ToF16</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f32tobf16">
+<h3>rampart.vector.f32ToBf16<a class="headerlink" href="#rampart-vector-f32tobf16" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (Brain Floating Point 16).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f32ToBf16</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f32toi8">
+<h3>rampart.vector.f32ToI8<a class="headerlink" href="#rampart-vector-f32toi8" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f32ToI8</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">-128</span></code> - <code class="docutils literal notranslate"><span class="pre">127</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f32tou8">
+<h3>rampart.vector.f32ToU8<a class="headerlink" href="#rampart-vector-f32tou8" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f32ToU8</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional positive <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">0</span></code> - <code class="docutils literal notranslate"><span class="pre">255</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f16tof32">
+<h3>rampart.vector.f16ToF32<a class="headerlink" href="#rampart-vector-f16tof32" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point) to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f16ToF32</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-bf16tof32">
+<h3>rampart.vector.bf16ToF32<a class="headerlink" href="#rampart-vector-bf16tof32" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (Brain Floating Point 16) to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">bf16ToF32</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-u8tof32">
+<h3>rampart.vector.u8ToF32<a class="headerlink" href="#rampart-vector-u8tof32" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">u8ToF32</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/255</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-i8tof32">
+<h3>rampart.vector.i8ToF32<a class="headerlink" href="#rampart-vector-i8tof32" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">i8ToF32</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/127.0</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f16toi8">
+<h3>rampart.vector.f16ToI8<a class="headerlink" href="#rampart-vector-f16toi8" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point) to a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f16ToI8</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">-128</span></code> - <code class="docutils literal notranslate"><span class="pre">127</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-f16tou8">
+<h3>rampart.vector.f16ToU8<a class="headerlink" href="#rampart-vector-f16tou8" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point) to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">f16ToU8</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default: auto calculate)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional positive <span class="green">Number</span> (<code class="docutils literal notranslate"><span class="pre">0</span></code> - <code class="docutils literal notranslate"><span class="pre">255</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-i8tof16">
+<h3>rampart.vector.i8ToF16<a class="headerlink" href="#rampart-vector-i8tof16" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">i8ToF16</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding an <code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/127.0</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-u8tof16">
+<h3>rampart.vector.u8ToF16<a class="headerlink" href="#rampart-vector-u8tof16" title="Permalink to this headline">¶</a></h3>
+<p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array to a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">u8ToF16</span><span class="p">(</span><span class="nx">mybuff</span> <span class="p">[,</span> <span class="nx">scale</span> <span class="p">[,</span> <span class="nx">zeroPoint</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code> array.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scale</span></code> is an optional positive <span class="green">Number</span> (default <code class="docutils literal notranslate"><span class="pre">1.0/255</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> is an optional <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">0</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-l2normalizenumbers">
+<h3>rampart.vector.l2NormalizeNumbers<a class="headerlink" href="#rampart-vector-l2normalizenumbers" title="Permalink to this headline">¶</a></h3>
+<p>Perform an in-place L2 normalization on an <span class="green">Array</span> of <span class="green">Numbers</span>, scaling the vector to unit length.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">l2NormalizeNumbers</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">myarr</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Numbers</span> with normalized values.</dd>
+<dt>Note:</dt>
+<dd>All L2 normalization functions are in-place, tranforming the input vector and returning it.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-l2normalizef64">
+<h3>rampart.vector.l2NormalizeF64<a class="headerlink" href="#rampart-vector-l2normalizef64" title="Permalink to this headline">¶</a></h3>
+<p>Perform an in-place L2 normalization on a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array, scaling the vector to unit length.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">l2NormalizeF64</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array with normalized values.</dd>
+<dt>Note:</dt>
+<dd>All L2 normalization functions are in-place, tranforming the input vector and returning it.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-l2normalizef32">
+<h3>rampart.vector.l2NormalizeF32<a class="headerlink" href="#rampart-vector-l2normalizef32" title="Permalink to this headline">¶</a></h3>
+<p>Perform an in-place L2 normalization on a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array, scaling the vector to unit length.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">l2NormalizeF32</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code> array with normalized values.</dd>
+<dt>Note:</dt>
+<dd>All L2 normalization functions are in-place, tranforming the input vector and returning it.</dd>
+</dl>
+</div>
+<div class="section" id="rampart-vector-l2normalizef16">
+<h3>rampart.vector.l2NormalizeF16<a class="headerlink" href="#rampart-vector-l2normalizef16" title="Permalink to this headline">¶</a></h3>
+<p>Perform an in-place L2 normalization on a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array (IEEE 754 half-precision floating point), scaling the vector to unit length.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">l2NormalizeF16</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> array with normalized values.</dd>
+<dt>Note:</dt>
+<dd>All L2 normalization functions are in-place, tranforming the input vector and returning it.</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="vector-distance-function">
+<h2>Vector Distance Function<a class="headerlink" href="#vector-distance-function" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart.vector.distance()</span></code> function measures the distance or score by comparing two vectors.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">dist</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">myvec</span><span class="p">,</span> <span class="nx">myvec2</span><span class="p">,</span> <span class="nx">metric</span><span class="p">,</span> <span class="nx">vecType</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">myvec</span></code> is one of the supported vector types above.</li>
+<li><code class="docutils literal notranslate"><span class="pre">myvec2</span></code> is a vector matching <code class="docutils literal notranslate"><span class="pre">myvec</span></code> in type and dimensions (number of elements/Numbers in the array).</li>
+<li><code class="docutils literal notranslate"><span class="pre">metric</span></code> is a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">dot</span></code>, <code class="docutils literal notranslate"><span class="pre">cosine</span></code> or <code class="docutils literal notranslate"><span class="pre">euclidean</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">dot</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">vecType</span></code> s a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">i8</span></code> or <code class="docutils literal notranslate"><span class="pre">u8</span></code>
+specifying the type of <code class="docutils literal notranslate"><span class="pre">myvec</span></code> and <code class="docutils literal notranslate"><span class="pre">myvec2</span></code>.   Default is <code class="docutils literal notranslate"><span class="pre">f16</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><ul class="first last simple">
+<li>For <code class="docutils literal notranslate"><span class="pre">euclidean</span></code> and <code class="docutils literal notranslate"><span class="pre">cosine</span></code> a measure of the distance between the two vectors (with 0 being the closest).</li>
+<li>For <code class="docutils literal notranslate"><span class="pre">dot</span></code> the cosine similarity between two vectors (with 1.0 being exact match and -1.0 being the opposite).</li>
+</ul>
+</dd>
+<dt>Note:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">dot</span></code> assumes L2 Normalized vectors are given to it and returns similarity score of <code class="docutils literal notranslate"><span class="pre">-1.0</span></code> to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">cosine</span></code> takes vectors, normalizes them and computes a distance of <code class="docutils literal notranslate"><span class="pre">0`</span> <span class="pre">to</span> <span class="pre">``2.0</span></code>.</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">cosineScore</span> <span class="pre">==</span> <span class="pre">dotDistance</span></code> if the vectors are L2 Normalized.  However, the <code class="docutils literal notranslate"><span class="pre">dot</span></code> calculation is simpler and faster for</dt>
+<dd>vectors thar are already L2 Normalized.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sqltoc.html" class="btn btn-neutral float-right" title="The rampart-sql module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rampart-thread.html" class="btn btn-neutral" title="Rampart Thread Functions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2025, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.6.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

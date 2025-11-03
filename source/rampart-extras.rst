@@ -357,6 +357,156 @@ A root crontab entry will keep the certificate up to date:
 
 
 
+GraphicsMagick Module
+---------------------
+
+Included in the rampart unsupported extras is a module to perform
+transformations on images using the ``graphicsMagick`` library.
+
+Because it relies on an external library, it is unsupported and
+must be compiled from the souce.
+
+Details on usage and how to compile can be found in the 
+`unsupported_extras/graphicsmagick <https://github.com/aflin/rampart/tree/main/unsupported_extras/graphicsmagick>`_
+directory of the rampart distribution.
+
+websocket_client
+----------------
+
+A command line websocket client and rampart module can be found in the
+`unsupported_extras/websocket_client <https://github.com/aflin/rampart/tree/main/unsupported_extras/websocket_client>`_
+directory of the rampart distribution.
+
+It can be used from the command line as such:
+
+.. code-block:: none
+
+    rampart@machine:~>$ /rampart/unsupported_extras/websocket_client>$ rampart wsclient.js
+    wsclient.js [ -h header] [-s] url:
+        url    where scheme is ws:// or wss://
+        -H     header is a header to be added ('headername=headerval'). May be used more than once.
+        -s     show raw http request to server on connect
+
+Once connected, text entered will be sent to the server while sent messages
+will appear in the terminal.  There are also commands that can be run from
+the prompt:
+
+    * ``.save filename`` - save the last binary message sent by the server.
+      to a file.
+
+    * ``.send filename`` - send a file as a binary message to the server.
+ 
+    * ``.close``         - close the connection and quit.
+
+More information is in the `file itself <https://github.com/aflin/rampart/blob/main/unsupported_extras/websocket_client/wsclient.js>`_\ .
+
+forkpty-term
+------------
+
+The `unsupported_extras/forkpty-term <https://github.com/aflin/rampart/blob/main/unsupported_extras/forkpty-term>`_
+directory of the rampart distribution contains a sample web terminal emulator 
+that uses the ``rampart-server`` module, :ref:`websockets <rampart-server:Websockets>` 
+and the :ref:`rampart.utils.forkpty() <rampart-utils:forkpty>` on
+the server side, and `xterm.js <https://xtermjs.org/>`_ on the client to
+create a fully functioning xterm in the browser.
+
+The relevant files may be copied directly into the
+`example webserver <https://github.com/aflin/rampart/tree/main/web_server>`_
+directory.
+
+rampart-converter
+-----------------
+
+The included rampart-converter module uses command line utilities to convert
+various file formats into plain text suitable for indexing with the 
+:ref:`sql module<rampart-sql:Preface>`.
+
+The following programs/modules should be installed and available before usage:
+
+    * pandoc - for docx, odt, markdown, rtf, latex, epub and docbook
+    * catdoc (linux/freebsd) or textutil (macos) - for doc
+    * pdftotext from the xpdf utils - for pdfs
+    * man - for man files (if not available, pandoc will be used)
+    * file - to identify file types
+    * head - for linux optimization identifying files
+    * gunzip - to decompress any gzipped document
+    * the rampart-html module for html and as a helper for pandoc conversions
+
+Minimally, pandoc and file must be available for this module to load.
+
+The following file formats are supported (if appropriate program
+above is available):
+
+    docx, doc, odt, markdown, rtf, latex, epub, docbook, pdf & man
+    Also files identified as txt (text/plain) will be returned as is.
+
+Usage:
+
+.. code-block:: javascript
+
+    var converter = require("rampart-converter.js");
+    var convert = new converter(defaultOptions);
+
+Where ``defaultOptions`` is :green:`Undefined` or an :green:`Object` of command line flags for each
+of the converting programs.  Example to only include the first two pages
+for a pdf (pdftotext) and to convert a docx (pandoc) to markdown instead
+of to text:
+
+.. code-block:: javascript
+
+    var convert = new converter({
+        pdftotext: {f:1, l:2},
+        pandoc :   {t: 'markdown'}
+    });
+
+To convert a document:
+
+.. code-block:: javascript
+
+    var converter = require("rampart-converter.js");
+    var convert = new converter();
+    var txt = convert.convertFile('/path/to/my/file.ext', options);
+        or
+    var txt = convert.convert(myFileBufferOrString, options);
+
+where ``options`` overrides the ``defaultOptions`` above and 
+is either of:
+
+    1) same format as defaultOptions above: 
+       ``{pdftotext: {f:1, l:2}}``; or
+    2) options for the utility to be used:
+       ``{f:1, l:2}``
+
+Full example:
+
+.. code-block:: javascript
+
+    var converter=require('rampart-converter.js');
+
+    // specify options optionally as defaults
+    //var c = new convert({
+    //    pandoc : { 't': 'markdown' },
+    //    pdftotext: {f:1, l:2}
+    //});
+
+    var convert = new converter();
+
+    //options per invocation
+    var ptxt = convert.convertFile('convtest/test.pdf', {pdftotext: {f:1, l:2}});
+    var dtxt = convert.convertFile('convtest/test.docx', { pandoc : { 't': 'markdown' }});
+
+    // OR - alternative format for options:
+    var ptxt = convert.convertFile('convtest/test.pdf', {f:1, l:2});
+    var dtxt = convert.convertFile('convtest/test.docx', { 't': 'markdown' });
+
+    rampart.utils.printf("%s\n\n%s\n", ptxt, dtxt);
+
+Command Line usage:
+
+.. code-block:: shell
+
+    > rampart /path/to/rampart-converter.js /path/to/document.ext
+
 The c_module_template_maker utility
 -----------------------------------
 
@@ -556,152 +706,240 @@ Running the test script results in the following output:
     rampart@machine:~/my_module>$ rampart myutil-test.js
     testing myutil.capitalize basic functionality              - passed
 
-GraphicsMagick Module
----------------------
+See: 
+    :ref:`Macros <rpmacros>` below for some useful macros.
 
-Included in the rampart unsupported extras is a module to perform
-transformations on images using the ``graphicsMagick`` library.
+See also:
+    `Duktape Api <https://duktape.org/api>`_
 
-Because it relies on an external library, it is unsupported and
-must be compiled from the souce.
+rampart-cmodule
+---------------
 
-Details on usage and how to compile can be found in the 
-`unsupported_extras/graphicsmagick <https://github.com/aflin/rampart/tree/main/unsupported_extras/graphicsmagick>`_
-directory of the rampart distribution.
-
-websocket_client
-----------------
-
-A command line websocket client and rampart module can be found in the
-`unsupported_extras/websocket_client <https://github.com/aflin/rampart/tree/main/unsupported_extras/websocket_client>`_
-directory of the rampart distribution.
-
-It can be used from the command line as such:
-
-.. code-block:: none
-
-    rampart@machine:~>$ /rampart/unsupported_extras/websocket_client>$ rampart wsclient.js
-    wsclient.js [ -h header] [-s] url:
-        url    where scheme is ws:// or wss://
-        -H     header is a header to be added ('headername=headerval'). May be used more than once.
-        -s     show raw http request to server on connect
-
-Once connected, text entered will be sent to the server while sent messages
-will appear in the terminal.  There are also commands that can be run from
-the prompt:
-
-    * ``.save filename`` - save the last binary message sent by the server.
-      to a file.
-
-    * ``.send filename`` - send a file as a binary message to the server.
- 
-    * ``.close``         - close the connection and quit.
-
-More information is in the `file itself <https://github.com/aflin/rampart/blob/main/unsupported_extras/websocket_client/wsclient.js>`_\ .
-
-forkpty-term
-------------
-
-The `unsupported_extras/forkpty-term <https://github.com/aflin/rampart/blob/main/unsupported_extras/forkpty-term>`_
-directory of the rampart distribution contains a sample web terminal emulator 
-that uses the ``rampart-server`` module, :ref:`websockets <rampart-server:Websockets>` 
-and the :ref:`rampart.utils.forkpty() <rampart-utils:forkpty>` on
-the server side, and `xterm.js <https://xtermjs.org/>`_ on the client to
-create a fully functioning xterm in the browser.
-
-The relevant files may be copied directly into the
-`example webserver <https://github.com/aflin/rampart/tree/main/web_server>`_
-directory.
-
-rampart-converter
------------------
-
-The included rampart-converter module uses command line utilities to convert
-various file formats into plain text suitable for indexing with the 
-:ref:`sql module<rampart-sql:Preface>`.
-
-The following programs/modules should be installed and available before usage:
-
-    * pandoc - for docx, odt, markdown, rtf, latex, epub and docbook
-    * catdoc (linux/freebsd) or textutil (macos) - for doc
-    * pdftotext from the xpdf utils - for pdfs
-    * man - for man files (if not available, pandoc will be used)
-    * file - to identify file types
-    * head - for linux optimization identifying files
-    * gunzip - to decompress any gzipped document
-    * the rampart-html module for html and as a helper for pandoc conversions
-
-Minimally, pandoc and file must be available for this module to load.
-
-The following file formats are supported (if appropriate program
-above is available):
-
-    docx, doc, odt, markdown, rtf, latex, epub, docbook, pdf & man
-    Also files identified as txt (text/plain) will be returned as is.
+With the rampart-cmodule, it is possible to embed c code that will be
+automatically compiled for use as a javascript function.
 
 Usage:
 
 .. code-block:: javascript
 
-    var converter = require("rampart-converter.js");
-    var convert = new converter(defaultOptions);
+    var cmodule = require('rampart-cmodule.js');
+    
+    var myfunc = cmodule(funcName, funcCode, supportFuncs, flags, libs, extraSearchPath);
 
-Where ``defaultOptions`` is :green:`Undefined` or an :green:`Object` of command line flags for each
-of the converting programs.  Example to only include the first two pages
-for a pdf (pdftotext) and to convert a docx (pandoc) to markdown instead
-of to text:
+    /* or */
 
-.. code-block:: javascript
-
-    var convert = new converter({
-        pdftotext: {f:1, l:2},
-        pandoc :   {t: 'markdown'}
+    var myfunc = cmodule({
+        name:funcName, 
+        exportFunction:funcCode, 
+        supportCode: supportFuncs,
+        compileFlags: flags,
+        libraries: libs,
+        rpHeaderLoc: extraSearchPath
     });
 
-To convert a document:
+Where:
+    * ``funcName`` is a :green:`String` - the name of your C function and module.
+    * ``exportFunction`` is a :green:`String` - code that contains 
+      ``#include`` lines and a single function block
+      **without** the function name and signature.
+    * ``supportFuncs`` is a :green:`String` - support functions which will be placed
+      above the ``exportFunction`` and below the ``#include`` lines, so they can be
+      called from the exportFunction without forward declarations.
+    * ``flags`` is a :green:`String` - any desired flags like ``-g -O2`` and the like.
+    * ``libs``  is a :green:`String` -  libraries to be included when compiling, such as ``-lm``. 
+    * ``rpHeaderLoc`` is a :green:`String` - a path to first search for ``rampart.h``.  If omitted
+      the search will include ``process.installPath + "/include/rampart.h"`` and other standard locations.
+
+Example:
 
 .. code-block:: javascript
 
-    var converter = require("rampart-converter.js");
-    var convert = new converter();
-    var txt = convert.convertFile('/path/to/my/file.ext', options);
-        or
-    var txt = convert.convert(myFileBufferOrString, options);
+    var cmodule = require('rampart-cmodule.js');
 
-where ``options`` overrides the ``defaultOptions`` above and 
-is either of:
+    var name = "squareRoot";
 
-    1) same format as defaultOptions above: 
-       ``{pdftotext: {f:1, l:2}}``; or
-    2) options for the utility to be used:
-       ``{f:1, l:2}``
+    // include lines and function block only.  Any extra, including
+    // comments not inside the function will throw an error.
+    var func =  `
+    #include <math.h>
 
-Full example:
+    {
+        double d = REQUIRE_NUMBER(ctx, 0, "squareRoot: argument 1 must be a Number");
 
-.. code-block:: javascript
-    var converter=require('rampart-converter.js');
+        duk_push_number(ctx, _square_root(d) );
 
-    // specify options optionally as defaults
-    //var c = new convert({
-    //    pandoc : { 't': 'markdown' },
-    //    pdftotext: {f:1, l:2}
-    //});
+        return 1;
+    }`;
 
-    var convert = new converter();
+    // support functions are written as normal C and placed above the main function
+    var supportFuncs = `
+    static double _square_root (double a) {
+        return sqrt(a);
+    }`;
 
-    //options per invocation
-    var ptxt = convert.convertFile('convtest/test.pdf', {pdftotext: {f:1, l:2}});
-    var dtxt = convert.convertFile('convtest/test.docx', { pandoc : { 't': 'markdown' }});
+    var extraFlags="-g -O3";
 
-    // OR - alternative format for options:
-    var ptxt = convert.convertFile('convtest/test.pdf', {f:1, l:2});
-    var dtxt = convert.convertFile('convtest/test.docx', { 't': 'markdown' });
+    var libs = "-lm"
 
-    rampart.utils.printf("%s\n\n%s\n", ptxt, dtxt);
+    //build squareRoot.so, or throw error
+    var sqRt = cmodule(name, func, supportFuncs, extraFlags, libs);
+    console.log(sqRt(64));
 
-Command Line usage:
+    // second go, don't need program if it is already built
+    // effectively the same as var myfunc2 = require('squareRoot.so');
+    var sqRt2 = cmodule(name);
+    console.log(sqRt2(111));
 
-.. code-block:: shell
+    /* expected output:
+       Files:
+            Two files named squareRoot.c and squareRoot.so
+       Stdout:
+            8
+            10.535653752852738
+    */
 
-    > rampart /path/to/rampart-converter.js /path/to/document.ext
+See:
+    `Duktape Api <https://duktape.org/api>`_
 
+.. |br| raw:: html
+
+    <br />
+
+.. _rpmacros:
+
+Rampart Macros for C Modules
+----------------------------
+
+    Require macros require that a the particular JavaScript variable be of the specified type, or throws
+    the given error, which is a variadic printf type format.
+    
+    +------------------------------------------------+---------------------+-------------------------------+
+    | Macro                                          | Return Type         | Notes                         |
+    +================================================+=====================+===============================+
+    | ``REQUIRE_STRING(ctx,idx,...)``                | const char *        |                               |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_LSTRING(ctx,idx,sz,...)``            | const char *        | sz is a ``duk_size_t *``      |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_INT(ctx,idx,...)``                   | int                 | ``(int) double``              |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_UINT(ctx,idx,...)``                  | unsigned int        | ``(unsigned int) double`` |br||
+    |                                                |                     | throws error if double < 0    |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_POSINT(ctx,idx,...)``                | int                 | throws error                  |
+    |                                                |                     | if int < 0                    |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_INT64(ctx,idx,...)``                 | int64_t             | ``(int64_t) double``          |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_UINT64(ctx,idx,...)``                | uint64_t            | ``(uint64_t) double``   |br|  |
+    |                                                |                     | throws error                  |
+    |                                                |                     | if double < 0                 |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_BOOL(ctx,idx,...)``                  | int                 |  ``0`` | ``1``                |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_NUMBER(ctx,idx,...)``                | double              |                               |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_FUNCTION(ctx,idx,...)``              | none                | no return                     |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_OBJECT(ctx,idx,...)``                | none                | no return                     |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_PLAIN_OBJECT(ctx,idx,...)``          | none                | no return |br|                | 
+    |                                                |                     | throw if array or function    |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_ARRAY(ctx,idx,...)``                 | none                | no return                     |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_BUFFER_DATA(ctx,idx,sz,...)``        | void *              | sz is a ``duk_size_t *`` |br| |
+    |                                                |                     | any buffer type               |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_STR_TO_BUF(ctx,idx,sz,...)``         | void *              | sz is a ``duk_size_t *`` |br| |
+    |                                                |                     | If string, converts           |
+    |                                                |                     | to buffer first               |
+    +------------------------------------------------+---------------------+-------------------------------+
+    | ``REQUIRE_STR_OR_BUF(ctx,idx,sz,...)``         | const char *        | sz is a ``duk_size_t *`` |br| |
+    |                                                |                     | casts to ``(const char *)``   |
+    |                                                |                     | if buffer                     |
+    +------------------------------------------------+---------------------+-------------------------------+
+
+    Example:
+
+    For a function that must be called as ``myfunc(bufData, myPosInt)`` where ``bufData`` must
+    be a :green:`Buffer` and ``myPosInt`` must be a :green:`Number` equal to or greater than ``0``. 
+
+    .. code-block:: C
+
+        duk_size_t mybufsz;
+        void *mybuf = REQUIRE_BUFFER_DATA(ctx, 0, &mybufsz, "myfunc - First argument must be a Buffer");
+
+        duk_idx_t idx = 1;
+        int myposInt = REQUIRE_POSINT(ctx, idx, "myfunc - Argument #%d must be a positive integer", (int)(idx+1));
+
+
+Throw Macro:
+    At any point in any function, a JavaScript error can be thrown and flow of the program can be returned
+    to Javascript by using RP_THROW (which uses `duk_push_error_object() <https://duktape.org/api#duk_push_error_object>`_ 
+    and `duk_throw() <https://duktape.org/api#duk_throw>`_\ ).
+
+.. code-block:: C
+
+    if(something_bad)
+        RP_THROW(ctx, "Something bad happened at line %d", __LINE__);
+
+Getting duk_context:
+    The ``exportFunction`` will aready have ``duk_context *ctx`` passed to it.  In other functions, you can continue to pass
+    the ``ctx`` pointer, or, if necessary, it can be retrieved as such:
+
+.. code-block:: C
+
+    RPTHR *thr = get_current_thread();
+    duk_context *ctx = thr->ctx;
+    
+Note:
+    ``* ctx`` is not a global variable, and may change depending on the current thread.  Nothing special
+    needs to be done to retrieve the valid ``ctx`` other than the above.
+
+Debugging stack:
+    Keeping track of variables on the duktape value stack can be aided with a few macros that
+    print out the stack contents.
+
+    * ``printstack(ctx)`` - A simple printout of the value stack contents.
+    * ``prettyprintstack(ctx)`` - A JSON-like printout of the stack.
+    * ``safeprintstack(ctx)``  - Prints stack, taking care to not infinitely regress if there are 
+      self referencing or cyclic :green:`Objects` present.
+    * ``safeprettyprintstack(ctx)`` - combines the two above.
+    * ``printat(ctx, idx)`` - prints the variable at stack index ``idx``
+    * ``printenum(ctx, idx)`` - enumerate :green:`Object` at idx, printing out
+      key/value pairs and including non-enumerable, symbols and hidden symbols.
+
+Returning a value to JavaScript:
+    Pushing a value to the top of the stack and returning ``1`` will set the return value in Javascript.
+    Returning ``0`` sets the return value to ``undefined``.  See the ``duk_push_*`` functions in the
+    `Duktape Api <https://duktape.org/api>`_\ .  If the value to be returned is not on the top of the
+    stack, `duk_dup() <https://duktape.org/api#duk_dup>`_  
+    or `duk_pull() <https://duktape.org/api#duk_pull>`_
+    functions may be used to place the variable on top of the stack before returning.
+
+Simple Type Check:
+    A simple type check of a value can be performed using ``rp_gettype()``.
+
+    .. code-block:: C
+
+        int type = rp_gettype(ctx, idx);
+        /* type is one of:
+             RP_TYPE_STRING
+             RP_TYPE_ARRAY
+             RP_TYPE_NAN
+             RP_TYPE_NUMBER
+             RP_TYPE_FUNCTION
+             RP_TYPE_BOOLEAN
+             RP_TYPE_BUFFER
+             RP_TYPE_NULL
+             RP_TYPE_UNDEFINED
+             RP_TYPE_SYMBOL
+             RP_TYPE_DATE
+             RP_TYPE_OBJECT
+             RP_TYPE_FILEHANDLE
+             RP_TYPE_UNKNOWN
+       */
+
+    This allows you to, e.g., check for a :green:`Date Object` without getting ``"object"`` back as you would
+    with ``typeof`` and obviates the need to use of ``instanceOf Date`` or ``Array.isArray()`` where is not cleanly
+    codable in C. It is also the basis of the :ref:`rampart.utils.getType() JavaScript call <rampart-utils:getType>`.

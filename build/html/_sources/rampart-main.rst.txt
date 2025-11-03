@@ -1328,8 +1328,8 @@ Babel License
 Babel.js is 
 `MIT licensed <https://github.com/babel/babel/blob/main/LICENSE>`_. 
 
-Usage
-"""""
+Activating Babel
+""""""""""""""""
 
 A slightly modified version of babel.js (currently babel-standalone v
 7.11.1) and the associated collection of polyfills (babel-polyfill.js) are
@@ -1467,3 +1467,62 @@ produces the same output in Rampart and Node.js.
    **I'm async in a Timeout!!**
    */
 
+ECMAScript 2015+ with transpiler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tree-sitter Acknowledgement
+"""""""""""""""""""""""""""
+
+Rampart **experimentally** uses the `tree-sitter <https://github.com/tree-sitter/tree-sitter>`_
+and the `tree-sitter-javascript <https://github.com/tree-sitter/tree-sitter-javascript>`_
+libraries to transpile a limited set of post-ES5 JavaScript.  The authors of Rampart are
+indebted to the `tree-sitter contributers <https://github.com/tree-sitter/tree-sitter-javascript/graphs/contributors>`_
+for this indispensable library.  
+
+Tree-sitter License
+"""""""""""""""""""
+
+Tree-sitter is `MIT licensed <https://github.com/tree-sitter/tree-sitter-javascript?tab=MIT-1-ov-file#readme>`_\ .
+
+Activating the Transpiler
+"""""""""""""""""""""""""
+
+To use the limited ECMA 2015+ features covered by the transpiler,
+simply include the following at the beginning of the script:
+
+.. code-block:: javascript
+
+   "use transpiler"
+
+    /* or */
+
+    "use transpilerGlobally" //run included modules through the transpiler as well
+
+Note that the ``"use transpiler"`` or ``"use transpilerGlobally"`` string should be the
+first JavaScript text in the script.  However it may come after any comments
+or a hash-bang line.  It also should be the only text on the line, other
+than an optional comment.
+
+Example:
+
+Please see the `transpile-test.js file <https://github.com/aflin/rampart/blob/main/test/transpile-test.js>`_
+to see which features are currently supported (and the disabled tests which show
+yet to be completed support).
+
+Why use the transpiler instead of Babel?
+""""""""""""""""""""""""""""""""""""""""
+
+Though babel has far better coverage of post-ES5 JavaScript, each time there is a new
+edit, it has to be run through babel, which can be slow.  The transpiler is
+several orders of magnitude faster than babel.
+In addition, the transpiler keeps the `Extra javaScript Functionality`_ listed above.
+
+Seeing the Transpiled script
+""""""""""""""""""""""""""""
+
+If you'd like to examine the transpiled script (which, unlike with ``"use babel"``, is not
+saved to a file), run your script like this:
+
+.. code-block:: shell
+
+    RPDEBUG=transpiler rampart -t myscript.js 2> myscript-transpiled.js

@@ -9,6 +9,22 @@ The functions below may be called anywhere that a field or an expression
 normally occurs in a SQL statement.  Arguments to a function can be either a
 single field name, another function or another expression.
 
+Vector Function
+~~~~~~~~~~~~~~~
+
+vdist
+"""""
+
+Calculate the distance/score of two vectors.
+
+.. code-block:: sql
+    vdist(vec1, vec2[, metric [, type]])
+
+Compute the distance or score of two vectors.
+If not specified, default metric is ``dot`` and default type is ``f16``
+
+Performs the same distance calculation as :ref:`rampart-vector:Vector Distance Function`
+with the exception that ``type`` must be a buffer type and cannot be ``numbers``.
 
 General Functions
 ~~~~~~~~~~~~~~~~~

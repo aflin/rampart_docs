@@ -148,7 +148,7 @@ Extended (non-standard) flags:
         
       Color is specified in a css compatible ``rgb(x, x, x)``
       format, by providing a `named css color <https://en.wikipedia.org/wiki/Web_colors>`_ 
-      or `named terminal color <https://plumbum.readthedocs.io/en/latest/colorlib.html#color-support>`_\ .
+      or by providing a `named terminal color <https://plumbum.readthedocs.io/en/latest/colorlib.html#color-support>`_\ .
 
     * ``^`` - same as ``a`` except 16 color mode is forced.
 
@@ -176,6 +176,16 @@ Color with ``%H`` format:
 
         <span class="rp-color myclassname" style="color:Green; background-color:White;">Text in a span</span>
     
+    If the plus flag is included (``%+aH``), rgb colors will be converted to the closest named css color.
+
+    .. code-block:: javascript
+
+        rampart.utils.sprintf("%+aH", "rgb(222,128,44)", "Text in a span");
+
+    The return value would be as follows:
+    
+        <span class="rp-color" style="color:Peru;">Text in a span</span>
+
 Colors with ``%J`` format:
 
     * Using ``%aJ`` or any of the forced versions (``^``, ``A`` or ``@``), takes as the color argument a number (pallate number)
@@ -205,6 +215,11 @@ Colors with ``%J`` format:
        }
        </pre></div>
 
+    If palatte option is omitted, and ``myObj`` is not a :green:`Number`, pallate ``0`` will be assumed:
+
+    .. code-block:: javascript
+
+        rampart.utils.printf("%a3J\n", myObj); //pallate 0 assumed
 
 Basic printf example:
 

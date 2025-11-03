@@ -170,6 +170,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -386,7 +387,7 @@ parameter that will be colorized.  Format for the color parameter is
 </div></blockquote>
 <p>Color is specified in a css compatible <code class="docutils literal notranslate"><span class="pre">rgb(x,</span> <span class="pre">x,</span> <span class="pre">x)</span></code>
 format, by providing a <a class="reference external" href="https://en.wikipedia.org/wiki/Web_colors">named css color</a>
-or <a class="reference external" href="https://plumbum.readthedocs.io/en/latest/colorlib.html#color-support">named terminal color</a>.</p>
+or by providing a <a class="reference external" href="https://plumbum.readthedocs.io/en/latest/colorlib.html#color-support">named terminal color</a>.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">^</span></code> - same as <code class="docutils literal notranslate"><span class="pre">a</span></code> except 16 color mode is forced.</p>
 </li>
@@ -413,6 +414,13 @@ colors set as specified.  It will also add the <code class="docutils literal not
 <p>If using <code class="docutils literal notranslate"><span class="pre">sprintf</span></code> or if not printing to the terminal, output would be as follows:</p>
 <blockquote>
 <div>&lt;span class=”rp-color myclassname” style=”color:Green; background-color:White;”&gt;Text in a span&lt;/span&gt;</div></blockquote>
+<p>If the plus flag is included (<code class="docutils literal notranslate"><span class="pre">%+aH</span></code>), rgb colors will be converted to the closest named css color.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%+aH&quot;</span><span class="p">,</span> <span class="s2">&quot;rgb(222,128,44)&quot;</span><span class="p">,</span> <span class="s2">&quot;Text in a span&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The return value would be as follows:</p>
+<blockquote>
+<div>&lt;span class=”rp-color” style=”color:Peru;”&gt;Text in a span&lt;/span&gt;</div></blockquote>
 </div></blockquote>
 <p>Colors with <code class="docutils literal notranslate"><span class="pre">%J</span></code> format:</p>
 <blockquote>
@@ -439,7 +447,11 @@ or outside of that range will default to <code class="docutils literal notransla
    <span class="nt1">"String"</span>: <span class="s1">"Hello World!"</span>,
    <span class="nt1">"Null"</span>: <span class="N1">null</span>
 }
-</pre></div></div></blockquote>
+</pre></div><p>If palatte option is omitted, and <code class="docutils literal notranslate"><span class="pre">myObj</span></code> is not a <span class="green">Number</span>, pallate <code class="docutils literal notranslate"><span class="pre">0</span></code> will be assumed:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%a3J\n&quot;</span><span class="p">,</span> <span class="nx">myObj</span><span class="p">);</span> <span class="c1">//pallate 0 assumed</span>
+</pre></div>
+</div>
+</div></blockquote>
 <p>Basic printf example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">uenc</span> <span class="o">=</span> <span class="s2">&quot;a+url+encoded+string.+%27%23%24%3f%27&quot;</span><span class="p">;</span>
 

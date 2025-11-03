@@ -2456,7 +2456,7 @@ Example for uploading files to server:
 Put Functions
 ~~~~~~~~~~~~~
 
-The following functions add to the buffer that hold the content to be
+The following functions add to the buffer that holds the content to be
 returned to the connecting client.  See, e.g. `req.put()`_ above.
 
 rp_server_put
@@ -2527,8 +2527,8 @@ after the exported function returns.
 End Functions
 ~~~~~~~~~~~~~
 
-The end of a function which serves a webpage must call one of the following
-functions.
+Each function which serves a webpage must call one of the following
+functions at its conclusion.
 
 Note:
    1) One and only one of these should be called at or near the end of the exported function.

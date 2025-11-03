@@ -162,15 +162,24 @@
 <li class="toctree-l2"><a class="reference internal" href="#ecmascript-2015-and-babel-js">ECMAScript 2015+ and Babel.js</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#babel-acknowledgement">Babel Acknowledgement</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#babel-license">Babel License</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#activating-babel">Activating Babel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-it-works">How it works</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#caveats">Caveats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ecmascript-2015-with-transpiler">ECMAScript 2015+ with transpiler</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tree-sitter-acknowledgement">Tree-sitter Acknowledgement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tree-sitter-license">Tree-sitter License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#activating-the-transpiler">Activating the Transpiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-use-the-transpiler-instead-of-babel">Why use the transpiler instead of Babel?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seeing-the-transpiled-script">Seeing the Transpiled script</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -1380,8 +1389,8 @@ Rampart are extremely grateful to the
 <p>Babel.js is
 <a class="reference external" href="https://github.com/babel/babel/blob/main/LICENSE">MIT licensed</a>.</p>
 </div>
-<div class="section" id="usage">
-<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="activating-babel">
+<h3>Activating Babel<a class="headerlink" href="#activating-babel" title="Permalink to this headline">¶</a></h3>
 <p>A slightly modified version of babel.js (currently babel-standalone v
 7.11.1) and the associated collection of polyfills (babel-polyfill.js) are
 included in the Rampart distribution.  To use ECMA 2015+ features of
@@ -1501,6 +1510,56 @@ produces the same output in Rampart and Node.js.</p>
 <span class="cm">**I&#39;m async!!**</span>
 <span class="cm">**I&#39;m async in a Timeout!!**</span>
 <span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="ecmascript-2015-with-transpiler">
+<h2>ECMAScript 2015+ with transpiler<a class="headerlink" href="#ecmascript-2015-with-transpiler" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tree-sitter-acknowledgement">
+<h3>Tree-sitter Acknowledgement<a class="headerlink" href="#tree-sitter-acknowledgement" title="Permalink to this headline">¶</a></h3>
+<p>Rampart <strong>experimentally</strong> uses the <a class="reference external" href="https://github.com/tree-sitter/tree-sitter">tree-sitter</a>
+and the <a class="reference external" href="https://github.com/tree-sitter/tree-sitter-javascript">tree-sitter-javascript</a>
+libraries to transpile a limited set of post-ES5 JavaScript.  The authors of Rampart are
+indebted to the <a class="reference external" href="https://github.com/tree-sitter/tree-sitter-javascript/graphs/contributors">tree-sitter contributers</a>
+for this indispensable library.</p>
+</div>
+<div class="section" id="tree-sitter-license">
+<h3>Tree-sitter License<a class="headerlink" href="#tree-sitter-license" title="Permalink to this headline">¶</a></h3>
+<p>Tree-sitter is <a class="reference external" href="https://github.com/tree-sitter/tree-sitter-javascript?tab=MIT-1-ov-file#readme">MIT licensed</a>.</p>
+</div>
+<div class="section" id="activating-the-transpiler">
+<h3>Activating the Transpiler<a class="headerlink" href="#activating-the-transpiler" title="Permalink to this headline">¶</a></h3>
+<p>To use the limited ECMA 2015+ features covered by the transpiler,
+simply include the following at the beginning of the script:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
+
+ <span class="cm">/* or */</span>
+
+ <span class="s2">&quot;use transpilerGlobally&quot;</span> <span class="c1">//run included modules through the transpiler as well</span>
+</pre></div>
+</div>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code> string should be the
+first JavaScript text in the script.  However it may come after any comments
+or a hash-bang line.  It also should be the only text on the line, other
+than an optional comment.</p>
+<p>Example:</p>
+<p>Please see the <a class="reference external" href="https://github.com/aflin/rampart/blob/main/test/transpile-test.js">transpile-test.js file</a>
+to see which features are currently supported (and the disabled tests which show
+yet to be completed support).</p>
+</div>
+<div class="section" id="why-use-the-transpiler-instead-of-babel">
+<h3>Why use the transpiler instead of Babel?<a class="headerlink" href="#why-use-the-transpiler-instead-of-babel" title="Permalink to this headline">¶</a></h3>
+<p>Though babel has far better coverage of post-ES5 JavaScript, each time there is a new
+edit, it has to be run through babel, which can be slow.  The transpiler is
+several orders of magnitude faster than babel.
+In addition, the transpiler keeps the <a class="reference internal" href="#extra-javascript-functionality">Extra javaScript Functionality</a> listed above.</p>
+</div>
+<div class="section" id="seeing-the-transpiled-script">
+<h3>Seeing the Transpiled script<a class="headerlink" href="#seeing-the-transpiled-script" title="Permalink to this headline">¶</a></h3>
+<p>If you’d like to examine the transpiled script (which, unlike with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>, is not
+saved to a file), run your script like this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RPDEBUG</span><span class="o">=</span>transpiler rampart -t myscript.js <span class="m">2</span>&gt; myscript-transpiled.js
 </pre></div>
 </div>
 </div>

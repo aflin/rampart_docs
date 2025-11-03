@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
@@ -113,15 +114,17 @@
 <li class="toctree-l3"><a class="reference internal" href="#use-with-letsencrypt">Use with Letsencrypt</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#graphicsmagick-module">GraphicsMagick Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#websocket-client">websocket_client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-converter">rampart-converter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-c-module-template-maker-utility">The c_module_template_maker utility</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-c-module-template">Creating a C Module template</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-usage-to-create-a-module">Example usage to create a module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#graphicsmagick-module">GraphicsMagick Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#websocket-client">websocket_client</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rampart-converter">rampart-converter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-cmodule">rampart-cmodule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-macros-for-c-modules">Rampart Macros for C Modules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -505,6 +508,138 @@ root@example.com:/path/to/my/web_server# rampart ./web_server_conf.js restart
 </div>
 </div>
 </div>
+<div class="section" id="graphicsmagick-module">
+<h2>GraphicsMagick Module<a class="headerlink" href="#graphicsmagick-module" title="Permalink to this headline">¶</a></h2>
+<p>Included in the rampart unsupported extras is a module to perform
+transformations on images using the <code class="docutils literal notranslate"><span class="pre">graphicsMagick</span></code> library.</p>
+<p>Because it relies on an external library, it is unsupported and
+must be compiled from the souce.</p>
+<p>Details on usage and how to compile can be found in the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/graphicsmagick">unsupported_extras/graphicsmagick</a>
+directory of the rampart distribution.</p>
+</div>
+<div class="section" id="websocket-client">
+<h2>websocket_client<a class="headerlink" href="#websocket-client" title="Permalink to this headline">¶</a></h2>
+<p>A command line websocket client and rampart module can be found in the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/websocket_client">unsupported_extras/websocket_client</a>
+directory of the rampart distribution.</p>
+<p>It can be used from the command line as such:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ /rampart/unsupported_extras/websocket_client&gt;$ rampart wsclient.js
+wsclient.js [ -h header] [-s] url:
+    url    where scheme is ws:// or wss://
+    -H     header is a header to be added (&#39;headername=headerval&#39;). May be used more than once.
+    -s     show raw http request to server on connect
+</pre></div>
+</div>
+<p>Once connected, text entered will be sent to the server while sent messages
+will appear in the terminal.  There are also commands that can be run from
+the prompt:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">.save</span> <span class="pre">filename</span></code> - save the last binary message sent by the server.
+to a file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">.send</span> <span class="pre">filename</span></code> - send a file as a binary message to the server.</li>
+<li><code class="docutils literal notranslate"><span class="pre">.close</span></code>         - close the connection and quit.</li>
+</ul>
+</div></blockquote>
+<p>More information is in the <a class="reference external" href="https://github.com/aflin/rampart/blob/main/unsupported_extras/websocket_client/wsclient.js">file itself</a>.</p>
+</div>
+<div class="section" id="forkpty-term">
+<h2>forkpty-term<a class="headerlink" href="#forkpty-term" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://github.com/aflin/rampart/blob/main/unsupported_extras/forkpty-term">unsupported_extras/forkpty-term</a>
+directory of the rampart distribution contains a sample web terminal emulator
+that uses the <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code> module, <a class="reference internal" href="rampart-server.html#websockets"><span class="std std-ref">websockets</span></a>
+and the <a class="reference internal" href="rampart-utils.html#forkpty"><span class="std std-ref">rampart.utils.forkpty()</span></a> on
+the server side, and <a class="reference external" href="https://xtermjs.org/">xterm.js</a> on the client to
+create a fully functioning xterm in the browser.</p>
+<p>The relevant files may be copied directly into the
+<a class="reference external" href="https://github.com/aflin/rampart/tree/main/web_server">example webserver</a>
+directory.</p>
+</div>
+<div class="section" id="rampart-converter">
+<h2>rampart-converter<a class="headerlink" href="#rampart-converter" title="Permalink to this headline">¶</a></h2>
+<p>The included rampart-converter module uses command line utilities to convert
+various file formats into plain text suitable for indexing with the
+<a class="reference internal" href="rampart-sql.html#preface"><span class="std std-ref">sql module</span></a>.</p>
+<p>The following programs/modules should be installed and available before usage:</p>
+<blockquote>
+<div><ul class="simple">
+<li>pandoc - for docx, odt, markdown, rtf, latex, epub and docbook</li>
+<li>catdoc (linux/freebsd) or textutil (macos) - for doc</li>
+<li>pdftotext from the xpdf utils - for pdfs</li>
+<li>man - for man files (if not available, pandoc will be used)</li>
+<li>file - to identify file types</li>
+<li>head - for linux optimization identifying files</li>
+<li>gunzip - to decompress any gzipped document</li>
+<li>the rampart-html module for html and as a helper for pandoc conversions</li>
+</ul>
+</div></blockquote>
+<p>Minimally, pandoc and file must be available for this module to load.</p>
+<p>The following file formats are supported (if appropriate program
+above is available):</p>
+<blockquote>
+<div>docx, doc, odt, markdown, rtf, latex, epub, docbook, pdf &amp; man
+Also files identified as txt (text/plain) will be returned as is.</div></blockquote>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">(</span><span class="nx">defaultOptions</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">defaultOptions</span></code> is <span class="green">Undefined</span> or an <span class="green">Object</span> of command line flags for each
+of the converting programs.  Example to only include the first two pages
+for a pdf (pdftotext) and to convert a docx (pandoc) to markdown instead
+of to text:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">({</span>
+    <span class="nx">pdftotext</span><span class="o">:</span> <span class="p">{</span><span class="nx">f</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">l</span><span class="o">:</span><span class="mi">2</span><span class="p">},</span>
+    <span class="nx">pandoc</span> <span class="o">:</span>   <span class="p">{</span><span class="nx">t</span><span class="o">:</span> <span class="s1">&#39;markdown&#39;</span><span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>To convert a document:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;/path/to/my/file.ext&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="nx">or</span>
+<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">myFileBufferOrString</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">options</span></code> overrides the <code class="docutils literal notranslate"><span class="pre">defaultOptions</span></code> above and
+is either of:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>same format as defaultOptions above:
+<code class="docutils literal notranslate"><span class="pre">{pdftotext:</span> <span class="pre">{f:1,</span> <span class="pre">l:2}}</span></code>; or</li>
+<li>options for the utility to be used:
+<code class="docutils literal notranslate"><span class="pre">{f:1,</span> <span class="pre">l:2}</span></code></li>
+</ol>
+</div></blockquote>
+<p>Full example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-converter.js&#39;</span><span class="p">);</span>
+
+<span class="c1">// specify options optionally as defaults</span>
+<span class="c1">//var c = new convert({</span>
+<span class="c1">//    pandoc : { &#39;t&#39;: &#39;markdown&#39; },</span>
+<span class="c1">//    pdftotext: {f:1, l:2}</span>
+<span class="c1">//});</span>
+
+<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">();</span>
+
+<span class="c1">//options per invocation</span>
+<span class="kd">var</span> <span class="nx">ptxt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;convtest/test.pdf&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">pdftotext</span><span class="o">:</span> <span class="p">{</span><span class="nx">f</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">l</span><span class="o">:</span><span class="mi">2</span><span class="p">}});</span>
+<span class="kd">var</span> <span class="nx">dtxt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;convtest/test.docx&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">pandoc</span> <span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;t&#39;</span><span class="o">:</span> <span class="s1">&#39;markdown&#39;</span> <span class="p">}});</span>
+
+<span class="c1">// OR - alternative format for options:</span>
+<span class="kd">var</span> <span class="nx">ptxt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;convtest/test.pdf&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">f</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">l</span><span class="o">:</span><span class="mi">2</span><span class="p">});</span>
+<span class="kd">var</span> <span class="nx">dtxt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;convtest/test.docx&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="s1">&#39;t&#39;</span><span class="o">:</span> <span class="s1">&#39;markdown&#39;</span> <span class="p">});</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n\n%s\n&quot;</span><span class="p">,</span> <span class="nx">ptxt</span><span class="p">,</span> <span class="nx">dtxt</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Command Line usage:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt; rampart /path/to/rampart-converter.js /path/to/document.ext
+</pre></div>
+</div>
+</div>
 <div class="section" id="the-c-module-template-maker-utility">
 <h2>The c_module_template_maker utility<a class="headerlink" href="#the-c-module-template-maker-utility" title="Permalink to this headline">¶</a></h2>
 <p>Included in the rampart unsupported extras is a utility script to help with
@@ -681,118 +816,278 @@ the new function works as expected:</p>
 testing myutil.capitalize basic functionality              - passed
 </pre></div>
 </div>
+<dl class="docutils">
+<dt>See:</dt>
+<dd><a class="reference internal" href="#rpmacros"><span class="std std-ref">Macros</span></a> below for some useful macros.</dd>
+<dt>See also:</dt>
+<dd><a class="reference external" href="https://duktape.org/api">Duktape Api</a></dd>
+</dl>
 </div>
 </div>
-<div class="section" id="graphicsmagick-module">
-<h2>GraphicsMagick Module<a class="headerlink" href="#graphicsmagick-module" title="Permalink to this headline">¶</a></h2>
-<p>Included in the rampart unsupported extras is a module to perform
-transformations on images using the <code class="docutils literal notranslate"><span class="pre">graphicsMagick</span></code> library.</p>
-<p>Because it relies on an external library, it is unsupported and
-must be compiled from the souce.</p>
-<p>Details on usage and how to compile can be found in the
-<a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/graphicsmagick">unsupported_extras/graphicsmagick</a>
-directory of the rampart distribution.</p>
-</div>
-<div class="section" id="websocket-client">
-<h2>websocket_client<a class="headerlink" href="#websocket-client" title="Permalink to this headline">¶</a></h2>
-<p>A command line websocket client and rampart module can be found in the
-<a class="reference external" href="https://github.com/aflin/rampart/tree/main/unsupported_extras/websocket_client">unsupported_extras/websocket_client</a>
-directory of the rampart distribution.</p>
-<p>It can be used from the command line as such:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>rampart@machine:~&gt;$ /rampart/unsupported_extras/websocket_client&gt;$ rampart wsclient.js
-wsclient.js [ -h header] [-s] url:
-    url    where scheme is ws:// or wss://
-    -H     header is a header to be added (&#39;headername=headerval&#39;). May be used more than once.
-    -s     show raw http request to server on connect
-</pre></div>
-</div>
-<p>Once connected, text entered will be sent to the server while sent messages
-will appear in the terminal.  There are also commands that can be run from
-the prompt:</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">.save</span> <span class="pre">filename</span></code> - save the last binary message sent by the server.
-to a file.</li>
-<li><code class="docutils literal notranslate"><span class="pre">.send</span> <span class="pre">filename</span></code> - send a file as a binary message to the server.</li>
-<li><code class="docutils literal notranslate"><span class="pre">.close</span></code>         - close the connection and quit.</li>
-</ul>
-</div></blockquote>
-<p>More information is in the <a class="reference external" href="https://github.com/aflin/rampart/blob/main/unsupported_extras/websocket_client/wsclient.js">file itself</a>.</p>
-</div>
-<div class="section" id="forkpty-term">
-<h2>forkpty-term<a class="headerlink" href="#forkpty-term" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="https://github.com/aflin/rampart/blob/main/unsupported_extras/forkpty-term">unsupported_extras/forkpty-term</a>
-directory of the rampart distribution contains a sample web terminal emulator
-that uses the <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code> module, <a class="reference internal" href="rampart-server.html#websockets"><span class="std std-ref">websockets</span></a>
-and the <a class="reference internal" href="rampart-utils.html#forkpty"><span class="std std-ref">rampart.utils.forkpty()</span></a> on
-the server side, and <a class="reference external" href="https://xtermjs.org/">xterm.js</a> on the client to
-create a fully functioning xterm in the browser.</p>
-<p>The relevant files may be copied directly into the
-<a class="reference external" href="https://github.com/aflin/rampart/tree/main/web_server">example webserver</a>
-directory.</p>
-</div>
-<div class="section" id="rampart-converter">
-<h2>rampart-converter<a class="headerlink" href="#rampart-converter" title="Permalink to this headline">¶</a></h2>
-<p>The included rampart-converter module uses command line utilities to convert
-various file formats into plain text suitable for indexing with the
-<a class="reference internal" href="rampart-sql.html#preface"><span class="std std-ref">sql module</span></a>.</p>
-<p>The following programs/modules should be installed and available before usage:</p>
-<blockquote>
-<div><ul class="simple">
-<li>pandoc - for docx, odt, markdown, rtf, latex, epub and docbook</li>
-<li>catdoc (linux/freebsd) or textutil (macos) - for doc</li>
-<li>pdftotext from the xpdf utils - for pdfs</li>
-<li>man - for man files (if not available, pandoc will be used)</li>
-<li>file - to identify file types</li>
-<li>head - for linux optimization identifying files</li>
-<li>gunzip - to decompress any gzipped document</li>
-<li>the rampart-html module for html and as a helper for pandoc conversions</li>
-</ul>
-</div></blockquote>
-<p>Minimally, pandoc and file must be available for this module to load.</p>
-<p>The following file formats are supported (if appropriate program
-above is available):</p>
-<blockquote>
-<div>docx, doc, odt, markdown, rtf, latex, epub, docbook, pdf &amp; man
-Also files identified as txt (text/plain) will be returned as is.</div></blockquote>
+<div class="section" id="rampart-cmodule">
+<h2>rampart-cmodule<a class="headerlink" href="#rampart-cmodule" title="Permalink to this headline">¶</a></h2>
+<p>With the rampart-cmodule, it is possible to embed c code that will be
+automatically compiled for use as a javascript function.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">(</span><span class="nx">defaultOptions</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">defaultOptions</span></code> is <span class="green">Undefined</span> or an <span class="green">Object</span> of command line flags for each
-of the converting programs.  Example to only include the first two pages
-for a pdf (pdftotext) and to convert a docx (pandoc) to markdown instead
-of to text:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">({</span>
-    <span class="nx">pdftotext</span><span class="o">:</span> <span class="p">{</span><span class="nx">f</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">l</span><span class="o">:</span><span class="mi">2</span><span class="p">},</span>
-    <span class="nx">pandoc</span> <span class="o">:</span>   <span class="p">{</span><span class="nx">t</span><span class="o">:</span> <span class="s1">&#39;markdown&#39;</span><span class="p">}</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmodule</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-cmodule.js&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">myfunc</span> <span class="o">=</span> <span class="nx">cmodule</span><span class="p">(</span><span class="nx">funcName</span><span class="p">,</span> <span class="nx">funcCode</span><span class="p">,</span> <span class="nx">supportFuncs</span><span class="p">,</span> <span class="nx">flags</span><span class="p">,</span> <span class="nx">libs</span><span class="p">,</span> <span class="nx">extraSearchPath</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">myfunc</span> <span class="o">=</span> <span class="nx">cmodule</span><span class="p">({</span>
+    <span class="nx">name</span><span class="o">:</span><span class="nx">funcName</span><span class="p">,</span>
+    <span class="nx">exportFunction</span><span class="o">:</span><span class="nx">funcCode</span><span class="p">,</span>
+    <span class="nx">supportCode</span><span class="o">:</span> <span class="nx">supportFuncs</span><span class="p">,</span>
+    <span class="nx">compileFlags</span><span class="o">:</span> <span class="nx">flags</span><span class="p">,</span>
+    <span class="nx">libraries</span><span class="o">:</span> <span class="nx">libs</span><span class="p">,</span>
+    <span class="nx">rpHeaderLoc</span><span class="o">:</span> <span class="nx">extraSearchPath</span>
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>To convert a document:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;/path/to/my/file.ext&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-    <span class="nx">or</span>
-<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">myFileBufferOrString</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+<dl class="docutils">
+<dt>Where:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">funcName</span></code> is a <span class="green">String</span> - the name of your C function and module.</li>
+<li><code class="docutils literal notranslate"><span class="pre">exportFunction</span></code> is a <span class="green">String</span> - code that contains
+<code class="docutils literal notranslate"><span class="pre">#include</span></code> lines and a single function block
+<strong>without</strong> the function name and signature.</li>
+<li><code class="docutils literal notranslate"><span class="pre">supportFuncs</span></code> is a <span class="green">String</span> - support functions which will be placed
+above the <code class="docutils literal notranslate"><span class="pre">exportFunction</span></code> and below the <code class="docutils literal notranslate"><span class="pre">#include</span></code> lines, so they can be
+called from the exportFunction without forward declarations.</li>
+<li><code class="docutils literal notranslate"><span class="pre">flags</span></code> is a <span class="green">String</span> - any desired flags like <code class="docutils literal notranslate"><span class="pre">-g</span> <span class="pre">-O2</span></code> and the like.</li>
+<li><code class="docutils literal notranslate"><span class="pre">libs</span></code>  is a <span class="green">String</span> -  libraries to be included when compiling, such as <code class="docutils literal notranslate"><span class="pre">-lm</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rpHeaderLoc</span></code> is a <span class="green">String</span> - a path to first search for <code class="docutils literal notranslate"><span class="pre">rampart.h</span></code>.  If omitted
+the search will include <code class="docutils literal notranslate"><span class="pre">process.installPath</span> <span class="pre">+</span> <span class="pre">&quot;/include/rampart.h&quot;</span></code> and other standard locations.</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmodule</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-cmodule.js&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="s2">&quot;squareRoot&quot;</span><span class="p">;</span>
+
+<span class="c1">// include lines and function block only.  Any extra, including</span>
+<span class="c1">// comments not inside the function will throw an error.</span>
+<span class="kd">var</span> <span class="nx">func</span> <span class="o">=</span>  <span class="sb">`</span>
+<span class="sb">#include &lt;math.h&gt;</span>
+
+<span class="sb">{</span>
+<span class="sb">    double d = REQUIRE_NUMBER(ctx, 0, &quot;squareRoot: argument 1 must be a Number&quot;);</span>
+
+<span class="sb">    duk_push_number(ctx, _square_root(d) );</span>
+
+<span class="sb">    return 1;</span>
+<span class="sb">}`</span><span class="p">;</span>
+
+<span class="c1">// support functions are written as normal C and placed above the main function</span>
+<span class="kd">var</span> <span class="nx">supportFuncs</span> <span class="o">=</span> <span class="sb">`</span>
+<span class="sb">static double _square_root (double a) {</span>
+<span class="sb">    return sqrt(a);</span>
+<span class="sb">}`</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">extraFlags</span><span class="o">=</span><span class="s2">&quot;-g -O3&quot;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">libs</span> <span class="o">=</span> <span class="s2">&quot;-lm&quot;</span>
+
+<span class="c1">//build squareRoot.so, or throw error</span>
+<span class="kd">var</span> <span class="nx">sqRt</span> <span class="o">=</span> <span class="nx">cmodule</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">func</span><span class="p">,</span> <span class="nx">supportFuncs</span><span class="p">,</span> <span class="nx">extraFlags</span><span class="p">,</span> <span class="nx">libs</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sqRt</span><span class="p">(</span><span class="mi">64</span><span class="p">));</span>
+
+<span class="c1">// second go, don&#39;t need program if it is already built</span>
+<span class="c1">// effectively the same as var myfunc2 = require(&#39;squareRoot.so&#39;);</span>
+<span class="kd">var</span> <span class="nx">sqRt2</span> <span class="o">=</span> <span class="nx">cmodule</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sqRt2</span><span class="p">(</span><span class="mi">111</span><span class="p">));</span>
+
+<span class="cm">/* expected output:</span>
+<span class="cm">   Files:</span>
+<span class="cm">        Two files named squareRoot.c and squareRoot.so</span>
+<span class="cm">   Stdout:</span>
+<span class="cm">        8</span>
+<span class="cm">        10.535653752852738</span>
+<span class="cm">*/</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">options</span></code> overrides the <code class="docutils literal notranslate"><span class="pre">defaultOptions</span></code> above and
-is either of:</p>
+<dl class="docutils">
+<dt>See:</dt>
+<dd><a class="reference external" href="https://duktape.org/api">Duktape Api</a></dd>
+</dl>
+</div>
+<div class="section" id="rampart-macros-for-c-modules">
+<span id="rpmacros"></span><h2>Rampart Macros for C Modules<a class="headerlink" href="#rampart-macros-for-c-modules" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><ol class="arabic simple">
-<li>same format as defaultOptions above:
-<code class="docutils literal notranslate"><span class="pre">{pdftotext:</span> <span class="pre">{f:1,</span> <span class="pre">l:2}}</span></code>; or</li>
-<li>options for the utility to be used:
-<code class="docutils literal notranslate"><span class="pre">{f:1,</span> <span class="pre">l:2}</span></code></li>
-</ol>
-</div></blockquote>
-<p>Full example:</p>
-<p>Command Line usage:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt; rampart /path/to/rampart-converter.js /path/to/document.ext
+<div><p>Require macros require that a the particular JavaScript variable be of the specified type, or throws
+the given error, which is a variadic printf type format.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="48%" />
+<col width="21%" />
+<col width="31%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Macro</th>
+<th class="head">Return Type</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_STRING(ctx,idx,...)</span></code></td>
+<td>const char *</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_LSTRING(ctx,idx,sz,...)</span></code></td>
+<td>const char *</td>
+<td>sz is a <code class="docutils literal notranslate"><span class="pre">duk_size_t</span> <span class="pre">*</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_INT(ctx,idx,...)</span></code></td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">(int)</span> <span class="pre">double</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_UINT(ctx,idx,...)</span></code></td>
+<td>unsigned int</td>
+<td><code class="docutils literal notranslate"><span class="pre">(unsigned</span> <span class="pre">int)</span> <span class="pre">double</span></code> <br />
+throws error if double &lt; 0</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_POSINT(ctx,idx,...)</span></code></td>
+<td>int</td>
+<td>throws error
+if int &lt; 0</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_INT64(ctx,idx,...)</span></code></td>
+<td>int64_t</td>
+<td><code class="docutils literal notranslate"><span class="pre">(int64_t)</span> <span class="pre">double</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_UINT64(ctx,idx,...)</span></code></td>
+<td>uint64_t</td>
+<td><code class="docutils literal notranslate"><span class="pre">(uint64_t)</span> <span class="pre">double</span></code>   <br />
+throws error
+if double &lt; 0</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_BOOL(ctx,idx,...)</span></code></td>
+<td>int</td>
+<td><code class="docutils literal notranslate"><span class="pre">0</span></code> | <code class="docutils literal notranslate"><span class="pre">1</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_NUMBER(ctx,idx,...)</span></code></td>
+<td>double</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_FUNCTION(ctx,idx,...)</span></code></td>
+<td>none</td>
+<td>no return</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_OBJECT(ctx,idx,...)</span></code></td>
+<td>none</td>
+<td>no return</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_PLAIN_OBJECT(ctx,idx,...)</span></code></td>
+<td>none</td>
+<td>no return <br />
+throw if array or function</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_ARRAY(ctx,idx,...)</span></code></td>
+<td>none</td>
+<td>no return</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_BUFFER_DATA(ctx,idx,sz,...)</span></code></td>
+<td>void *</td>
+<td>sz is a <code class="docutils literal notranslate"><span class="pre">duk_size_t</span> <span class="pre">*</span></code> <br />
+any buffer type</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_STR_TO_BUF(ctx,idx,sz,...)</span></code></td>
+<td>void *</td>
+<td>sz is a <code class="docutils literal notranslate"><span class="pre">duk_size_t</span> <span class="pre">*</span></code> <br />
+If string, converts
+to buffer first</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">REQUIRE_STR_OR_BUF(ctx,idx,sz,...)</span></code></td>
+<td>const char *</td>
+<td>sz is a <code class="docutils literal notranslate"><span class="pre">duk_size_t</span> <span class="pre">*</span></code> <br />
+casts to <code class="docutils literal notranslate"><span class="pre">(const</span> <span class="pre">char</span> <span class="pre">*)</span></code>
+if buffer</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<p>For a function that must be called as <code class="docutils literal notranslate"><span class="pre">myfunc(bufData,</span> <span class="pre">myPosInt)</span></code> where <code class="docutils literal notranslate"><span class="pre">bufData</span></code> must
+be a <span class="green">Buffer</span> and <code class="docutils literal notranslate"><span class="pre">myPosInt</span></code> must be a <span class="green">Number</span> equal to or greater than <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">duk_size_t</span> <span class="n">mybufsz</span><span class="p">;</span>
+<span class="kt">void</span> <span class="o">*</span><span class="n">mybuf</span> <span class="o">=</span> <span class="n">REQUIRE_BUFFER_DATA</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">mybufsz</span><span class="p">,</span> <span class="s">&quot;myfunc - First argument must be a Buffer&quot;</span><span class="p">);</span>
+
+<span class="n">duk_idx_t</span> <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">myposInt</span> <span class="o">=</span> <span class="n">REQUIRE_POSINT</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="s">&quot;myfunc - Argument #%d must be a positive integer&quot;</span><span class="p">,</span> <span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span>
 </pre></div>
 </div>
+</div></blockquote>
+<dl class="docutils">
+<dt>Throw Macro:</dt>
+<dd>At any point in any function, a JavaScript error can be thrown and flow of the program can be returned
+to Javascript by using RP_THROW (which uses <a class="reference external" href="https://duktape.org/api#duk_push_error_object">duk_push_error_object()</a>
+and <a class="reference external" href="https://duktape.org/api#duk_throw">duk_throw()</a>).</dd>
+</dl>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="p">(</span><span class="n">something_bad</span><span class="p">)</span>
+    <span class="n">RP_THROW</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s">&quot;Something bad happened at line %d&quot;</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Getting duk_context:</dt>
+<dd>The <code class="docutils literal notranslate"><span class="pre">exportFunction</span></code> will aready have <code class="docutils literal notranslate"><span class="pre">duk_context</span> <span class="pre">*ctx</span></code> passed to it.  In other functions, you can continue to pass
+the <code class="docutils literal notranslate"><span class="pre">ctx</span></code> pointer, or, if necessary, it can be retrieved as such:</dd>
+</dl>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">RPTHR</span> <span class="o">*</span><span class="n">thr</span> <span class="o">=</span> <span class="n">get_current_thread</span><span class="p">();</span>
+<span class="n">duk_context</span> <span class="o">*</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">thr</span><span class="o">-&gt;</span><span class="n">ctx</span><span class="p">;</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">*</span> <span class="pre">ctx</span></code> is not a global variable, and may change depending on the current thread.  Nothing special
+needs to be done to retrieve the valid <code class="docutils literal notranslate"><span class="pre">ctx</span></code> other than the above.</dd>
+<dt>Debugging stack:</dt>
+<dd><p class="first">Keeping track of variables on the duktape value stack can be aided with a few macros that
+print out the stack contents.</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">printstack(ctx)</span></code> - A simple printout of the value stack contents.</li>
+<li><code class="docutils literal notranslate"><span class="pre">prettyprintstack(ctx)</span></code> - A JSON-like printout of the stack.</li>
+<li><code class="docutils literal notranslate"><span class="pre">safeprintstack(ctx)</span></code>  - Prints stack, taking care to not infinitely regress if there are
+self referencing or cyclic <span class="green">Objects</span> present.</li>
+<li><code class="docutils literal notranslate"><span class="pre">safeprettyprintstack(ctx)</span></code> - combines the two above.</li>
+<li><code class="docutils literal notranslate"><span class="pre">printat(ctx,</span> <span class="pre">idx)</span></code> - prints the variable at stack index <code class="docutils literal notranslate"><span class="pre">idx</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">printenum(ctx,</span> <span class="pre">idx)</span></code> - enumerate <span class="green">Object</span> at idx, printing out
+key/value pairs and including non-enumerable, symbols and hidden symbols.</li>
+</ul>
+</dd>
+<dt>Returning a value to JavaScript:</dt>
+<dd>Pushing a value to the top of the stack and returning <code class="docutils literal notranslate"><span class="pre">1</span></code> will set the return value in Javascript.
+Returning <code class="docutils literal notranslate"><span class="pre">0</span></code> sets the return value to <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.  See the <code class="docutils literal notranslate"><span class="pre">duk_push_*</span></code> functions in the
+<a class="reference external" href="https://duktape.org/api">Duktape Api</a>.  If the value to be returned is not on the top of the
+stack, <a class="reference external" href="https://duktape.org/api#duk_dup">duk_dup()</a>
+or <a class="reference external" href="https://duktape.org/api#duk_pull">duk_pull()</a>
+functions may be used to place the variable on top of the stack before returning.</dd>
+<dt>Simple Type Check:</dt>
+<dd><p class="first">A simple type check of a value can be performed using <code class="docutils literal notranslate"><span class="pre">rp_gettype()</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="kt">int</span> <span class="n">type</span> <span class="o">=</span> <span class="n">rp_gettype</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">idx</span><span class="p">);</span>
+ <span class="cm">/* type is one of:</span>
+<span class="cm">      RP_TYPE_STRING</span>
+<span class="cm">      RP_TYPE_ARRAY</span>
+<span class="cm">      RP_TYPE_NAN</span>
+<span class="cm">      RP_TYPE_NUMBER</span>
+<span class="cm">      RP_TYPE_FUNCTION</span>
+<span class="cm">      RP_TYPE_BOOLEAN</span>
+<span class="cm">      RP_TYPE_BUFFER</span>
+<span class="cm">      RP_TYPE_NULL</span>
+<span class="cm">      RP_TYPE_UNDEFINED</span>
+<span class="cm">      RP_TYPE_SYMBOL</span>
+<span class="cm">      RP_TYPE_DATE</span>
+<span class="cm">      RP_TYPE_OBJECT</span>
+<span class="cm">      RP_TYPE_FILEHANDLE</span>
+<span class="cm">      RP_TYPE_UNKNOWN</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p class="last">This allows you to, e.g., check for a <span class="green">Date Object</span> without getting <code class="docutils literal notranslate"><span class="pre">&quot;object&quot;</span></code> back as you would
+with <code class="docutils literal notranslate"><span class="pre">typeof</span></code> and obviates the need to use of <code class="docutils literal notranslate"><span class="pre">instanceOf</span> <span class="pre">Date</span></code> or <code class="docutils literal notranslate"><span class="pre">Array.isArray()</span></code> where is not cleanly
+codable in C. It is also the basis of the <a class="reference internal" href="rampart-utils.html#gettype"><span class="std std-ref">rampart.utils.getType() JavaScript call</span></a>.</p>
+</dd>
+</dl>
 </div>
 </div>
 

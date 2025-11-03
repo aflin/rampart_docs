@@ -9,6 +9,7 @@ Welcome to Rampart's documentation.
    Rampart JavaScript <rampart-main>
    Rampart Utility Functions <rampart-utils>
    Rampart Thread Functions <rampart-thread>
+   Rampart Vector Functions <rampart-vector>
    The rampart-sql module <sqltoc>
    The rampart-server module <rampart-server>
    The rampart-net module <rampart-net>
