@@ -548,7 +548,11 @@ if not specified, is <code class="docutils literal notranslate"><span class="pre
 title (as seen in utilities like <code class="docutils literal notranslate"><span class="pre">ps</span></code>) with the ip address and port
 number of the server.  The default if not specified is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>: A <span class="green">Boolean</span>, <span class="green">Object</span> or <span class="green">Function</span>.
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code>: A <span class="green">Function</span>. Function to be executed after
+the server forks but before server threads are created, if
+<code class="docutils literal notranslate"><span class="pre">daemon</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>: A <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run at the beginning of each JavaScript function or on
 file load as specified in <code class="docutils literal notranslate"><span class="pre">map</span></code> below.  This can be a global
 function (i.e.  <code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">myglobalbeginfunc</span></code>), an inline function
@@ -564,15 +568,15 @@ When the provided function is called before the loading of a file, the
 <code class="docutils literal notranslate"><span class="pre">req</span></code> <span class="green">Object</span> <code class="docutils literal notranslate"><span class="pre">fsPath</span></code> property will be set to the file being
 retrieved.  If <code class="docutils literal notranslate"><span class="pre">req.fsPath</span></code> is set to a new path and the function returns
 true, the updated file will be sent instead.
-For websocket connections, it is run only befor the first connect
+For websocket connections, it is run only before the first connect
 (i.e., when <code class="docutils literal notranslate"><span class="pre">req.count</span> <span class="pre">==</span> <span class="pre">0</span></code>, see <a class="reference internal" href="#websockets">Websockets</a> below).
-Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+Default value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFuncOnFile</span></code>: A <span class="green">Boolean</span>.  Whether to run the begin
 function before serving a file (-i.e.  files from a mapped location such
 as the <code class="docutils literal notranslate"><span class="pre">web_server/html/</span></code> directory),  Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code>: A <span class="green">Boolean</span>, <span class="green">Object</span> or <span class="green">Function</span>.
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code>: A <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run after the completion of a JavaScript function
 callback from <code class="docutils literal notranslate"><span class="pre">map</span></code> below.
 Like <code class="docutils literal notranslate"><span class="pre">beginFunc</span></code> It will also receive the <cite>req</cite> object.  In
@@ -583,9 +587,9 @@ For websocket connections, it is run after websockets disconnects and
 after the req.wsOnDisconnect callback, if any.  <cite>req.reply</cite> is an
 empty object, modifying it has no effect and return value from endFunc
 has not effect. End function is never run on file requests. The default
-value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logFunc</span></code>: A <span class="green">Boolean</span>, <span class="green">Object</span> or <span class="green">Function</span>.
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logFunc</span></code>: A <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run after data has been written to the client and in place of
 normal logging (<code class="docutils literal notranslate"><span class="pre">log</span></code> above must be <code class="docutils literal notranslate"><span class="pre">true</span></code>).  The callback function
 will be passed two parameters (i.e. <code class="docutils literal notranslate"><span class="pre">myloggingfunc</span> <span class="pre">(logdata,</span> <span class="pre">logline)</span></code>)

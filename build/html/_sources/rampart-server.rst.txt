@@ -47,7 +47,7 @@ After getting the server started, the following sections will fill in the detail
 * The `Websockets`_ Section to write websocket applications, which may be placed
   in the ``wsapps`` directory.
 
-If customization beyond what is available using the Standard Server Layout is required, the 
+If customization beyond what is available using the Standard Server Layout is required, the
 details in the documentation below can be used as a reference.
 
 How does it work?
@@ -151,7 +151,7 @@ Where:
 
     * ``logIpFromHeader``: A :green:`String`, a header name to use for logging
       the ip address of the request.  In cases where the server is behind a proxy
-      such as nginx, instead of logging ``127.0.0.1``, setting, e.g. 
+      such as nginx, instead of logging ``127.0.0.1``, setting, e.g.
       ``proxy_set_header Remote_address $remote_addr;`` in the appropriate section
       of ``/etc/nginx/nginx.conf``, and setting ``logIpFromHeader: "Remote_address"``
       here will log the ip address of the client connecting to nginx, rather the
@@ -238,7 +238,7 @@ Where:
       public", if not set or set ``true``.  If set ``false``, no header is
       sent.
 
-    * ``defaultRangeMBytes``: a :green:`Number` (range 0.01 to 1000).  Set the 
+    * ``defaultRangeMBytes``: a :green:`Number` (range 0.01 to 1000).  Set the
       default range size when sending a ``206 Partial Content`` response to an
       open ended request (e.g. ``range: 0-``), specified in megabytes.
       The default value is ``8`` for eight megabytes.
@@ -275,11 +275,15 @@ Where:
       title (as seen in utilities like ``ps``) with the ip address and port
       number of the server.  The default if not specified is ``false``.
 
-    * ``beginFunc``: A :green:`Boolean`, :green:`Object` or :green:`Function`.  
+    * ``postForkFunc``: A :green:`Function`. Function to be executed after
+      the server forks but before server threads are created, if
+      ``daemon`` is ``true``.
+
+    * ``beginFunc``: A :green:`Object` or :green:`Function`.
       A function to run at the beginning of each JavaScript function or on
       file load as specified in ``map`` below.  This can be a global
       function (i.e.  ``beginFunc: myglobalbeginfunc``), an inline function
-      (i.e.  ``beginFunc: function(req){...}``), or an object (i.e. 
+      (i.e.  ``beginFunc: function(req){...}``), or an object (i.e.
       ``{module: working_directory+'/apps/beginfunc.js'}``) specifying the
       path of a module.
       The function, like all server callback function is passed ``req``, which if
@@ -288,18 +292,18 @@ Where:
       send a 404 Not Found page.  Returning an :green:`Object` (i.e. ``{html:myhtml}``)
       will skip the normal callback and send the content from that :green:`Object`.
       When the provided function is called before the loading of a file, the
-      ``req`` :green:`Object` ``fsPath`` property will be set to the file being 
+      ``req`` :green:`Object` ``fsPath`` property will be set to the file being
       retrieved.  If ``req.fsPath`` is set to a new path and the function returns
       true, the updated file will be sent instead.
-      For websocket connections, it is run only befor the first connect 
+      For websocket connections, it is run only before the first connect
       (i.e., when ``req.count == 0``, see `Websockets`_ below).
-      Default value is ``false``.
+      Default value is ``undefined``.
 
     * ``beginFuncOnFile``: A :green:`Boolean`.  Whether to run the begin
       function before serving a file (-i.e.  files from a mapped location such
       as the ``web_server/html/`` directory),  Default value is ``false``.
-                           
-    * ``endFunc``: A :green:`Boolean`, :green:`Object` or :green:`Function`.  
+
+    * ``endFunc``: A :green:`Object` or :green:`Function`.
       A function to run after the completion of a JavaScript function
       callback from ``map`` below.
       Like ``beginFunc`` It will also receive the `req` object.  In
@@ -310,10 +314,10 @@ Where:
       after the req.wsOnDisconnect callback, if any.  `req.reply` is an
       empty object, modifying it has no effect and return value from endFunc
       has not effect. End function is never run on file requests. The default
-      value is ``false``.
-                           
+      value is ``undefined``.
 
-    * ``logFunc``: A :green:`Boolean`, :green:`Object` or :green:`Function`.  
+
+    * ``logFunc``: A :green:`Object` or :green:`Function`.
       A function to run after data has been written to the client and in place of
       normal logging (``log`` above must be ``true``).  The callback function
       will be passed two parameters (i.e. ``myloggingfunc (logdata, logline)``)
@@ -338,7 +342,7 @@ Where:
                     logdata.code );
             else
                 rampart.utils.fprintf(rampart.utils.accessLog,
-                    "%s\n", logline); 
+                    "%s\n", logline);
         }
 
         // example logging func - skip logging for connections from localhost
@@ -1974,9 +1978,9 @@ layout for the server tree:
 * ``web_server/logs``                - the standard location for access and
   error log files.
 
-See the ``conf`` configuration :green:`Object` near the top of 
-``web_server/web_server_conf.js`` for possible settings. The global 
-``serverConf`` will be created from this and be available to all server 
+See the ``conf`` configuration :green:`Object` near the top of
+``web_server/web_server_conf.js`` for possible settings. The global
+``serverConf`` will be created from this and be available to all server
 module scripts.
 
 This layout translates as:

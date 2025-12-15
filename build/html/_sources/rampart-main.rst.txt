@@ -1520,8 +1520,8 @@ In addition, the transpiler keeps the `Extra javaScript Functionality`_ listed a
 Seeing the Transpiled script
 """"""""""""""""""""""""""""
 
-If you'd like to examine the transpiled script (which, unlike with ``"use babel"``, is not
-saved to a file), run your script like this:
+To examine and save the transpiled script (which, unlike with ``"use babel"``, is not
+saved to a file), a script can be run as such:
 
 .. code-block:: shell
 

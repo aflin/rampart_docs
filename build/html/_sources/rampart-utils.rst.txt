@@ -1587,8 +1587,8 @@ Usage:
 Return Value:
   A :green:`String`, one of ``String``, ``Array``, ``Number``, ``Function``,
   ``Boolean``, ``Buffer`` (any buffer type), ``Nan``, ``Null``,
-  ``Undefined``, ``Date`` or ``Object`` (excluding any of the other types of
-  :green:`Objects` such as ``Null``, ``Array`` or ``Function``) .
+  ``Undefined``, ``Date``, ``Vector``, ``Filehandle`` or ``Object`` (excluding any of the other types of
+  :green:`Objects` such as ``Null``, ``Array``, ``Function``, ``Vector`` or ``Filehandle``) .
 
 timezone
 ''''''''

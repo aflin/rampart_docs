@@ -97,7 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Server Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#vector-function">Vector Function</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#vdist">vdist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vecdist">vecdist</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#general-functions">General Functions</a><ul>
@@ -269,13 +269,30 @@ normally occurs in a SQL statement.  Arguments to a function can be either a
 single field name, another function or another expression.</p>
 <div class="section" id="vector-function">
 <h2>Vector Function<a class="headerlink" href="#vector-function" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="vdist">
-<h3>vdist<a class="headerlink" href="#vdist" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="vecdist">
+<h3>vecdist<a class="headerlink" href="#vecdist" title="Permalink to this headline">¶</a></h3>
 <p>Calculate the distance/score of two vectors.</p>
-<p>Compute the distance or score of two vectors.
-If not specified, default metric is <code class="docutils literal notranslate"><span class="pre">dot</span></code> and default type is <code class="docutils literal notranslate"><span class="pre">f16</span></code></p>
-<p>Performs the same distance calculation as <a class="reference internal" href="rampart-vector.html#vector-distance-function"><span class="std std-ref">Vector Distance Function</span></a>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">vdist</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">[,</span> <span class="n">metric</span> <span class="p">[,</span> <span class="k">type</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>If not specified, default metric is <code class="docutils literal notranslate"><span class="pre">dot</span></code> and default type is <code class="docutils literal notranslate"><span class="pre">f16</span></code></p>
+<p>Performs the same distance calculation as <span class="xref std std-ref">rampart-vector:Vector Distance Function</span>
 with the exception that <code class="docutils literal notranslate"><span class="pre">type</span></code> must be a buffer type and cannot be <code class="docutils literal notranslate"><span class="pre">numbers</span></code>.</p>
+<p>With semantic embedding vectors, it can be used to rerank likep results.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/*</span>
+<span class="cm">  do a likep search on query for 100 rows, rerank on the embedding vector of query (compvec).</span>
+<span class="cm">  1 is first selected column (score).</span>
+<span class="cm">  ORDER BY 1 DESC because higher dot product scores = more similar.</span>
+<span class="cm">*/</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="sb">`select vdist(VecCol, ?) score, Title, Text from mytable</span>
+<span class="sb">        where Text likep ? order by 1 DESC`</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span><span class="p">},</span>
+    <span class="p">[</span><span class="nx">compvec</span><span class="p">,</span> <span class="nx">query</span><span class="p">]</span>
+<span class="p">);</span>
+<span class="cm">/* display top 10 rows in res here */</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="general-functions">

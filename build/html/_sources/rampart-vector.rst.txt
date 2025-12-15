@@ -14,16 +14,18 @@ Acknowledgement
 ~~~~~~~~~~~~~~~
 
 The ``rampart.vector.distance()`` function uses
-`SimSIMD <https://github.com/ashvardanian/SimSIMD>`_ 
+`SimSIMD <https://github.com/ashvardanian/SimSIMD>`_
 (`Apache license <https://github.com/ashvardanian/SimSIMD/blob/main/LICENSE>`_\ )
-to dispatch to the fastest available distance calculation function.  The authors 
+to dispatch to the fastest available distance calculation function.  The authors
 of Rampart express their appreciation for this capable library.
 
 What does it do?
 ~~~~~~~~~~~~~~~~
 
 The rampart.vector functions provides utility functions to pack, convert and
-compare vectors from within JavaScript.
+compare vectors from within JavaScript.  Note that the vector functions in Rampart
+are designed to aid semantic search, and are not a robust general purpose set of vector
+functions. Additional functionality may be added in the future.
 
 Vectors in General
 ------------------
@@ -31,203 +33,322 @@ Vectors in General
 Why use Vectors?
 ~~~~~~~~~~~~~~~~
 
-Vectors have become fundamental to modern information retrieval and artificial intelligence applications, 
-particularly in the realm of semantic search and similarity matching. Unlike traditional keyword-based 
-search methods that rely on exact text matches, vector representations capture the semantic meaning 
-of content by encoding it into high-dimensional numerical arrays. This approach enables systems to 
-understand context, identify conceptually similar items, and provide more intelligent search results 
-even when exact terms don't match.
+Vectors can provide a numerical representation of content that captures semantic
+meaning rather than relying on exact text matches.  This makes them
+effective for identifying related concepts, even when different terms are
+used.
 
-The power of vector similarity lies in its ability to measure relationships between different pieces 
-of information in a meaningful way. When text, images, audio, or other data types are converted into 
-vectors using machine learning models (embeddings), items with similar meanings or characteristics 
-naturally cluster together in vector space. This makes it possible to find documents that discuss 
-the same topic using different terminology, recommend products based on conceptual similarity rather 
-than just tags, or even perform cross-modal searches like finding images that match a text description.
+Embedding models convert text, images, or other data into high-dimensional
+vectors where similar items cluster naturally.  This enables semantic
+search, recommendation, and cross-modal matching with simple distance
+calculations.
 
-Vector operations are particularly valuable in applications such as recommendation systems, content 
-classification, duplicate detection, and retrieval-augmented generation (RAG) systems. By efficiently 
-computing distances between vectors, applications can quickly identify the most relevant information 
-from large datasets, enabling responsive user experiences even when searching through millions of items. 
-The rampart.vector functions provide the essential tools needed to work with these vector representations, 
-offering both high-performance computations and flexible format conversions to suit various storage and 
-processing requirements.
-
-
-Vector Datatypes in Rampart
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Rampart supports a variety of vector formats and functions
-to convert between them:
-
-* ``Numbers``: a :green:`Array` of :green:`Numbers` - Useful for
-  manipulating values in JavaScript. This is the standard JavaScript array 
-  format where each element is a full-precision 64-bit floating point number. 
-  While this format offers maximum flexibility for mathematical operations and 
-  is easiest to work with in JavaScript code, it consumes the most memory and 
-  may not be optimal for storage or large-scale vector operations.
-
-* ``f64``: a :green:`Buffer` - Holds a ``double *`` c array.  Equivalent
-  to ``Numbers`` in precision, but suitable for efficient storage in a database.
-  Each element is stored as a 64-bit (8-byte) double-precision floating point value, 
-  providing the highest accuracy for vector operations. This format is ideal when 
-  precision is critical and storage space is not a primary concern. It maintains 
-  full numerical precision during conversions and calculations.
-  
-* ``f32``: a :green:`Buffer` - Holds a ``float *`` c array. Each element is 
-  stored as a 32-bit (4-byte) single-precision floating point value. This format 
-  reduces storage requirements by 50% compared to ``f64`` while maintaining 
-  sufficient precision for most machine learning and similarity search applications. 
-  It is widely used in neural networks and embedding models, offering an excellent 
-  balance between memory efficiency and numerical accuracy.
-
-* ``f16``: a :green:`Buffer` - Holds a ``uint16_t *`` c array. Each element is 
-  stored as a 16-bit (2-byte) half-precision floating point value following the 
-  IEEE 754 standard. This format reduces storage by 75% compared to ``f64``, 
-  making it suitable for applications where memory is limited or when working 
-  with very large vector databases. While precision is reduced, ``f16`` is often 
-  sufficient for similarity calculations and is increasingly supported by modern 
-  hardware accelerators.
-
-* ``bf16``: a :green:`Buffer` - Holds a ``uint16_t *`` c array. Each element is 
-  stored as a 16-bit (2-byte) Brain Floating Point value. Unlike ``f16``, ``bf16`` 
-  maintains the same exponent range as ``f32`` but with reduced mantissa precision. 
-  This format was developed by Google Brain and is particularly well-suited for 
-  machine learning applications, as it preserves the dynamic range of ``f32`` while 
-  using half the storage. It's especially effective for gradient calculations and 
-  model training workflows.
-
-* ``u8``: a :green:`Buffer` - Holds a ``uint8_t *`` c array. Each element is 
-  stored as an 8-bit (1-byte) unsigned integer with values ranging from 0 to 255. 
-  This format achieves an 87.5% reduction in storage compared to ``f64``, making it 
-  ideal for very large-scale vector databases where storage and memory bandwidth are 
-  critical constraints. Vectors must be quantized (scaled and rounded) to fit in this 
-  range, but for many similarity search applications, the trade-off between precision 
-  and efficiency is worthwhile.
-
-* ``i8``: a :green:`Buffer` - Holds a ``int8_t *`` c array. Each element is 
-  stored as an 8-bit (1-byte) signed integer with values ranging from -128 to 127. 
-  Like ``u8``, this format provides maximum storage efficiency but with support 
-  for negative values. It's commonly used for quantized neural network weights 
-  and embeddings where the distribution is centered around zero, allowing for 
-  efficient computation while maintaining acceptable accuracy for similarity 
-  comparisons.
-
+These properties make vectors useful for tasks such as classification,
+deduplication, recommendation, and retrieval-augmented generation.  The
+rampart.vector functions support fast similarity operations and flexible
+conversions for efficient storage and processing.
 
 Vector Distance Primer
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Understanding vector distances is essential for working with vector embeddings and 
-similarity search. Different distance metrics serve different purposes and can 
-significantly impact the results of your application. The following sections describe 
-the most common distance measures used in vector operations.
+Different distance metrics emphasize different aspects of vector similarity.
+The most common are:
 
 Dot Product / Inner Product
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The dot product (also called inner product) is one of the most fundamental vector 
-operations. It multiplies corresponding elements of two vectors and sums the results, 
-producing a scalar value. Mathematically, for vectors **a** and **b**, the dot product 
-is: **a** · **b** = a₁b₁ + a₂b₂ + ... + aₙbₙ.
+This method multiplies matching components and sums the results.  It
+reflects both magnitude and directional alignment.  With normalized vectors,
+it becomes equivalent to `Cosine Similarity` and is widely used for semantic
+search, recommendations, and attention mechanisms.  When used with `L2-Normalized vectors`,
+it produces a similarity number with range 1.0 (most
+similar), 0 (orthogonal) and -1.0 (opposite).  It is widely used for
+semantic search, recommendations, and attention mechanisms.
 
-The dot product measures both the magnitude and directional alignment of vectors. 
-Higher positive values indicate vectors that point in similar directions and have 
-large magnitudes, while negative values indicate opposing directions. Unlike distance 
-metrics, the dot product is a similarity measure rather than a distance, meaning larger 
-values indicate greater similarity. It's computationally efficient and commonly used in 
-machine learning applications, particularly with normalized vectors.
+Cosine Distance
+^^^^^^^^^^^^^^^
 
-In practical applications, the dot product is often used with normalized embeddings 
-where it becomes equivalent to cosine similarity. It's particularly effective for 
-recommendation systems and information retrieval where you want to measure the 
-alignment between query and document vectors. Many neural networks also use dot 
-product attention mechanisms to determine the relevance between different parts 
-of their input.
+This method measures the angle between vectors, ignoring magnitude.  `Cosine
+Distance` is defined as ``1 – cosineSimilarity`` and range from 0 (closest)
+to 2 (furthest).  When vectors are `L2-Normalized`, `Cosine Similarity` becomes a
+simple dot product, so `Cosine Distance` becomes ``1 – dotProduct``.
 
-Cosine Similarity
-^^^^^^^^^^^^^^^^^
+Euclidean Distance (L2)
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Cosine similarity measures the cosine of the angle between two vectors, focusing 
-purely on their direction rather than magnitude. It ranges from -1 (opposite directions) 
-to 1 (same direction), with 0 indicating orthogonality (perpendicularity). The formula 
-is: cos(θ) = (**a** · **b**) / (||**a**|| × ||**b**||), where ||**a**|| represents 
-the magnitude (length) of vector **a**.
+This method measures straight-line distance.  It reflects both
+magnitude and direction and is useful when vector scale carries information.
+Common in k-NN, clustering, and anomaly detection.  Many embedding models,
+however, work best with `Cosine Distance` or `Dot Product` similarity.
 
-This metric is particularly valuable when vector magnitude doesn't carry meaningful 
-information, and you only care about orientation. In text analysis and natural language 
-processing, for example, document vectors might have different lengths simply due to 
-document size, but their semantic content is better captured by direction. Cosine 
-similarity effectively normalizes for these magnitude differences, making it ideal 
-for comparing embeddings generated by language models.
-
-An important optimization technique used with cosine similarity is L2 normalization 
-(also called unit normalization). L2 normalization scales a vector so its magnitude 
-becomes exactly 1 by dividing each component by the vector's length: **a**' = **a** / ||**a**||. 
-When both vectors are L2 normalized, computing cosine similarity simplifies to just 
-the dot product, since the denominator (||**a**|| × ||**b**||) equals 1. This makes 
-the calculation significantly faster while producing identical results. Many embedding 
-models output pre-normalized vectors specifically to enable this optimization.
-
-Cosine similarity is widely used in semantic search, document clustering, and 
-recommendation systems. It's especially effective with word embeddings and sentence 
-embeddings where the magnitude of the vector may vary but the direction encodes the 
-semantic meaning. Many vector databases default to cosine similarity because of its 
-robustness to scale variations and its intuitive interpretation as directional alignment.
-
-Euclidean Distance
-^^^^^^^^^^^^^^^^^^
-
-Euclidean distance, also known as L2 distance, measures the straight-line distance 
-between two points in vector space. It's the most intuitive distance metric, 
-corresponding to how we naturally think about distance in the physical world. The 
-formula is: d(**a**, **b**) = √[(a₁-b₁)² + (a₂-b₂)² + ... + (aₙ-bₙ)²].
-
-Unlike cosine similarity, Euclidean distance considers both the direction and magnitude 
-of vectors. This makes it sensitive to the scale of features, which can be both an 
-advantage and a disadvantage depending on your application. When vector magnitudes 
-carry important information (such as in image feature vectors or certain types of 
-numerical data), Euclidean distance preserves that information in the similarity 
-calculation.
-
-Euclidean distance is commonly used in k-nearest neighbors algorithms, clustering 
-applications like k-means, and anomaly detection. In the context of embeddings, it's 
-particularly useful when the model has been trained to produce vectors where both 
-magnitude and direction are meaningful. For many pre-trained embedding models, however, 
-cosine similarity or normalized dot product may be more appropriate as the models often 
-normalize their outputs or are trained with that metric in mind.
-
-L2 Normalization
+L2-Normalization
 ^^^^^^^^^^^^^^^^
 
-L2 normalization (also called unit normalization or vector normalization) is the process 
-of scaling a vector so that its length (magnitude) becomes exactly 1, while preserving 
-its direction. The operation divides each component of the vector by the vector's L2 norm 
-(Euclidean length): **a**' = **a** / ||**a**||, where ||**a**|| = √(a₁² + a₂² + ... + aₙ²). 
-The resulting unit vector points in the same direction as the original but has a magnitude 
-of 1, making it lie on the surface of a unit hypersphere in n-dimensional space.
+`L2-Normalization` Scales a vector to unit length,placing all vectors on a
+unit hypersphere (i.e.  if vectors are three dimensional, each vector would
+be on a sphere with radius of 1).  This removes magnitude effects and allows
+`Cosine Similarity` to be computed as a simple `Dot Product`.  Many systems
+normalize embeddings to improve search speed and consistency.
 
-L2 normalization is crucial for many machine learning and vector similarity applications 
-because it removes magnitude as a factor in comparisons, focusing purely on directional 
-relationships. When vectors are normalized, differences in scale—whether due to varying 
-document lengths, feature magnitudes, or model outputs—no longer affect similarity 
-measurements. This property makes normalized vectors particularly valuable for comparing 
-embeddings where only the semantic direction matters, not the absolute values.
+Common Use In Semantic Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The technique offers significant computational benefits when used with cosine similarity. 
-Since cosine similarity divides the dot product by the product of both vectors' magnitudes, 
-normalizing both vectors beforehand (making their magnitudes equal to 1) reduces the 
-calculation to a simple dot product. This optimization can speed up similarity searches 
-by 50% or more, which is why many embedding models and vector databases work exclusively 
-with normalized vectors. Additionally, normalized vectors enable the use of efficient 
-maximum inner product search (MIPS) algorithms that can quickly find the most similar 
-vectors in large datasets.
+A typical workflow is to produce vectors from text using an embedding model,
+`L2-Normalize` each and store them.  At search time one can use the `Dot
+Product` method to compare a query vector with stored vectors, and sort/order descending
+to get the closest matching vectors along with their corresponding texts or other content.
+
+Typed Vectors in Rampart
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Vector Conversion Functions
----------------------------
+Vector Representations in Rampart
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-rampart.vector.numbersToF64
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Rampart supports a variety of vector formats and functions
+to convert between them in a typed vector or in raw form (as a buffer):
+
+* ``Numbers``: a :green:`Array` of :green:`Numbers` - Useful for
+  manipulating values in JavaScript. This is the standard JavaScript array
+  format where each element is a full-precision 64-bit floating point number.
+  While this format offers maximum flexibility for mathematical operations and
+  is easiest to work with in JavaScript code, it consumes the most memory and
+  may not be optimal for storage or large-scale vector operations.
+
+* ``f64``: a :green:`Buffer` - Holds a ``double *`` c array.  Equivalent
+  to ``Numbers`` in precision, but suitable for efficient storage in a database.
+  Each element is stored as a 64-bit (8-byte) double-precision floating point value,
+  providing the highest accuracy for vector operations. This format is ideal when
+  precision is critical and storage space is not a primary concern. It maintains
+  full numerical precision during conversions and calculations.
+
+* ``f32``: a :green:`Buffer` - Holds a ``float *`` c array. Each element is
+  stored as a 32-bit (4-byte) single-precision floating point value. This format
+  reduces storage requirements by 50% compared to ``f64`` while maintaining
+  sufficient precision for most machine learning and similarity search applications.
+  It is widely used in neural networks and embedding models, offering an excellent
+  balance between memory efficiency and numerical accuracy.
+
+* ``f16``: a :green:`Buffer` - Holds a ``uint16_t *`` c array. Each element is
+  stored as a 16-bit (2-byte) half-precision floating point value following the
+  IEEE 754 standard. This format reduces storage by 75% compared to ``f64``,
+  making it suitable for applications where memory is limited or when working
+  with very large vector databases. While precision is reduced, ``f16`` is often
+  sufficient for similarity calculations and is increasingly supported by modern
+  hardware accelerators.
+
+* ``bf16``: a :green:`Buffer` - Holds a ``uint16_t *`` c array. Each element is
+  stored as a 16-bit (2-byte) Brain Floating Point value. Unlike ``f16``, ``bf16``
+  maintains the same exponent range as ``f32`` but with reduced mantissa precision.
+  This format was developed by Google Brain and is particularly well-suited for
+  machine learning applications, as it preserves the dynamic range of ``f32`` while
+  using half the storage. It's especially effective for gradient calculations and
+  model training workflows.
+
+* ``u8``: a :green:`Buffer` - Holds a ``uint8_t *`` c array. Each element is
+  stored as an 8-bit (1-byte) unsigned integer with values ranging from 0 to 255.
+  This format achieves an 87.5% reduction in storage compared to ``f64``, making it
+  ideal for very large-scale vector databases where storage and memory bandwidth are
+  critical constraints. Vectors must be quantized (scaled and rounded) to fit in this
+  range, but for many similarity search applications, the trade-off between precision
+  and efficiency is worthwhile.
+
+* ``i8``: a :green:`Buffer` - Holds a ``int8_t *`` c array. Each element is
+  stored as an 8-bit (1-byte) signed integer with values ranging from -127 to 127.
+  Like ``u8``, this format provides maximum storage efficiency but with support
+  for negative values. It's commonly used for quantized neural network weights
+  and embeddings where the distribution is centered around zero, allowing for
+  efficient computation while maintaining acceptable accuracy for similarity
+  comparisons.
+
+
+Typed Vectors
+-------------
+
+Rampart vectors are opaque :green:`Objects` which hold a vector in a
+:green:`Buffer` along with metadata such as number of dimensions and
+vector type.  A vector can be created or initialized from an :green:`Array`
+of :green:`Numbers` or from an existing raw :green:`Buffer` using the
+``new rampart.vector()`` call.
+
+new rampart.vector()
+~~~~~~~~~~~~~~~~~~~~
+
+Create an empty or initialize a new `Vector Object` from an :green:`Array`
+of :green:`Numbers` or :green:`Buffer`.
+
+Usage:
+
+.. code-block:: javascript
+
+   var vec = new rampart.vector(type, [ndim|rawbuf|numbarr]);
+
+Where:
+
+   * ``type`` is a :green:`String`, one of ``f64``, ``f32``, ``f16``,
+     ``bf16``, ``i8`` or ``u8``;
+
+   * ``ndim`` is a positive :green:`Number`, the dimensionality (number of elements)
+     for a new zero-filled vector.
+
+   * ``rawbuf`` is a :green:`Buffer`, the raw binary data holding a vector (i.e. ``double *``, ``float *``
+     ``uint16_t *`` arrays in c).  Number of elements is calculated from the type and length of the vector.
+
+   * ``numbarr`` is an :green:`Array` of :green:`Numbers`, with each :green:`Number` being an element of the
+     vector.
+
+Return Value from new rampart.vector()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Several constants and methods will be available as properties of the resulting `Vector Object`.
+
+.. code-block:: javascript
+
+   var n = [0,1,2,3,4,5,6,7];
+   var v = new rampart.vector('f32',n);
+
+   rampart.utils.printf("%3J\n", v);
+   /* expected output:
+      {
+         "type": "f32",
+         "dim": 8,
+         "toF64": {
+            "_c_func": true
+         },
+         "toF32": {
+            "_c_func": true
+         },
+         "toF16": {
+            "_c_func": true
+         },
+         "toBf16": {
+            "_c_func": true
+         },
+         "toI8": {
+            "_c_func": true
+         },
+         "toU8": {
+            "_c_func": true
+         },
+         "toNumbers": {
+            "_c_func": true
+         },
+         "l2Normalize": {
+            "_c_func": true
+         },
+         "toRaw": {
+            "_c_func": true
+         },
+         "byteLength": {
+            "_c_func": true
+         },
+         "resize": {
+            "_c_func": true
+         },
+         "copy": {
+            "_c_func": true
+         },
+         "distance": {
+            "_c_func": true
+         }
+      }
+   */
+
+Vector Object Conversion Functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each `Vector Object` will have several methods to convert the underlying
+vector to other types.
+
+Note that not every vector type can be directly converted to another (for
+example there is no ``.toU8()`` function for a `Vector Object` with type
+``i8``).
+
+Also note that each type has a conversion method to its own type (i.e.  an
+``f64`` `Vector Object` will have a ``.toF64()`` method).  These are null
+operations and return the same `Vector Object`, while other methods return a new
+`Vector Object` or :green:`Array`.
+
+Available methods:
+
+   *  ``toF64()`` - Convert to a F64 (``double *``) vector.
+   *  ``toF32()`` - Convert to a F32 (``float *``) vector.
+   *  ``toF16()`` - Convert to a F16 (half precision) vector.
+   *  ``toBf16()`` - Convert to a Brain Float vector.
+   *  ``toI8()`` - Convert to a quantized 8 bit signed (``int8_t *``) vector.
+   *  ``toU8()`` - Convert to a quantized 8 bit unsigned (``uint8_t *``) vector.
+   *  ``toNumbers()`` - Convert to an :green:`Array` of :green:`Numbers`.
+
+Note that these methods take no arguments, except ``toU8`` and ``toI8``
+may take an optional ``(scale[, zeroPoint]))``. See Raw Conversions below
+for more detail.
+
+Information Constants
+~~~~~~~~~~~~~~~~~~~~~
+
+   * ``type`` - type of underlying vector in the `Vector Object`.
+   * ``dim``  - the number of elements in the underlying vector.
+
+Utility Functions
+~~~~~~~~~~~~~~~~~
+
+   * ``l2Normalize()`` - perform an in-place `L2-Normalization` of the
+     vector and return the same `Vector Object`.
+   * ``toRaw()`` - return the underlying :green:`Buffer`.
+   * ``copy()`` - Copy the underlying :green:`Buffer` and return a new
+     `Vector Object`.
+   * ``resize(n)`` - Copy and grow or truncate the underlying :green:`Buffer`
+     so the vector contains ``n`` elements.  Return a new `Vector Object`.
+   * ``byteLength()`` - Return the length of the underlying :green:`Buffer` in bytes.
+
+Distance Function
+~~~~~~~~~~~~~~~~~
+
+Works the same as `Raw Vector Distance Function`_
+except that type is derived and not specified.
+
+The vectors must be of the same type and have the
+same number of elements.  If not, a conversion
+must be performed to make the two vectors match.
+
+Example:
+
+.. code-block:: javascript
+
+   var n1 = [0,1,2,3,4,5,6,7];
+   var v1 = new rampart.vector('f32',n1);
+
+   var n2 = [0,-1,-2,-3,-4,-5,-6,-7];
+   var v2 = new rampart.vector('f64',n2);
+
+   v1.l2Normalize();
+   v2.l2Normalize();
+
+   // cannot pass a vector of a different type
+   try {
+      var score = v1.distance(v2, 'dot');
+   } catch(e) {
+      // e.message == "vector.distance() - vectors must be the same type, convert one first"
+   }
+
+   // convert v2 to f32, then compare
+   var score = v1.distance(v2.toF32(), 'dot');
+   /* score ~= -1.0 */
+
+   // OR convert v1 to f64, then compare
+   var score = v1.toF64().distance(v2, 'dot');
+   /* score ~= -1.0 */
+
+Raw Vector Conversion Functions
+-------------------------------
+
+Unlike the `Vector Object` methods above, the following functions work
+directly on raw :green:`Buffer` representations of vectors (the same type that
+are produced by ``.toRaw()`` above).  As such, care must
+be taken that input vectors are of the expected type.
+
+rampart.vector.raw.numbersToF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert an :green:`Array` of :green:`Numbers` to a :green:`Buffer` holding a
 ``double *`` array.
@@ -236,15 +357,15 @@ Usage:
 
 .. code-block:: javascript
 
-   rampart.vector.NumbersToF64(myarr);
+   rampart.vector.raw.NumbersToF64(myarr);
 
 Where ``myarray`` is an :green:`Array` of :green:`Numbers`.
 
 Return Value:
    A :green:`Buffer` holding a ``double *`` array.
 
-rampart.vector.numbersToF32
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.numbersToF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert an :green:`Array` of :green:`Numbers` to a :green:`Buffer` holding a
 ``float *`` array.
@@ -253,15 +374,15 @@ Usage:
 
 .. code-block:: javascript
 
-   rampart.vector.numbersToF32(myarr);
+   rampart.vector.raw.numbersToF32(myarr);
 
 Where ``myarr`` is an :green:`Array` of :green:`Numbers`.
 
 Return Value:
    A :green:`Buffer` holding a ``float *`` array.
 
-rampart.vector.numbersToF16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.numbersToF16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert an :green:`Array` of :green:`Numbers` to a :green:`Buffer` holding a
 ``uint16_t *`` array (IEEE 754 half-precision floating point).
@@ -270,15 +391,15 @@ Usage:
 
 .. code-block:: javascript
 
-   rampart.vector.numbersToF16(myarr);
+   rampart.vector.raw.numbersToF16(myarr);
 
 Where ``myarr`` is an :green:`Array` of :green:`Numbers`.
 
 Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
-rampart.vector.numbersToBf16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.numbersToBf16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert an :green:`Array` of :green:`Numbers` to a :green:`Buffer` holding a
 ``uint16_t *`` array (Brain Floating Point 16).
@@ -287,15 +408,15 @@ Usage:
 
 .. code-block:: javascript
 
-   rampart.vector.numbersToBf16(myarr);
+   rampart.vector.raw.numbersToBf16(myarr);
 
 Where ``myarr`` is an :green:`Array` of :green:`Numbers`.
 
 Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
-rampart.vector.numbersToI8
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.numbersToI8
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert an :green:`Array` of :green:`Numbers` to a :green:`Buffer` holding an ``int8_t *`` array.
 
@@ -303,7 +424,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.numbersToI8(myarr [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.numbersToI8(myarr [, scale [, zeroPoint]]);
 
 Where:
 
@@ -315,8 +436,8 @@ Return Value:
   A :green:`Buffer` holding an ``int8_t *`` array.
 
 
-rampart.vector.numbersToU8
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.numbersToU8
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert an :green:`Array` of :green:`Numbers` to a :green:`Buffer` holding a ``uint8_t *`` array.
 
@@ -324,7 +445,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.numbersToU8(myarr [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.numbersToU8(myarr [, scale [, zeroPoint]]);
 
 Where:
 
@@ -334,8 +455,8 @@ Where:
 
 
 
-rampart.vector.f64ToNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f64ToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``double *`` array to an :green:`Array` of :green:`Numbers`.
 
@@ -343,7 +464,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.NumbersToF64(mybuff);
+   var res = rampart.vector.raw.NumbersToF64(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``double *`` array.
 
@@ -351,8 +472,8 @@ Return Value:
    An :green:`Array` of :green:`Numbers`.
 
 
-rampart.vector.f32ToNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f32ToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``float *`` array to an :green:`Array` of :green:`Numbers`.
 
@@ -360,7 +481,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f32ToNumbers(mybuff);
+   var res = rampart.vector.raw.f32ToNumbers(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``float *`` array.
 
@@ -368,8 +489,8 @@ Return Value:
    An :green:`Array` of :green:`Numbers`.
 
 
-rampart.vector.f16ToNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f16ToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point) to an :green:`Array` of :green:`Numbers`.
 
@@ -377,7 +498,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f16ToNumbers(mybuff);
+   var res = rampart.vector.raw.f16ToNumbers(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -385,8 +506,8 @@ Return Value:
    An :green:`Array` of :green:`Numbers`.
 
 
-rampart.vector.bf16ToNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.bf16ToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (Brain Floating Point 16) to an :green:`Array` of :green:`Numbers`.
 
@@ -394,7 +515,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.bf16ToNumbers(mybuff);
+   var res = rampart.vector.raw.bf16ToNumbers(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -402,8 +523,8 @@ Return Value:
    An :green:`Array` of :green:`Numbers`.
 
 
-rampart.vector.u8ToNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.u8ToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint8_t *`` array to an :green:`Array` of :green:`Numbers`.
 
@@ -411,7 +532,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.u8ToNumbers(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.u8ToNumbers(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -423,8 +544,8 @@ Return Value:
    An :green:`Array` of :green:`Numbers`.
 
 
-rampart.vector.i8ToNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.i8ToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding an ``int8_t *`` array to an :green:`Array` of :green:`Numbers`.
 
@@ -432,7 +553,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.i8ToNumbers(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.i8ToNumbers(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -445,8 +566,8 @@ Return Value:
 
 
 
-rampart.vector.f64ToF32
-~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f64ToF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``double *`` array to a :green:`Buffer` holding a ``float *`` array.
 
@@ -454,7 +575,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f64ToF32(mybuff);
+   var res = rampart.vector.raw.f64ToF32(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``double *`` array.
 
@@ -462,8 +583,8 @@ Return Value:
    A :green:`Buffer` holding a ``float *`` array.
 
 
-rampart.vector.f64ToF16
-~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f64ToF16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``double *`` array to a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point).
 
@@ -471,7 +592,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f64ToF16(mybuff);
+   var res = rampart.vector.raw.f64ToF16(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``double *`` array.
 
@@ -479,8 +600,8 @@ Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
 
-rampart.vector.f64ToBf16
-~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f64ToBf16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``double *`` array to a :green:`Buffer` holding a ``uint16_t *`` array (Brain Floating Point 16).
 
@@ -488,7 +609,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f64ToBf16(mybuff);
+   var res = rampart.vector.raw.f64ToBf16(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``double *`` array.
 
@@ -496,8 +617,8 @@ Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
 
-rampart.vector.f64ToI8
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f64ToI8
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``double *`` array to a :green:`Buffer` holding an ``int8_t *`` array.
 
@@ -505,7 +626,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f64ToI8(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.f64ToI8(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -517,8 +638,8 @@ Return Value:
    A :green:`Buffer` holding an ``int8_t *`` array.
 
 
-rampart.vector.f64ToU8
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f64ToU8
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``double *`` array to a :green:`Buffer` holding a ``uint8_t *`` array.
 
@@ -526,7 +647,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f64ToU8(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.f64ToU8(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -538,8 +659,8 @@ Return Value:
    A :green:`Buffer` holding a ``uint8_t *`` array.
 
 
-rampart.vector.f32ToF64
-~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f32ToF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``float *`` array to a :green:`Buffer` holding a ``double *`` array.
 
@@ -547,7 +668,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f32ToF64(mybuff);
+   var res = rampart.vector.raw.f32ToF64(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``float *`` array.
 
@@ -555,8 +676,8 @@ Return Value:
    A :green:`Buffer` holding a ``double *`` array.
 
 
-rampart.vector.f16ToF64
-~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f16ToF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point) to a :green:`Buffer` holding a ``double *`` array.
 
@@ -564,7 +685,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f16ToF64(mybuff);
+   var res = rampart.vector.raw.f16ToF64(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -572,8 +693,8 @@ Return Value:
    A :green:`Buffer` holding a ``double *`` array.
 
 
-rampart.vector.bf16ToF64
-~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.bf16ToF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (Brain Floating Point 16) to a :green:`Buffer` holding a ``double *`` array.
 
@@ -581,7 +702,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.bf16ToF64(mybuff);
+   var res = rampart.vector.raw.bf16ToF64(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -589,8 +710,8 @@ Return Value:
    A :green:`Buffer` holding a ``double *`` array.
 
 
-rampart.vector.i8ToF64
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.i8ToF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding an ``int8_t *`` array to a :green:`Buffer` holding a ``double *`` array.
 
@@ -598,7 +719,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.i8ToF64(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.i8ToF64(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -610,8 +731,8 @@ Return Value:
    A :green:`Buffer` holding a ``double *`` array.
 
 
-rampart.vector.u8ToF64
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.u8ToF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint8_t *`` array to a :green:`Buffer` holding a ``double *`` array.
 
@@ -619,7 +740,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.u8ToF64(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.u8ToF64(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -631,8 +752,8 @@ Return Value:
    A :green:`Buffer` holding a ``double *`` array.
 
 
-rampart.vector.f32ToF16
-~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f32ToF16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``float *`` array to a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point).
 
@@ -640,7 +761,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f32ToF16(mybuff);
+   var res = rampart.vector.raw.f32ToF16(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``float *`` array.
 
@@ -648,8 +769,8 @@ Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
 
-rampart.vector.f32ToBf16
-~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f32ToBf16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``float *`` array to a :green:`Buffer` holding a ``uint16_t *`` array (Brain Floating Point 16).
 
@@ -657,7 +778,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f32ToBf16(mybuff);
+   var res = rampart.vector.raw.f32ToBf16(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``float *`` array.
 
@@ -665,8 +786,8 @@ Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
 
-rampart.vector.f32ToI8
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f32ToI8
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``float *`` array to a :green:`Buffer` holding an ``int8_t *`` array.
 
@@ -674,7 +795,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f32ToI8(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.f32ToI8(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -686,8 +807,8 @@ Return Value:
    A :green:`Buffer` holding an ``int8_t *`` array.
 
 
-rampart.vector.f32ToU8
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f32ToU8
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``float *`` array to a :green:`Buffer` holding a ``uint8_t *`` array.
 
@@ -695,7 +816,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f32ToU8(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.f32ToU8(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -708,8 +829,8 @@ Return Value:
 
 
 
-rampart.vector.f16ToF32
-~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f16ToF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point) to a :green:`Buffer` holding a ``float *`` array.
 
@@ -717,7 +838,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f16ToF32(mybuff);
+   var res = rampart.vector.raw.f16ToF32(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -725,8 +846,8 @@ Return Value:
    A :green:`Buffer` holding a ``float *`` array.
 
 
-rampart.vector.bf16ToF32
-~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.bf16ToF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (Brain Floating Point 16) to a :green:`Buffer` holding a ``float *`` array.
 
@@ -734,7 +855,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.bf16ToF32(mybuff);
+   var res = rampart.vector.raw.bf16ToF32(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -742,8 +863,8 @@ Return Value:
    A :green:`Buffer` holding a ``float *`` array.
 
 
-rampart.vector.u8ToF32
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.u8ToF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint8_t *`` array to a :green:`Buffer` holding a ``float *`` array.
 
@@ -751,7 +872,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.u8ToF32(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.u8ToF32(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -763,8 +884,8 @@ Return Value:
    A :green:`Buffer` holding a ``float *`` array.
 
 
-rampart.vector.i8ToF32
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.i8ToF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding an ``int8_t *`` array to a :green:`Buffer` holding a ``float *`` array.
 
@@ -772,7 +893,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.i8ToF32(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.i8ToF32(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -784,8 +905,8 @@ Return Value:
    A :green:`Buffer` holding a ``float *`` array.
 
 
-rampart.vector.f16ToI8
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f16ToI8
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point) to a :green:`Buffer` holding an ``int8_t *`` array.
 
@@ -793,7 +914,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f16ToI8(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.f16ToI8(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -805,8 +926,8 @@ Return Value:
    A :green:`Buffer` holding an ``int8_t *`` array.
 
 
-rampart.vector.f16ToU8
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.f16ToU8
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point) to a :green:`Buffer` holding a ``uint8_t *`` array.
 
@@ -814,7 +935,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.f16ToU8(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.f16ToU8(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -827,8 +948,8 @@ Return Value:
 
 
 
-rampart.vector.i8ToF16
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.i8ToF16
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding an ``int8_t *`` array to a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point).
 
@@ -836,7 +957,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.i8ToF16(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.i8ToF16(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -848,8 +969,8 @@ Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
 
-rampart.vector.u8ToF16
-~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.u8ToF16
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Convert a :green:`Buffer` holding a ``uint8_t *`` array to a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point).
 
@@ -857,7 +978,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.u8ToF16(mybuff [, scale [, zeroPoint]]);
+   var res = rampart.vector.raw.u8ToF16(mybuff [, scale [, zeroPoint]]);
 
 Where:
 
@@ -868,8 +989,8 @@ Where:
 Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array.
 
-rampart.vector.l2NormalizeNumbers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.l2NormalizeNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Perform an in-place L2 normalization on an :green:`Array` of :green:`Numbers`, scaling the vector to unit length.
 
@@ -877,7 +998,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.l2NormalizeNumbers(myarr);
+   var res = rampart.vector.raw.l2NormalizeNumbers(myarr);
 
 Where ``myarr`` is an :green:`Array` of :green:`Numbers`.
 
@@ -887,8 +1008,8 @@ Return Value:
 Note:
    All L2 normalization functions are in-place, tranforming the input vector and returning it.
 
-rampart.vector.l2NormalizeF64
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.l2NormalizeF64
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Perform an in-place L2 normalization on a :green:`Buffer` holding a ``double *`` array, scaling the vector to unit length.
 
@@ -896,7 +1017,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.l2NormalizeF64(mybuff);
+   var res = rampart.vector.raw.l2NormalizeF64(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``double *`` array.
 
@@ -906,8 +1027,8 @@ Return Value:
 Note:
    All L2 normalization functions are in-place, tranforming the input vector and returning it.
 
-rampart.vector.l2NormalizeF32
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.l2NormalizeF32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Perform an in-place L2 normalization on a :green:`Buffer` holding a ``float *`` array, scaling the vector to unit length.
 
@@ -915,7 +1036,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.l2NormalizeF32(mybuff);
+   var res = rampart.vector.raw.l2NormalizeF32(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``float *`` array.
 
@@ -925,8 +1046,8 @@ Return Value:
 Note:
    All L2 normalization functions are in-place, tranforming the input vector and returning it.
 
-rampart.vector.l2NormalizeF16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+rampart.vector.raw.l2NormalizeF16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Perform an in-place L2 normalization on a :green:`Buffer` holding a ``uint16_t *`` array (IEEE 754 half-precision floating point), scaling the vector to unit length.
 
@@ -934,7 +1055,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.l2NormalizeF16(mybuff);
+   var res = rampart.vector.raw.l2NormalizeF16(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``uint16_t *`` array.
 
@@ -944,29 +1065,34 @@ Return Value:
 Note:
    All L2 normalization functions are in-place, tranforming the input vector and returning it.
 
-Vector Distance Function
-------------------------
+Raw Vector Distance Function
+----------------------------
 
-The ``rampart.vector.distance()`` function measures the distance or score by comparing two vectors.
+The ``rampart.vector.raw.distance()`` function measures the distance or score by comparing two vectors.
 
 .. code-block:: javascript
 
-   var dist = rampart.vector.distance(myvec, myvec2, metric, vecType);
+   var dist = rampart.vector.raw.distance(myvec, myvec2 [, metric [, vecType]]);
 
 Where:
 
 * ``myvec`` is one of the supported vector types above.
 * ``myvec2`` is a vector matching ``myvec`` in type and dimensions (number of elements/Numbers in the array).
 * ``metric`` is a :green:`String`, one of ``dot``, ``cosine`` or ``euclidean``. Default is ``dot``.
-* ``vecType`` s a :green:`String`, one of ``numbers``, ``f64``, ``f32``, ``f16``, ``bf16``, ``i8`` or ``u8``
+* ``vecType`` is a :green:`String`, one of ``numbers``, ``f64``, ``f32``, ``f16``, ``bf16``, ``i8`` or ``u8``
   specifying the type of ``myvec`` and ``myvec2``.   Default is ``f16``.
 
 Return Value:
    * For ``euclidean`` and ``cosine`` a measure of the distance between the two vectors (with 0 being the closest).
-   * For ``dot`` the cosine similarity between two vectors (with 1.0 being exact match and -1.0 being the opposite).
+   * For ``dot`` the `Cosine Similarity` between two `L2-Normalized` vectors (with 1.0 being exact match and -1.0 being the opposite).
 
 Note:
-  * ``dot`` assumes L2 Normalized vectors are given to it and returns similarity score of ``-1.0`` to ``1.0``.
-  * ``cosine`` takes vectors, normalizes them and computes a distance of ``0` to ``2.0``.
+  * ``euclidean`` is a true distance function, taking into account angle and magnitude. The return distance range depends
+    on the magnitude of the input vectors.
+  * ``dot``, assuming L2 Normalized vectors are given to it, will return a similarity score of ``-1.0`` to ``1.0`` with ``1.0`` being
+    an exact match and ``-1.0`` being the exact opposite.
+  * ``cosine`` computes distance by dividing by vector magnitudes (effectively normalizing). It returns distance of ``0`` to ``2.0``.
   * ``1 - cosineScore == dotDistance`` if the vectors are L2 Normalized.  However, the ``dot`` calculation is simpler and faster for
-     vectors thar are already L2 Normalized.
+    vectors thar are already L2 Normalized.
+  *  The distance functions assumes ``dot`` and L2 normalized ``f16`` vectors, as these settings provides gains in terms
+     of memory and speed while retaining a high level of accuracy.

@@ -144,16 +144,17 @@ Return Value:
 
     {
         exec:          {_func:true},
+        query:         {_func:true},
         one:           {_func:true},
         set:           {_func:true},
         reset:         {_func:true},
         close:         {_func:true}
         addTable:      {_func:true},
-	importCsv:     {_func:true},
-	importCsvFile: {_func:true},
-	errMsg:        "",
+        importCsv:     {_func:true},
+        importCsvFile: {_func:true},
+        errMsg:        "",
         db:            "/path/to/db",
-	selectMaxRows: 10
+        selectMaxRows: 10
     }
 
 Example:

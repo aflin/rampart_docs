@@ -12,19 +12,37 @@ single field name, another function or another expression.
 Vector Function
 ~~~~~~~~~~~~~~~
 
-vdist
-"""""
+vecdist
+"""""""
 
 Calculate the distance/score of two vectors.
 
 .. code-block:: sql
+
     vdist(vec1, vec2[, metric [, type]])
 
-Compute the distance or score of two vectors.
+
 If not specified, default metric is ``dot`` and default type is ``f16``
 
 Performs the same distance calculation as :ref:`rampart-vector:Vector Distance Function`
 with the exception that ``type`` must be a buffer type and cannot be ``numbers``.
+
+With semantic embedding vectors, it can be used to rerank likep results.
+
+.. code-block:: javascript
+
+    /* 
+      do a likep search on query for 100 rows, rerank on the embedding vector of query (compvec).
+      1 is first selected column (score).
+      ORDER BY 1 DESC because higher dot product scores = more similar.
+    */
+    var res = sql.exec(
+        `select vdist(VecCol, ?) score, Title, Text from mytable
+            where Text likep ? order by 1 DESC`,
+        {maxRows: 100},
+        [compvec, query]
+    );
+    /* display top 10 rows in res here */
 
 General Functions
 ~~~~~~~~~~~~~~~~~
