@@ -689,6 +689,7 @@ The Request Object
            "ip": "::1",
            "port": 33948,
            "method": "GET",
+           "methodRaw": "GET",
            "path": {
               "file": "showreq.html",
               "path": "/showreq.html",
@@ -759,6 +760,9 @@ The Request Object
   prioritize in that order.  If, e.g., a query parameter has the same name
   as a cookie, the cookie value will override the the query parameter.
 
+  Note also that ``method`` and ``methodRaw`` will have the same value unless an
+  unknown method is used (in which case ``method`` will be ``unknown`` and
+  ``methodRaw`` will be the raw text of the method submitted to the server).
 
 Posting Form Data
 """""""""""""""""
@@ -808,6 +812,7 @@ Posting Form Data
                "ip": "127.0.0.1",
                "port": 38680,
                "method": "POST",
+               "methodRaw": "POST",
                "path": {
                   "file": "showreq.html",
                   "path": "/showreq.html",
@@ -884,6 +889,7 @@ Posting Multipart Form Data
            "ip": "::1",
            "port": 39004,
            "method": "POST",
+           "methodRaw": "POST",
            "path": {
               "file": "showreq.html",
               "path": "/showreq.html",
@@ -1030,6 +1036,7 @@ Posting JSON Data
            "ip": "::1",
            "port": 46586,
            "method": "POST",
+           "methodRaw": "POST",
            "path": {
               "file": "showreq.json",
               "path": "/showreq.json",
