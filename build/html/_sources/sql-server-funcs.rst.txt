@@ -19,7 +19,7 @@ Calculate the distance/score of two vectors.
 
 .. code-block:: sql
 
-    vdist(vec1, vec2[, metric [, type]])
+    vecdist(vec1, vec2[, metric [, type]])
 
 
 If not specified, default metric is ``dot`` and default type is ``f16``
@@ -37,7 +37,7 @@ With semantic embedding vectors, it can be used to rerank likep results.
       ORDER BY 1 DESC because higher dot product scores = more similar.
     */
     var res = sql.exec(
-        `select vdist(VecCol, ?) score, Title, Text from mytable
+        `select vecdist(VecCol, ?) score, Title, Text from mytable
             where Text likep ? order by 1 DESC`,
         {maxRows: 100},
         [compvec, query]

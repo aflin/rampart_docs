@@ -272,7 +272,7 @@ single field name, another function or another expression.</p>
 <div class="section" id="vecdist">
 <h3>vecdist<a class="headerlink" href="#vecdist" title="Permalink to this headline">¶</a></h3>
 <p>Calculate the distance/score of two vectors.</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">vdist</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">[,</span> <span class="n">metric</span> <span class="p">[,</span> <span class="k">type</span><span class="p">]])</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">vecdist</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">[,</span> <span class="n">metric</span> <span class="p">[,</span> <span class="k">type</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>If not specified, default metric is <code class="docutils literal notranslate"><span class="pre">dot</span></code> and default type is <code class="docutils literal notranslate"><span class="pre">f16</span></code></p>
@@ -285,7 +285,7 @@ with the exception that <code class="docutils literal notranslate"><span class="
 <span class="cm">  ORDER BY 1 DESC because higher dot product scores = more similar.</span>
 <span class="cm">*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
-    <span class="sb">`select vdist(VecCol, ?) score, Title, Text from mytable</span>
+    <span class="sb">`select vecdist(VecCol, ?) score, Title, Text from mytable</span>
 <span class="sb">        where Text likep ? order by 1 DESC`</span><span class="p">,</span>
     <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span><span class="p">},</span>
     <span class="p">[</span><span class="nx">compvec</span><span class="p">,</span> <span class="nx">query</span><span class="p">]</span>
