@@ -32,7 +32,7 @@ will run in multiple processes.
 Loading the Javascript Module
 -----------------------------
 
-    Loading of the sql module from within Rampart JavaScript is a simple matter
+    Loading of the python module from within Rampart JavaScript is a simple matter
     of using the ``require`` statement:
 
     .. code-block:: javascript
@@ -158,7 +158,7 @@ pvar.toString()
         */
 
     Return Value:
-        An :green:`String`.
+        A :green:`String`.
 
 pvar.toValue()
 ~~~~~~~~~~~~~~

@@ -9,7 +9,7 @@ Acknowledgement
 
 Rampart uses the `Duktape JavaScript Engine <https://duktape.org>`_. Duktape is an 
 embeddable JavaScript engine, with a focus on portability and compact footprint.
-The developers of Rampart are extremely grateful for the excellent api and
+The developers of Rampart are extremely grateful for the excellent API and
 ease of use of this library.
 
 License
@@ -90,7 +90,7 @@ following:
 
 * Cryptography functions from OpenSSL via ``rampart-crypto``.
 
-* HTML parsing and and error correcting via ``rampart-html``. 
+* HTML parsing and error correcting via ``rampart-html``. 
 
 * Fast NOSQL database via ``rampart-lmdb``.
 
@@ -110,12 +110,12 @@ Rampart philosophy
 
 Rampart uses the Duktape JavaScript Engine and API as a gateway for high
 performance functions written in C.  JavaScript execution with Duktape is
-more memory efficient, but interpertation is slower than with, e.g., node.js. 
+more memory efficient, but interpretation is slower than with, e.g., node.js. 
 However, the functionality and speed of the available C functions provide
 comparable efficacy, excellent performance and is a viable alternative to
 `LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_, 
 `MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_ or other stacks, 
-all in a single product, while consuming considerably less resources than
+all in a single product, while consuming considerably fewer resources than
 the aforementioned.
 
 Rampart Global Variable and Functions
@@ -244,16 +244,16 @@ Remove a named function from the list of functions for the given event.
 
 Where:
 
-   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.utils.on()`
+   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.event.on()`
      function above.
 
-   * ``funcName`` is a :green:`String`, the ``funcName`` passed to the `rampart.utils.on()`
+   * ``funcName`` is a :green:`String`, the ``funcName`` passed to the `rampart.event.on()`
      function above.
 
 rampart.event.remove()
 ''''''''''''''''''''''
 
-Remove all function from the list of functions for the given event. This effectively
+Remove all functions from the list of functions for the given event. This effectively
 removes the event.
 
 .. code-block:: javascript
@@ -262,7 +262,7 @@ removes the event.
 
 Where:
 
-   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.utils.on()`
+   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.event.on()`
      function above.
 
 rampart.event.scopeToModule()
@@ -333,7 +333,7 @@ Usage:
 
 Where ``jsfile`` is the path of the script to be included.  
 
-If ``jsfile`` is not a absolute path name it will be searched for in the same
+If ``jsfile`` is not an absolute path name it will be searched for in the same
 manner as with `Module Search Path`_ except that in addition to the 
 current directory and the ``process.scriptPath`` directory, it will search in
 ``/usr/local/rampart/includes/`` and ``~/.rampart/includes/`` rather than the
@@ -427,7 +427,7 @@ options:
         ``"object"``): Whether to
         return an :green:`Array` or an :green:`Object` for each row.
 
-      * ``hasHeaderRow`` - -  :green:`Boolean` (default ``false``): Whether
+      * ``hasHeaderRow`` -  :green:`Boolean` (default ``false``): Whether
         to treat the first row as column names. If ``false``, the first row
         is imported as csv data and the column names will
         default to ``col_1, col_2, ..., col_n``.
@@ -452,7 +452,7 @@ options:
         ``3`` for column 0 second pass, etc.).  The variable ``i`` is the current row number.
 
       * ``progressStep`` :green:`Number`: Where number is ``n``, execute
-        ``progresFunc`` callback, if provided, for every nth row in each stage.
+        ``progressFunc`` callback, if provided, for every nth row in each stage.
         
 
 callback:
@@ -617,8 +617,8 @@ installPath
 
 The value of ``process.installPath`` is a :green:`String` containing the
 canonical path (directory) of the rampart install directory. It is derived
-from the path of the rampart executable, removing '/bin' from the end of the 
-path if exists.  Example: if ``/usr/local/bin/rampart`` is run (and is the
+from the path of the rampart executable, removing '/bin' from the end of the
+path if it exists.  Example: if ``/usr/local/bin/rampart`` is run (and is the
 actual location of the executable and not a symlink), ``process.installPath``
 will be ``/usr/local``.  However if the executable is in a path that does
 not end in ``bin/`` (e.g. ``~/mytestfiles/rampart``), ``process.installPath`` 
@@ -710,7 +710,7 @@ Return Value:
 Using the require Function to Import Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Scripts may reference function stored in external files.  These files are
+Scripts may reference functions stored in external files.  These files are
 known as modules.  A module is a compiled C program or a JavaScript file
 which exports an :green:`Object` or :green:`Function` when the
 ``require("module-name")`` syntax is used.
@@ -1085,7 +1085,7 @@ Usage:
 
     var newBuf = Buffer.from(data);
 
-Where ``from`` is a :green:`String` or :green:`Buffer`, the data which will
+Where ``data`` is a :green:`String` or :green:`Buffer`, the data which will
 be copied into the new Buffer.
 
 setTimeout()
@@ -1316,7 +1316,7 @@ Babel Acknowledgement
 """""""""""""""""""""
 
 Rampart **experimentally** uses `Babel.js <https://babeljs.io/>`_ to support a
-greater breath of JavaScript syntax and functionality.  Babel.js is a
+greater breadth of JavaScript syntax and functionality.  Babel.js is a
 toolchain that converts ECMAScript 2015+ (and optionally TypeScript) code
 into a version of JavaScript compatible with Duktape.  The authors of
 Rampart are extremely grateful to the 
@@ -1426,7 +1426,7 @@ Caveats
 
 For a complicated script, the transpile stage can be very slow.  However if
 the script has not changed since last run, the execution speed will be
-normal as the cached/transpiled code will be used and thus no traspiling
+normal as the cached/transpiled code will be used and thus no transpiling
 will occur.
 
 Asynchronous code may also be used with babel.  For example, the following code 
@@ -1476,7 +1476,7 @@ Tree-sitter Acknowledgement
 Rampart **experimentally** uses the `tree-sitter <https://github.com/tree-sitter/tree-sitter>`_
 and the `tree-sitter-javascript <https://github.com/tree-sitter/tree-sitter-javascript>`_
 libraries to transpile a limited set of post-ES5 JavaScript.  The authors of Rampart are
-indebted to the `tree-sitter contributers <https://github.com/tree-sitter/tree-sitter-javascript/graphs/contributors>`_
+indebted to the `tree-sitter contributors <https://github.com/tree-sitter/tree-sitter-javascript/graphs/contributors>`_
 for this indispensable library.  
 
 Tree-sitter License
@@ -1515,7 +1515,7 @@ Why use the transpiler instead of Babel?
 Though babel has far better coverage of post-ES5 JavaScript, each time there is a new
 edit, it has to be run through babel, which can be slow.  The transpiler is
 several orders of magnitude faster than babel.
-In addition, the transpiler keeps the `Extra javaScript Functionality`_ listed above.
+In addition, the transpiler keeps the `Extra JavaScript Functionality`_ listed above.
 
 Seeing the Transpiled script
 """"""""""""""""""""""""""""

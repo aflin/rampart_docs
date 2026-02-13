@@ -79,7 +79,7 @@ Database Functions
 init() constructor
 ~~~~~~~~~~~~~~~~~~
 
-DEPRICATED: see connection() below.
+DEPRECATED: see connection() below.
 
 .. _connection_const:
 
@@ -115,7 +115,7 @@ Usage:
 |        |                  | * ``path`` - :green:`String` - The path to the    |
 |        |                  |   directory containing the database.              |
 |        |                  | * ``create`` - :green:`Boolean` create the        |
-|        |                  |   database if it doesn'texist.                    |
+|        |                  |   database if it doesn't exist.                    |
 |        |                  | * ``force`` - :green:`Boolean` force create a     |
 |        |                  |   database in a non-empty directory (must not     |
 |        |                  |   contain a db). This option implies ``create``.  |
@@ -209,7 +209,7 @@ parameters, an optional :green:`Object` of options and an optional callback
 +--------------+------------------+--------------------------------------------------------+
 |sql_parameters|:green:`Array`    | ``?`` substitution parameters                          |
 +              +------------------+--------------------------------------------------------+
-|              |:green:`Object`   | ``?named`` substution parameters                       |
+|              |:green:`Object`   | ``?named`` substitution parameters                       |
 +--------------+------------------+--------------------------------------------------------+
 |callback      |:green:`Function` | a function to handle data one row at a time.           |
 +--------------+------------------+--------------------------------------------------------+
@@ -279,8 +279,8 @@ Options:
         be an empty array as if ``"novars"`` was set.
 
       * ``"object"``: An :green:`Array` of :green:`Objects`.  Each
-        :green:`Array` member  correspond to each row fetched. Each
-        :green:`Object` has its property names (keys) set the names of the
+        :green:`Array` member  corresponds to each row fetched. Each
+        :green:`Object` has its property names (keys) set to the names of the
         corresponding column and its values set to the field value of the
         corresponding row for the named column.
 
@@ -300,7 +300,7 @@ Options:
 
    * ``returnRows`` (:green:`Boolean`): If set ``true``, performs the same
      function as ``{returnType: "object"}`` above.  If set ``false``,
-     performs the same function at ``{returnType: "novars"}`` above.  This
+     performs the same function as ``{returnType: "novars"}`` above.  This
      setting overrides the ``returnType`` setting if both are present.
 
    * ``includeCounts`` (:green:`Boolean`): whether to include count
@@ -1088,7 +1088,7 @@ options:
         ``3`` for column 0 second pass, etc.).  The variable ``i`` is the row number.
 
       * ``progressStep`` :green:`Number`: Where number is ``n``, execute
-        ``progresFunc`` callback, if provided, for every nth row in each stage.
+        ``progressFunc`` callback, if provided, for every nth row in each stage.
 
 
 ordering:
@@ -1498,7 +1498,7 @@ and punctuation.
 In some cases, there may be datasets where the matching of a limited amount
 of punctuation is desirable.
 
-Consider the following small snippit of a C Program that might be cataloged in
+Consider the following small snippet of a C Program that might be cataloged in
 a full text searchable database:
 
 ::
@@ -1534,7 +1534,7 @@ If many rows are being added and deleted in an application, choosing an
 appropriate time to do the update, and limiting the update to a threshold
 of changed rows is appropriate.
 
-Depending the size of the table, it may be more efficient to linearly scan
+Depending on the size of the table, it may be more efficient to linearly scan
 new rows rather than update the index.  A script (named, e.g.,
 ``update-index.js``) like the following would only execute an update if more
 than 1000 rows have been changed.
@@ -1557,7 +1557,7 @@ Then adding a crontab entry like the following would execute the script at 2 am 
 scheduleUpdate()
 """"""""""""""""
 
-Auto Maintenance (currently expirimental) of a text index is accomplished by scheduling a time
+Auto Maintenance (currently experimental) of a text index is accomplished by scheduling a time
 for an index update using ``sql.scheduleUpdate()``.
 
 Usage:
@@ -1598,9 +1598,9 @@ Note:
 
     * The index schedule is saved in a new table ``SYSUPDATE`` in the database in question.
 
-    * The first time an index is scheduled for update on a database, a index monitor process is launched.
+    * The first time an index is scheduled for update on a database, an index monitor process is launched.
       
-    * The monitor for a database is also checked and relaunched if necessary everytime ``new Sql.connection(database)``
+    * The monitor for a database is also checked and relaunched if necessary every time ``new Sql.connection(database)``
       is called.
 
     * If ``sql.scheduleUpdate`` is never run for a text index, the index will not be touched by
@@ -2135,7 +2135,7 @@ In addition to the standard printf() formatting codes, other
     that only the "Q" encoding should be used for encoded words; normally
     either "Q" or base64 - whichever is shorter - is used.  The ``hh``,
     ``hhh``, ``j``, ``^`` and ``|`` flags are respected.  The ``h`` flag is
-    aslo supported for %``!W``.  If a non-zero field width is given, it is
+    also supported for %``!W``.  If a non-zero field width is given, it is
     used as the desired maximum byte length of encoded words: if an encoded
     word would be longer than this, it is split atomically into multiple
     words, separated by newline-space.
@@ -2560,7 +2560,7 @@ argument as well, which is a Metamorph search query:
 
 *   ``querymultiple`` Like ``querysingle``, but also break up the abstract into
     multiple sections (separated with ``...``) if needed to help ensure all
-    terms are visible.  Also it wll take care with URLs to try to show the start
+    terms are visible.  Also it will take care with URLs to try to show the start
     and end.
 
 *   ``querybest`` An alias for the best available query-based style; currently the
@@ -2807,7 +2807,7 @@ containing the following information:
 *   ``expressionIndex - the index in ``expr`` of the expression that
     produced ``match``, if ``expr`` is an :green:`Array`.  Otherwise ``0``.
 
-*   ``sumbatches`` - :green:`Array` of submatches (one per substring matched with a
+*   ``submatches`` - :green:`Array` of submatches (one per substring matched with a
     ``+``, ``*``, ``=`` or ``{x,y}``) from search expression in the order
     specified in the search pattern.  For ``*`` or ``{0,y}``, this may be an
     empty :green:`String` ("").
@@ -2869,7 +2869,7 @@ Callback:
 
 *   ``match`` - the current :green:`String` matched.
 
-*   ``sumbatches`` - :green:`Array` of submatches (one per substring matched with a
+*   ``submatches`` - :green:`Array` of submatches (one per substring matched with a
     ``+``, ``*``, ``=`` or ``{x,y}``) from search expression in the order
     specified in the search pattern.  For ``*`` or ``{0,y}``, this may be an
     empty :green:`String` (``""``).
@@ -3114,7 +3114,7 @@ A normal pattern matching scheme would begin looking for 'abc*' .  Since
 'abc*' is matched by every position within the text, the normal pattern
 matcher would plod along checking for 'abc*' and then whether it's there
 or not it would try to match "def".  ``rex`` examines the expression
-in search of the the most efficient fixed length sub-pattern and uses it
+in search of the most efficient fixed length sub-pattern and uses it
 as the root of search rather than the first sub-expression.  So, in the
 example above, ``rex`` would not begin searching for "abc*" until it has located
 a "def".
@@ -3149,7 +3149,7 @@ Rule 3 example:
 
 Note that when using ``\`` escapes in JavaScript :green:`Strings`, they must be
 double escaped as javascript interprets the ``\`` before it is passed on to
-the ``rex`` function (.e.g.  ``Sql.rex("\\n=[^\\n]+", text)``).
+the ``rex`` function (e.g.  ``Sql.rex("\\n=[^\\n]+", text)``).
 However the following **unsupported** syntax can also be used in limited cases:
 ``Sql.rex(/\n=[^\n]+/, text)``.  This may be useful for quick
 scripting, but as the ``/pattern/`` is compiled by javascript, and then
@@ -3221,7 +3221,7 @@ See `rex()`_ above.
    var Sql = require("rampart-sql");
    var ret = Sql.rexFile(expr, filename [, callback] [, options]);
 
-It includes ths same ``options`` as available in `rex()`_\ .
+It includes the same ``options`` as available in `rex()`_\ .
 
 re2File()
 ~~~~~~~~~

@@ -83,7 +83,7 @@ init()
       which means to wait forever.
         
     Return Value:
-        A :green:`Object` - the handle representing the connection to the Redis
+        An :green:`Object` - the handle representing the connection to the Redis
         server as well as containing the functions/redis commands listed below.
 
 Client Functions
@@ -192,11 +192,11 @@ format
           as :ref:`rampart-utils:printf`).  However only a limited number
           of format codes are available:
 
-            * ``%s`` - the corresponding parameter is and will be send as a
+            * ``%s`` - the corresponding parameter is and will be sent as a
               :green:`String`
 
             * ``%c`` - the corresponding parameter is a :green:`String`, the
-              first character of which will be send as a single character.
+              first character of which will be sent as a single character.
 
             * ``%i`` - the corresponding parameter is a :green:`Number` and
               will be converted and sent as an integer.
@@ -266,7 +266,7 @@ Supported Commands
 ------------------
 
 The following commands have been tested and return values formatted
-appropriately for the given command (number in parantheses is the format of
+appropriately for the given command (number in parentheses is the format of
 the :ref:`return value <rampart-redis:Return Values from Supported Commands>`):
 
     ``bitcount``\ →(1), ``bitfield``\ →(2), ``bitop``\ →(1), ``bitpos``\ →(1),
@@ -526,11 +526,11 @@ Unsupported Commands
 Proxy Objects
 -------------
 
-A Rampart Redis Proxy Object is an JavaScript :green:`Object` whose
+A Rampart Redis Proxy Object is a JavaScript :green:`Object` whose
 properties are backed by a `Redis Hash <https://redis.io/topics/data-types-intro#redis-hashes>`_
 and for which operations on the :green:`Object` serves as a shortcut for the
 ``hset``, ``hget``, ``hgetall`` and ``hdel`` commands.  They are intended as
-a quick and easy storage system for occassionally used variables that are
+a quick and easy storage system for occasionally used variables that are
 shared between scripts or threads.  They should not be used as a robust
 databasing solution.
 

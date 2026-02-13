@@ -13,14 +13,14 @@ The tsql Command Line Utility
 =============================
 
 The tsql utility is the main program provided for interactive use of a
-Rampart/Texis SQL database.  It should either be executed the database directory,
+Rampart/Texis SQL database.  It should either be executed in the database directory,
 or else specified on the command line as the -d <database> option.
 
 If a query is present on the command line then tsql will execute that
 statement, and display the results on stdout (the screen).  If no query is
 present then queries will be accepted on stdin (the keyboard) in an
 interactive SQL shell. Queries on stdin must be terminated by a semicolon. 
-To exit from tsql you should produce EOF on it’s stdin.  On Unix systems
+To exit from tsql you should produce EOF on its stdin.  On Unix systems
 this is usually done with Control-D (a Control-C should also exit the
 program).
 
@@ -134,7 +134,7 @@ The addtable Command Line Utility
 
 A table file (created with tsql or the SQL module and ending in ``.tbl``)
 from another database or as repaired using ``kdbfchk`` above may be added to
-the database usin the ``addtable`` command.  Note that the table must have
+the database using the ``addtable`` command.  Note that the table must have
 been created on a similar system (32 vs 64 bit).  Note also that after
 adding a table, any indexes which existed on the original table (either from
 another database, or as repaired by ``kdbfchk``) will need to be recreated.

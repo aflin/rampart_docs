@@ -345,7 +345,7 @@ argument is one of the following flags:
 -  ``stream``: Use the default output mode: a continuous stream of
    hexadecimal bytes.
 
--  ``pretty``: Return a “pretty” version of the data: print 16 byte per
+-  ``pretty``: Return a “pretty” version of the data: print 16 bytes per
    line, space-separate the hexadecimal bytes, and print an ASCII dump
    on the right side.
 
@@ -432,7 +432,7 @@ Example:
 
    var sql = new Sql.connection("./testdb", true);
 
-   // ignore error if table doesn't exists
+   // ignore error if table doesn't exist
    try {
       sql.exec("drop table idtext;");
    } catch(e){}
@@ -605,7 +605,7 @@ Full example in Rampart JavaScript:
 
    var sql=new Sql.connection("./testdb");
 
-   // ignore error if table doesn't exists
+   // ignore error if table doesn't exist
    try {
       sql.exec("drop table Products;");
    } catch(e){}
@@ -969,7 +969,7 @@ The database will now contain a pointer to a copy of ``srcfile``, which
 will remain searchable even if the original is changed or removed. An
 important point to note is that any changes to ``srcfile`` will not be
 reflected in the database, unless the table row’s ``indirect`` column is
-modified (even to the save value, this just tells Texis to re-index it).
+modified (even to the same value, this just tells Texis to re-index it).
 
 
 canonpath
@@ -1142,7 +1142,7 @@ Metamorph query to look for:
   is the default if neither ``style`` nor ``query`` is given.
 
 * ``querysingle`` (2) -
-  Center the abstract contiguously on the best occurence of ``query``
+  Center the abstract contiguously on the best occurrence of ``query``
   in the document.
 
 * ``querymultiple`` (3) -
@@ -1293,12 +1293,12 @@ The results are:
 
 The optional ``mode`` argument is a string-folding mode.
 If ``mode`` is unspecified, the current apicp :ref:`sql-set:stringCompareMode` 
-setting – with “+lowercase” aded – is used.
+setting – with "+lowercase" added – is used.
 
 upper
 """""
 
-Returns the text expression with all letters in upper-case. The sytax is
+Returns the text expression with all letters in upper-case. The syntax is
 
 .. code-block:: sql
 

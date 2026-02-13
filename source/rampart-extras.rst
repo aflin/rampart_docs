@@ -115,7 +115,7 @@ Notable extras:
       Default is false.
 
     * ``stop``         - :green:`Boolean`, if true, stop the server, along
-      with the redirect server and monitor processs if either was launched.
+      with the redirect server and monitor processes if either was launched.
 
 Building a command line utility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -544,7 +544,7 @@ for the project.  After copying, it can be run as such:
                         - May be specified more than once.
                         - Format: cfunc_name:jsfunc_name[:nargs[:input_types]]
 
-        function_args format (each argument seperated by a ':'):
+        function_args format (each argument separated by a ':'):
 
             cfunc_name:  The name of the c function.
 
@@ -810,7 +810,7 @@ See:
 Rampart Macros for C Modules
 ----------------------------
 
-    Require macros require that a the particular JavaScript variable be of the specified type, or throws
+    Require macros require that the particular JavaScript variable be of the specified type, or throws
     the given error, which is a variadic printf type format.
     
     +------------------------------------------------+---------------------+-------------------------------+
@@ -884,7 +884,7 @@ Throw Macro:
         RP_THROW(ctx, "Something bad happened at line %d", __LINE__);
 
 Getting duk_context:
-    The ``exportFunction`` will aready have ``duk_context *ctx`` passed to it.  In other functions, you can continue to pass
+    The ``exportFunction`` will already have ``duk_context *ctx`` passed to it.  In other functions, you can continue to pass
     the ``ctx`` pointer, or, if necessary, it can be retrieved as such:
 
 .. code-block:: C

@@ -188,8 +188,8 @@ Color with ``%H`` format:
 
 Colors with ``%J`` format:
 
-    * Using ``%aJ`` or any of the forced versions (``^``, ``A`` or ``@``), takes as the color argument a number (pallate number)
-      rather than a foreground and background color.  There are currently four pallates, numbered ``0-3``.  Anything not a number
+    * Using ``%aJ`` or any of the forced versions (``^``, ``A`` or ``@``), takes as the color argument a number (palette number)
+      rather than a foreground and background color.  There are currently four palettes, numbered ``0-3``.  Anything not a number
       or outside of that range will default to ``0``.
 
     .. code-block:: javascript
@@ -215,11 +215,11 @@ Colors with ``%J`` format:
        }
        </pre></div>
 
-    If palatte option is omitted, and ``myObj`` is not a :green:`Number`, pallate ``0`` will be assumed:
+    If palette option is omitted, and ``myObj`` is not a :green:`Number`, palette ``0`` will be assumed:
 
     .. code-block:: javascript
 
-        rampart.utils.printf("%a3J\n", myObj); //pallate 0 assumed
+        rampart.utils.printf("%a3J\n", myObj); //palette 0 assumed
 
 Basic printf example:
 
@@ -712,7 +712,7 @@ Note:
    If ``stdin`` is from an interactive terminal, execution
    will be paused until ``nchar`` chars are input.  Unlike
    ``fread(stdin);`` :ref:`below <rampart-utils:fread>`, the terminal will be
-   set to return characters in without waiting for a newline.
+   set to return characters without waiting for a newline.
 
 readFile
 ''''''''
@@ -1333,7 +1333,7 @@ Usage:
 Where ``path`` is a :green:`String`, the directory to be removed and ``recurse`` is an
 optional :green:`Boolean`, which if ``true``, parent directories explicitly present in
 ``path`` will also be removed.  Throws an error if the directory cannot be
-removed (.e.g., not empty or lacking permission).
+removed (e.g., not empty or lacking permission).
 
 Return Value:
    ``undefined``.
@@ -1518,12 +1518,12 @@ Where:
   ``file``.
 
 * ``setAccess`` is a :green:`Boolean` (default ``true``), a :green:`Date Object`,
-  or an :green:`Number` (seconds since unix epoch).  Update access time of
+  or a :green:`Number` (seconds since unix epoch).  Update access time of
   the file to specified date or current date if ``true``.  Do not update if
   ``false``.
 
 * ``setModify`` is a :green:`Boolean` (default ``true``), a :green:`Date Object`,
-  or an :green:`Number` (seconds since unix epoch).  Update modification time of
+  or a :green:`Number` (seconds since unix epoch).  Update modification time of
   the file to specified date or current date if ``true``.  Do not update if
   ``false``.
 
@@ -2139,7 +2139,7 @@ Where:
 
 Note:
     In normal usage, this function should not be necessary.  If used, the callback function must
-    not call any asychronous functions.  See `the libevent2 reference <https://libevent.org/libevent-book/Ref1_libsetup.html>`_
+    not call any asynchronous functions.  See `the libevent2 reference <https://libevent.org/libevent-book/Ref1_libsetup.html>`_
     for more information.
     
 
@@ -2268,7 +2268,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var handle = rampart.utils.fopenBuffer([chunkSize][, sdtRedir]);
+   var handle = rampart.utils.fopenBuffer([chunkSize][, stdRedir]);
 
 Where ``chunkSize`` is a :green:`Number` (default is ``4096``), amount of memory to allocate each
 time the buffer is resized.  When the filehandle is closed, the buffer will
@@ -2288,7 +2288,7 @@ Return Value:
 
 Note:
    Calling ``fclose()`` will close the file handle, but the backing buffer is still available for use with
-   ``getBuffer()`` and ``getString()``.  Calling ``destroy()`` will close close the file handle if still open
+   ``getBuffer()`` and ``getString()``.  Calling ``destroy()`` will close the file handle if still open
    and delete the backing buffer.  There is no finalizer on the returned object, so it is important
    to call ``destroy()`` when it is no longer needed.  Also note that the ``fopenBuffer()`` return object can be
    used in several threads at the same time, so long as it hasn't been destroyed in any thread.  Attempting to 
@@ -2623,7 +2623,7 @@ Usage:
    var line = rl.next();
 
 Where ``file`` is a :green:`String` (name of file to be read) or a file handle opened
-with with `fopen`_\ () or ``rampart.utils.stdin``. It returns a :green:`Object`
+with `fopen`_\ () or ``rampart.utils.stdin``. It returns a :green:`Object`
 that contains the property ``next`` which is :green:`Function` to retrieve and return the next
 line of text in the opened file.
 
@@ -2740,7 +2740,7 @@ fast, non-cryptographic random number generator and based on
 a normal distribution centered at zero (``0.0``) and clamped between ``-scale``
 and ``scale``.
 
-Similar to the `gaussrand`_ above.  It is equivelant to:
+Similar to the `gaussrand`_ above.  It is equivalent to:
 
 .. code-block:: javascript
 

@@ -3,7 +3,7 @@ Server Properties
 -----------------
 
 There are a number of properties that are settable in the SQL Engine.
-They do not need to be changed unless a change in the  behavior of 
+They do not need to be changed unless a change in the  behavior of
 the system is desired.
 
 Using the command line utility
@@ -14,7 +14,7 @@ the properties are set using the following SQL syntax:
 
         SET property = value;
 
-In Rampart, this is accomplished by using the 
+In Rampart, this is accomplished by using the
 :ref:`rampart-sql:set()` function:
 
 .. code-block:: javascript
@@ -25,9 +25,9 @@ In Rampart, this is accomplished by using the
    });
 
 The ``property`` names are case insensitive and may be specified in
-*camelCase*, *lower case*, *UPPER CASE* or as you prefer.  
+*camelCase*, *lower case*, *UPPER CASE* or as you prefer.
 
-The `Server Properties` set using either 
+The `Server Properties` set using either
 :ref:`tsql <sql-utils:The tsql Command Line Utility>`
 or :ref:`rampart-sql:set()` are for the most part identical.
 However, note below that a few properties (such as ``noiseList``) can only
@@ -86,7 +86,7 @@ pRedoPtType
     ignoreCase
     """"""""""
     **Note:** Deprecated; see ``stringcomparemode`` setting which
-    supercedes this. Setting ``ignorecase`` to true will cause string
+    supersedes this. Setting ``ignorecase`` to true will cause string
     comparisons (equals, sorting, etc.) in the SQL engine to ignore
     case, e.g. “``A``” will compare identical to “``a``”. (This is
     distinct from *text* comparisons, e.g. the ``LIKE`` operator, which
@@ -101,15 +101,15 @@ pRedoPtType
     not necessary; the saved-at-index-creation value will automatically
     be used. In version 6 and later, this setting toggles the
     ``ignorecase`` flag of the ``stringcomparemode`` setting, which
-    supercedes it.
+    supersedes it.
 
 
-textSearchMode 
-"""""""""""""" 
+textSearchMode
+""""""""""""""
 
    ``textSearchMode`` changes the mode and flags for text searches.  It
    controls case-sensitivity and other character-folding aspects of
-   Metamorph text searches.  
+   Metamorph text searches.
 
    The ``textSearchMode`` default is
    ``unicodemulti, ignorecase, ignorewidth, ignorediacritics, expandligatures``
@@ -131,26 +131,26 @@ stringCompareMode
     - :ref:`sql-server-funcs:upper`
     - :ref:`sql-server-funcs:initcap`
 
-    The ``stringcomparemode`` parameter specifies string compares (e.g. 
+    The ``stringcomparemode`` parameter specifies string compares (e.g.
     equals, less-than or greater-than) for the
     :ref:`sql-server-funcs:stringcompare` function.  It also controls the
     default mode for the non-case-style flags/mode for the functions
     :ref:`sql-server-funcs:length`, :ref:`sql-server-funcs:lower`,
     :ref:`sql-server-funcs:upper` and :ref:`sql-server-funcs:initcap`.
 
-    Its value is given in the same format as the `textSearchMode`_ setting, 
+    Its value is given in the same format as the `textSearchMode`_ setting,
     (see `stringCompareMode/textSearchMode parameters`_ below)
-    but the default is "``unicodemulti, respectcase``" — i.e. 
+    but the default is "``unicodemulti, respectcase``" — i.e.
     characters must be identical to match, though ISO-8859-1 vs.  UTF-8
     encoding may be ignored.
 
     A regular (B-tree) index will always use the ``stringCompareMode`` value that
     was set at its creation, not the current value. However, when multiple
-    regular indexes exist on the same fields, at search time the Texis optmizer
+    regular indexes exist on the same fields, at search time the Texis optimizer
     will attempt to use the index whose (creation-time) ``stringCompareMode`` is
     closest to the current value. This allows some dynamic flexibility in
     supporting queries with different ``stringCompareMode`` values (e.g.
-    case-sensitive vs. insensitive). 
+    case-sensitive vs. insensitive).
 
 stringCompareMode/textSearchMode parameters
 """""""""""""""""""""""""""""""""""""""""""
@@ -161,12 +161,12 @@ stringCompareMode/textSearchMode parameters
    (instead of cleared and set) by using ``+`` or ``-`` in front of the
    given values to denote adding or removing just those values, rather than
    clearing the whole setting first.  This makes it easier to alter just the
-   desired parts, without having to specify the remainder of the setting. 
+   desired parts, without having to specify the remainder of the setting.
    For example, ``+respectcase, ignorewidth, -expandligatures`` sets the
    case style to case-sensitive, turns on ignorewidth and turns off ligature
-   expansion, without changing other flags such as ``ignoreDiacritics``. 
+   expansion, without changing other flags such as ``ignoreDiacritics``.
 
-   Note that all option values are case-insensitive (e.g. ``ignoreDiacritics`` 
+   Note that all option values are case-insensitive (e.g. ``ignoreDiacritics``
    is the same as ``ignorediacritics``).
 
    Note also that negation (``-``) can only be used with values that are "on/off",
@@ -286,7 +286,7 @@ stringCompareMode/textSearchMode parameters
    ``stringcomparemode`` or ``textsearchmode`` refers to that setting's value (if
    not given: the setting being modified). ``default`` refers to the default value
    (modifiable with texis.ini) and ``builtin`` refers to the builtin factory
-   default (if not given: the the alias refers to the current setting value).
+   default (if not given: the alias refers to the current setting value).
    Example: ``stringcomparemodedefault,+ignorecase`` would obtain the default
    stringcomparemode setting (from texis.ini if available), but set the case
    style to ignorecase.
@@ -413,11 +413,11 @@ optimize,noOptimize
     groupby
         This setting is enabled by default and will cause the data to be
         read only once to perform a group by operation. The query should
-        produce indentical results whether this is enabled or disabled,
+        produce identical results whether this is enabled or disabled,
         with the performance being the only difference.
 
     faststats
-        When enabled, which is the default, and when the appopriate
+        When enabled, which is the default, and when the appropriate
         indexes exist Texis will try and resolve aggregate functions
         directly from the index that was used to perform the ``WHERE``
         clause.
@@ -539,11 +539,11 @@ ignoreNewList
     unoptimized portion of a Metamorph index by issuing the SQL ``set
     ignorenewlist = 1;`` or ``sql.set({ignoreNewList:true});``.  If you have
     a continually changing dataset, and the index is frequently updated then
-    the default of processing the unoptimized portion is probably correct. 
+    the default of processing the unoptimized portion is probably correct.
     If the data tends to change in large batches, followed by a
     reoptimization of the index then the large batch can cause significant
     processing overhead.  In that case it may be wise to enable the
-    ``ignoreNewList`` option.  If the option is enable then records that
+    ``ignoreNewList`` option.  If the option is enabled then records that
     have been updated in the batch will not be found with Metamorph queries
     until the index has been optimized.
 
@@ -662,7 +662,7 @@ metamorphStrlstMode
          Space-separate each string, e.g. “one two bear arms”.
 
     *    ``anywords``
-         Space-separate each string and append ``@0``, e.g. 
+         Space-separate each string and append ``@0``, e.g.
          ``\ ‘one two bear arms @0``.
 
     *    ``allphrases``
@@ -766,7 +766,7 @@ keepNoise
 
 suffixProc
 """"""""""
-    Whether suffixes should be stripped from the words to find a match. 
+    Whether suffixes should be stripped from the words to find a match.
     Default ``true``.  Note that ``minwordlen`` must be set to an
     appropriate size as well.
 
@@ -792,7 +792,7 @@ useEquiv
     ``~``.  If it is ``false`` then only the query word is searched for
     (unless the term is preceded with a ``~``).  Default is ``false``.  Note
     `alEquivs`_ must be set ``true`` for any thesaurus lookup to occur when
-    using ``set keepeqvs=1`` syntax.  Also note that `alEquivs`_ is automatically 
+    using ``set keepeqvs=1`` syntax.  Also note that `alEquivs`_ is automatically
     set ``true`` when setting ``useEquiv`` from ``sql.set()``.
 
 .. possibly include this later or in a more appropriate section
@@ -819,15 +819,15 @@ useEquiv
         hit. The default is no delimiter.
 
 useDerivations
-""""""""""""""    
+""""""""""""""
     This is an **EXPERIMENTAL** setting.
-    
+
     Load the equivalence file from
     ``derivations/${lc}/${lc}-deriv`` in the rampart install or
     ``~/.rampart`` directory.  Only works when set via
     ``sql.set(useDerivations: [lc|true]})``.  If set to ``true``, it will
     load the ``derivations/en/en-deriv``.  Otherwise it will load the file
-    using the :green:`String` value set (e.g. 
+    using the :green:`String` value set (e.g.
     ``sql.set({useDerivations:"fa"})`` would load the
     ``derivations/fa/fa-deriv`` file for Farsi equivalences).
 
@@ -843,10 +843,10 @@ useDerivations
     This setting implies ``{useEquiv:true``, ``alEquiv:true`` and
     ``eqPrefix:`derivations/${lc}/${lc}-deriv```.
 
-    More info, plus files for language other than English can be found on the
+    More info, plus files for languages other than English can be found on the
     `rampart_lang_derivs github page <https://github.com/aflin/rampart_lang_derivs>`_\ .
 
-    Prebuild derivation files for more languages can be downloaded using the
+    Prebuilt derivation files for more languages can be downloaded using the
     ``rampart/derivations/downloadLangDeriv.js`` script.
 
     This option precludes the use of the built-in thesaurus.
@@ -862,7 +862,7 @@ hyphenPhrase
 """"""""""""
     Controls whether a hyphen between words searches for the phrase of the
     two words next to each other, or searches for the hyphen literally.  The
-    default value of ``true`` will search for the two words as a phrase. 
+    default value of ``true`` will search for the two words as a phrase.
     Setting it to ``false`` will search for a single term including the
     hyphen.  If you anticipate setting hyphenphrase to 0 then you should
     modify the index word expression to include hyphens.
@@ -872,7 +872,7 @@ wordc
     For language or wildcard query terms during linear (non-index) searches,
     this defines which characters in the document constitute a word.  When a
     match is found for language/wildcard terms, the hit is expanded to
-    include all surrounding word characters, as defined by this setting. 
+    include all surrounding word characters, as defined by this setting.
     The resulting expansion must then match the query term for the hit to be
     valid.  (This prevents the query “``pond``” from inadvertently matching
     the text “``correspondence``”, for example.) The value is specified as a
@@ -922,7 +922,7 @@ phrasewordproc
 
     * ``mono`` to treat the phrase as a monolithic
       word (i.e. only last word processed, but entire phrase counts
-      towards ``minwordlen``).  
+      towards ``minwordlen``).
 
     * ``none`` for no suffix/wildcard processing on phrases.
 
@@ -931,7 +931,7 @@ phrasewordproc
       phrase, and thus ``phrasewordproc`` does not apply.
 
     * ``all`` to process all words in the phrase.  Only applicable for
-      searches against a text index and not applicable to linear searches. 
+      searches against a text index and not applicable to linear searches.
 
     The default value is ``last``.
 
@@ -959,7 +959,7 @@ eqPrefix
     equivalence file.  Default is "builtin", which uses the built-in
     `equivalence list <https://docs.thunderstone.com/site/texisman/thesaurus_customization.html>`_\ .
 
-exactPhrase 
+exactPhrase
 """""""""""
     Whether to exactly resolve the noise words in phrases.
 
@@ -1031,7 +1031,7 @@ listNoise
 """""""""
     If not set to ``false``, the return object of ``sql.set()`` will include
     the property ``noiseList``, which will be set to an array containing the
-    current noise list. 
+    current noise list.
 
     This setting can only be used via ``sql.set()``.
 
@@ -1076,7 +1076,7 @@ suffixList
              "ous",     "re",     "red",     "res",    "ry",
              "s",       "ship",   "sion",    "th",     "tic",
              "tion",    "ty",     "ual",     "ul",     "ward"
-         ] 
+         ]
 
     This setting can only be set using ``sql.set()``.
 
@@ -1086,7 +1086,7 @@ listSuffix
 """"""""""
     If not set to ``false``, the return object of ``sql.set()`` will include
     the property ``suffixList``, which will be set to an array containing the
-    current suffix list. 
+    current suffix list.
 
     This setting can only be used via ``sql.set()``.
 
@@ -1105,7 +1105,7 @@ listSuffixEquivs
 """"""""""""""""
     If not set to ``false``, the return object of ``sql.set()`` will include
     the property ``suffixListEquivs``, which will be set to an array containing the
-    current suffix list. 
+    current suffix list.
 
     This setting can only be used via ``sql.set()``.
 
@@ -1124,7 +1124,7 @@ prefixList
              "inter",     "mis",           "non",            "post",
              "pre",       "pro",           "re",             "semi",
              "sub",       "super",         "ultra",          "un"
-         ] 
+         ]
 
     This setting can only be set using ``sql.set()``.
 
@@ -1134,13 +1134,13 @@ listPrefix
 """"""""""
     If not set to ``false``, the return object of ``sql.set()`` will include
     the property ``prefixList``, which will be set to an array containing the
-    current prefix list. 
+    current prefix list.
 
     This setting can only be used via ``sql.set()``.
 
 uEqPrefix
 """""""""
-    AKA ``userEquivsFile`` when set from ``sql.set()``.  
+    AKA ``userEquivsFile`` when set from ``sql.set()``.
     The name of the user equivalence file. Default is empty.
 
 .. this causes an error
@@ -1321,13 +1321,13 @@ indexMem
     the process. This setting allows the amount of memory used to be
     adjusted. The default is to use 40% of physical memory, if it can be
     determined, and to use 16MB if not. If the value set is less than 100
-    then it is treated as a percentage of physical memory. It the number is
+    then it is treated as a percentage of physical memory. If the number is
     greater than 100 then it is treated as the number of bytes of memory to
     use. Setting this value too high can cause excessive swapping, while
     setting it too low causes unneeded extra merges to disk.
 
 indexMeter
-"""""""""" 
+""""""""""
     Whether to print a progress meter during index
     creation/update. The default is 0 or ``'none'``, which suppresses the
     meter. A value of ``1`` or ``'simple'`` prints a simple hash-mark meter
@@ -1357,7 +1357,7 @@ addExp
     array of additional REX expression to match words to be indexed in a
     Metamorph index.  This is useful if there are non-English words to be
     searched for, such as part numbers.  When an index is first created, the
-    expressions used are stored with it so they will be updated properly. 
+    expressions used are stored with it so they will be updated properly.
     The default expression is ``\alnum{2,99}``.  **Note:** Only the
     expressions set when the index is initially created (i.e.  the first
     CREATE METAMORPH ...  statement – later statements are index updates)
@@ -1370,7 +1370,7 @@ delExp
 """"""
 
     AKA ``deleteExpressions`` in ``sql.set()``.  A single value or an array
-    of values.  This removes an index word expression from the list. 
+    of values.  This removes an index word expression from the list.
     Expressions can be removed either by number (starting with 0) or by
     expression.  *Note* avoid using numbers in an array as the index
     numbering changes with each delete.
@@ -1393,13 +1393,13 @@ lstExp
 
        var lists = sql.set({
           deleteExpressions: 0,              // delete the default at pos 0
-          addExpressions: [ 
+          addExpressions: [
              "[\\alnum\\x80-\\xff]+",        // letters and numbers
              "[\\alnum\\$\\%\\@\\-\\_\\+]+"  // letters, numbers and additional chars
           ],
           listExpressions: true
        });
-       
+
        console.log(JSON.stringify(lists,null,3));
 
        /* expected output
@@ -1416,7 +1416,7 @@ lstExp
 addIndexTmp
 """""""""""
 
-    AKA ``addIndexTemp`` in ``sql.set()``.  A string or array of strings. 
+    AKA ``addIndexTemp`` in ``sql.set()``.  A string or array of strings.
     Add a directory or directories to the list of directories to use for
     temporary files while creating the index.  If temporary files are needed
     while creating a Metamorph index they will be created in one of these
@@ -1463,7 +1463,7 @@ lstIndexTmp
        console.log(JSON.stringify(lists,null,3));
 
        /* expected output:
-       {  
+       {
           "indexTempList": [
              "/tmp",
              "/usr/tmp"
@@ -1485,7 +1485,7 @@ indexValues
     If ``indexValues`` is set to ``all`` – or the index is not on a
     ``strlst`` field, or is on multiple fields – such splitting does not
     occur, and the index can generally not be used for set-like queries
-    (with some exceptions; see 
+    (with some exceptions; see
     `Searches Using SUBSET <https://docs.thunderstone.com/site/texisman/searches_using_subset.html>`_
     for details).
 
@@ -1688,7 +1688,7 @@ btreeThreshold
 
 maxLinearRows
 """""""""""""
-    This set the maximum number of records that should be searched linearly.
+    This sets the maximum number of records that should be searched linearly.
     If using the indices to date yield a result set larger than
     ``maxLinearRows`` then the program will try to find more indices to use.
     Once the result set is smaller than ``maxLinearRows``, or all possible
@@ -1735,8 +1735,8 @@ indexAccess
        /* a sample typeahead request */
        var typeahead="qu"
 
-       /* find the 10 most used terms that start with 'qu' 
-          in the metamorph inverted index (i.e. fulltext index) 
+       /* find the 10 most used terms that start with 'qu'
+          in the metamorph inverted index (i.e. fulltext index)
           "wikitext_Doc_mmix"                              */
        var res=sql.exec(
          "select Word from wikitext_Doc_mmix where Word matches ? order by RowCount DESC",
@@ -1841,7 +1841,7 @@ indexMmap
 
 indexReadBufSz
 """"""""""""""
-    Read buffer size, when reading (not memory-mapping) Metamorh index
+    Read buffer size, when reading (not memory-mapping) Metamorph index
     ``.tok`` and ``.dat`` files. The default is 64KB; suffixes like “``KB``”
     are respected. During search, actual read block size could be less (if
     predicted) or more (if blocks merged). Also used during index
@@ -1921,7 +1921,7 @@ mergeFlush
     to ``false`` to disable.
 
 
-indexVersion 
+indexVersion
 """"""""""""
     Which version of Metamorph index to produce or update, when
     creating or updating Metamorph indexes. The supported values are 0
@@ -2174,7 +2174,7 @@ varcharToStrlstMode
 """""""""""""""""""
     AKA ``varcharToStrlstSep``. The separator character or mode to use when
     converting a ``varchar`` string into a ``strlst`` list of strings in
-    Texis. In Rampart,the default is set to ``json`` regardless of the 
+    Texis. In Rampart, the default is set to ``json`` regardless of the
     ``conf/texis.ini`` setting.  Using ``tsql``, it is set to ``create``, or
     as set in ``conf/texis.ini``.
 
@@ -2196,7 +2196,7 @@ varcharToStrlstMode
        is useful for converting CSV-type strings e.g.  “a,b,c” without having
        to modify the string and append the separator character first (i.e.  for
        lastchar mode).
-    
+
     See also the `metamorphStrLstMode`_ setting, which
     affects conversion of ``strlst`` values into Metamorph queries; and
     the :ref:`sql-server-funcs:convert` SQL function, which
@@ -2205,7 +2205,7 @@ varcharToStrlstMode
 strlstToVarcharMode
 """""""""""""""""""
     The mode for converting a ``strlst`` to a ``varchar`` in Texis. In
-    Rampart,the default is set to ``json`` regardless of the 
+    Rampart,the default is set to ``json`` regardless of the
     ``conf/texis.ini`` setting.  Using ``tsql``, it is set to
     ``delimited``, or as set in ``conf/texis.ini``.
 
@@ -2244,14 +2244,14 @@ multiValueToMultiRow
               values(convert('red,green,blue,', 'strlst', 'lastchar'));
             insert into test(Colors)
               values(convert('blue,orange,green,', 'strlst', 'lastchar'));
-          
+
 
     With ``multivaluetomultirow`` set true, the statement:
 
     ::
 
             select count(Colors) Count, Colors from test group by Colors;
-          
+
 
     generates the following output:
 
@@ -2263,7 +2263,7 @@ multiValueToMultiRow
                        2 green
                        1 orange
                        1 red
-          
+
 
     Note that the ``strlst`` values have been split, allowing the two
     ``blue`` and ``green`` values to be counted individually. This also
@@ -2283,9 +2283,9 @@ multiValueToMultiRow
 inMode
 """"""
     How the IN operator should behave. If set to
-    ``subset``, IN behaves like 
-    the `SUBSET <https://docs.thunderstone.com/site/texisman/searches_using_subset.html>`_ 
-    operator. If set to ``intersect``, IN behaves like the 
+    ``subset``, IN behaves like
+    the `SUBSET <https://docs.thunderstone.com/site/texisman/searches_using_subset.html>`_
+    operator. If set to ``intersect``, IN behaves like the
     `INTERSECT <https://docs.thunderstone.com/site/texisman/searches_using_intersect.html>`_
     operator. The default is ``subset``.
 
@@ -2344,14 +2344,14 @@ validateBtrees
     Bit flags for additional consistency checks on B-trees.
     Overrides Validate Btrees setting in ``conf/texis.ini``.
 
-    *  ``0x0001`` - validate tree on open   
-    *  ``0x0002`` - validate page on read   
-    *  ``0x0004`` - validate page on write   
-    *  ``0x0008`` - validate page on release   
-    *  ``0x0010`` - other page-release errors   
-    *  ``0x0020`` - more stringent limits   
-    *  ``0x0040`` - validate on page manipulation   
-    *  ``0x1000`` - attempt to fix bad pages if possible   
+    *  ``0x0001`` - validate tree on open
+    *  ``0x0002`` - validate page on read
+    *  ``0x0004`` - validate page on write
+    *  ``0x0008`` - validate page on release
+    *  ``0x0010`` - other page-release errors
+    *  ``0x0020`` - more stringent limits
+    *  ``0x0040`` - validate on page manipulation
+    *  ``0x1000`` - attempt to fix bad pages if possible
     *  ``0x2000`` - overwrite freed pages in memory
 
 .. [1]
@@ -2368,7 +2368,7 @@ validateBtrees
    meaning empty-set for strlst, as is true in other contexts.
 
 Query Protection
-~~~~~~~~~~~~~~~~ 
+~~~~~~~~~~~~~~~~
 
 The following settings alter the set of query syntax and features that
 are allowed. Metamorph has a powerful search syntax, but if improperly or
@@ -2382,7 +2382,7 @@ quicker resolution of all queries.  By altering these settings, script
 authors can "open up" Texis and Metamorph to allow more powerful searches,
 at the risk of higher load for special searches.
 
-alEquivs 
+alEquivs
 """"""""
   Boolean, ``false`` by default.  If ``true``, allows equivalences (via
   thesaurus lookups) in queries.  If ``false``, only the actual terms in a
@@ -2400,7 +2400,7 @@ alIntersects
    (intersections) operator in queries. Queries with few or no intersections
    (e.g. @0) may be slower, as they can generate a copious number of hits.
 
-alLinear 
+alLinear
 """"""""
    Boolean, ``false`` by default. If ``true``, an all-linear query-one without
    any indexable "anchor" words-is allowed. A query like "/money #million"
@@ -2426,9 +2426,9 @@ alLinear
 alNot
 """""
    Boolean, ``true`` by default.  If ``true``, allows "NOT" logic (e.g.  the
-   ``-`` operator) in a query.  
+   ``-`` operator) in a query.
 
-alPostProc 
+alPostProc
 """"""""""
 
    Boolean, ``false`` by default If ``true``, post-processing of queries is
@@ -2439,7 +2439,7 @@ alPostProc
    require post-processing" may be generated by such queries if
    ``alPostProc`` is ``false``.
 
-alWild 
+alWild
 """"""
    Boolean, ``true`` by default. If ``true``, wildcards are
    allowed in queries.  Wildcards can slow searches because potentially many
@@ -2508,7 +2508,7 @@ qMaxWords
    Integer, ``1100`` by default.  The maximum number of words allowed in the
    entire query, after equivalence and wildcard expansion.  If this limit is
    exceeded, a message such as "Max words per query exceeded at word 'xyz*'
-   in query 'xyz* abc'" is generated, and the query cannot be resolved. 
+   in query 'xyz* abc'" is generated, and the query cannot be resolved.
    ``0`` means unlimited.  Like ``qMaxSetWords``, this is distinct search words,
    not hits.  `dropWordMode`_ also applies here.
 
@@ -2519,14 +2519,14 @@ qMinPrelen
    (non-``*`` part) of a wildcard term. Short prefixes (e.g. "a*") may match many
    words and thus slow the search.
 
-qMinWordLen 
+qMinWordLen
 """""""""""
 
    Integer, ``2`` by default. The minimum allowed length of a word in
    a query. Note that this is different from `minWordLen`_, the minimum word
    length for prefix/suffix processing to occur.
 
-querySettings 
+querySettings
 """""""""""""
    Container for changing all or a group of
    settings to a certain mode. (Explicit texis.ini [Apicp] settings still
@@ -2535,7 +2535,7 @@ querySettings
 
    *  ``defaults`` - Set Rampart defaults:
 
-      The following are set ``false``: 
+      The following are set ``false``:
 
       ``prefixProc``, ``keepNoise``, ``keepEqvs``/``useEquivs``, ``alPostProc``,
       ``alLinear``, ``alWithin``, ``alIntersects``, ``alEquivs`` and
@@ -2555,7 +2555,7 @@ querySettings
       *  ``qMaxSets`` - 100
       *  ``qMaxSetWords`` - 500
 
-   *  ``protectionOff`` - turn off all `Query Protection`_ settings 
+   *  ``protectionOff`` - turn off all `Query Protection`_ settings
       (e.g. all ``al``\ .. setting are set ``true``).
 
 .. this was removed above
