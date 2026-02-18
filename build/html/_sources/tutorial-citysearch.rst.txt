@@ -107,7 +107,7 @@ Examine your CSV
 
 The first step for importing a CSV file is to have a look at the format of the
 data in the file.  CSV can vary quite a bit, and to import it, we will want to 
-know a few thing such as (but not limited to):
+know a few things such as (but not limited to):
 
 *  Does every column contain the same type?
 *  Are text columns quoted?
@@ -166,7 +166,7 @@ Creating the table
 
 The data will need to be imported in two stages.  Stage one will be as-is from the
 CSV into a temporary table.  Stage two will combine City, Admin1 and Country
-names into one field, separate and convert "Latitude,Longitute" to Numbers
+names into one field, separate and convert "Latitude,Longitude" to Numbers
 and compute a geocode we will use later for a bounded area search.
 
 So let's create a script that will make our table by opening 
@@ -231,12 +231,12 @@ database, let's make our table.
 
     create_tmp_table();
 
-This should all be self expanatory.  If not, please brush up on
+This should all be self-explanatory.  If not, please brush up on
 your `SQL <https://www.w3schools.com/sql/sql_create_table.asp>`_\ .
 
 Note though that ``varchar(x)`` in Texis SQL, the size ``x`` is
 merely a suggestion.  If the text put into this field is larger
-that what is specified, it will not truncate the text or affect any indexing.
+than what is specified, it will not truncate the text or affect any indexing.
 
 Now we have our table.  Let's get that data in!
 
@@ -313,7 +313,7 @@ at either of or both of the major stages.
     var step = 100; //set in importCsvFile(), only report every 100th row
 
     /* a single function to monitor the import for both pre-processing (progressFunc)
-       and import (callback function supplied to sql.importCsvFile as a paramater)   */
+       and import (callback function supplied to sql.importCsvFile as a parameter)   */
     function monitor_import(count, stg) {
         var stage = "Import";
 
@@ -461,7 +461,7 @@ settings, we end up with this:
     var step = 100; //set in importCsvFile(), only report every 100th row
 
     /* a single function to monitor the import for both pre-processing (progressFunc)
-       and import (callback function supplied to sql.importCsvFile as a paramater)   */
+       and import (callback function supplied to sql.importCsvFile as a parameter)   */
     function monitor_import(count, stg) {
         var stage = "Import";
 
@@ -573,7 +573,7 @@ it in a function.
 
 A couple of things to note:
 
-First -- when this index is made, it will backed by a
+First -- when this index is made, it will be backed by a
 file named ``cities_geocode_x.btr``.  It is so named because it will be
 easy to find using ``ls -l`` (it will come right before the table, named
 ``cities.tbl``, and it lets you know the field indexed (``_geocode``) and
@@ -728,7 +728,7 @@ We put it all together, wrap it in a function, and it looks something like this:
         var step = 100; //set in importCsvFile(), only report every 100th row
 
         /* a single function to monitor the import for both pre-processing (progressFunc)
-           and import (callback function supplied to sql.importCsvFile as a paramater)   */
+           and import (callback function supplied to sql.importCsvFile as a parameter)   */
         function monitor_import(count, stg) {
             var stage = "Import";
 
@@ -1480,7 +1480,7 @@ database when run from the command line as ``rampart citysearch.js``.
         var step = 100; //set in importCsvFile(), only report every 100th row
 
         /* a single function to monitor the import for both pre-processing (progressFunc)
-           and import (callback function supplied to sql.importCsvFile as a paramater)   */
+           and import (callback function supplied to sql.importCsvFile as a parameter)   */
         function monitor_import(count, stg) {
             var stage = "Import";
 

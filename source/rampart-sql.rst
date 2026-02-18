@@ -115,7 +115,7 @@ Usage:
 |        |                  | * ``path`` - :green:`String` - The path to the    |
 |        |                  |   directory containing the database.              |
 |        |                  | * ``create`` - :green:`Boolean` create the        |
-|        |                  |   database if it doesn't exist.                    |
+|        |                  |   database if it doesn't exist.                   |
 |        |                  | * ``force`` - :green:`Boolean` force create a     |
 |        |                  |   database in a non-empty directory (must not     |
 |        |                  |   contain a db). This option implies ``create``.  |
@@ -209,7 +209,7 @@ parameters, an optional :green:`Object` of options and an optional callback
 +--------------+------------------+--------------------------------------------------------+
 |sql_parameters|:green:`Array`    | ``?`` substitution parameters                          |
 +              +------------------+--------------------------------------------------------+
-|              |:green:`Object`   | ``?named`` substitution parameters                       |
+|              |:green:`Object`   | ``?named`` substitution parameters                     |
 +--------------+------------------+--------------------------------------------------------+
 |callback      |:green:`Function` | a function to handle data one row at a time.           |
 +--------------+------------------+--------------------------------------------------------+

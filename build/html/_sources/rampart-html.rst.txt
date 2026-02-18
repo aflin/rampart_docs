@@ -111,7 +111,7 @@ where:
   *  ``vertical-space`` - a :green:`Boolean` or a :green:`String`, whether
      to add some extra empty lines for readability.  The default is
      ``false``.  If set to ``"auto"`` nearly all newline characters will be
-     elimiated.
+     eliminated.
 
   *  See the `HTML Tidy Options Quick Reference
      <https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html>`_
@@ -967,7 +967,7 @@ Example:
         { indent: true }
     );
 
-    output = mydoc.prettyPrint({indent:true, indenSpaces:2});
+    output = mydoc.prettyPrint({indent:true, indentSpaces:2});
 
     console.log(output);
 
@@ -1735,7 +1735,7 @@ Where
 * ``oldlist`` contains the given elements which provide a reference for placement.
 
 * ``elems`` is an *html object* or a :green:`String`  of text or HTML
-  to be placed after to the given elements.
+  to be placed after the given elements.
 
 Example:
 

@@ -221,7 +221,7 @@ Where:
 
     ``dbase`` is a :green:`String`, the name of the database to be accessed. 
     If ``undefined`` or ``null``, the *default* database for the database
-    envirnoment will be opened.
+    environment will be opened.
 
     ``create`` is a :green:`Boolean`, if ``true`` openDb will be 
     a write transaction which creates the database, if it does not
@@ -373,7 +373,7 @@ items in the database along with the database itself.
 Where:
 
     * ``dbase`` is a ``dbi object`` returned from `openDb`_\ , a ``null``
-      (to select the defaut database) or a
+      (to select the default database) or a
       :green:`String`, the name of the database to be dropped.
 
       To drop the *default* database, pass an empty string or ``null``:
@@ -456,7 +456,7 @@ Return Value:
 close
 ~~~~~
 
-Close the database envirnoment.  After closing, all transaction
+Close the database environment.  After closing, all transaction
 handles, database handles and all functions using the previously 
 opened environment will throw errors if used again.
 
@@ -593,7 +593,7 @@ code in order to insert all of the records in a single transaction:
     /* insert all at once */
     lmdb.put(dbi, insertobj);
 
-In order to conserver memory and to insert in a single transaction, see the
+In order to conserve memory and to insert in a single transaction, see the
 `Transaction Functions Full Example`_ below.
     
 
@@ -655,7 +655,7 @@ Where:
       :green:`String`, the name of the database to be accessed.  If the
       database does not exist, it will be created.  If omitted, the 
       lmdb *default* database for the current database environment will
-      be use.  This database will be the default for all operations
+      be used.  This database will be the default for all operations
       below.  However, more than one database may be used per transaction.
 
     * ``open_rw`` is a :green:`Boolean`, if ``true``, open the transaction
@@ -944,7 +944,7 @@ Return Value:
 txn.cursorPut
 ~~~~~~~~~~~~~
 
-Put (store) value in a given into a database, indexed
+Put (store) a value into a database, indexed
 by the given key.  Move cursor to the item's location.
 
 Usage:
@@ -1033,7 +1033,7 @@ Where:
       ``value`` will be converted to a :green:`String`.  If ``false``
       (the default) ``value`` will be a :green:`Buffer`.
 
-This operates identical to:
+This operates identically to:
 
 .. code-block:: javascript
 
@@ -1114,7 +1114,7 @@ Where:
 
 
 
-This operates identical to:
+This operates identically to:
 
 .. code-block:: javascript
 

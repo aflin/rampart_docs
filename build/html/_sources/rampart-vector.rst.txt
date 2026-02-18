@@ -428,7 +428,7 @@ Usage:
 
 Where:
 
-* ``myarr`` is a an :green:`Array` of :green:`Numbers`.
+* ``myarr`` is an :green:`Array` of :green:`Numbers`.
 * ``scale`` is an optional positive :green:`Number` (default: auto calculate)
 * ``zeroPoint`` is an optional :green:`Number` (``-128`` - ``127``). Default is ``0``.
 
@@ -449,7 +449,7 @@ Usage:
 
 Where:
 
-* ``myarr`` is a an :green:`Array` of :green:`Numbers`.
+* ``myarr`` is an :green:`Array` of :green:`Numbers`.
 * ``scale`` is an optional positive :green:`Number` (default: auto calculate)
 * ``zeroPoint`` is an optional positive :green:`Number` (``0`` - ``255``). Default is ``0``.
 
@@ -1006,7 +1006,7 @@ Return Value:
    An :green:`Array` of :green:`Numbers` with normalized values.
 
 Note:
-   All L2 normalization functions are in-place, tranforming the input vector and returning it.
+   All L2 normalization functions are in-place, transforming the input vector and returning it.
 
 rampart.vector.raw.l2NormalizeF64
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1025,7 +1025,7 @@ Return Value:
    A :green:`Buffer` holding a ``double *`` array with normalized values.
 
 Note:
-   All L2 normalization functions are in-place, tranforming the input vector and returning it.
+   All L2 normalization functions are in-place, transforming the input vector and returning it.
 
 rampart.vector.raw.l2NormalizeF32
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1044,7 +1044,7 @@ Return Value:
    A :green:`Buffer` holding a ``float *`` array with normalized values.
 
 Note:
-   All L2 normalization functions are in-place, tranforming the input vector and returning it.
+   All L2 normalization functions are in-place, transforming the input vector and returning it.
 
 rampart.vector.raw.l2NormalizeF16
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1063,7 +1063,7 @@ Return Value:
    A :green:`Buffer` holding a ``uint16_t *`` array with normalized values.
 
 Note:
-   All L2 normalization functions are in-place, tranforming the input vector and returning it.
+   All L2 normalization functions are in-place, transforming the input vector and returning it.
 
 Raw Vector Distance Function
 ----------------------------
@@ -1093,6 +1093,6 @@ Note:
     an exact match and ``-1.0`` being the exact opposite.
   * ``cosine`` computes distance by dividing by vector magnitudes (effectively normalizing). It returns distance of ``0`` to ``2.0``.
   * ``1 - cosineScore == dotDistance`` if the vectors are L2 Normalized.  However, the ``dot`` calculation is simpler and faster for
-    vectors thar are already L2 Normalized.
+    vectors that are already L2 Normalized.
   *  The distance functions assumes ``dot`` and L2 normalized ``f16`` vectors, as these settings provides gains in terms
      of memory and speed while retaining a high level of accuracy.

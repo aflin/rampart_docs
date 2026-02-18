@@ -428,7 +428,7 @@ the ip address of the request.  In cases where the server is behind a proxy
 such as nginx, instead of logging <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, setting, e.g.
 <code class="docutils literal notranslate"><span class="pre">proxy_set_header</span> <span class="pre">Remote_address</span> <span class="pre">$remote_addr;</span></code> in the appropriate section
 of <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code>, and setting <code class="docutils literal notranslate"><span class="pre">logIpFromHeader:</span> <span class="pre">&quot;Remote_address&quot;</span></code>
-here will log the ip address of the client connecting to nginx, rather the
+here will log the ip address of the client connecting to nginx, rather than the
 ip address of the nginx proxy server.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">daemon</span></code>: A <span class="green">Boolean</span>, whether to fork and detach from the
@@ -496,7 +496,7 @@ contain the key <code class="docutils literal notranslate"><span class="pre">err
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">directoryFunc</span></code>: A <span class="green">Function</span> to handle directory listings from
 the filesystem, if no <code class="docutils literal notranslate"><span class="pre">index.html</span></code> file exists in the requested
 directory.  May also be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> to use the built-in function.
-If set <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default), a “404 Forbidden” response is sent
+If set <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default), a “403 Forbidden” response is sent
 where a directory listing is requested and no index.html file exists.
 See <a class="reference internal" href="#built-in-directory-function">Built-in Directory Function</a> below for more information.</p>
 </li>
@@ -552,14 +552,14 @@ number of the server.  The default if not specified is <code class="docutils lit
 the server forks but before server threads are created, if
 <code class="docutils literal notranslate"><span class="pre">daemon</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>: A <span class="green">Object</span> or <span class="green">Function</span>.
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run at the beginning of each JavaScript function or on
 file load as specified in <code class="docutils literal notranslate"><span class="pre">map</span></code> below.  This can be a global
 function (i.e.  <code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">myglobalbeginfunc</span></code>), an inline function
 (i.e.  <code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">function(req){...}</span></code>), or an object (i.e.
 <code class="docutils literal notranslate"><span class="pre">{module:</span> <span class="pre">working_directory+'/apps/beginfunc.js'}</span></code>) specifying the
 path of a module.
-The function, like all server callback function is passed <code class="docutils literal notranslate"><span class="pre">req</span></code>, which if
+The function, like all server callback functions, is passed <code class="docutils literal notranslate"><span class="pre">req</span></code>, which if
 altered will be reflected in the call of the normal callback for the
 requested page.  Returning false will skip the normal callback and
 send a 404 Not Found page.  Returning an <span class="green">Object</span> (i.e. <code class="docutils literal notranslate"><span class="pre">{html:myhtml}</span></code>)
@@ -576,20 +576,20 @@ Default value is <code class="docutils literal notranslate"><span class="pre">un
 function before serving a file (-i.e.  files from a mapped location such
 as the <code class="docutils literal notranslate"><span class="pre">web_server/html/</span></code> directory),  Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code>: A <span class="green">Object</span> or <span class="green">Function</span>.
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run after the completion of a JavaScript function
 callback from <code class="docutils literal notranslate"><span class="pre">map</span></code> below.
-Like <code class="docutils literal notranslate"><span class="pre">beginFunc</span></code> It will also receive the <cite>req</cite> object.  In
+Like <code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>, it will also receive the <cite>req</cite> object.  In
 addition, <cite>req.reply</cite> will be set to the return value of the normal
 server callback function mapped in <code class="docutils literal notranslate"><span class="pre">map</span></code> below and req.reply can be
 modified before it is sent.
 For websocket connections, it is run after websockets disconnects and
 after the req.wsOnDisconnect callback, if any.  <cite>req.reply</cite> is an
 empty object, modifying it has no effect and return value from endFunc
-has not effect. End function is never run on file requests. The default
+has no effect. End function is never run on file requests. The default
 value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logFunc</span></code>: A <span class="green">Object</span> or <span class="green">Function</span>.
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run after data has been written to the client and in place of
 normal logging (<code class="docutils literal notranslate"><span class="pre">log</span></code> above must be <code class="docutils literal notranslate"><span class="pre">true</span></code>).  The callback function
 will be passed two parameters (i.e. <code class="docutils literal notranslate"><span class="pre">myloggingfunc</span> <span class="pre">(logdata,</span> <span class="pre">logline)</span></code>)
@@ -710,7 +710,7 @@ Regular expressions and globs are not allowed.</p>
 mapped paths given as keys to the <span class="green">Object</span> passed to <code class="docutils literal notranslate"><span class="pre">map</span></code> below.
 Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code>, paths from the <code class="docutils literal notranslate"><span class="pre">map</span></code> <span class="green">Object</span>
 will be matched in the order they are given.</p>
-<p>Note that regardless of this setting, paths are match by type of path (see
+<p>Note that regardless of this setting, paths are matched by type of path (see
 below) with Exact paths tested first, then regular expression paths and
 lastly glob paths.  However, it is usually desirable for longer paths to
 have priority over shorter ones.  For example, if <code class="docutils literal notranslate"><span class="pre">/</span></code> and
@@ -998,7 +998,7 @@ of the request.  For example, if the url
 amalgam of all the useful variables sent from the client.  It includes
 variables from headers, cookies, GET query parameters and POST data,
 prioritize in that order.  If, e.g., a query parameter has the same name
-as a cookie, the cookie value will override the the query parameter.</p>
+as a cookie, the cookie value will override the query parameter.</p>
 <p>Note also that <code class="docutils literal notranslate"><span class="pre">method</span></code> and <code class="docutils literal notranslate"><span class="pre">methodRaw</span></code> will have the same value unless an
 unknown method is used (in which case <code class="docutils literal notranslate"><span class="pre">method</span></code> will be <code class="docutils literal notranslate"><span class="pre">unknown</span></code> and
 <code class="docutils literal notranslate"><span class="pre">methodRaw</span></code> will be the raw text of the method submitted to the server).</p>
@@ -1386,7 +1386,7 @@ with an <code class="docutils literal notranslate"><span class="pre">&#64;</span
 <span class="p">};</span>
 </pre></div>
 </div>
-<p>This will be more efficient than reading the file and returing its
+<p>This will be more efficient than reading the file and returning its
 content as shown in the previous example.</p>
 <p>Note that in order to send a string whose first character is <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>, it
 must be escaped.</p>
@@ -1409,7 +1409,7 @@ or to a compression level (1-10).</p>
 <h4>The Return Object with Defer<a class="headerlink" href="#the-return-object-with-defer" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><p>When data is not ready to be sent at the end of a mapped
-<span class="green">Function</span>, the reply may be defered until later by returning an
+<span class="green">Function</span>, the reply may be deferred until later by returning an
 <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">defer</span></code> set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.  Another asynchronous
 <span class="green">Function</span> then will be able to use the <code class="docutils literal notranslate"><span class="pre">req</span></code> object with
 <code class="docutils literal notranslate"><span class="pre">req.reply()</span></code> in order to send data to the client and close the
@@ -1620,7 +1620,7 @@ buffer.</p>
     <span class="cm">/*  fork and return pid server start (see end of the script) */</span>
     <span class="nx">daemon</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
 
-    <span class="cm">/* make server singe-threaded. */</span>
+    <span class="cm">/* make server single-threaded. */</span>
     <span class="c1">//useThreads: false,</span>
 
     <span class="cm">/*  By default, number of threads is set to cpu core count.</span>
@@ -1657,7 +1657,7 @@ buffer.</p>
 <span class="cm">        present in the directory.  Added to the normal request object</span>
 <span class="cm">        will be the property (string) &quot;fsPath&quot; (req.fsPath), which can be used</span>
 <span class="cm">        to create a directory listing.  See function dirlist() above.</span>
-<span class="cm">        It is substantially equivelant to the built-in server.defaultDirList function.</span>
+<span class="cm">        It is substantially equivalent to the built-in server.defaultDirList function.</span>
 
 <span class="cm">        If directoryFunc is not set, a url pointing to a directory without an index.htm(l)</span>
 <span class="cm">        will return a 403 Forbidden error.</span>
@@ -1688,7 +1688,7 @@ buffer.</p>
 
 <span class="cm">    mapSort: false,</span>
 
-<span class="cm">       and then put them in your prefered order below.</span>
+<span class="cm">       and then put them in your preferred order below.</span>
 <span class="cm">       ********************************************************** */</span>
     <span class="nx">map</span><span class="o">:</span>
     <span class="p">{</span>

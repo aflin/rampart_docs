@@ -432,7 +432,7 @@ characters must be identical to match, though ISO-8859-1 vs.  UTF-8
 encoding may be ignored.</p>
 <p>A regular (B-tree) index will always use the <code class="docutils literal notranslate"><span class="pre">stringCompareMode</span></code> value that
 was set at its creation, not the current value. However, when multiple
-regular indexes exist on the same fields, at search time the Texis optmizer
+regular indexes exist on the same fields, at search time the Texis optimizer
 will attempt to use the index whose (creation-time) <code class="docutils literal notranslate"><span class="pre">stringCompareMode</span></code> is
 closest to the current value. This allows some dynamic flexibility in
 supporting queries with different <code class="docutils literal notranslate"><span class="pre">stringCompareMode</span></code> values (e.g.
@@ -551,7 +551,7 @@ used, and mixed with flags. The aliases have the form:</p>
 <p><code class="docutils literal notranslate"><span class="pre">stringcomparemode</span></code> or <code class="docutils literal notranslate"><span class="pre">textsearchmode</span></code> refers to that setting’s value (if
 not given: the setting being modified). <code class="docutils literal notranslate"><span class="pre">default</span></code> refers to the default value
 (modifiable with texis.ini) and <code class="docutils literal notranslate"><span class="pre">builtin</span></code> refers to the builtin factory
-default (if not given: the the alias refers to the current setting value).
+default (if not given: the alias refers to the current setting value).
 Example: <code class="docutils literal notranslate"><span class="pre">stringcomparemodedefault,+ignorecase</span></code> would obtain the default
 stringcomparemode setting (from texis.ini if available), but set the case
 style to ignorecase.</p>
@@ -642,10 +642,10 @@ read, with few writes and small records.</dd>
 <dt>groupby</dt>
 <dd>This setting is enabled by default and will cause the data to be
 read only once to perform a group by operation. The query should
-produce indentical results whether this is enabled or disabled,
+produce identical results whether this is enabled or disabled,
 with the performance being the only difference.</dd>
 <dt>faststats</dt>
-<dd>When enabled, which is the default, and when the appopriate
+<dd>When enabled, which is the default, and when the appropriate
 indexes exist Texis will try and resolve aggregate functions
 directly from the index that was used to perform the <code class="docutils literal notranslate"><span class="pre">WHERE</span></code>
 clause.</dd>
@@ -762,7 +762,7 @@ the default of processing the unoptimized portion is probably correct.
 If the data tends to change in large batches, followed by a
 reoptimization of the index then the large batch can cause significant
 processing overhead.  In that case it may be wise to enable the
-<code class="docutils literal notranslate"><span class="pre">ignoreNewList</span></code> option.  If the option is enable then records that
+<code class="docutils literal notranslate"><span class="pre">ignoreNewList</span></code> option.  If the option is enabled then records that
 have been updated in the batch will not be found with Metamorph queries
 until the index has been optimized.</div></blockquote>
 </div>
@@ -969,9 +969,9 @@ find relevant matches which would otherwise not be found, at the
 potential cost to performance and accuracy.</p>
 <p>This setting implies <code class="docutils literal notranslate"><span class="pre">{useEquiv:true</span></code>, <code class="docutils literal notranslate"><span class="pre">alEquiv:true</span></code> and
 <code class="docutils literal notranslate"><span class="pre">eqPrefix:`derivations/${lc}/${lc}-deriv`</span></code>.</p>
-<p>More info, plus files for language other than English can be found on the
+<p>More info, plus files for languages other than English can be found on the
 <a class="reference external" href="https://github.com/aflin/rampart_lang_derivs">rampart_lang_derivs github page</a>.</p>
-<p>Prebuild derivation files for more languages can be downloaded using the
+<p>Prebuilt derivation files for more languages can be downloaded using the
 <code class="docutils literal notranslate"><span class="pre">rampart/derivations/downloadLangDeriv.js</span></code> script.</p>
 <p>This option precludes the use of the built-in thesaurus.</p>
 </div></blockquote>
@@ -1414,7 +1414,7 @@ used to be redefined.</div></blockquote>
 the process. This setting allows the amount of memory used to be
 adjusted. The default is to use 40% of physical memory, if it can be
 determined, and to use 16MB if not. If the value set is less than 100
-then it is treated as a percentage of physical memory. It the number is
+then it is treated as a percentage of physical memory. If the number is
 greater than 100 then it is treated as the number of bytes of memory to
 use. Setting this value too high can cause excessive swapping, while
 setting it too low causes unneeded extra merges to disk.</div></blockquote>
@@ -1604,7 +1604,7 @@ the index will not be used. This only applies to ordinary indices.</div></blockq
 <div class="section" id="maxlinearrows">
 <h3>maxLinearRows<a class="headerlink" href="#maxlinearrows" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>This set the maximum number of records that should be searched linearly.
+<div>This sets the maximum number of records that should be searched linearly.
 If using the indices to date yield a result set larger than
 <code class="docutils literal notranslate"><span class="pre">maxLinearRows</span></code> then the program will try to find more indices to use.
 Once the result set is smaller than <code class="docutils literal notranslate"><span class="pre">maxLinearRows</span></code>, or all possible
@@ -1699,7 +1699,7 @@ may not be supported on all platforms.</p>
 <div class="section" id="indexreadbufsz">
 <h3>indexReadBufSz<a class="headerlink" href="#indexreadbufsz" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>Read buffer size, when reading (not memory-mapping) Metamorh index
+<div>Read buffer size, when reading (not memory-mapping) Metamorph index
 <code class="docutils literal notranslate"><span class="pre">.tok</span></code> and <code class="docutils literal notranslate"><span class="pre">.dat</span></code> files. The default is 64KB; suffixes like “<code class="docutils literal notranslate"><span class="pre">KB</span></code>”
 are respected. During search, actual read block size could be less (if
 predicted) or more (if blocks merged). Also used during index
@@ -1962,7 +1962,7 @@ that should take effect on the query.</p>
 <blockquote>
 <div><p>AKA <code class="docutils literal notranslate"><span class="pre">varcharToStrlstSep</span></code>. The separator character or mode to use when
 converting a <code class="docutils literal notranslate"><span class="pre">varchar</span></code> string into a <code class="docutils literal notranslate"><span class="pre">strlst</span></code> list of strings in
-Texis. In Rampart,the default is set to <code class="docutils literal notranslate"><span class="pre">json</span></code> regardless of the
+Texis. In Rampart, the default is set to <code class="docutils literal notranslate"><span class="pre">json</span></code> regardless of the
 <code class="docutils literal notranslate"><span class="pre">conf/texis.ini</span></code> setting.  Using <code class="docutils literal notranslate"><span class="pre">tsql</span></code>, it is set to <code class="docutils literal notranslate"><span class="pre">create</span></code>, or
 as set in <code class="docutils literal notranslate"><span class="pre">conf/texis.ini</span></code>.</p>
 <ul class="simple">

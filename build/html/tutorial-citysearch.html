@@ -298,7 +298,7 @@ user@localhost:~/citysearch/web_server$ curl -o data/geonames-all-cities-with-a-
 <h3>Examine your CSV<a class="headerlink" href="#examine-your-csv" title="Permalink to this headline">¶</a></h3>
 <p>The first step for importing a CSV file is to have a look at the format of the
 data in the file.  CSV can vary quite a bit, and to import it, we will want to
-know a few thing such as (but not limited to):</p>
+know a few things such as (but not limited to):</p>
 <ul class="simple">
 <li>Does every column contain the same type?</li>
 <li>Are text columns quoted?</li>
@@ -348,7 +348,7 @@ Also the first row appears to be column names, and not data.</p>
 <h3>Creating the table<a class="headerlink" href="#creating-the-table" title="Permalink to this headline">¶</a></h3>
 <p>The data will need to be imported in two stages.  Stage one will be as-is from the
 CSV into a temporary table.  Stage two will combine City, Admin1 and Country
-names into one field, separate and convert “Latitude,Longitute” to Numbers
+names into one field, separate and convert “Latitude,Longitude” to Numbers
 and compute a geocode we will use later for a bounded area search.</p>
 <p>So let’s create a script that will make our table by opening
 <code class="docutils literal notranslate"><span class="pre">~/citysearch/web_server/apps/citysearch.js</span></code> in your text editor.</p>
@@ -403,11 +403,11 @@ database, let’s make our table.</p>
 <span class="nx">create_tmp_table</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>This should all be self expanatory.  If not, please brush up on
+<p>This should all be self-explanatory.  If not, please brush up on
 your <a class="reference external" href="https://www.w3schools.com/sql/sql_create_table.asp">SQL</a>.</p>
 <p>Note though that <code class="docutils literal notranslate"><span class="pre">varchar(x)</span></code> in Texis SQL, the size <code class="docutils literal notranslate"><span class="pre">x</span></code> is
 merely a suggestion.  If the text put into this field is larger
-that what is specified, it will not truncate the text or affect any indexing.</p>
+than what is specified, it will not truncate the text or affect any indexing.</p>
 <p>Now we have our table.  Let’s get that data in!</p>
 </div>
 <div class="section" id="importing-the-csv">
@@ -468,7 +468,7 @@ at either of or both of the major stages.</p>
 <span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
 
 <span class="cm">/* a single function to monitor the import for both pre-processing (progressFunc)</span>
-<span class="cm">   and import (callback function supplied to sql.importCsvFile as a paramater)   */</span>
+<span class="cm">   and import (callback function supplied to sql.importCsvFile as a parameter)   */</span>
 <span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
 
@@ -604,7 +604,7 @@ settings, we end up with this:</p>
 <span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
 
 <span class="cm">/* a single function to monitor the import for both pre-processing (progressFunc)</span>
-<span class="cm">   and import (callback function supplied to sql.importCsvFile as a paramater)   */</span>
+<span class="cm">   and import (callback function supplied to sql.importCsvFile as a parameter)   */</span>
 <span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
 
@@ -714,7 +714,7 @@ it in a function.</p>
 </pre></div>
 </div>
 <p>A couple of things to note:</p>
-<p>First – when this index is made, it will backed by a
+<p>First – when this index is made, it will be backed by a
 file named <code class="docutils literal notranslate"><span class="pre">cities_geocode_x.btr</span></code>.  It is so named because it will be
 easy to find using <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">-l</span></code> (it will come right before the table, named
 <code class="docutils literal notranslate"><span class="pre">cities.tbl</span></code>, and it lets you know the field indexed (<code class="docutils literal notranslate"><span class="pre">_geocode</span></code>) and
@@ -847,7 +847,7 @@ needed.</p>
     <span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
 
     <span class="cm">/* a single function to monitor the import for both pre-processing (progressFunc)</span>
-<span class="cm">       and import (callback function supplied to sql.importCsvFile as a paramater)   */</span>
+<span class="cm">       and import (callback function supplied to sql.importCsvFile as a parameter)   */</span>
     <span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
 
@@ -1541,7 +1541,7 @@ database when run from the command line as <code class="docutils literal notrans
     <span class="kd">var</span> <span class="nx">step</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="c1">//set in importCsvFile(), only report every 100th row</span>
 
     <span class="cm">/* a single function to monitor the import for both pre-processing (progressFunc)</span>
-<span class="cm">       and import (callback function supplied to sql.importCsvFile as a paramater)   */</span>
+<span class="cm">       and import (callback function supplied to sql.importCsvFile as a parameter)   */</span>
     <span class="kd">function</span> <span class="nx">monitor_import</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">stg</span><span class="p">)</span> <span class="p">{</span>
         <span class="kd">var</span> <span class="nx">stage</span> <span class="o">=</span> <span class="s2">&quot;Import&quot;</span><span class="p">;</span>
 

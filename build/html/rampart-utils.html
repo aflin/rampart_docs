@@ -425,8 +425,8 @@ colors set as specified.  It will also add the <code class="docutils literal not
 <p>Colors with <code class="docutils literal notranslate"><span class="pre">%J</span></code> format:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Using <code class="docutils literal notranslate"><span class="pre">%aJ</span></code> or any of the forced versions (<code class="docutils literal notranslate"><span class="pre">^</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>), takes as the color argument a number (pallate number)
-rather than a foreground and background color.  There are currently four pallates, numbered <code class="docutils literal notranslate"><span class="pre">0-3</span></code>.  Anything not a number
+<li>Using <code class="docutils literal notranslate"><span class="pre">%aJ</span></code> or any of the forced versions (<code class="docutils literal notranslate"><span class="pre">^</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>), takes as the color argument a number (palette number)
+rather than a foreground and background color.  There are currently four palettes, numbered <code class="docutils literal notranslate"><span class="pre">0-3</span></code>.  Anything not a number
 or outside of that range will default to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
 </ul>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myObj</span> <span class="o">=</span> <span class="p">{</span><span class="nb">Number</span><span class="o">:</span><span class="mf">1.23</span><span class="p">,</span> <span class="nx">Bool</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span> <span class="nb">String</span><span class="o">:</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">,</span> <span class="nx">Null</span><span class="o">:</span> <span class="kc">null</span><span class="p">};</span>
@@ -447,8 +447,8 @@ or outside of that range will default to <code class="docutils literal notransla
    <span class="nt1">"String"</span>: <span class="s1">"Hello World!"</span>,
    <span class="nt1">"Null"</span>: <span class="N1">null</span>
 }
-</pre></div><p>If palatte option is omitted, and <code class="docutils literal notranslate"><span class="pre">myObj</span></code> is not a <span class="green">Number</span>, pallate <code class="docutils literal notranslate"><span class="pre">0</span></code> will be assumed:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%a3J\n&quot;</span><span class="p">,</span> <span class="nx">myObj</span><span class="p">);</span> <span class="c1">//pallate 0 assumed</span>
+</pre></div><p>If palette option is omitted, and <code class="docutils literal notranslate"><span class="pre">myObj</span></code> is not a <span class="green">Number</span>, palette <code class="docutils literal notranslate"><span class="pre">0</span></code> will be assumed:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%a3J\n&quot;</span><span class="p">,</span> <span class="nx">myObj</span><span class="p">);</span> <span class="c1">//palette 0 assumed</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -895,7 +895,7 @@ to read from <code class="docutils literal notranslate"><span class="pre">stdin<
 <dd>If <code class="docutils literal notranslate"><span class="pre">stdin</span></code> is from an interactive terminal, execution
 will be paused until <code class="docutils literal notranslate"><span class="pre">nchar</span></code> chars are input.  Unlike
 <code class="docutils literal notranslate"><span class="pre">fread(stdin);</span></code> <a class="reference internal" href="#fread"><span class="std std-ref">below</span></a>, the terminal will be
-set to return characters in without waiting for a newline.</dd>
+set to return characters without waiting for a newline.</dd>
 </dl>
 </div>
 <div class="section" id="readfile">
@@ -1462,7 +1462,7 @@ which is likely not what was intended.</p>
 <p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the directory to be removed and <code class="docutils literal notranslate"><span class="pre">recurse</span></code> is an
 optional <span class="green">Boolean</span>, which if <code class="docutils literal notranslate"><span class="pre">true</span></code>, parent directories explicitly present in
 <code class="docutils literal notranslate"><span class="pre">path</span></code> will also be removed.  Throws an error if the directory cannot be
-removed (.e.g., not empty or lacking permission).</p>
+removed (e.g., not empty or lacking permission).</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
@@ -1616,11 +1616,11 @@ number), but <code class="docutils literal notranslate"><span class="pre">755</s
 will only update the timestamp, and will not create a non-existing
 <code class="docutils literal notranslate"><span class="pre">file</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">setAccess</span></code> is a <span class="green">Boolean</span> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>), a <span class="green">Date Object</span>,
-or an <span class="green">Number</span> (seconds since unix epoch).  Update access time of
+or a <span class="green">Number</span> (seconds since unix epoch).  Update access time of
 the file to specified date or current date if <code class="docutils literal notranslate"><span class="pre">true</span></code>.  Do not update if
 <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">setModify</span></code> is a <span class="green">Boolean</span> (default <code class="docutils literal notranslate"><span class="pre">true</span></code>), a <span class="green">Date Object</span>,
-or an <span class="green">Number</span> (seconds since unix epoch).  Update modification time of
+or a <span class="green">Number</span> (seconds since unix epoch).  Update modification time of
 the file to specified date or current date if <code class="docutils literal notranslate"><span class="pre">true</span></code>.  Do not update if
 <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">referenceFile</span></code> is a <span class="green">String</span>.  If specified, the named file’s access and
@@ -2175,7 +2175,7 @@ rather than its reference.  Default is <code class="docutils literal notranslate
 <dl class="docutils">
 <dt>Note:</dt>
 <dd>In normal usage, this function should not be necessary.  If used, the callback function must
-not call any asychronous functions.  See <a class="reference external" href="https://libevent.org/libevent-book/Ref1_libsetup.html">the libevent2 reference</a>
+not call any asynchronous functions.  See <a class="reference external" href="https://libevent.org/libevent-book/Ref1_libsetup.html">the libevent2 reference</a>
 for more information.</dd>
 </dl>
 </div>
@@ -2283,7 +2283,7 @@ for use with <a class="reference internal" href="#fprintf">fprintf</a>(), <a cla
 the above functions.</dd>
 </dl>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopenBuffer</span><span class="p">([</span><span class="nx">chunkSize</span><span class="p">][,</span> <span class="nx">sdtRedir</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">handle</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fopenBuffer</span><span class="p">([</span><span class="nx">chunkSize</span><span class="p">][,</span> <span class="nx">stdRedir</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">chunkSize</span></code> is a <span class="green">Number</span> (default is <code class="docutils literal notranslate"><span class="pre">4096</span></code>), amount of memory to allocate each
@@ -2302,7 +2302,7 @@ functions, which will delete the backing data or copy the backing data and retur
 JavaScript type.</dd>
 <dt>Note:</dt>
 <dd>Calling <code class="docutils literal notranslate"><span class="pre">fclose()</span></code> will close the file handle, but the backing buffer is still available for use with
-<code class="docutils literal notranslate"><span class="pre">getBuffer()</span></code> and <code class="docutils literal notranslate"><span class="pre">getString()</span></code>.  Calling <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> will close close the file handle if still open
+<code class="docutils literal notranslate"><span class="pre">getBuffer()</span></code> and <code class="docutils literal notranslate"><span class="pre">getString()</span></code>.  Calling <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> will close the file handle if still open
 and delete the backing buffer.  There is no finalizer on the returned object, so it is important
 to call <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> when it is no longer needed.  Also note that the <code class="docutils literal notranslate"><span class="pre">fopenBuffer()</span></code> return object can be
 used in several threads at the same time, so long as it hasn’t been destroyed in any thread.  Attempting to
@@ -2659,7 +2659,7 @@ in which case the file will be truncated.</td>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">file</span></code> is a <span class="green">String</span> (name of file to be read) or a file handle opened
-with with <a class="reference internal" href="#fopen">fopen</a>() or <code class="docutils literal notranslate"><span class="pre">rampart.utils.stdin</span></code>. It returns a <span class="green">Object</span>
+with <a class="reference internal" href="#fopen">fopen</a>() or <code class="docutils literal notranslate"><span class="pre">rampart.utils.stdin</span></code>. It returns a <span class="green">Object</span>
 that contains the property <code class="docutils literal notranslate"><span class="pre">next</span></code> which is <span class="green">Function</span> to retrieve and return the next
 line of text in the opened file.</p>
 <dl class="docutils">
@@ -2760,7 +2760,7 @@ standard deviation.  <code class="docutils literal notranslate"><span class="pre
 fast, non-cryptographic random number generator and based on
 a normal distribution centered at zero (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>) and clamped between <code class="docutils literal notranslate"><span class="pre">-scale</span></code>
 and <code class="docutils literal notranslate"><span class="pre">scale</span></code>.</p>
-<p>Similar to the <a class="reference internal" href="#gaussrand">gaussrand</a> above.  It is equivelant to:</p>
+<p>Similar to the <a class="reference internal" href="#gaussrand">gaussrand</a> above.  It is equivalent to:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">nrand</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">*</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">gaussrand</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="mf">5.0</span><span class="p">;</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">nrand</span><span class="o">&gt;</span><span class="nx">scale</span><span class="p">)</span>

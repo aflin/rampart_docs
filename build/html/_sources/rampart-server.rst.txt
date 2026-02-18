@@ -154,7 +154,7 @@ Where:
       such as nginx, instead of logging ``127.0.0.1``, setting, e.g.
       ``proxy_set_header Remote_address $remote_addr;`` in the appropriate section
       of ``/etc/nginx/nginx.conf``, and setting ``logIpFromHeader: "Remote_address"``
-      here will log the ip address of the client connecting to nginx, rather the
+      here will log the ip address of the client connecting to nginx, rather than the
       ip address of the nginx proxy server.
 
     * ``daemon``: A :green:`Boolean`, whether to fork and detach from the
@@ -222,7 +222,7 @@ Where:
     * ``directoryFunc``: A :green:`Function` to handle directory listings from
       the filesystem, if no ``index.html`` file exists in the requested
       directory.  May also be set to ``true`` to use the built-in function.
-      If set ``false`` (the default), a "404 Forbidden" response is sent
+      If set ``false`` (the default), a "403 Forbidden" response is sent
       where a directory listing is requested and no index.html file exists.
       See `Built-in Directory Function`_ below for more information.
 
@@ -279,14 +279,14 @@ Where:
       the server forks but before server threads are created, if
       ``daemon`` is ``true``.
 
-    * ``beginFunc``: A :green:`Object` or :green:`Function`.
+    * ``beginFunc``: An :green:`Object` or :green:`Function`.
       A function to run at the beginning of each JavaScript function or on
       file load as specified in ``map`` below.  This can be a global
       function (i.e.  ``beginFunc: myglobalbeginfunc``), an inline function
       (i.e.  ``beginFunc: function(req){...}``), or an object (i.e.
       ``{module: working_directory+'/apps/beginfunc.js'}``) specifying the
       path of a module.
-      The function, like all server callback function is passed ``req``, which if
+      The function, like all server callback functions, is passed ``req``, which if
       altered will be reflected in the call of the normal callback for the
       requested page.  Returning false will skip the normal callback and
       send a 404 Not Found page.  Returning an :green:`Object` (i.e. ``{html:myhtml}``)
@@ -303,21 +303,21 @@ Where:
       function before serving a file (-i.e.  files from a mapped location such
       as the ``web_server/html/`` directory),  Default value is ``false``.
 
-    * ``endFunc``: A :green:`Object` or :green:`Function`.
+    * ``endFunc``: An :green:`Object` or :green:`Function`.
       A function to run after the completion of a JavaScript function
       callback from ``map`` below.
-      Like ``beginFunc`` It will also receive the `req` object.  In
+      Like ``beginFunc``, it will also receive the `req` object.  In
       addition, `req.reply` will be set to the return value of the normal
       server callback function mapped in ``map`` below and req.reply can be
       modified before it is sent.
       For websocket connections, it is run after websockets disconnects and
       after the req.wsOnDisconnect callback, if any.  `req.reply` is an
       empty object, modifying it has no effect and return value from endFunc
-      has not effect. End function is never run on file requests. The default
+      has no effect. End function is never run on file requests. The default
       value is ``undefined``.
 
 
-    * ``logFunc``: A :green:`Object` or :green:`Function`.
+    * ``logFunc``: An :green:`Object` or :green:`Function`.
       A function to run after data has been written to the client and in place of
       normal logging (``log`` above must be ``true``).  The callback function
       will be passed two parameters (i.e. ``myloggingfunc (logdata, logline)``)
@@ -453,7 +453,7 @@ Where:
       Default is ``true``.  If ``false``, paths from the ``map`` :green:`Object`
       will be matched in the order they are given.
 
-      Note that regardless of this setting, paths are match by type of path (see
+      Note that regardless of this setting, paths are matched by type of path (see
       below) with Exact paths tested first, then regular expression paths and
       lastly glob paths.  However, it is usually desirable for longer paths to
       have priority over shorter ones.  For example, if ``/`` and
@@ -758,7 +758,7 @@ The Request Object
   amalgam of all the useful variables sent from the client.  It includes
   variables from headers, cookies, GET query parameters and POST data,
   prioritize in that order.  If, e.g., a query parameter has the same name
-  as a cookie, the cookie value will override the the query parameter.
+  as a cookie, the cookie value will override the query parameter.
 
   Note also that ``method`` and ``methodRaw`` will have the same value unless an
   unknown method is used (in which case ``method`` will be ``unknown`` and
@@ -1160,7 +1160,7 @@ The Return Object
        jpg: "@/path/to/my/jpeg.jpg"
     };
 
-  This will be more efficient than reading the file and returing its
+  This will be more efficient than reading the file and returning its
   content as shown in the previous example.
 
   Note that in order to send a string whose first character is ``@``, it
@@ -1187,7 +1187,7 @@ The Return Object with Defer
 """"""""""""""""""""""""""""
 
     When data is not ready to be sent at the end of a mapped
-    :green:`Function`, the reply may be defered until later by returning an
+    :green:`Function`, the reply may be deferred until later by returning an
     :green:`Object` with ``defer`` set to ``true``.  Another asynchronous
     :green:`Function` then will be able to use the ``req`` object with
     ``req.reply()`` in order to send data to the client and close the
@@ -1417,7 +1417,7 @@ Below is a full example:
         /*  fork and return pid server start (see end of the script) */
         daemon: true,
 
-        /* make server singe-threaded. */
+        /* make server single-threaded. */
         //useThreads: false,
 
         /*  By default, number of threads is set to cpu core count.
@@ -1454,7 +1454,7 @@ Below is a full example:
             present in the directory.  Added to the normal request object
             will be the property (string) "fsPath" (req.fsPath), which can be used
             to create a directory listing.  See function dirlist() above.
-            It is substantially equivelant to the built-in server.defaultDirList function.
+            It is substantially equivalent to the built-in server.defaultDirList function.
 
             If directoryFunc is not set, a url pointing to a directory without an index.htm(l)
             will return a 403 Forbidden error.
@@ -1485,7 +1485,7 @@ Below is a full example:
 
         mapSort: false,
 
-           and then put them in your prefered order below.
+           and then put them in your preferred order below.
            ********************************************************** */
         map:
         {

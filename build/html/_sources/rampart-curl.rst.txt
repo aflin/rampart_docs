@@ -11,7 +11,7 @@ The rampart-curl module uses the `libcurl <https://curl.se/libcurl/>`_
 library.  Libcurl is a multi-protocol file transfer library with a long
 history of feature rich and stable performance.  It also has an exceptionally
 well written and documented API.  The authors of Rampart extend our thanks
-to  Daniel Stenberg, et. al. for providing this library.
+to Daniel Stenberg, et. al. for providing this library.
 
 
 License
