@@ -120,6 +120,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#rsa-sign">rsa_sign</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rsa-verify">rsa_verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#gen-csr">gen_csr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gen-cert">gen_cert</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cert-info">cert_info</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#password">Password</a><ul>
@@ -1055,6 +1057,194 @@ should be used, particularly where the requested certificate will cover more tha
     <span class="cm">/* , &quot;password&quot; */</span>
 <span class="p">);</span>
 <span class="cm">/* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gen-cert">
+<h3>gen_cert<a class="headerlink" href="#gen-cert" title="Permalink to this headline">¶</a></h3>
+<p>Generate a self-signed X509v3 certificate and RSA private key.  This is
+the equivalent of running
+<code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-x509</span> <span class="pre">-nodes</span> <span class="pre">-days</span> <span class="pre">365</span> <span class="pre">-newkey</span> <span class="pre">rsa:2048</span> <span class="pre">-keyout</span> <span class="pre">key.pem</span> <span class="pre">-out</span> <span class="pre">cert.pem</span></code>
+from the command line.  The generated certificate is suitable for use with
+web servers such as nginx or the rampart-server module.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_cert</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_cert</span><span class="p">(</span><span class="nx">subject_string</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> which may contain the following properties:</p>
+<p>Subject properties (all optional <span class="green">Strings</span>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">name</span></code> - The “Common Name” (CN), usually the relevant domain name.</li>
+<li><code class="docutils literal notranslate"><span class="pre">country</span></code> - A two letter country code (e.g. <code class="docutils literal notranslate"><span class="pre">US</span></code> or <code class="docutils literal notranslate"><span class="pre">DE</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">state</span></code> - State or Province name.</li>
+<li><code class="docutils literal notranslate"><span class="pre">city</span></code> - The locality or city of your organization.</li>
+<li><code class="docutils literal notranslate"><span class="pre">organization</span></code> - The full legal name of your organization.</li>
+<li><code class="docutils literal notranslate"><span class="pre">organizationUnit</span></code> - The department of your organization.</li>
+<li><code class="docutils literal notranslate"><span class="pre">email</span></code> - Contact email address.</li>
+</ul>
+</div></blockquote>
+<p>Certificate options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">bits</span></code> - a <span class="green">Number</span>, the RSA key size in bits.  Default is <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">days</span></code> - a <span class="green">Number</span>, the number of days the certificate is valid.  Default is <code class="docutils literal notranslate"><span class="pre">365</span></code>.</li>
+</ul>
+</div></blockquote>
+<p>Extension properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">basicConstraints</span></code> - a <span class="green">String</span>, the value for the X509v3 Basic Constraints
+extension.  Default is <code class="docutils literal notranslate"><span class="pre">&quot;CA:FALSE&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">keyUsage</span></code> - a <span class="green">String</span>, the value for the X509v3 Key Usage extension.
+Default is <code class="docutils literal notranslate"><span class="pre">&quot;digitalSignature,</span> <span class="pre">keyEncipherment&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">subjectAltName</span></code> - a <span class="green">String</span> or <span class="green">Array</span> of <span class="green">Strings</span>,
+the Subject Alternative Name entries for the certificate.</li>
+<li><code class="docutils literal notranslate"><span class="pre">subjectAltNameType</span></code> - a <span class="green">String</span>, the type prefix for <code class="docutils literal notranslate"><span class="pre">subjectAltName</span></code>
+entries.  One of <code class="docutils literal notranslate"><span class="pre">&quot;dns&quot;</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;email&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;uri&quot;</span></code>
+(case insensitive).  For web server certificates, <code class="docutils literal notranslate"><span class="pre">&quot;dns&quot;</span></code> should be used.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">subject_string</span></code> is a <span class="green">String</span> specifying the certificate subject in the
+format used by <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">req</span> <span class="pre">-subj</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;/C=US/ST=Delaware/O=My</span> <span class="pre">Org/CN=example.com&quot;</span></code>.
+Standard OpenSSL short names are accepted (<code class="docutils literal notranslate"><span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">ST</span></code>, <code class="docutils literal notranslate"><span class="pre">L</span></code>, <code class="docutils literal notranslate"><span class="pre">O</span></code>, <code class="docutils literal notranslate"><span class="pre">OU</span></code>, <code class="docutils literal notranslate"><span class="pre">CN</span></code>,
+<code class="docutils literal notranslate"><span class="pre">emailAddress</span></code>, etc.).  When using this form, certificate and extension options may be
+passed in an optional second argument <code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> (the subject properties
+listed above are ignored in that case).</p>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with the following properties:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">key</span></code> - a <span class="green">String</span>, the generated RSA private key in PEM format.</li>
+<li><code class="docutils literal notranslate"><span class="pre">cert</span></code> - a <span class="green">String</span>, the generated self-signed certificate in PEM format.</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<p>Example using an <span class="green">Object</span>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_cert</span><span class="p">({</span>
+    <span class="nx">country</span><span class="o">:</span> <span class="s2">&quot;US&quot;</span><span class="p">,</span>
+    <span class="nx">state</span><span class="o">:</span> <span class="s2">&quot;Delaware&quot;</span><span class="p">,</span>
+    <span class="nx">city</span><span class="o">:</span> <span class="s2">&quot;Wilmington&quot;</span><span class="p">,</span>
+    <span class="nx">organization</span><span class="o">:</span> <span class="s2">&quot;My Company&quot;</span><span class="p">,</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;example.com&quot;</span><span class="p">,</span>
+    <span class="nx">bits</span><span class="o">:</span> <span class="mi">2048</span><span class="p">,</span>
+    <span class="nx">days</span><span class="o">:</span> <span class="mi">365</span><span class="p">,</span>
+    <span class="nx">subjectAltName</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;*.example.com&quot;</span><span class="p">]</span>
+<span class="p">});</span>
+
+<span class="cm">/* write key and cert to files for use with a web server */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;/path/to/server.key&quot;</span><span class="p">,</span> <span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">key</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;/path/to/server.crt&quot;</span><span class="p">,</span> <span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">cert</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example using a subject <span class="green">String</span>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_cert</span><span class="p">(</span>
+    <span class="s2">&quot;/C=US/ST=Delaware/L=Wilmington/O=My Company/CN=example.com&quot;</span><span class="p">,</span>
+    <span class="p">{</span>
+        <span class="nx">days</span><span class="o">:</span> <span class="mi">730</span><span class="p">,</span>
+        <span class="nx">subjectAltName</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;*.example.com&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;/path/to/server.key&quot;</span><span class="p">,</span> <span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">key</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;/path/to/server.crt&quot;</span><span class="p">,</span> <span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">cert</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example for use with the rampart-server module:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">certdir</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span> <span class="o">+</span> <span class="s2">&quot;/certs&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">keyfile</span> <span class="o">=</span> <span class="nx">certdir</span> <span class="o">+</span> <span class="s2">&quot;/server.key&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">certfile</span> <span class="o">=</span> <span class="nx">certdir</span> <span class="o">+</span> <span class="s2">&quot;/server.crt&quot;</span><span class="p">;</span>
+
+<span class="cm">/* generate certs if they don&#39;t exist */</span>
+<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">keyfile</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">certfile</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">mkdir</span><span class="p">(</span><span class="nx">certdir</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_cert</span><span class="p">({</span>
+        <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+        <span class="nx">subjectAltName</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;*.localhost&quot;</span><span class="p">]</span>
+    <span class="p">});</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">keyfile</span><span class="p">,</span> <span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">key</span><span class="p">);</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">certfile</span><span class="p">,</span> <span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">cert</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s2">&quot;0.0.0.0:8443&quot;</span><span class="p">,</span>
+    <span class="nx">secure</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">sslKeyFile</span><span class="o">:</span> <span class="nx">keyfile</span><span class="p">,</span>
+    <span class="nx">sslCertFile</span><span class="o">:</span> <span class="nx">certfile</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span><span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;Hello, HTTPS!&quot;</span><span class="p">};</span> <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cert-info">
+<h3>cert_info<a class="headerlink" href="#cert-info" title="Permalink to this headline">¶</a></h3>
+<p>Parse a PEM formatted X509 certificate and return its details.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">cert_info</span><span class="p">(</span><span class="nx">pem</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">pem</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span> containing the PEM formatted
+certificate.</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with properties describing the certificate, including
+<code class="docutils literal notranslate"><span class="pre">version</span></code>, <code class="docutils literal notranslate"><span class="pre">serialNumber</span></code>, <code class="docutils literal notranslate"><span class="pre">issuer</span></code>, <code class="docutils literal notranslate"><span class="pre">subject</span></code>, <code class="docutils literal notranslate"><span class="pre">notBefore</span></code>,
+<code class="docutils literal notranslate"><span class="pre">notAfter</span></code>, <code class="docutils literal notranslate"><span class="pre">extensions</span></code> and other fields as available in the certificate.
+Note that <code class="docutils literal notranslate"><span class="pre">notBefore</span></code> and <code class="docutils literal notranslate"><span class="pre">notAfter</span></code> are JavaScript <span class="green">Date</span> objects
+(shown below as strings due to JSON serialization).</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">gen_cert</span><span class="p">(</span><span class="s2">&quot;/CN=example.com/O=My Company&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">cert_info</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">cert</span><span class="p">);</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%3J\n&quot;</span><span class="p">,</span> <span class="nx">info</span><span class="p">);</span>
+
+<span class="cm">/* sample output (abbreviated):</span>
+<span class="cm">{</span>
+<span class="cm">   &quot;version&quot;: 2,</span>
+<span class="cm">   &quot;serialNumber&quot;: &quot;...&quot;,</span>
+<span class="cm">   &quot;issuer&quot;: &quot;O=My Company, CN=example.com&quot;,</span>
+<span class="cm">   &quot;subject&quot;: &quot;O=My Company, CN=example.com&quot;,</span>
+<span class="cm">   &quot;notBefore&quot;: &quot;2026-03-10T00:00:00.000Z&quot;,</span>
+<span class="cm">   &quot;notAfter&quot;: &quot;2027-03-10T00:00:00.000Z&quot;,</span>
+<span class="cm">   &quot;extensions&quot;: {</span>
+<span class="cm">      &quot;X509v3 Basic Constraints&quot;: &quot;CA:FALSE&quot;,</span>
+<span class="cm">      &quot;X509v3 Key Usage&quot;: &quot;Digital Signature, Key Encipherment&quot;</span>
+<span class="cm">   }</span>
+<span class="cm">}</span>
+<span class="cm">*/</span>
 </pre></div>
 </div>
 </div>

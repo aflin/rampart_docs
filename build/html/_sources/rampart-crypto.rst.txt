@@ -804,7 +804,194 @@ Example:
         }
         /* , "password" */
     );
-    /* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */ 
+    /* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */
+
+gen_cert
+~~~~~~~~
+
+Generate a self-signed X509v3 certificate and RSA private key.  This is
+the equivalent of running
+``openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem``
+from the command line.  The generated certificate is suitable for use with
+web servers such as nginx or the rampart-server module.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert(options);
+
+    /* or */
+
+    var res = crypto.gen_cert(subject_string[, options]);
+
+Where:
+
+* ``options`` is an :green:`Object` which may contain the following properties:
+
+  Subject properties (all optional :green:`Strings`):
+
+    * ``name`` - The "Common Name" (CN), usually the relevant domain name.
+    * ``country`` - A two letter country code (e.g. ``US`` or ``DE``).
+    * ``state`` - State or Province name.
+    * ``city`` - The locality or city of your organization.
+    * ``organization`` - The full legal name of your organization.
+    * ``organizationUnit`` - The department of your organization.
+    * ``email`` - Contact email address.
+
+  Certificate options:
+
+    * ``bits`` - a :green:`Number`, the RSA key size in bits.  Default is ``2048``.
+    * ``days`` - a :green:`Number`, the number of days the certificate is valid.  Default is ``365``.
+
+  Extension properties:
+
+    * ``basicConstraints`` - a :green:`String`, the value for the X509v3 Basic Constraints
+      extension.  Default is ``"CA:FALSE"``.
+    * ``keyUsage`` - a :green:`String`, the value for the X509v3 Key Usage extension.
+      Default is ``"digitalSignature, keyEncipherment"``.
+    * ``subjectAltName`` - a :green:`String` or :green:`Array` of :green:`Strings`,
+      the Subject Alternative Name entries for the certificate.
+    * ``subjectAltNameType`` - a :green:`String`, the type prefix for ``subjectAltName``
+      entries.  One of ``"dns"`` (the default), ``"ip"``, ``"email"`` or ``"uri"``
+      (case insensitive).  For web server certificates, ``"dns"`` should be used.
+
+* ``subject_string`` is a :green:`String` specifying the certificate subject in the
+  format used by ``openssl req -subj``, e.g. ``"/C=US/ST=Delaware/O=My Org/CN=example.com"``.
+  Standard OpenSSL short names are accepted (``C``, ``ST``, ``L``, ``O``, ``OU``, ``CN``,
+  ``emailAddress``, etc.).  When using this form, certificate and extension options may be
+  passed in an optional second argument ``options`` :green:`Object` (the subject properties
+  listed above are ignored in that case).
+
+Return Value:
+    An :green:`Object` with the following properties:
+
+      * ``key`` - a :green:`String`, the generated RSA private key in PEM format.
+      * ``cert`` - a :green:`String`, the generated self-signed certificate in PEM format.
+
+Example using an :green:`Object`:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert({
+        country: "US",
+        state: "Delaware",
+        city: "Wilmington",
+        organization: "My Company",
+        name: "example.com",
+        bits: 2048,
+        days: 365,
+        subjectAltName: ["example.com", "*.example.com"]
+    });
+
+    /* write key and cert to files for use with a web server */
+    rampart.utils.fprintf("/path/to/server.key", "%s", res.key);
+    rampart.utils.fprintf("/path/to/server.crt", "%s", res.cert);
+
+Example using a subject :green:`String`:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert(
+        "/C=US/ST=Delaware/L=Wilmington/O=My Company/CN=example.com",
+        {
+            days: 730,
+            subjectAltName: ["example.com", "*.example.com"]
+        }
+    );
+
+    rampart.utils.fprintf("/path/to/server.key", "%s", res.key);
+    rampart.utils.fprintf("/path/to/server.crt", "%s", res.cert);
+
+Example for use with the rampart-server module:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+    var server = require("rampart-server");
+
+    var certdir = process.scriptPath + "/certs";
+    var keyfile = certdir + "/server.key";
+    var certfile = certdir + "/server.crt";
+
+    /* generate certs if they don't exist */
+    if(!rampart.utils.stat(keyfile) || !rampart.utils.stat(certfile))
+    {
+        rampart.utils.mkdir(certdir);
+        var res = crypto.gen_cert({
+            name: "localhost",
+            subjectAltName: ["localhost", "*.localhost"]
+        });
+        rampart.utils.fprintf(keyfile, "%s", res.key);
+        rampart.utils.fprintf(certfile, "%s", res.cert);
+    }
+
+    server.start({
+        bind: "0.0.0.0:8443",
+        secure: true,
+        sslKeyFile: keyfile,
+        sslCertFile: certfile,
+        map: {
+            "/": function(req) { return {text: "Hello, HTTPS!"}; }
+        }
+    });
+
+cert_info
+~~~~~~~~~
+
+Parse a PEM formatted X509 certificate and return its details.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var info = crypto.cert_info(pem);
+
+Where:
+
+    * ``pem`` is a :green:`String` or :green:`Buffer` containing the PEM formatted
+      certificate.
+
+Return Value:
+    An :green:`Object` with properties describing the certificate, including
+    ``version``, ``serialNumber``, ``issuer``, ``subject``, ``notBefore``,
+    ``notAfter``, ``extensions`` and other fields as available in the certificate.
+    Note that ``notBefore`` and ``notAfter`` are JavaScript :green:`Date` objects
+    (shown below as strings due to JSON serialization).
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert("/CN=example.com/O=My Company");
+    var info = crypto.cert_info(res.cert);
+
+    rampart.utils.printf("%3J\n", info);
+
+    /* sample output (abbreviated):
+    {
+       "version": 2,
+       "serialNumber": "...",
+       "issuer": "O=My Company, CN=example.com",
+       "subject": "O=My Company, CN=example.com",
+       "notBefore": "2026-03-10T00:00:00.000Z",
+       "notAfter": "2027-03-10T00:00:00.000Z",
+       "extensions": {
+          "X509v3 Basic Constraints": "CA:FALSE",
+          "X509v3 Key Usage": "Digital Signature, Key Encipherment"
+       }
+    }
+    */
 
 Password
 --------
