@@ -1962,6 +1962,173 @@ and :ref:`rampart.event <rampart-main:rampart.event>` functions.
     see the ``rampart/examples/web_server/modules/wschat.js``
     script.
 
+Reverse Proxy (Experimental)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   This feature is experimental and subject to change.  It is intended for
+   lightweight internal proxying where Rampart is already serving other
+   content and a separate proxy server would be unnecessary overhead.  For
+   production deployments requiring advanced load balancing, rate limiting,
+   caching, connection pooling, or upstream health checks, a dedicated
+   reverse proxy such as `nginx <https://nginx.org/>`_ remains the
+   recommended choice.
+
+The server can act as a reverse proxy, forwarding HTTP and WebSocket
+requests to one or more upstream servers.  Proxy routes are configured in
+the ``map`` object by setting the value of a path key to an :green:`Object`
+containing a ``proxy`` property.
+
+Basic Configuration
+"""""""""""""""""""
+
+The ``proxy`` property is a :green:`String` containing the URL of the
+upstream server, including the scheme (``http://`` or ``https://``), host,
+optional port, and optional path prefix.
+
+.. code-block:: javascript
+
+   var server = require("rampart-server");
+
+   server.start({
+       bind: "0.0.0.0:8088",
+       map: {
+           "/api/": { proxy: "http://backend.local:3000/" },
+           "/":     "/var/www/html"
+       }
+   });
+
+In this example, a request to ``http://localhost:8088/api/users`` is
+forwarded to ``http://backend.local:3000/users``.  The matched portion of
+the local path (``/api/``) is replaced with the upstream path (``/``).
+All other requests are served from the local filesystem as usual.
+
+Multiple proxy routes may coexist with one another and with mapped
+functions, modules and directories:
+
+.. code-block:: javascript
+
+   server.start({
+       bind: "0.0.0.0:8088",
+       map: {
+           "/search/":  { proxy: "http://10.0.0.2:8080/search/" },
+           "/images/":  { proxy: "http://10.0.0.3:9090/" },
+           "/status":   function(req) { return { text: "ok" }; },
+           "/":         "/var/www/html"
+       }
+   });
+
+Proxy Options
+"""""""""""""
+
+The value of a proxy mapping is an :green:`Object` that accepts the
+following properties:
+
+* ``proxy`` - A :green:`String` (required).  The upstream URL to which
+  requests will be forwarded.  Must begin with ``http://`` or ``https://``.
+
+* ``headers`` - An :green:`Object` (optional).  Additional headers to
+  inject into the request sent to the upstream server.  These are added
+  alongside the original client headers and will override any client header
+  with the same name.
+
+* ``timeout`` - A :green:`Number` (optional).  The maximum number of
+  seconds to wait for the upstream server to respond.  If the timeout is
+  reached, the proxy returns a ``504 Gateway Timeout`` response to the
+  client.  The default is no timeout.
+
+Example with custom headers and a timeout:
+
+.. code-block:: javascript
+
+   server.start({
+       bind: "0.0.0.0:8088",
+       map: {
+           "/api/": {
+               proxy: "http://backend.local:3000/",
+               headers: {
+                   "X-Forwarded-By": "rampart-proxy",
+                   "X-Custom-Auth":  "shared-secret"
+               },
+               timeout: 30
+           }
+       }
+   });
+
+Forwarded Headers
+"""""""""""""""""
+
+The proxy automatically adds the following headers to each request
+forwarded to the upstream server:
+
+* ``X-Forwarded-For`` - The IP address of the connecting client.  If
+  this header is already present in the client request (e.g. from a
+  downstream proxy), the client's address is appended to the existing
+  value.
+
+* ``X-Forwarded-Proto`` - The protocol used by the client to connect to
+  the proxy server (``http`` or ``https``).
+
+* ``X-Forwarded-Host`` - The contents of the ``Host`` header from the
+  original client request.
+
+All other client headers are forwarded to the upstream unmodified.
+
+Error Handling
+""""""""""""""
+
+If the upstream server is unreachable or the connection fails, the proxy
+returns a ``502 Bad Gateway`` response to the client.  If a ``timeout``
+is configured and the upstream does not respond within the specified
+number of seconds, a ``504 Gateway Timeout`` response is returned.
+
+WebSocket Proxying
+""""""""""""""""""
+
+WebSocket connections are proxied automatically.  When the proxy detects
+an HTTP request with ``Upgrade: websocket`` and ``Connection: Upgrade``
+headers, it performs the WebSocket handshake with the upstream server on
+behalf of the client.  Upon receiving a ``101 Switching Protocols``
+response from the upstream, the proxy relays the response to the client
+and establishes a bidirectional byte relay between the two connections.
+
+No special configuration is required.  Any proxy route that points to an
+upstream server with a WebSocket endpoint will proxy WebSocket traffic
+on that path.  For example, if the upstream server handles WebSocket
+connections at ``/ws``:
+
+.. code-block:: javascript
+
+   server.start({
+       bind: "0.0.0.0:8088",
+       map: {
+           "/": { proxy: "http://backend.local:3000/" }
+       }
+   });
+
+A client connecting to ``ws://localhost:8088/ws`` will be transparently
+proxied to ``ws://backend.local:3000/ws``.
+
+When to Use the Built-in Proxy
+""""""""""""""""""""""""""""""
+
+The built-in proxy is appropriate when:
+
+* Rampart is already serving an application and needs to integrate one or
+  two upstream services without introducing an additional server process.
+
+* The deployment is internal or low-traffic and does not require advanced
+  proxy features.
+
+* WebSocket connections must be proxied alongside normal HTTP traffic from
+  a single entry point.
+
+For deployments that require upstream connection pooling, load balancing
+across multiple backends, rate limiting, response caching, or detailed
+access control, nginx or a comparable dedicated reverse proxy should be
+used in front of or instead of the built-in proxy.
+
 Standard Server Layout
 ----------------------
 
