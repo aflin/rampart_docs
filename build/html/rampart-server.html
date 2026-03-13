@@ -151,6 +151,15 @@
 <li class="toctree-l4"><a class="reference internal" href="#example-echo-chat-server">Example echo/chat server</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#reverse-proxy-experimental">Reverse Proxy (Experimental)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#basic-configuration">Basic Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#proxy-options">Proxy Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#forwarded-headers">Forwarded Headers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#error-handling">Error Handling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#websocket-proxying">WebSocket Proxying</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#when-to-use-the-built-in-proxy">When to Use the Built-in Proxy</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#standard-server-layout">Standard Server Layout</a></li>
@@ -2121,6 +2130,156 @@ and <a class="reference internal" href="rampart-main.html#rampart-event"><span c
 <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\nWebchat is available here:\nhttp://127.0.0.1:8088/\n&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="reverse-proxy-experimental">
+<h3>Reverse Proxy (Experimental)<a class="headerlink" href="#reverse-proxy-experimental" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This feature is experimental and subject to change.  It is intended for
+lightweight internal proxying where Rampart is already serving other
+content and a separate proxy server would be unnecessary overhead.  For
+production deployments requiring advanced load balancing, rate limiting,
+caching, connection pooling, or upstream health checks, a dedicated
+reverse proxy such as <a class="reference external" href="https://nginx.org/">nginx</a> remains the
+recommended choice.</p>
+</div>
+<p>The server can act as a reverse proxy, forwarding HTTP and WebSocket
+requests to one or more upstream servers.  Proxy routes are configured in
+the <code class="docutils literal notranslate"><span class="pre">map</span></code> object by setting the value of a path key to an <span class="green">Object</span>
+containing a <code class="docutils literal notranslate"><span class="pre">proxy</span></code> property.</p>
+<div class="section" id="basic-configuration">
+<h4>Basic Configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">proxy</span></code> property is a <span class="green">String</span> containing the URL of the
+upstream server, including the scheme (<code class="docutils literal notranslate"><span class="pre">http://</span></code> or <code class="docutils literal notranslate"><span class="pre">https://</span></code>), host,
+optional port, and optional path prefix.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s2">&quot;0.0.0.0:8088&quot;</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;/api/&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="nx">proxy</span><span class="o">:</span> <span class="s2">&quot;http://backend.local:3000/&quot;</span> <span class="p">},</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span>     <span class="s2">&quot;/var/www/html&quot;</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>In this example, a request to <code class="docutils literal notranslate"><span class="pre">http://localhost:8088/api/users</span></code> is
+forwarded to <code class="docutils literal notranslate"><span class="pre">http://backend.local:3000/users</span></code>.  The matched portion of
+the local path (<code class="docutils literal notranslate"><span class="pre">/api/</span></code>) is replaced with the upstream path (<code class="docutils literal notranslate"><span class="pre">/</span></code>).
+All other requests are served from the local filesystem as usual.</p>
+<p>Multiple proxy routes may coexist with one another and with mapped
+functions, modules and directories:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s2">&quot;0.0.0.0:8088&quot;</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;/search/&quot;</span><span class="o">:</span>  <span class="p">{</span> <span class="nx">proxy</span><span class="o">:</span> <span class="s2">&quot;http://10.0.0.2:8080/search/&quot;</span> <span class="p">},</span>
+        <span class="s2">&quot;/images/&quot;</span><span class="o">:</span>  <span class="p">{</span> <span class="nx">proxy</span><span class="o">:</span> <span class="s2">&quot;http://10.0.0.3:9090/&quot;</span> <span class="p">},</span>
+        <span class="s2">&quot;/status&quot;</span><span class="o">:</span>   <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;ok&quot;</span> <span class="p">};</span> <span class="p">},</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span>         <span class="s2">&quot;/var/www/html&quot;</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="proxy-options">
+<h4>Proxy Options<a class="headerlink" href="#proxy-options" title="Permalink to this headline">¶</a></h4>
+<p>The value of a proxy mapping is an <span class="green">Object</span> that accepts the
+following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">proxy</span></code> - A <span class="green">String</span> (required).  The upstream URL to which
+requests will be forwarded.  Must begin with <code class="docutils literal notranslate"><span class="pre">http://</span></code> or <code class="docutils literal notranslate"><span class="pre">https://</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">headers</span></code> - An <span class="green">Object</span> (optional).  Additional headers to
+inject into the request sent to the upstream server.  These are added
+alongside the original client headers and will override any client header
+with the same name.</li>
+<li><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - A <span class="green">Number</span> (optional).  The maximum number of
+seconds to wait for the upstream server to respond.  If the timeout is
+reached, the proxy returns a <code class="docutils literal notranslate"><span class="pre">504</span> <span class="pre">Gateway</span> <span class="pre">Timeout</span></code> response to the
+client.  The default is no timeout.</li>
+<li><code class="docutils literal notranslate"><span class="pre">insecure</span></code> - A <span class="green">Boolean</span> (optional).  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, skip SSL
+certificate verification when connecting to an <code class="docutils literal notranslate"><span class="pre">https://</span></code> upstream.
+This allows proxying to upstream servers that use self-signed or otherwise
+untrusted certificates.  The default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+</ul>
+<p>Example with custom headers and a timeout:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s2">&quot;0.0.0.0:8088&quot;</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;/api/&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">proxy</span><span class="o">:</span> <span class="s2">&quot;http://backend.local:3000/&quot;</span><span class="p">,</span>
+            <span class="nx">headers</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;X-Forwarded-By&quot;</span><span class="o">:</span> <span class="s2">&quot;rampart-proxy&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;X-Custom-Auth&quot;</span><span class="o">:</span>  <span class="s2">&quot;shared-secret&quot;</span>
+            <span class="p">},</span>
+            <span class="nx">timeout</span><span class="o">:</span> <span class="mi">30</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="forwarded-headers">
+<h4>Forwarded Headers<a class="headerlink" href="#forwarded-headers" title="Permalink to this headline">¶</a></h4>
+<p>The proxy automatically adds the following headers to each request
+forwarded to the upstream server:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">X-Forwarded-For</span></code> - The IP address of the connecting client.  If
+this header is already present in the client request (e.g. from a
+downstream proxy), the client’s address is appended to the existing
+value.</li>
+<li><code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> - The protocol used by the client to connect to
+the proxy server (<code class="docutils literal notranslate"><span class="pre">http</span></code> or <code class="docutils literal notranslate"><span class="pre">https</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">X-Forwarded-Host</span></code> - The contents of the <code class="docutils literal notranslate"><span class="pre">Host</span></code> header from the
+original client request.</li>
+</ul>
+<p>All other client headers are forwarded to the upstream unmodified.</p>
+</div>
+<div class="section" id="error-handling">
+<h4>Error Handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h4>
+<p>If the upstream server is unreachable or the connection fails, the proxy
+returns a <code class="docutils literal notranslate"><span class="pre">502</span> <span class="pre">Bad</span> <span class="pre">Gateway</span></code> response to the client.  If a <code class="docutils literal notranslate"><span class="pre">timeout</span></code>
+is configured and the upstream does not respond within the specified
+number of seconds, a <code class="docutils literal notranslate"><span class="pre">504</span> <span class="pre">Gateway</span> <span class="pre">Timeout</span></code> response is returned.</p>
+</div>
+<div class="section" id="websocket-proxying">
+<h4>WebSocket Proxying<a class="headerlink" href="#websocket-proxying" title="Permalink to this headline">¶</a></h4>
+<p>WebSocket connections are proxied automatically.  When the proxy detects
+an HTTP request with <code class="docutils literal notranslate"><span class="pre">Upgrade:</span> <span class="pre">websocket</span></code> and <code class="docutils literal notranslate"><span class="pre">Connection:</span> <span class="pre">Upgrade</span></code>
+headers, it performs the WebSocket handshake with the upstream server on
+behalf of the client.  Upon receiving a <code class="docutils literal notranslate"><span class="pre">101</span> <span class="pre">Switching</span> <span class="pre">Protocols</span></code>
+response from the upstream, the proxy relays the response to the client
+and establishes a bidirectional byte relay between the two connections.</p>
+<p>No special configuration is required.  Any proxy route that points to an
+upstream server with a WebSocket endpoint will proxy WebSocket traffic
+on that path.  For example, if the upstream server handles WebSocket
+connections at <code class="docutils literal notranslate"><span class="pre">/ws</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s2">&quot;0.0.0.0:8088&quot;</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="nx">proxy</span><span class="o">:</span> <span class="s2">&quot;http://backend.local:3000/&quot;</span> <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>A client connecting to <code class="docutils literal notranslate"><span class="pre">ws://localhost:8088/ws</span></code> will be transparently
+proxied to <code class="docutils literal notranslate"><span class="pre">ws://backend.local:3000/ws</span></code>.</p>
+</div>
+<div class="section" id="when-to-use-the-built-in-proxy">
+<h4>When to Use the Built-in Proxy<a class="headerlink" href="#when-to-use-the-built-in-proxy" title="Permalink to this headline">¶</a></h4>
+<p>The built-in proxy is appropriate when:</p>
+<ul class="simple">
+<li>Rampart is already serving an application and needs to integrate one or
+two upstream services without introducing an additional server process.</li>
+<li>The deployment is internal or low-traffic and does not require advanced
+proxy features.</li>
+<li>WebSocket connections must be proxied alongside normal HTTP traffic from
+a single entry point.</li>
+</ul>
+<p>For deployments that require upstream connection pooling, load balancing
+across multiple backends, rate limiting, response caching, or detailed
+access control, nginx or a comparable dedicated reverse proxy should be
+used in front of or instead of the built-in proxy.</p>
 </div>
 </div>
 </div>
