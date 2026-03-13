@@ -2038,6 +2038,11 @@ following properties:
   reached, the proxy returns a ``504 Gateway Timeout`` response to the
   client.  The default is no timeout.
 
+* ``insecure`` - A :green:`Boolean` (optional).  If ``true``, skip SSL
+  certificate verification when connecting to an ``https://`` upstream.
+  This allows proxying to upstream servers that use self-signed or otherwise
+  untrusted certificates.  The default is ``false``.
+
 Example with custom headers and a timeout:
 
 .. code-block:: javascript
