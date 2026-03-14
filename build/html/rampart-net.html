@@ -130,6 +130,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#server-full-example">Server Full Example</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#websocket-client-functions">WebSocket Client Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#net-wsconnect">net.wsConnect()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wsclient-wssend">wsclient.wsSend()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wsclient-wsclose">wsclient.wsClose()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#websocket-client-events">WebSocket Client Events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#websocket-client-example">WebSocket Client Example</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-functions">Resolve functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#new-net-resolver">new net.Resolver()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-resolve">resolver.resolve()</a></li>
@@ -1005,6 +1013,193 @@ default of <code class="docutils literal notranslate"><span class="pre">511</spa
 <span class="cm">    closed connection to  2001:db8::1</span>
 
 <span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="websocket-client-functions">
+<h2>WebSocket Client Functions<a class="headerlink" href="#websocket-client-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="net-wsconnect">
+<h3>net.wsConnect()<a class="headerlink" href="#net-wsconnect" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Establish a WebSocket connection to a server.  The <code class="docutils literal notranslate"><span class="pre">net.wsConnect()</span></code>
+function creates a new socket, performs the WebSocket opening handshake
+(as defined in <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc6455">RFC 6455</a>),
+and returns a wsclient object with additional WebSocket methods.</p>
+<p>Unlike lower-level socket connections, WebSocket framing, masking, and
+control frame handling (ping/pong, close handshake) are managed
+automatically.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">wsclient</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">wsConnect</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">url</span></code> - Required.  A <span class="green">String</span>.  The WebSocket URL to connect
+to.  Must begin with <code class="docutils literal notranslate"><span class="pre">ws://</span></code> (unencrypted) or <code class="docutils literal notranslate"><span class="pre">wss://</span></code> (SSL/TLS).
+The URL may include a port (e.g. <code class="docutils literal notranslate"><span class="pre">ws://host:8080/path</span></code>) and a
+path.  If the port is omitted, <code class="docutils literal notranslate"><span class="pre">80</span></code> is used for <code class="docutils literal notranslate"><span class="pre">ws://</span></code> and
+<code class="docutils literal notranslate"><span class="pre">443</span></code> for <code class="docutils literal notranslate"><span class="pre">wss://</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">callbacks</span></code> - An <span class="green">Object</span> of event name/callback function
+pairs.  See <a class="reference internal" href="#websocket-client-events">WebSocket Client Events</a> below for the list of
+available events.</li>
+<li><code class="docutils literal notranslate"><span class="pre">headers</span></code> - An <span class="green">Object</span> of additional HTTP headers to include
+in the WebSocket upgrade request.  Keys are header names and values
+are header values, both as <span class="green">Strings</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - A <span class="green">Number</span>.  How long in milliseconds before
+the connection is terminated for inactivity (no data read or
+written).  Default is <code class="docutils literal notranslate"><span class="pre">0</span></code> (no timeout).  Note that the
+<code class="docutils literal notranslate"><span class="pre">pingInterval</span></code> option provides a separate keepalive mechanism
+at the WebSocket protocol level.</li>
+<li><code class="docutils literal notranslate"><span class="pre">pingInterval</span></code> - A <span class="green">Number</span>.  Interval in seconds between
+WebSocket ping frames sent to the server.  If the server does not
+respond to three consecutive pings, the connection is closed and
+an <code class="docutils literal notranslate"><span class="pre">error</span></code> event is emitted.  Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to disable ping
+keepalive.  Default is <code class="docutils literal notranslate"><span class="pre">30</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">insecure</span></code> - A <span class="green">Boolean</span>.  Whether to skip verification of
+the server’s SSL/TLS certificate when connecting via <code class="docutils literal notranslate"><span class="pre">wss://</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A wsclient <span class="green">Object</span> (a socket as returned from
+<a class="reference internal" href="#new-net-socket">new net.Socket()</a>) with the additional methods described below.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="wsclient-wssend">
+<h3>wsclient.wsSend()<a class="headerlink" href="#wsclient-wssend" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Send a WebSocket message to the connected server.  This method is
+available only on sockets returned by <a class="reference internal" href="#net-wsconnect">net.wsConnect()</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">wsclient</span><span class="p">.</span><span class="nx">wsSend</span><span class="p">(</span><span class="nx">data</span><span class="p">[,</span> <span class="nx">isBinary</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code> - A <span class="green">String</span> or <span class="green">Buffer</span>.  The message payload
+to send.</li>
+<li><code class="docutils literal notranslate"><span class="pre">isBinary</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the message is sent
+as a binary frame (opcode <code class="docutils literal notranslate"><span class="pre">0x2</span></code>).  If <code class="docutils literal notranslate"><span class="pre">false</span></code> or omitted, it is
+sent as a text frame (opcode <code class="docutils literal notranslate"><span class="pre">0x1</span></code>).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>The wsclient <span class="green">Object</span>, for chaining.</dd>
+<dt>NOTE:</dt>
+<dd>All outgoing frames are masked as required by
+<a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc6455#section-5.3">RFC 6455 Section 5.3</a>.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="wsclient-wsclose">
+<h3>wsclient.wsClose()<a class="headerlink" href="#wsclient-wsclose" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Initiate the WebSocket close handshake by sending a close frame with
+status code <code class="docutils literal notranslate"><span class="pre">1000</span></code> (normal closure) to the server.  The underlying
+connection is destroyed after the close frame is sent.  The <code class="docutils literal notranslate"><span class="pre">close</span></code>
+event is emitted upon actual disconnection.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">wsclient</span><span class="p">.</span><span class="nx">wsClose</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="websocket-client-events">
+<h3>WebSocket Client Events<a class="headerlink" href="#websocket-client-events" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The following events may be registered via the <code class="docutils literal notranslate"><span class="pre">callbacks</span></code> property
+of <a class="reference internal" href="#net-wsconnect">net.wsConnect()</a> or by calling <code class="docutils literal notranslate"><span class="pre">wsclient.on()</span></code> on the returned
+wsclient object.</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">wsConnect</span></code> - Emitted after the WebSocket handshake has completed
+successfully and the connection is ready for sending and receiving
+messages.  Note that the lower-level <code class="docutils literal notranslate"><span class="pre">connect</span></code> event is used
+internally and should not be registered by user code.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">message</span></code> - Emitted when a complete WebSocket message is received.
+The callback is provided a single argument, an <span class="green">Object</span> with
+the following properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">message</span></code> - A <span class="green">Buffer</span> containing the message payload.</li>
+<li><code class="docutils literal notranslate"><span class="pre">binary</span></code> - A <span class="green">Boolean</span>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> if the message was
+sent as a binary frame, <code class="docutils literal notranslate"><span class="pre">false</span></code> if sent as a text frame.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">close</span></code> - Emitted when the connection is closed.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">error</span></code> - Emitted upon error.  The callback receives the error
+message as its first argument.  If no error callback is registered,
+rampart will throw an error instead.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - Emitted if the connection exceeds the timeout interval.</p>
+</li>
+</ul>
+<p>In addition, standard socket events (<code class="docutils literal notranslate"><span class="pre">drain</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>) are available
+as documented in <a class="reference internal" href="#socket-on">socket.on()</a>.</p>
+<dl class="docutils">
+<dt>NOTE:</dt>
+<dd>Within event callbacks, <code class="docutils literal notranslate"><span class="pre">this</span></code> refers to the wsclient object.
+This can be used to send messages, close the connection, or access
+wsclient properties from within a callback.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="websocket-client-example">
+<h3>WebSocket Client Example<a class="headerlink" href="#websocket-client-example" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Connect to a WebSocket server, send a message,</span>
+<span class="cm">   and print the response.                         */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">wsclient</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">wsConnect</span><span class="p">({</span>
+    <span class="nx">url</span><span class="o">:</span> <span class="s2">&quot;ws://127.0.0.1:8080/wsecho&quot;</span><span class="p">,</span>
+    <span class="nx">pingInterval</span><span class="o">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="nx">callbacks</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;wsConnect&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;WebSocket connected\n&quot;</span><span class="p">);</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">wsSend</span><span class="p">(</span><span class="s2">&quot;Hello, World!&quot;</span><span class="p">);</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;message&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">ev</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">ev</span><span class="p">.</span><span class="nx">binary</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Received %d bytes of binary data\n&quot;</span><span class="p">,</span>
+                    <span class="nx">ev</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Received: %s\n&quot;</span><span class="p">,</span> <span class="nx">ev</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">wsClose</span><span class="p">();</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Error: %s\n&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;close&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Connection closed\n&quot;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="cm">/* Expected output:</span>
+<span class="cm">    WebSocket connected</span>
+<span class="cm">    Received: Hello, World!</span>
+<span class="cm">    Connection closed</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p>Sending binary data:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Send binary data to the server */</span>
+<span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="mi">256</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
+
+<span class="nx">wsclient</span><span class="p">.</span><span class="nx">wsSend</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 </pre></div>
 </div>
 </div></blockquote>

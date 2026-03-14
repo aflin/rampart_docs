@@ -836,6 +836,199 @@ Server Full Example
         */
 
 
+WebSocket Client Functions
+--------------------------
+
+net.wsConnect()
+~~~~~~~~~~~~~~~
+
+    Establish a WebSocket connection to a server.  The ``net.wsConnect()``
+    function creates a new socket, performs the WebSocket opening handshake
+    (as defined in `RFC 6455 <https://datatracker.ietf.org/doc/html/rfc6455>`_\ ),
+    and returns a wsclient object with additional WebSocket methods.
+
+    Unlike lower-level socket connections, WebSocket framing, masking, and
+    control frame handling (ping/pong, close handshake) are managed
+    automatically.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var wsclient = net.wsConnect(options);
+
+    Where ``options`` is an :green:`Object` with the following properties:
+
+    * ``url`` - Required.  A :green:`String`.  The WebSocket URL to connect
+      to.  Must begin with ``ws://`` (unencrypted) or ``wss://`` (SSL/TLS).
+      The URL may include a port (e.g. ``ws://host:8080/path``) and a
+      path.  If the port is omitted, ``80`` is used for ``ws://`` and
+      ``443`` for ``wss://``.
+
+    * ``callbacks`` - An :green:`Object` of event name/callback function
+      pairs.  See `WebSocket Client Events`_ below for the list of
+      available events.
+
+    * ``headers`` - An :green:`Object` of additional HTTP headers to include
+      in the WebSocket upgrade request.  Keys are header names and values
+      are header values, both as :green:`Strings`.
+
+    * ``timeout`` - A :green:`Number`.  How long in milliseconds before
+      the connection is terminated for inactivity (no data read or
+      written).  Default is ``0`` (no timeout).  Note that the
+      ``pingInterval`` option provides a separate keepalive mechanism
+      at the WebSocket protocol level.
+
+    * ``pingInterval`` - A :green:`Number`.  Interval in seconds between
+      WebSocket ping frames sent to the server.  If the server does not
+      respond to three consecutive pings, the connection is closed and
+      an ``error`` event is emitted.  Set to ``0`` to disable ping
+      keepalive.  Default is ``30``.
+
+    * ``insecure`` - A :green:`Boolean`.  Whether to skip verification of
+      the server's SSL/TLS certificate when connecting via ``wss://``.
+      Default is ``false``.
+
+    Return Value:
+        A wsclient :green:`Object` (a socket as returned from
+        `new net.Socket()`_\ ) with the additional methods described below.
+
+wsclient.wsSend()
+~~~~~~~~~~~~~~~~~
+
+    Send a WebSocket message to the connected server.  This method is
+    available only on sockets returned by `net.wsConnect()`_\ .
+
+    Usage:
+
+    .. code-block:: javascript
+
+        wsclient.wsSend(data[, isBinary]);
+
+    Where:
+
+    * ``data`` - A :green:`String` or :green:`Buffer`.  The message payload
+      to send.
+
+    * ``isBinary`` - A :green:`Boolean`.  If ``true``, the message is sent
+      as a binary frame (opcode ``0x2``).  If ``false`` or omitted, it is
+      sent as a text frame (opcode ``0x1``).
+
+    Return Value:
+        The wsclient :green:`Object`, for chaining.
+
+    NOTE:
+        All outgoing frames are masked as required by
+        `RFC 6455 Section 5.3 <https://datatracker.ietf.org/doc/html/rfc6455#section-5.3>`_\ .
+
+wsclient.wsClose()
+~~~~~~~~~~~~~~~~~~
+
+    Initiate the WebSocket close handshake by sending a close frame with
+    status code ``1000`` (normal closure) to the server.  The underlying
+    connection is destroyed after the close frame is sent.  The ``close``
+    event is emitted upon actual disconnection.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        wsclient.wsClose();
+
+WebSocket Client Events
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+    The following events may be registered via the ``callbacks`` property
+    of `net.wsConnect()`_ or by calling ``wsclient.on()`` on the returned
+    wsclient object.
+
+    * ``wsConnect`` - Emitted after the WebSocket handshake has completed
+      successfully and the connection is ready for sending and receiving
+      messages.  Note that the lower-level ``connect`` event is used
+      internally and should not be registered by user code.
+
+    * ``message`` - Emitted when a complete WebSocket message is received.
+      The callback is provided a single argument, an :green:`Object` with
+      the following properties:
+
+        * ``message`` - A :green:`Buffer` containing the message payload.
+
+        * ``binary`` - A :green:`Boolean`.  ``true`` if the message was
+          sent as a binary frame, ``false`` if sent as a text frame.
+
+    * ``close`` - Emitted when the connection is closed.
+
+    * ``error`` - Emitted upon error.  The callback receives the error
+      message as its first argument.  If no error callback is registered,
+      rampart will throw an error instead.
+
+    * ``timeout`` - Emitted if the connection exceeds the timeout interval.
+
+    In addition, standard socket events (``drain``, ``end``) are available
+    as documented in `socket.on()`_\ .
+
+    NOTE:
+        Within event callbacks, ``this`` refers to the wsclient object.
+        This can be used to send messages, close the connection, or access
+        wsclient properties from within a callback.
+
+WebSocket Client Example
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    .. code-block:: javascript
+
+        /* Connect to a WebSocket server, send a message,
+           and print the response.                         */
+        rampart.globalize(rampart.utils);
+
+        var net = require("rampart-net");
+
+        var wsclient = net.wsConnect({
+            url: "ws://127.0.0.1:8080/wsecho",
+            pingInterval: 30,
+            callbacks: {
+                "wsConnect": function() {
+                    printf("WebSocket connected\n");
+                    this.wsSend("Hello, World!");
+                },
+                "message": function(ev) {
+                    if (ev.binary) {
+                        printf("Received %d bytes of binary data\n",
+                            ev.message.length);
+                    } else {
+                        printf("Received: %s\n", ev.message);
+                    }
+                    this.wsClose();
+                },
+                "error": function(err) {
+                    printf("Error: %s\n", err);
+                },
+                "close": function() {
+                    printf("Connection closed\n");
+                }
+            }
+        });
+
+        /* Expected output:
+            WebSocket connected
+            Received: Hello, World!
+            Connection closed
+        */
+
+    Sending binary data:
+
+    .. code-block:: javascript
+
+        /* Send binary data to the server */
+        var data = new Buffer(256);
+        for (var i = 0; i < 256; i++)
+            data[i] = i;
+
+        wsclient.wsSend(data, true);
+
+
 Resolve functions
 -----------------
 
