@@ -23,5 +23,6 @@ Welcome to Rampart's documentation.
    The rampart-cmark module <rampart-cmark>
    The rampart-almanac module <rampart-almanac>
    The rampart-url module <rampart-url>
+   The rampart-gm module <rampart-gm>
    Extras <rampart-extras>
    Tutorials <tutorialtoc>

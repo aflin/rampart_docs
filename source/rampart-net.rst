@@ -845,7 +845,7 @@ net.wsConnect()
     Establish a WebSocket connection to a server.  The ``net.wsConnect()``
     function creates a new socket, performs the WebSocket opening handshake
     (as defined in `RFC 6455 <https://datatracker.ietf.org/doc/html/rfc6455>`_\ ),
-    and returns a socket object with additional WebSocket methods.
+    and returns a wsclient object with additional WebSocket methods.
 
     Unlike lower-level socket connections, WebSocket framing, masking, and
     control frame handling (ping/pong, close handshake) are managed
@@ -892,13 +892,14 @@ net.wsConnect()
       Default is ``false``.
 
     Return Value:
-        An :green:`Object` (a socket as returned from
+        A wsclient :green:`Object` (a socket as returned from
         `new net.Socket()`_\ ) with the additional methods described below.
 
 wsclient.wsSend()
 ~~~~~~~~~~~~~~~~~
 
-    Send a WebSocket message to the connected server.
+    Send a WebSocket message to the connected server.  This method is
+    available only on sockets returned by `net.wsConnect()`_\ .
 
     Usage:
 
