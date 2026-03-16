@@ -44,16 +44,12 @@ GraphicsMagick are available.
 Prerequisites
 ~~~~~~~~~~~~~
 
-The GraphicsMagick development libraries must be installed on the system
-before building Rampart with this module.
+The GraphicsMagick shared libraries must be installed on the system
+in order to use this module.
 
-* Debian/Ubuntu: ``sudo apt install libgraphicsmagick1-dev``
+* Debian/Ubuntu: ``sudo apt install libgraphicsmagick-q16-3``
 * macOS: ``brew install graphicsmagick``
 * FreeBSD: ``pkg install GraphicsMagick``
-
-If the GraphicsMagick libraries are not available at build time, the
-module will not be compiled, and a warning will be printed during the
-configure step.
 
 Loading and Using the Module
 ----------------------------
