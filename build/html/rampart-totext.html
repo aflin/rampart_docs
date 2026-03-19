@@ -1,0 +1,749 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The rampart-totext module &mdash; Rampart 0.6.2 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.6.2 documentation" href="index.html"/>
+        <link rel="next" title="The rampart-python module" href="rampart-python.html"/>
+        <link rel="prev" title="The rampart-redis module" href="rampart-redis.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The rampart-totext module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-does-it-do">What does it do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-does-it-work">How does it work?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-formats">Supported Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#external-dependencies">External Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">pdftotext</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">catdoc</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading">Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#convertfile">convertFile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert">convert</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#identify">identify</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#output-format">Output Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notes-on-specific-formats">Notes on Specific Formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#docx">DOCX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pptx">PPTX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#xlsx">XLSX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#odt-odp-ods">ODT / ODP / ODS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#epub">EPUB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#markdown">Markdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pdf">PDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-word-doc">Legacy Word (.doc)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The rampart-totext module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rampart-totext.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-rampart-totext-module">
+<h1>The rampart-totext module<a class="headerlink" href="#the-rampart-totext-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-totext module uses the
+<a class="reference external" href="https://github.com/ebiggers/libdeflate">libdeflate</a> library for
+decompressing ZIP-based document formats (DOCX, PPTX, XLSX, ODT, ODP,
+ODS, EPUB).  The developers of Rampart extend our thanks to the author
+for this fast and portable decompression library.</p>
+<p>For HTML text extraction, the module relies on the
+<a class="reference internal" href="rampart-html.html#the-rampart-html-module"><span class="std std-ref">rampart-html module</span></a> and
+for Markdown conversion, the
+<a class="reference internal" href="rampart-cmark.html#the-rampart-cmark-module"><span class="std std-ref">rampart-cmark module</span></a>.</p>
+<p>For PDF conversion, the module optionally uses the
+<a class="reference external" href="https://www.xpdfreader.com/pdftotext-man.html">pdftotext</a> utility
+from the Xpdf or Poppler utilities package.  For legacy Microsoft Word
+<code class="docutils literal notranslate"><span class="pre">.doc</span></code> conversion, it optionally uses the
+<a class="reference external" href="https://www.wagner.pp.ru/~vitus/software/catdoc/">catdoc</a> utility on
+Linux and FreeBSD, or the built-in <code class="docutils literal notranslate"><span class="pre">textutil</span></code> command on macOS.</p>
+</div>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-totext module is released under the MIT license.</p>
+<p>The <a class="reference external" href="https://github.com/ebiggers/libdeflate">libdeflate</a> library is
+released under the
+<a class="reference external" href="https://github.com/ebiggers/libdeflate/blob/master/COPYING">MIT License</a>.</p>
+</div>
+<div class="section" id="what-does-it-do">
+<h3>What does it do?<a class="headerlink" href="#what-does-it-do" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-totext module extracts plain text from a variety of document
+formats.  It is designed for use with search engines and semantic search,
+where the primary goal is to retrieve all textual content from a
+document while preserving paragraph boundaries.  Formatting such as
+bold, italic, font changes and indentation are discarded — only the
+text content and paragraph structure are retained.</p>
+</div>
+<div class="section" id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
+<p>The module identifies the file format by inspecting the content of the
+file (magic bytes, document structure) and falls back to the file
+extension when the content is ambiguous.  Based on the detected type, it
+applies the appropriate extraction method:</p>
+<ul class="simple">
+<li><strong>Built-in C converters</strong> handle plain text, XML/Docbook, LaTeX, RTF,
+and troff/man page formats directly.</li>
+<li><strong>Rampart module converters</strong> use the <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code> modules (via internal JavaScript evaluation) for
+HTML and Markdown formats.</li>
+<li><strong>ZIP-based formats</strong> (DOCX, PPTX, XLSX, ODT, ODP, ODS, EPUB) are
+decompressed in C using libdeflate, and the extracted XML or HTML
+content is then parsed for text.</li>
+<li><strong>External tool converters</strong> invoke <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> for PDF files and
+<code class="docutils literal notranslate"><span class="pre">catdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">textutil</span></code> for legacy <code class="docutils literal notranslate"><span class="pre">.doc</span></code> files.  If the
+required external tool is not installed, an error is thrown.</li>
+<li><strong>Gzip-compressed files</strong> are transparently decompressed before
+processing.  This is particularly useful for man pages, which are
+typically stored as <code class="docutils literal notranslate"><span class="pre">.1.gz</span></code>, <code class="docutils literal notranslate"><span class="pre">.2.gz</span></code>, etc. on the filesystem.
+After decompression, the <code class="docutils literal notranslate"><span class="pre">.gz</span></code> extension is stripped and the inner
+file format is detected normally.  Any supported format may be
+gzip-compressed.</li>
+<li><strong>Unknown formats</strong> are scanned for readable ASCII/UTF-8 text
+chunks.  Significant runs of text are extracted as paragraphs,
+allowing partial text recovery even from unrecognized binary formats.</li>
+<li><strong>Source code and structured text</strong> files (e.g. <code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.c</span></code>, <code class="docutils literal notranslate"><span class="pre">.js</span></code>) are recognized by extension and returned
+as-is without whitespace normalization, preserving their original
+formatting.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="supported-formats">
+<h2>Supported Formats<a class="headerlink" href="#supported-formats" title="Permalink to this headline">¶</a></h2>
+<p>The following table lists all supported formats, their detection method,
+and any external dependencies.</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="15%" />
+<col width="15%" />
+<col width="35%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Format</th>
+<th class="head">Extensions</th>
+<th class="head">Detection</th>
+<th class="head">Dependencies</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Plain Text</td>
+<td><code class="docutils literal notranslate"><span class="pre">.txt</span></code></td>
+<td>Fallback (extension only)</td>
+<td>None</td>
+</tr>
+<tr class="row-odd"><td>Source / Config</td>
+<td><code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.json</span></code>, <code class="docutils literal notranslate"><span class="pre">.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.c</span></code>, <code class="docutils literal notranslate"><span class="pre">.js</span></code>, etc.</td>
+<td>Fallback (extension only)</td>
+<td>None</td>
+</tr>
+<tr class="row-even"><td>HTML</td>
+<td><code class="docutils literal notranslate"><span class="pre">.html</span></code>, <code class="docutils literal notranslate"><span class="pre">.htm</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&lt;!DOCTYPE</span> <span class="pre">html&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;html</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">rampart-html</span></code></td>
+</tr>
+<tr class="row-odd"><td>Markdown</td>
+<td><code class="docutils literal notranslate"><span class="pre">.md</span></code>, <code class="docutils literal notranslate"><span class="pre">.markdown</span></code></td>
+<td>Heuristic (headings, fenced divs, attributes)</td>
+<td><code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code></td>
+</tr>
+<tr class="row-even"><td>XML / Docbook</td>
+<td><code class="docutils literal notranslate"><span class="pre">.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">.docbook</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&lt;?xml</span></code>, docbook root elements</td>
+<td>None</td>
+</tr>
+<tr class="row-odd"><td>LaTeX</td>
+<td><code class="docutils literal notranslate"><span class="pre">.tex</span></code>, <code class="docutils literal notranslate"><span class="pre">.latex</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">\section{</span></code>, <code class="docutils literal notranslate"><span class="pre">\href{</span></code>, <code class="docutils literal notranslate"><span class="pre">\documentclass</span></code>, etc.</td>
+<td>None</td>
+</tr>
+<tr class="row-even"><td>RTF</td>
+<td><code class="docutils literal notranslate"><span class="pre">.rtf</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">{\rtf</span></code></td>
+<td>None</td>
+</tr>
+<tr class="row-odd"><td>Man Page</td>
+<td><code class="docutils literal notranslate"><span class="pre">.1</span></code> through <code class="docutils literal notranslate"><span class="pre">.9</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">.\&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">'.\&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">.TH</span></code>, <code class="docutils literal notranslate"><span class="pre">.SH</span></code></td>
+<td>None</td>
+</tr>
+<tr class="row-even"><td>DOCX</td>
+<td><code class="docutils literal notranslate"><span class="pre">.docx</span></code></td>
+<td>ZIP with <code class="docutils literal notranslate"><span class="pre">word/</span></code> entries</td>
+<td>None (libdeflate is built-in)</td>
+</tr>
+<tr class="row-odd"><td>PPTX</td>
+<td><code class="docutils literal notranslate"><span class="pre">.pptx</span></code></td>
+<td>ZIP with <code class="docutils literal notranslate"><span class="pre">ppt/</span></code> entries</td>
+<td>None (libdeflate is built-in)</td>
+</tr>
+<tr class="row-even"><td>XLSX</td>
+<td><code class="docutils literal notranslate"><span class="pre">.xlsx</span></code></td>
+<td>ZIP with <code class="docutils literal notranslate"><span class="pre">xl/</span></code> entries</td>
+<td>None (libdeflate is built-in)</td>
+</tr>
+<tr class="row-odd"><td>ODT</td>
+<td><code class="docutils literal notranslate"><span class="pre">.odt</span></code></td>
+<td>ZIP with mimetype <code class="docutils literal notranslate"><span class="pre">application/vnd.oasis.opendocument.text</span></code></td>
+<td>None (libdeflate is built-in)</td>
+</tr>
+<tr class="row-even"><td>ODP</td>
+<td><code class="docutils literal notranslate"><span class="pre">.odp</span></code></td>
+<td>ZIP with mimetype <code class="docutils literal notranslate"><span class="pre">application/vnd.oasis.opendocument.presentation</span></code></td>
+<td>None (libdeflate is built-in)</td>
+</tr>
+<tr class="row-odd"><td>ODS</td>
+<td><code class="docutils literal notranslate"><span class="pre">.ods</span></code></td>
+<td>ZIP with mimetype <code class="docutils literal notranslate"><span class="pre">application/vnd.oasis.opendocument.spreadsheet</span></code></td>
+<td>None (libdeflate is built-in)</td>
+</tr>
+<tr class="row-even"><td>EPUB</td>
+<td><code class="docutils literal notranslate"><span class="pre">.epub</span></code></td>
+<td>ZIP with mimetype <code class="docutils literal notranslate"><span class="pre">application/epub+zip</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">rampart-html</span></code> (libdeflate is built-in)</td>
+</tr>
+<tr class="row-odd"><td>PDF</td>
+<td><code class="docutils literal notranslate"><span class="pre">.pdf</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">%PDF-</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> (external)</td>
+</tr>
+<tr class="row-even"><td>Legacy Word (.doc)</td>
+<td><code class="docutils literal notranslate"><span class="pre">.doc</span></code></td>
+<td>OLE2 magic bytes (<code class="docutils literal notranslate"><span class="pre">\xD0\xCF\x11\xE0</span></code>)</td>
+<td><code class="docutils literal notranslate"><span class="pre">catdoc</span></code> (Linux/FreeBSD) or <code class="docutils literal notranslate"><span class="pre">textutil</span></code> (macOS)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="external-dependencies">
+<h2>External Dependencies<a class="headerlink" href="#external-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Most formats are handled entirely within the module.  Two formats
+require external command-line utilities:</p>
+<div class="section" id="id2">
+<h3>pdftotext<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> utility is used to extract text from PDF files.  It
+is available in the <code class="docutils literal notranslate"><span class="pre">poppler-utils</span></code> or <code class="docutils literal notranslate"><span class="pre">xpdf-utils</span></code> package on most
+systems:</p>
+<ul class="simple">
+<li><strong>Debian/Ubuntu</strong>: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">install</span> <span class="pre">poppler-utils</span></code></li>
+<li><strong>Fedora/RHEL</strong>: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">dnf</span> <span class="pre">install</span> <span class="pre">poppler-utils</span></code></li>
+<li><strong>macOS</strong>: <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">poppler</span></code></li>
+<li><strong>FreeBSD</strong>: <code class="docutils literal notranslate"><span class="pre">pkg</span> <span class="pre">install</span> <span class="pre">poppler-utils</span></code></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> is not installed and a PDF file is passed to
+<code class="docutils literal notranslate"><span class="pre">convertFile()</span></code> or <code class="docutils literal notranslate"><span class="pre">convert()</span></code>, an error will be thrown.</p>
+</div>
+<div class="section" id="id3">
+<h3>catdoc<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">catdoc</span></code> utility is used to extract text from legacy Microsoft
+Word <code class="docutils literal notranslate"><span class="pre">.doc</span></code> files on Linux and FreeBSD.  On macOS, the built-in
+<code class="docutils literal notranslate"><span class="pre">textutil</span></code> command is used instead.</p>
+<ul class="simple">
+<li><strong>Debian/Ubuntu</strong>: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">install</span> <span class="pre">catdoc</span></code></li>
+<li><strong>Fedora/RHEL</strong>: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">dnf</span> <span class="pre">install</span> <span class="pre">catdoc</span></code></li>
+<li><strong>FreeBSD</strong>: <code class="docutils literal notranslate"><span class="pre">pkg</span> <span class="pre">install</span> <span class="pre">catdoc</span></code></li>
+<li><strong>macOS</strong>: No installation required (<code class="docutils literal notranslate"><span class="pre">textutil</span></code> is built-in).</li>
+</ul>
+<p>If neither <code class="docutils literal notranslate"><span class="pre">catdoc</span></code> nor <code class="docutils literal notranslate"><span class="pre">textutil</span></code> is available and a <code class="docutils literal notranslate"><span class="pre">.doc</span></code> file
+is passed to <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code> or <code class="docutils literal notranslate"><span class="pre">convert()</span></code>, an error will be thrown.</p>
+</div>
+</div>
+<div class="section" id="loading-and-using-the-module">
+<h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
+function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">totext</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-totext&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p>The rampart-totext module exports three functions: <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">convert()</span></code>, and <code class="docutils literal notranslate"><span class="pre">identify()</span></code>.</p>
+<div class="section" id="convertfile">
+<h3>convertFile<a class="headerlink" href="#convertfile" title="Permalink to this headline">¶</a></h3>
+<p>Extract plain text from a document file on disk.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="nx">filename</span><span class="p">[,</span> <span class="nx">details</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span>, the path to the file to convert.
+If the file is gzip-compressed (e.g. <code class="docutils literal notranslate"><span class="pre">myfile.1.gz</span></code>), it will be
+transparently decompressed before conversion.</li>
+<li><code class="docutils literal notranslate"><span class="pre">details</span></code> is an optional <span class="green">Boolean</span> or <span class="green">Object</span>.
+If <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">{details:</span> <span class="pre">true}</span></code> is passed, the function returns
+an <span class="green">Object</span> instead of a <span class="green">String</span> (see below).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">By default, a <span class="green">String</span> containing the extracted plain text.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">details</span></code> is set, an <span class="green">Object</span> with the following
+properties:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> — a <span class="green">String</span>, the extracted plain text.</li>
+<li><code class="docutils literal notranslate"><span class="pre">mimeType</span></code> — a <span class="green">String</span>, the MIME type of the detected
+input format (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;text/html&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot;</span></code>).
+For unknown formats, the MIME type is
+<code class="docutils literal notranslate"><span class="pre">&quot;application/octet-stream&quot;</span></code>.</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">totext</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-totext&quot;</span><span class="p">);</span>
+
+<span class="cm">/* convert an HTML file to text */</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s2">&quot;/path/to/document.html&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+
+<span class="cm">/* convert a DOCX file with details */</span>
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s2">&quot;/path/to/report.docx&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">mimeType</span><span class="p">);</span>  <span class="c1">// &quot;application/vnd.openxmlformats-...&quot;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
+
+<span class="cm">/* convert a gzipped man page */</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s2">&quot;/usr/share/man/man1/ls.1.gz&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+
+<span class="cm">/* convert a PDF (requires pdftotext) */</span>
+<span class="k">try</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s2">&quot;/path/to/paper.pdf&quot;</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+<span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;PDF conversion failed:&quot;</span><span class="p">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="convert">
+<h3>convert<a class="headerlink" href="#convert" title="Permalink to this headline">¶</a></h3>
+<p>Extract plain text from in-memory document content.  This function
+behaves the same as <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code> but takes a <span class="green">String</span> or
+<span class="green">Buffer</span> of document content instead of a filename.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">content</span><span class="p">[,</span> <span class="nx">details</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">content</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span> containing the
+document data to convert.  If the data is gzip-compressed, it will
+be transparently decompressed before conversion.</li>
+<li><code class="docutils literal notranslate"><span class="pre">details</span></code> is an optional <span class="green">Boolean</span> or <span class="green">Object</span>,
+with the same behavior as in <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">Same as <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code>.</p>
+<p>Note: since no filename is available, file type detection relies
+entirely on content inspection.  For ambiguous formats (e.g. plain
+text vs. Markdown), the content heuristic determines the type.</p>
+<p class="last">For PDF and legacy <code class="docutils literal notranslate"><span class="pre">.doc</span></code> formats, the content is passed to the
+external tool via standard input.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">totext</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-totext&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="cm">/* convert a buffer read from a file */</span>
+<span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;/path/to/document.docx&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">buf</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+
+<span class="cm">/* convert with details */</span>
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span> <span class="p">{</span><span class="nx">details</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">mimeType</span><span class="p">);</span>  <span class="c1">// &quot;application/vnd.openxmlformats-...&quot;</span>
+
+<span class="cm">/* convert an HTML string directly */</span>
+<span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s2">&quot;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">html</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>  <span class="c1">// &quot;Hello\n\nWorld&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="identify">
+<h3>identify<a class="headerlink" href="#identify" title="Permalink to this headline">¶</a></h3>
+<p>Identify the file format of a document without converting it.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="nx">filename</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span>, the path to the file to identify.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a <span class="green">Buffer</span> containing the document data.</p>
+<p>If the data is gzip-compressed, it will be transparently
+decompressed before identification.</p>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">A <span class="green">String</span>, one of the following type names:</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;text&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;plaintext&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;html&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;markdown&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;xml&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;latex&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rtf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;man&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;docx&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pptx&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;xlsx&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;odt&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;odp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ods&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;epub&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;doc&quot;</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">&quot;unknown&quot;</span></code>.</p>
+<p class="last">The file type is determined primarily by inspecting the content.
+If the content is ambiguous, the file extension is used as a
+fallback (when a filename is provided).</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">totext</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-totext&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="s2">&quot;myfile.docx&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">type</span><span class="p">);</span>  <span class="c1">// &quot;docx&quot;</span>
+
+<span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;presentation.pptx&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">totext</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="nx">buf</span><span class="p">));</span>  <span class="c1">// &quot;pptx&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="output-format">
+<h2>Output Format<a class="headerlink" href="#output-format" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code> and <code class="docutils literal notranslate"><span class="pre">convert()</span></code> functions return plain text
+formatted for search indexing and semantic analysis:</p>
+<ul class="simple">
+<li><strong>Paragraph separation</strong> — Block-level elements (headings,
+paragraphs, list items, table cells) are separated by double
+newlines (<code class="docutils literal notranslate"><span class="pre">\n\n</span></code>).</li>
+<li><strong>Whitespace normalization</strong> — For document formats (HTML, DOCX,
+RTF, etc.), consecutive spaces, tabs and single newlines within a
+paragraph are collapsed to a single space.  For source code and
+structured text files (<code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.json</span></code>, <code class="docutils literal notranslate"><span class="pre">.py</span></code>, etc.), the
+original formatting is preserved.</li>
+<li><strong>Trimming</strong> — Leading and trailing whitespace is removed from the
+output.</li>
+<li><strong>Entity decoding</strong> — HTML and XML entities (e.g. <code class="docutils literal notranslate"><span class="pre">&amp;amp;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&amp;#8220;</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;nbsp;</span></code>) are decoded to their Unicode equivalents.</li>
+<li><strong>Formatting removal</strong> — Bold, italic, font changes, colors,
+indentation, and other visual formatting are discarded.</li>
+<li><strong>Tag stripping</strong> — All markup tags (HTML, XML, RTF control words,
+LaTeX commands, troff macros) are removed.  An inline tag that is
+stripped will leave a space to prevent adjacent words from being
+concatenated.</li>
+</ul>
+</div>
+<div class="section" id="notes-on-specific-formats">
+<h2>Notes on Specific Formats<a class="headerlink" href="#notes-on-specific-formats" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="docx">
+<h3>DOCX<a class="headerlink" href="#docx" title="Permalink to this headline">¶</a></h3>
+<p>The module extracts text from the main document body
+(<code class="docutils literal notranslate"><span class="pre">word/document.xml</span></code>).  The actual document path is resolved by
+parsing <code class="docutils literal notranslate"><span class="pre">_rels/.rels</span></code>, so non-standard paths (e.g.
+<code class="docutils literal notranslate"><span class="pre">word/document2.xml</span></code>) are handled correctly.  Headers, footers,
+footnotes, endnotes, and comments stored in separate XML files within
+the ZIP archive are not currently extracted.</p>
+</div>
+<div class="section" id="pptx">
+<h3>PPTX<a class="headerlink" href="#pptx" title="Permalink to this headline">¶</a></h3>
+<p>The module iterates over all slide XML files
+(<code class="docutils literal notranslate"><span class="pre">ppt/slides/slide1.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">slide2.xml</span></code>, etc.) in the ZIP archive
+and extracts text from each.  Text from all slides is concatenated
+with paragraph breaks between slides.</p>
+</div>
+<div class="section" id="xlsx">
+<h3>XLSX<a class="headerlink" href="#xlsx" title="Permalink to this headline">¶</a></h3>
+<p>The module extracts text from the shared string table
+(<code class="docutils literal notranslate"><span class="pre">xl/sharedStrings.xml</span></code>), which contains all unique string values
+used in the spreadsheet.  This captures cell text content without
+duplicating repeated values.</p>
+</div>
+<div class="section" id="odt-odp-ods">
+<h3>ODT / ODP / ODS<a class="headerlink" href="#odt-odp-ods" title="Permalink to this headline">¶</a></h3>
+<p>The module extracts text from <code class="docutils literal notranslate"><span class="pre">content.xml</span></code>, which in the ODF format
+contains the main document body as well as headers, footers, footnotes,
+and annotations.  All three OpenDocument formats (text, presentation,
+spreadsheet) use the same <code class="docutils literal notranslate"><span class="pre">content.xml</span></code> structure.  The module is
+compatible with ODF versions 1.0 through 1.3 and files produced by
+OpenOffice, LibreOffice, and other ODF-compliant applications.</p>
+</div>
+<div class="section" id="epub">
+<h3>EPUB<a class="headerlink" href="#epub" title="Permalink to this headline">¶</a></h3>
+<p>The module extracts and concatenates text from all <code class="docutils literal notranslate"><span class="pre">.xhtml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.html</span></code>, and <code class="docutils literal notranslate"><span class="pre">.htm</span></code> files found in the EPUB archive.  The
+extracted HTML is then processed using the <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code> module.</p>
+</div>
+<div class="section" id="markdown">
+<h3>Markdown<a class="headerlink" href="#markdown" title="Permalink to this headline">¶</a></h3>
+<p>The module preprocesses the Markdown source to remove Pandoc extensions
+(fenced div markers <code class="docutils literal notranslate"><span class="pre">:::</span></code>, attribute spans <code class="docutils literal notranslate"><span class="pre">{.class</span> <span class="pre">#id}</span></code>) before
+passing the content to <code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code> for conversion to HTML and
+then to <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code> for text extraction.  Standard CommonMark
+syntax is fully supported.</p>
+</div>
+<div class="section" id="pdf">
+<h3>PDF<a class="headerlink" href="#pdf" title="Permalink to this headline">¶</a></h3>
+<p>PDF text extraction is delegated to the external <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> utility,
+which is invoked with UTF-8 encoding.  When using <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code>,
+the filename is passed directly to <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code>.  When using
+<code class="docutils literal notranslate"><span class="pre">convert()</span></code> with a buffer, the content is passed via standard input.</p>
+<p>The quality of the extracted text depends on the PDF’s internal
+structure — PDFs created from text documents generally produce excellent
+results, while scanned documents (image-only PDFs) will produce no text
+output.</p>
+</div>
+<div class="section" id="legacy-word-doc">
+<h3>Legacy Word (.doc)<a class="headerlink" href="#legacy-word-doc" title="Permalink to this headline">¶</a></h3>
+<p>The legacy <code class="docutils literal notranslate"><span class="pre">.doc</span></code> format (OLE2 Compound Document) is a proprietary
+binary format.  Text extraction is delegated to <code class="docutils literal notranslate"><span class="pre">catdoc</span></code> on Linux
+and FreeBSD, or to <code class="docutils literal notranslate"><span class="pre">textutil</span></code> on macOS.  When using <code class="docutils literal notranslate"><span class="pre">convert()</span></code>
+with a buffer, the content is passed to the tool via standard input.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rampart-python.html" class="btn btn-neutral float-right" title="The rampart-python module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rampart-redis.html" class="btn btn-neutral" title="The rampart-redis module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2025, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.6.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
