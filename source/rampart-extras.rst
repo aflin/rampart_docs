@@ -404,6 +404,8 @@ directory.
 rampart-converter
 -----------------
 
+NOTE: superseded by :doc:`rampart-totext module <rampart-totext>`.
+
 The included rampart-converter module uses command line utilities to convert
 various file formats into plain text suitable for indexing with the 
 :ref:`sql module<rampart-sql:Preface>`.

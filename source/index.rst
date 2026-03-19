@@ -18,6 +18,7 @@ Welcome to Rampart's documentation.
    The rampart-curl module <rampart-curl>
    The rampart-lmdb module <rampart-lmdb>
    The rampart-redis module <rampart-redis>
+   The rampart-totext module <rampart-totext>
    The rampart-python module <rampart-python>
    The rampart-robots module <rampart-robots>
    The rampart-cmark module <rampart-cmark>
