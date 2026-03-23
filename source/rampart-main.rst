@@ -163,6 +163,71 @@ Example:
   rampart.globalize(rampart.utils, ["printf"]);
   printf("only printf is a global var\n");
 
+rampart.localize
+""""""""""""""""
+
+Put all or named properties of an :green:`Object` into the local scope
+of the calling function.  Localized names are accessible as if they were
+local variables, but do not pollute the global namespace.  When called
+from the global scope, the behavior is identical to `rampart.globalize`_.
+
+.. code-block:: javascript
+
+    rampart.localize(var_obj [, filterOrIgnore [, ignoreConflicts]]);
+
++------------------+------------------+-----------------------------------------------------------+
+|Argument          |Type              |Description                                                |
++==================+==================+===========================================================+
+|var_obj           |:green:`Object`   | The :green:`Object` with the properties to be localized.  |
++------------------+------------------+-----------------------------------------------------------+
+|filterOrIgnore    |:green:`Array` or | If an :green:`Array`, only the named properties will be   |
+|                  |:green:`Boolean`  | copied (same convention as ``rampart.globalize``).         |
+|                  |                  +-----------------------------------------------------------+
+|                  |                  | If a :green:`Boolean` set ``true``, silently skip          |
+|                  |                  | properties that conflict with local variable               |
+|                  |                  | declarations.  Default is ``false`` (throw a               |
+|                  |                  | ``TypeError`` on conflict).                                |
++------------------+------------------+-----------------------------------------------------------+
+|ignoreConflicts   |:green:`Boolean`  | When ``filterOrIgnore`` is an :green:`Array`, this         |
+|                  |                  | optional third argument controls conflict behavior.        |
+|                  |                  | If ``true``, silently skip conflicts.  Default is          |
+|                  |                  | ``false`` (throw a ``TypeError``).                         |
++------------------+------------------+-----------------------------------------------------------+
+
+Return value:
+   ``undefined``.
+
+Note:
+   Names that are declared with ``var`` in the calling function are
+   register-bound at compile time and cannot be overridden by ``localize``.
+   By default, attempting to localize a name that conflicts with a ``var``
+   declaration throws a ``TypeError``.  Setting ``ignoreConflicts`` to
+   ``true`` causes the conflicting name to be silently skipped while
+   still copying non-conflicting names.
+
+Example:
+
+.. code-block:: javascript
+
+   function handleRequest() {
+       rampart.localize(rampart.utils);
+       printf("rampart.utils.* are now local to this function!\n");
+   }
+
+   /* with a filter */
+   function handleRequest2() {
+       rampart.localize(rampart.utils, ["printf", "sprintf"]);
+       printf("only printf and sprintf are local\n");
+   }
+
+   /* with ignore conflicts */
+   function myFunc() {
+       var printf = null; /* local var declaration */
+       rampart.localize(rampart.utils, true);
+       /* printf stays null (conflict skipped), other utils are localized */
+       sprintf("this works: %s\n", "yes");
+   }
+
 rampart.utils
 """""""""""""
 
