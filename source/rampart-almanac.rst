@@ -348,16 +348,16 @@ More information, and this example (slightly modified) can be found `here <https
     // get supported states e.g. for US
     var res = hd.getStates('US');
     printf("%3J\n", res);
-    /*  res = 
+    /*  res =
         {
-           al: 'Alabama',
+           AL: 'Alabama',
            ...
-           wy: 'Wyoming'
+           WY: 'Wyoming'
         }
     */
 
-    // get supported regions e.g. for US, Lousiana
-    res = hd.getRegions('US', 'la');
+    // get supported regions e.g. for US, Louisiana
+    res = hd.getRegions('US', 'LA');
     printf("%3J\n", res);
     /*  res = 
         {
@@ -365,8 +365,8 @@ More information, and this example (slightly modified) can be found `here <https
         }
     */
 
-    // initialize holidays for US, Lousiana, New Orleans
-    hd.init('US', 'la', 'no');
+    // initialize holidays for US, Louisiana, New Orleans
+    hd.init('US', 'LA', 'NO');
 
     /* or using a new instance */
     //hd = new Holidays('US', 'la', 'no');
@@ -409,7 +409,7 @@ More information, and this example (slightly modified) can be found `here <https
 
     res = hd.isHoliday(rampart.utils.autoScanDate('2016-02-09 00:00:00 -0600').date);
     printf("%3J\n", res);
-    /*  res = 
+    /*  res =
         [
            {
               "date": "2016-02-09 00:00:00",
@@ -420,3 +420,387 @@ More information, and this example (slightly modified) can be found `here <https
            }
         ]
     */
+
+Weather
+-------
+
+The weather sub-module provides access to weather data from
+`Open-Meteo <https://open-meteo.com/>`_\ , a free weather API for
+non-commercial use.  It is available as ``almanac.weather`` and includes
+geocoding, current conditions, forecasts, historical data, air quality
+and marine weather.  Results are cached in an LMDB database to minimize
+API calls.
+
+    Attribution: Weather data by `Open-Meteo.com <https://open-meteo.com/>`_\ .
+    Geocoding data from `GeoNames <https://www.geonames.org/>`_\ .
+
+almanac.weather.configure()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configure the weather module.
+
+Usage:
+
+.. code-block:: javascript
+
+    var almanac = require("rampart-almanac");
+    var weather = almanac.weather;
+
+    weather.configure(options);
+
+Where ``options`` is an :green:`Object` which may contain any of the following:
+
+* ``lmdbCache`` - :green:`String` or ``null``.  Path to the LMDB cache
+  directory.  If not set, defaults to ``/tmp/rampart-open-meteo-cache``.
+  If set to ``null``, caching is disabled entirely.
+
+* ``units`` - :green:`String`.  Set to ``"imperial"`` for Fahrenheit, mph
+  and inches, or ``"metric"`` for Celsius, km/h and mm.
+
+* ``temperature_unit`` - :green:`String`.  ``"celsius"`` (default) or
+  ``"fahrenheit"``.
+
+* ``wind_speed_unit`` - :green:`String`.  ``"kmh"`` (default), ``"mph"``,
+  ``"ms"`` or ``"kn"``.
+
+* ``precipitation_unit`` - :green:`String`.  ``"mm"`` (default) or
+  ``"inch"``.
+
+* ``timezone`` - :green:`String`.  IANA timezone or ``"auto"`` (default).
+
+* ``maxTime`` - :green:`Number`.  Maximum seconds per HTTP request
+  (default ``10``).
+
+* ``retries`` - :green:`Number`.  Number of retries on failure (default
+  ``2``).
+
+Example:
+
+.. code-block:: javascript
+
+    weather.configure({ units: 'imperial', lmdbCache: '/var/data/weather-cache' });
+
+almanac.weather.search()
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Search for a place by name using the Open-Meteo geocoding API.
+
+Usage:
+
+.. code-block:: javascript
+
+    var results = weather.search(name [, options]);
+
+    /* async version */
+    weather.searchAsync(name [, options], callback);
+
+Where:
+
+* ``name`` is a :green:`String`, the place name to search for.
+
+* ``options`` is an optional :green:`Object` with:
+
+  * ``count`` - :green:`Number` (default ``10``).  Maximum results.
+  * ``language`` - :green:`String`.  ISO-639 language code.
+  * ``countryCode`` - :green:`String`.  ISO-3166-1 alpha-2 country code filter.
+
+Return Value: An :green:`Array` of :green:`Objects`, each containing
+``name``, ``latitude``, ``longitude``, ``country``, ``country_code``,
+``admin1``, ``timezone``, ``population`` and ``elevation``.
+
+Results are cached for 30 days.
+
+Example:
+
+.. code-block:: javascript
+
+    var places = weather.search('San Francisco');
+    printf("%s: %.4f, %.4f\n", places[0].name, places[0].latitude, places[0].longitude);
+    /* San Francisco: 37.7749, -122.4194 */
+
+almanac.weather.current()
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get current weather conditions for a location.
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = weather.current(latitude, longitude [, options]);
+
+    /* async version */
+    weather.currentAsync(latitude, longitude [, options], callback);
+
+Where:
+
+* ``latitude`` is a :green:`Number`.
+
+* ``longitude`` is a :green:`Number`.
+
+* ``options`` is an optional :green:`Object` with unit overrides (see
+  `almanac.weather.configure()`_\ ).
+
+Return Value: An :green:`Object` containing ``current`` (with temperature,
+humidity, wind speed, weather code, etc.), ``current_units`` and a
+``weather_code_description`` :green:`String`.
+
+Results are cached for 15 minutes.
+
+Example:
+
+.. code-block:: javascript
+
+    var res = weather.current(37.77, -122.42);
+    printf("Temperature: %s %s\n", res.current.temperature_2m, res.current_units.temperature_2m);
+    printf("Conditions: %s\n", res.current.weather_code_description);
+    /* Temperature: 18.5 °C */
+    /* Conditions: Partly cloudy */
+
+almanac.weather.forecast()
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get weather forecast (current conditions, hourly and daily data).
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = weather.forecast(latitude, longitude [, options]);
+
+    /* async version */
+    weather.forecastAsync(latitude, longitude [, options], callback);
+
+Where:
+
+* ``latitude`` is a :green:`Number`.
+
+* ``longitude`` is a :green:`Number`.
+
+* ``options`` is an optional :green:`Object` with:
+
+  * ``days`` - :green:`Number` (default ``7``, max ``16``).  Forecast days.
+  * ``hourly`` - :green:`Array` of :green:`Strings` or ``false``.  Hourly
+    variables to request.  Defaults to temperature, precipitation, humidity,
+    wind speed, cloud cover and weather code.  Set to ``false`` to omit.
+  * ``daily`` - :green:`Array` of :green:`Strings` or ``false``.  Daily
+    variables to request.  Defaults to max/min temperature, precipitation sum,
+    sunrise/sunset, wind speed max and weather code.  Set to ``false`` to omit.
+  * ``current`` - :green:`Array` of :green:`Strings` or ``false``.  Current
+    condition variables.  Set to ``false`` to omit.
+  * ``past_days`` - :green:`Number` (``0``-``92``).  Include past days.
+  * ``timezone`` - :green:`String`.  IANA timezone or ``"auto"``.
+  * Unit overrides (see `almanac.weather.configure()`_\ ).
+
+Return Value: An :green:`Object` containing ``current``, ``hourly``,
+``daily``, their corresponding ``*_units`` :green:`Objects`, and
+``weather_code_description`` :green:`Arrays` for weather codes.
+
+Results are cached for 1 hour.
+
+Example:
+
+.. code-block:: javascript
+
+    var res = weather.forecast(37.77, -122.42, { days: 3 });
+    for (var i = 0; i < res.daily.time.length; i++) {
+        printf("%s: %s/%s %s\n",
+            res.daily.time[i],
+            res.daily.temperature_2m_max[i],
+            res.daily.temperature_2m_min[i],
+            res.daily.weather_code_description[i]);
+    }
+
+almanac.weather.history()
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get historical weather data (from 1940 to present).
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = weather.history(latitude, longitude, startDate, endDate [, options]);
+
+    /* async version */
+    weather.historyAsync(latitude, longitude, startDate, endDate [, options], callback);
+
+Where:
+
+* ``latitude`` is a :green:`Number`.
+
+* ``longitude`` is a :green:`Number`.
+
+* ``startDate`` is a :green:`String` in ``"YYYY-MM-DD"`` format.
+
+* ``endDate`` is a :green:`String` in ``"YYYY-MM-DD"`` format.
+
+* ``options`` is an optional :green:`Object` with ``hourly``, ``daily``,
+  ``timezone`` and unit overrides.
+
+Return Value: Same shape as `almanac.weather.forecast()`_\ .
+
+Results are cached for 7 days.
+
+Example:
+
+.. code-block:: javascript
+
+    var res = weather.history(37.77, -122.42, '2024-01-01', '2024-01-07');
+    printf("High on Jan 1: %s\n", res.daily.temperature_2m_max[0]);
+
+almanac.weather.airQuality()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get air quality data.
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = weather.airQuality(latitude, longitude [, options]);
+
+    /* async version */
+    weather.airQualityAsync(latitude, longitude [, options], callback);
+
+Where:
+
+* ``latitude`` is a :green:`Number`.
+
+* ``longitude`` is a :green:`Number`.
+
+* ``options`` is an optional :green:`Object` with:
+
+  * ``hourly`` - :green:`Array` of :green:`Strings`.  Defaults to PM10,
+    PM2.5, US AQI, European AQI and UV index.
+  * ``forecast_days`` - :green:`Number`.
+  * ``past_days`` - :green:`Number`.
+
+Return Value: An :green:`Object` containing ``hourly`` data with time,
+pollutant concentrations and air quality indices.
+
+Results are cached for 1 hour.
+
+Example:
+
+.. code-block:: javascript
+
+    var res = weather.airQuality(37.77, -122.42);
+    printf("PM2.5: %s\n", res.hourly.pm2_5[0]);
+    printf("US AQI: %s\n", res.hourly.us_aqi[0]);
+
+almanac.weather.marine()
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get marine/ocean weather data.
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = weather.marine(latitude, longitude [, options]);
+
+    /* async version */
+    weather.marineAsync(latitude, longitude [, options], callback);
+
+Where:
+
+* ``latitude`` is a :green:`Number`.
+
+* ``longitude`` is a :green:`Number`.
+
+* ``options`` is an optional :green:`Object` with ``hourly``, ``daily``,
+  ``forecast_days`` and ``past_days``.
+
+Return Value: An :green:`Object` containing ``hourly`` and ``daily`` data
+with wave height, wave direction, wave period and sea surface temperature.
+
+Results are cached for 1 hour.
+
+Example:
+
+.. code-block:: javascript
+
+    var res = weather.marine(36.95, -122.02);
+    printf("Wave height: %s m\n", res.hourly.wave_height[0]);
+
+almanac.weather.weatherAt()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Convenience function: geocode a place name and fetch the full forecast
+in a single call.
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = weather.weatherAt(placeName [, options]);
+
+    /* async version */
+    weather.weatherAtAsync(placeName [, options], callback);
+
+Where:
+
+* ``placeName`` is a :green:`String`.  Supports ``"City"``,
+  ``"City, CC"`` (two-letter country code) and common aliases like
+  ``"UK"`` for ``"GB"`` and ``"USA"`` for ``"US"``.
+
+* ``options`` is an optional :green:`Object` with the same options as
+  `almanac.weather.forecast()`_\ .
+
+Return Value: An :green:`Object` containing ``location`` (with name,
+country, latitude, longitude, timezone), ``current``, ``hourly``,
+``daily`` and their units.
+
+Example:
+
+.. code-block:: javascript
+
+    var res = weather.weatherAt('London, UK');
+    printf("%s, %s: %s°C %s\n",
+        res.location.name, res.location.country,
+        res.current.temperature_2m,
+        res.current.weather_code_description);
+
+almanac.weather.clearCache()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Delete the LMDB cache database.  The cache will be recreated
+automatically on the next API call.
+
+Usage:
+
+.. code-block:: javascript
+
+    weather.clearCache();
+
+almanac.weather.weatherCodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An :green:`Object` mapping WMO weather codes to human-readable
+descriptions.
+
+.. code-block:: javascript
+
+    printf("%s\n", weather.weatherCodes[0]);   /* "Clear sky" */
+    printf("%s\n", weather.weatherCodes[61]);  /* "Rain: slight" */
+    printf("%s\n", weather.weatherCodes[95]);  /* "Thunderstorm: slight or moderate" */
+
+Async Callbacks
+~~~~~~~~~~~~~~~
+
+All async methods (``searchAsync``, ``currentAsync``, ``forecastAsync``,
+``historyAsync``, ``airQualityAsync``, ``marineAsync``,
+``weatherAtAsync``) take a callback as the last argument with the
+signature ``function(error, data)``.
+
+.. code-block:: javascript
+
+    weather.weatherAtAsync('Tokyo', function(err, data) {
+        if (err) {
+            printf("Error: %s\n", err);
+            return;
+        }
+        printf("Temperature in %s: %s°C\n",
+            data.location.name, data.current.temperature_2m);
+    });
