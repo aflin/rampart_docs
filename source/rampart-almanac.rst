@@ -543,11 +543,21 @@ Where:
 
 * ``longitude`` is a :green:`Number`.
 
-* ``options`` is an optional :green:`Object` with unit overrides (see
-  `almanac.weather.configure()`_\ ).
+* ``options`` is an optional :green:`Object` with:
 
-Return Value: An :green:`Object` containing ``current`` (with temperature,
-humidity, wind speed, weather code, etc.), ``current_units`` and a
+  * ``variables`` - :green:`Array` of :green:`Strings`.  Variables to request.
+    Default:
+
+    .. code-block:: javascript
+
+        ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature',
+         'weather_code', 'wind_speed_10m', 'wind_direction_10m',
+         'precipitation', 'cloud_cover', 'surface_pressure']
+
+  * Unit overrides (see `almanac.weather.configure()`_\ ).
+
+Return Value: An :green:`Object` containing ``current`` (with the
+requested variables), ``current_units`` and a
 ``weather_code_description`` :green:`String`.
 
 Results are cached for 15 minutes.
@@ -585,17 +595,41 @@ Where:
 * ``options`` is an optional :green:`Object` with:
 
   * ``days`` - :green:`Number` (default ``7``, max ``16``).  Forecast days.
-  * ``hourly`` - :green:`Array` of :green:`Strings` or ``false``.  Hourly
-    variables to request.  Defaults to temperature, precipitation, humidity,
-    wind speed, cloud cover and weather code.  Set to ``false`` to omit.
-  * ``daily`` - :green:`Array` of :green:`Strings` or ``false``.  Daily
-    variables to request.  Defaults to max/min temperature, precipitation sum,
-    sunrise/sunset, wind speed max and weather code.  Set to ``false`` to omit.
-  * ``current`` - :green:`Array` of :green:`Strings` or ``false``.  Current
-    condition variables.  Set to ``false`` to omit.
+
+  * ``hourly`` - :green:`Array` of :green:`Strings` or ``false``.
+    Hourly variables to request.  Set to ``false`` to omit hourly data.
+    Default:
+
+    .. code-block:: javascript
+
+        ['temperature_2m', 'precipitation', 'relative_humidity_2m',
+         'wind_speed_10m', 'cloud_cover', 'weather_code']
+
+  * ``daily`` - :green:`Array` of :green:`Strings` or ``false``.
+    Daily variables to request.  Set to ``false`` to omit daily data.
+    Default:
+
+    .. code-block:: javascript
+
+        ['temperature_2m_max', 'temperature_2m_min', 'precipitation_sum',
+         'sunrise', 'sunset', 'wind_speed_10m_max', 'weather_code']
+
+  * ``current`` - :green:`Array` of :green:`Strings` or ``false``.
+    Current condition variables.  Set to ``false`` to omit.
+    Default:
+
+    .. code-block:: javascript
+
+        ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature',
+         'weather_code', 'wind_speed_10m', 'wind_direction_10m',
+         'precipitation', 'cloud_cover', 'surface_pressure']
+
   * ``past_days`` - :green:`Number` (``0``-``92``).  Include past days.
   * ``timezone`` - :green:`String`.  IANA timezone or ``"auto"``.
   * Unit overrides (see `almanac.weather.configure()`_\ ).
+
+  The full list of available variables can be found in the
+  `Open-Meteo forecast API documentation <https://open-meteo.com/en/docs>`_\ .
 
 Return Value: An :green:`Object` containing ``current``, ``hourly``,
 ``daily``, their corresponding ``*_units`` :green:`Objects`, and
@@ -636,9 +670,13 @@ Where:
 
 * ``longitude`` is a :green:`Number`.
 
-* ``startDate`` is a :green:`String` in ``"YYYY-MM-DD"`` format.
+* ``startDate`` is a :green:`String` (parsed by
+  :ref:`autoScanDate <rampart-utils:autoScanDate>`), a JavaScript
+  :green:`Date`, or a :green:`Number` (epoch seconds).
 
-* ``endDate`` is a :green:`String` in ``"YYYY-MM-DD"`` format.
+* ``endDate`` is a :green:`String` (parsed by
+  :ref:`autoScanDate <rampart-utils:autoScanDate>`), a JavaScript
+  :green:`Date`, or a :green:`Number` (epoch seconds).
 
 * ``options`` is an optional :green:`Object` with ``hourly``, ``daily``,
   ``timezone`` and unit overrides.
@@ -676,8 +714,16 @@ Where:
 
 * ``options`` is an optional :green:`Object` with:
 
-  * ``hourly`` - :green:`Array` of :green:`Strings`.  Defaults to PM10,
-    PM2.5, US AQI, European AQI and UV index.
+  * ``hourly`` - :green:`Array` of :green:`Strings`.  Default:
+
+    .. code-block:: javascript
+
+        ['pm10', 'pm2_5', 'us_aqi', 'european_aqi', 'uv_index']
+
+    See the `Open-Meteo air quality API documentation
+    <https://open-meteo.com/en/docs/air-quality-api>`_ for all available
+    variables.
+
   * ``forecast_days`` - :green:`Number`.
   * ``past_days`` - :green:`Number`.
 
@@ -714,11 +760,30 @@ Where:
 
 * ``longitude`` is a :green:`Number`.
 
-* ``options`` is an optional :green:`Object` with ``hourly``, ``daily``,
-  ``forecast_days`` and ``past_days``.
+* ``options`` is an optional :green:`Object` with:
+
+  * ``hourly`` - :green:`Array` of :green:`Strings`.  Default:
+
+    .. code-block:: javascript
+
+        ['wave_height', 'wave_direction', 'wave_period',
+         'sea_surface_temperature']
+
+  * ``daily`` - :green:`Array` of :green:`Strings`.  Default:
+
+    .. code-block:: javascript
+
+        ['wave_height_max', 'wave_direction_dominant', 'wave_period_max']
+
+  * ``forecast_days`` - :green:`Number`.
+  * ``past_days`` - :green:`Number`.
+
+  See the `Open-Meteo marine API documentation
+  <https://open-meteo.com/en/docs/marine-weather-api>`_ for all available
+  variables.
 
 Return Value: An :green:`Object` containing ``hourly`` and ``daily`` data
-with wave height, wave direction, wave period and sea surface temperature.
+with the requested variables.
 
 Results are cached for 1 hour.
 
