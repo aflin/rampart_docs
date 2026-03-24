@@ -426,13 +426,18 @@ Weather
 
 The weather sub-module provides access to weather data from
 `Open-Meteo <https://open-meteo.com/>`_\ , a free weather API for
-non-commercial use.  It is available as ``almanac.weather`` and includes
-geocoding, current conditions, forecasts, historical data, air quality
-and marine weather.  Results are cached in an LMDB database to minimize
-API calls.
+non-commercial use.  Commercial use requires a paid API subscription.
+It is available as ``almanac.weather`` and includes geocoding, current
+conditions, forecasts, historical data, air quality and marine weather.
+Results are cached in an LMDB database to minimize API calls.
 
-    Attribution: Weather data by `Open-Meteo.com <https://open-meteo.com/>`_\ .
-    Geocoding data from `GeoNames <https://www.geonames.org/>`_\ .
+Weather data from Open-Meteo is licensed under
+`CC BY 4.0 <https://creativecommons.org/licenses/by/4.0/>`_\ , which
+requires attribution.  Any application that displays Open-Meteo data
+should include an attribution notice such as:
+
+    Weather data by `Open-Meteo.com <https://open-meteo.com/>`_
+    (`CC BY 4.0 <https://creativecommons.org/licenses/by/4.0/>`_)
 
 almanac.weather.configure()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
