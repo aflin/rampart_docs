@@ -102,8 +102,8 @@ Example:
 almanac.moontimes()
 ~~~~~~~~~~~~~~~~~~~
 
-Calculate moon position times for a given day, longitude and latitude.
-Also return dates of the next moon phases.
+Calculate the next moon rise and set times from the given date/time, for a
+given longitude and latitude.  Also return dates of the next moon phases.
 
 Usage:
 
@@ -111,12 +111,14 @@ Usage:
 
     var almanac = require("rampart-almanac");
 
-    var times = almanac.suntimes(date, latitude, longitude);
+    var times = almanac.moontimes(date, latitude, longitude);
 
 Where:
 
 * ``date`` is a JavaScript :green:`Date` or a :green:`String` (which is converted using
-  :ref:`autoScanDate <rampart-utils:autoScanDate>`).
+  :ref:`autoScanDate <rampart-utils:autoScanDate>`).  The next moonrise and moonset
+  occurring after this date/time are returned.  To get times for a specific day,
+  pass local midnight (e.g. ``"2024-01-01 00:00:00 -0700"``).
 
 * ``latitude`` is a :green:`Number` (negative for south).
 
@@ -130,26 +132,30 @@ Example:
 
     var almanac = require("rampart-almanac");
 
-    var times = almanac.moontimes("2024-01-01 -0700", 37.77, -122.42);
-    /*  times = 
+    var times = almanac.moontimes("2024-01-01 00:00:00 -0700", 37.77, -122.42);
+    /*  times =
         {
-           "moonrise": "2024-01-01T05:39:21.000Z",
-           "moonset": "2024-01-01T19:02:42.000Z",
-           "newMoon": "2024-01-11T11:57:54.000Z",
-           "firstQuarter": "2024-01-18T03:53:09.000Z",
-           "fullMoon": "2024-01-25T17:54:41.000Z",
+           "moonrise": "2024-01-02T06:37:25.000Z",
+           "moonset": "2024-01-01T19:02:43.000Z",
+           "newMoon": "2024-01-11T11:57:55.000Z",
+           "firstQuarter": "2024-01-18T03:53:10.000Z",
+           "fullMoon": "2024-01-25T17:54:42.000Z",
            "lastQuarter": "2024-01-04T03:31:09.000Z",
-           "moonriseAzimuth": 75.56532169981396,
-           "moonsetAzimuth": 280.6774632262042,
-           "moonPhase": 0.6554114447709545,
-           "moonIllumination": 0.779971673366036
+           "moonriseAzimuth": 82.64960233180054,
+           "moonsetAzimuth": 280.67746349893633,
+           "moonPhase": 0.6641758156156009,
+           "moonIllumination": 0.7567459628710032
         }
     */
+    /* Note: moonset may be before moonrise if the moon is
+       already up at the given time. */
 
 almanac.celestials()
 ~~~~~~~~~~~~~~~~~~~~
 
-Calculate sun, moon and planet times for a given day, longitude and latitude.
+Calculate the next rise and set times for the sun, moon and planets from
+the given date/time, for a given longitude and latitude.  Also return
+current position data (right ascension, declination, azimuth and altitude).
 
 Usage:
 
@@ -552,7 +558,8 @@ Where:
 
         ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature',
          'weather_code', 'wind_speed_10m', 'wind_direction_10m',
-         'precipitation', 'cloud_cover', 'surface_pressure']
+         'precipitation', 'cloud_cover', 'cloud_cover_low',
+         'cloud_cover_mid', 'cloud_cover_high', 'surface_pressure']
 
   * Unit overrides (see `almanac.weather.configure()`_\ ).
 
@@ -622,7 +629,8 @@ Where:
 
         ['temperature_2m', 'relative_humidity_2m', 'apparent_temperature',
          'weather_code', 'wind_speed_10m', 'wind_direction_10m',
-         'precipitation', 'cloud_cover', 'surface_pressure']
+         'precipitation', 'cloud_cover', 'cloud_cover_low',
+         'cloud_cover_mid', 'cloud_cover_high', 'surface_pressure']
 
   * ``past_days`` - :green:`Number` (``0``-``92``).  Include past days.
   * ``timezone`` - :green:`String`.  IANA timezone or ``"auto"``.
