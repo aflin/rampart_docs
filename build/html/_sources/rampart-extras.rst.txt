@@ -496,6 +496,338 @@ Command Line usage:
 
     > rampart /path/to/rampart-converter.js /path/to/document.ext
 
+rampart-llm
+-----------
+
+The ``rampart-llm.js`` module provides a streaming interface to LLM servers
+that expose an OpenAI-compatible API.  It supports both
+`llama.cpp's llama-server <https://github.com/ggml-org/llama.cpp>`_ and
+`Ollama <https://ollama.com/>`_, and handles SSE parsing, thinking/reasoning
+model output, and cancellation.
+
+The module lives in the ``process.modulesPath`` directory.
+
+Loading the module
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: javascript
+
+    var llm = require("rampart-llm.js");
+
+Creating a connection
+~~~~~~~~~~~~~~~~~~~~~
+
+The module exports two constructors, one for each supported backend.  Both
+accept an :green:`Object` of options and verify that the server is reachable
+on construction.
+
+.. code-block:: javascript
+
+    // llama-server (llama.cpp)
+    var client = new llm.llamaCpp({
+        server: "127.0.0.1",   // default
+        port:   8080            // default
+    });
+
+    // Ollama
+    var client = new llm.ollama({
+        server: "127.0.0.1",   // default
+        port:   11434           // default
+    });
+
+An error is thrown if the server is not running at the given address.
+
+Note: ``llama-server`` loads a single model at startup, so the ``model``
+property described below is required by the API format but its value is
+ignored.  With Ollama, the ``model`` name selects which model to use.
+
+Instance properties
+~~~~~~~~~~~~~~~~~~~
+
+After construction, set properties on the instance before calling ``query()``.
+
+    * ``model`` - :green:`String`.  The model name.  Required for Ollama
+      (e.g. ``"qwen2.5-coder:7b"``).  For llamaCpp, any non-empty string
+      will do since llama-server always uses its loaded model.
+
+    * ``params`` - :green:`Object`.  Sampling and generation parameters that
+      are merged directly into the ``/v1/chat/completions`` POST body.
+      Common parameters include:
+
+      - ``temperature`` - :green:`Number`.  Controls randomness (0.0 – 2.0).
+      - ``max_tokens`` - :green:`Number`.  Maximum tokens to generate.
+      - ``top_p`` - :green:`Number`.  Nucleus sampling threshold (0.0 – 1.0).
+      - ``top_k`` - :green:`Number`.  Top-k sampling.
+      - ``repeat_penalty`` - :green:`Number`.  Repetition penalty (1.0 = off; 1.1 – 1.3 typical).
+      - ``frequency_penalty`` - :green:`Number`.  Penalize tokens by frequency (0.0 – 1.0).
+      - ``presence_penalty`` - :green:`Number`.  Penalize tokens by presence (0.0 – 1.0).
+
+    * ``cancel`` - :green:`Boolean`.  Set to ``true`` to abort an in-flight
+      query.  The stream will stop on the next chunk and the final callback
+      will fire.
+
+Example:
+
+.. code-block:: javascript
+
+    client.model  = "qwen2.5-3b-instruct-q4_k_m.gguf";
+    client.params = {temperature: 0.2, max_tokens: 4096};
+
+query()
+~~~~~~~
+
+The ``query()`` method sends a prompt to the server and streams the response
+back through callbacks.
+
+.. code-block:: javascript
+
+    client.query(prompt, perTokenCallback, finalCallback);
+
+Where:
+
+    * ``prompt`` - :green:`Array` or :green:`String`.  If an :green:`Array`,
+      it is sent as ``messages`` to the ``/v1/chat/completions`` endpoint
+      (chat mode).  Each element is an :green:`Object` with ``role``
+      (``"system"``, ``"user"``, or ``"assistant"``) and ``content``
+      properties.  If a :green:`String`, it is sent as ``prompt`` to the
+      ``/v1/completions`` endpoint (completion mode).
+
+    * ``perTokenCallback`` - :green:`Function`.  Called for each streamed
+      token and on error or completion.  May be ``null`` if only
+      ``finalCallback`` is needed.  The callback receives a single
+      :green:`Object` argument with the following properties:
+
+      - ``token`` - :green:`String`.  The token text.
+      - ``thinking`` - :green:`Boolean`.  ``true`` if this token is
+        reasoning/thinking content (from ``<think>`` tags or the
+        ``--reasoning-format`` flag in llama-server).
+      - ``error`` - Set if the server returned an error.
+      - ``done`` - :green:`Boolean`.  ``true`` when the stream has ended.
+      - ``serverResponse`` - The raw HTTP response object.
+
+    * ``finalCallback`` - :green:`Function`.  Called once after the stream
+      ends.  Receives a single :green:`Object` with:
+
+      - ``fullText`` - :green:`String`.  The complete response text
+        (excluding thinking content).
+      - ``thinkingText`` - :green:`String`.  The complete thinking/reasoning
+        text (only present if the model produced thinking output).
+      - ``answer`` - :green:`String`.  The answer portion after thinking
+        (only present if ``thinkingText`` is present).
+      - ``serverResponse`` - The raw HTTP response object.
+      - ``error`` - Set if the query failed.
+
+At least one of ``perTokenCallback`` or ``finalCallback`` must be provided.
+
+Chat example
+~~~~~~~~~~~~
+
+A basic chat completion with streaming output:
+
+.. code-block:: javascript
+
+    var llm = require("rampart-llm.js");
+    var client = new llm.llamaCpp({server: "127.0.0.1", port: 8080});
+
+    client.params = {temperature: 0.7, max_tokens: 2048};
+
+    var prompt = [
+        {role: "system",  content: "You are a helpful assistant."},
+        {role: "user",    content: "What is the capital of France?"}
+    ];
+
+    client.query(
+        prompt,
+
+        // per-token callback — print each token as it arrives
+        function(res) {
+            if (res.error) {
+                fprintf(stderr, "Error: %J\n", res.error);
+                return;
+            }
+            if (res.done) return;
+
+            if (res.thinking)
+                fprintf(stderr, "(thinking) %s", res.token);
+            else
+                printf("%s", res.token);
+        },
+
+        // final callback — runs once when the stream ends
+        function(res) {
+            if (res.error) {
+                fprintf(stderr, "Query failed: %J\n", res.error);
+                return;
+            }
+            printf("\n\n--- Complete response ---\n%s\n", res.fullText);
+        }
+    );
+
+Multi-turn conversation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+To maintain a conversation, accumulate messages and send the full array
+on each turn.  The server is stateless — it needs the entire history
+every time.
+
+.. code-block:: javascript
+
+    var conversation = [
+        {role: "system", content: "You are a helpful assistant."}
+    ];
+
+    function ask(question, callback) {
+        conversation.push({role: "user", content: question});
+
+        client.query(conversation, null, function(res) {
+            if (!res.error) {
+                conversation.push({role: "assistant", content: res.fullText});
+                printf("%s\n", res.fullText);
+            }
+            if (callback) callback();
+        });
+    }
+
+    ask("What is the capital of France?", function() {
+        ask("What is its population?");
+    });
+
+Cancelling a query
+~~~~~~~~~~~~~~~~~~
+
+Setting ``cancel`` to ``true`` on the instance will abort the current stream
+on the next chunk.
+
+.. code-block:: javascript
+
+    // start a query
+    client.query(prompt, function(res) {
+        if (res.done) {
+            printf("(cancelled or complete)\n");
+            return;
+        }
+        printf("%s", res.token);
+    });
+
+    // cancel it after 2 seconds
+    setTimeout(function() {
+        client.cancel = true;
+    }, 2000);
+
+Overriding params per query
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``params`` property can be saved and temporarily replaced for a
+side-query (e.g. a short classification task) without affecting the main
+conversation settings.
+
+.. code-block:: javascript
+
+    var savedParams = client.params;
+    client.params = {temperature: 0.1, max_tokens: 2048};
+
+    client.query(classifyPrompt, null, function(res) {
+        client.params = savedParams;  // restore original params
+        printf("Classification: %s\n", res.fullText);
+    });
+
+Thinking/reasoning models
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some models produce internal reasoning wrapped in ``<think>...</think>`` tags
+or via a separate ``reasoning_content`` field (when llama-server is started
+with ``--reasoning-format deepseek``).  The module handles both formats
+transparently:
+
+- In the per-token callback, ``res.thinking`` is ``true`` for reasoning tokens
+  and ``false`` for answer tokens.
+- In the final callback, ``res.thinkingText`` contains the full reasoning
+  and ``res.answer`` contains only the answer.  ``res.fullText`` contains
+  the full non-thinking output.
+
+Note that thinking tokens consume the ``max_tokens`` budget but do not
+appear in ``fullText``.  When using thinking models, set ``max_tokens``
+high enough to accommodate both reasoning and answer (4096 or more is
+recommended, as reasoning can easily consume several thousand tokens
+before the visible answer begins).
+
+Context window management
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a conversation grows long enough to exceed the server's context
+window, the server will return an error.  There are two approaches to
+handling this:
+
+**llama-server (llama.cpp):**  Start the server with the ``--context-shift``
+flag to allow automatic context shifting — older tokens are discarded
+from the KV cache to make room for new ones.  This is a server-start
+flag and cannot be set per-request.  The context size is set with ``-c``
+(e.g. ``-c 32768``).  When using
+``--parallel`` for multiple slots, the context is divided evenly among
+slots.
+
+llama-server also exposes several useful REST endpoints beyond the
+OpenAI-compatible ``/v1/`` API:
+
+- ``/props`` — returns server properties including
+  ``default_generation_settings.n_ctx`` (the configured context size).
+- ``/slots`` — returns per-slot information including ``n_ctx`` (the
+  actual per-slot context size, which accounts for ``--parallel``).
+- ``/health`` — returns server health status.
+
+These can be queried with ``rampart-curl`` to discover the context size
+at runtime, for example to display a token usage indicator to the user.
+
+**Ollama:**  Context shifting is handled automatically.  The context
+window size defaults to 2048 tokens but can be increased by passing
+``num_ctx`` in the params (e.g. ``client.params = {num_ctx: 32768}``).
+Ollama will silently shift context when the window fills up.
+
+Using with the Rampart web server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The module is designed to work well in
+:ref:`websocket scripts <rampart-server:Websockets>`.
+The ``req`` object in a websocket handler persists across messages, so
+an ``llm`` instance created during the handshake (``req.count == 0``) can be
+reused for all subsequent messages in the connection.  See the
+``llmchat.js`` example in the Rampart LLM demo for a complete working
+implementation.
+
+.. code-block:: javascript
+
+    var llm = require("rampart-llm.js");
+
+    function handler(req) {
+        if (req.count == 0) {
+            // handshake — create connection, store on req
+            req.llm = new llm.llamaCpp({server: "127.0.0.1", port: 8080});
+            req.llm.params = {temperature: 0.5};
+            return;
+        }
+
+        // subsequent messages
+        var userText = sprintf("%s", req.body);  // Buffer to string
+
+        var prompt = [
+            {role: "system", content: "You are a helpful assistant."},
+            {role: "user",   content: userText}
+        ];
+
+        req.llm.query(prompt,
+            function(res) {
+                if (res.error || res.done) return;
+                req.wsSend(res.token);
+            },
+            function(res) {
+                req.wsSend({end: true});
+            }
+        );
+    }
+
+    module.exports = handler;
+
+
 The c_module_template_maker utility
 -----------------------------------
 

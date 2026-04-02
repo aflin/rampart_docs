@@ -119,6 +119,20 @@
 <li class="toctree-l2"><a class="reference internal" href="#websocket-client">websocket_client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-converter">rampart-converter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-llm">rampart-llm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Loading the module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-connection">Creating a connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#instance-properties">Instance properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#query">query()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chat-example">Chat example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-turn-conversation">Multi-turn conversation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cancelling-a-query">Cancelling a query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overriding-params-per-query">Overriding params per query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thinking-reasoning-models">Thinking/reasoning models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#context-window-management">Context window management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-with-the-rampart-web-server">Using with the Rampart web server</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#the-c-module-template-maker-utility">The c_module_template_maker utility</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-c-module-template">Creating a C Module template</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-usage-to-create-a-module">Example usage to create a module</a></li>
@@ -631,6 +645,313 @@ is either of:</p>
 <p>Command Line usage:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt; rampart /path/to/rampart-converter.js /path/to/document.ext
 </pre></div>
+</div>
+</div>
+<div class="section" id="rampart-llm">
+<h2>rampart-llm<a class="headerlink" href="#rampart-llm" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart-llm.js</span></code> module provides a streaming interface to LLM servers
+that expose an OpenAI-compatible API.  It supports both
+<a class="reference external" href="https://github.com/ggml-org/llama.cpp">llama.cpp’s llama-server</a> and
+<a class="reference external" href="https://ollama.com/">Ollama</a>, and handles SSE parsing, thinking/reasoning
+model output, and cancellation.</p>
+<p>The module lives in the <code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> directory.</p>
+<div class="section" id="id2">
+<h3>Loading the module<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llm</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llm.js&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-a-connection">
+<h3>Creating a connection<a class="headerlink" href="#creating-a-connection" title="Permalink to this headline">¶</a></h3>
+<p>The module exports two constructors, one for each supported backend.  Both
+accept an <span class="green">Object</span> of options and verify that the server is reachable
+on construction.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// llama-server (llama.cpp)</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">llamaCpp</span><span class="p">({</span>
+    <span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>   <span class="c1">// default</span>
+    <span class="nx">port</span><span class="o">:</span>   <span class="mi">8080</span>            <span class="c1">// default</span>
+<span class="p">});</span>
+
+<span class="c1">// Ollama</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">ollama</span><span class="p">({</span>
+    <span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>   <span class="c1">// default</span>
+    <span class="nx">port</span><span class="o">:</span>   <span class="mi">11434</span>           <span class="c1">// default</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>An error is thrown if the server is not running at the given address.</p>
+<p>Note: <code class="docutils literal notranslate"><span class="pre">llama-server</span></code> loads a single model at startup, so the <code class="docutils literal notranslate"><span class="pre">model</span></code>
+property described below is required by the API format but its value is
+ignored.  With Ollama, the <code class="docutils literal notranslate"><span class="pre">model</span></code> name selects which model to use.</p>
+</div>
+<div class="section" id="instance-properties">
+<h3>Instance properties<a class="headerlink" href="#instance-properties" title="Permalink to this headline">¶</a></h3>
+<p>After construction, set properties on the instance before calling <code class="docutils literal notranslate"><span class="pre">query()</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">model</span></code> - <span class="green">String</span>.  The model name.  Required for Ollama
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;qwen2.5-coder:7b&quot;</span></code>).  For llamaCpp, any non-empty string
+will do since llama-server always uses its loaded model.</li>
+<li><code class="docutils literal notranslate"><span class="pre">params</span></code> - <span class="green">Object</span>.  Sampling and generation parameters that
+are merged directly into the <code class="docutils literal notranslate"><span class="pre">/v1/chat/completions</span></code> POST body.
+Common parameters include:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">temperature</span></code> - <span class="green">Number</span>.  Controls randomness (0.0 – 2.0).</li>
+<li><code class="docutils literal notranslate"><span class="pre">max_tokens</span></code> - <span class="green">Number</span>.  Maximum tokens to generate.</li>
+<li><code class="docutils literal notranslate"><span class="pre">top_p</span></code> - <span class="green">Number</span>.  Nucleus sampling threshold (0.0 – 1.0).</li>
+<li><code class="docutils literal notranslate"><span class="pre">top_k</span></code> - <span class="green">Number</span>.  Top-k sampling.</li>
+<li><code class="docutils literal notranslate"><span class="pre">repeat_penalty</span></code> - <span class="green">Number</span>.  Repetition penalty (1.0 = off; 1.1 – 1.3 typical).</li>
+<li><code class="docutils literal notranslate"><span class="pre">frequency_penalty</span></code> - <span class="green">Number</span>.  Penalize tokens by frequency (0.0 – 1.0).</li>
+<li><code class="docutils literal notranslate"><span class="pre">presence_penalty</span></code> - <span class="green">Number</span>.  Penalize tokens by presence (0.0 – 1.0).</li>
+</ul>
+</li>
+<li><code class="docutils literal notranslate"><span class="pre">cancel</span></code> - <span class="green">Boolean</span>.  Set to <code class="docutils literal notranslate"><span class="pre">true</span></code> to abort an in-flight
+query.  The stream will stop on the next chunk and the final callback
+will fire.</li>
+</ul>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">model</span>  <span class="o">=</span> <span class="s2">&quot;qwen2.5-3b-instruct-q4_k_m.gguf&quot;</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">params</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="nx">max_tokens</span><span class="o">:</span> <span class="mi">4096</span><span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="query">
+<h3>query()<a class="headerlink" href="#query" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">query()</span></code> method sends a prompt to the server and streams the response
+back through callbacks.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span> <span class="nx">perTokenCallback</span><span class="p">,</span> <span class="nx">finalCallback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">prompt</span></code> - <span class="green">Array</span> or <span class="green">String</span>.  If an <span class="green">Array</span>,
+it is sent as <code class="docutils literal notranslate"><span class="pre">messages</span></code> to the <code class="docutils literal notranslate"><span class="pre">/v1/chat/completions</span></code> endpoint
+(chat mode).  Each element is an <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">role</span></code>
+(<code class="docutils literal notranslate"><span class="pre">&quot;system&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;user&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;assistant&quot;</span></code>) and <code class="docutils literal notranslate"><span class="pre">content</span></code>
+properties.  If a <span class="green">String</span>, it is sent as <code class="docutils literal notranslate"><span class="pre">prompt</span></code> to the
+<code class="docutils literal notranslate"><span class="pre">/v1/completions</span></code> endpoint (completion mode).</li>
+<li><code class="docutils literal notranslate"><span class="pre">perTokenCallback</span></code> - <span class="green">Function</span>.  Called for each streamed
+token and on error or completion.  May be <code class="docutils literal notranslate"><span class="pre">null</span></code> if only
+<code class="docutils literal notranslate"><span class="pre">finalCallback</span></code> is needed.  The callback receives a single
+<span class="green">Object</span> argument with the following properties:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">token</span></code> - <span class="green">String</span>.  The token text.</li>
+<li><code class="docutils literal notranslate"><span class="pre">thinking</span></code> - <span class="green">Boolean</span>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> if this token is
+reasoning/thinking content (from <code class="docutils literal notranslate"><span class="pre">&lt;think&gt;</span></code> tags or the
+<code class="docutils literal notranslate"><span class="pre">--reasoning-format</span></code> flag in llama-server).</li>
+<li><code class="docutils literal notranslate"><span class="pre">error</span></code> - Set if the server returned an error.</li>
+<li><code class="docutils literal notranslate"><span class="pre">done</span></code> - <span class="green">Boolean</span>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> when the stream has ended.</li>
+<li><code class="docutils literal notranslate"><span class="pre">serverResponse</span></code> - The raw HTTP response object.</li>
+</ul>
+</li>
+<li><code class="docutils literal notranslate"><span class="pre">finalCallback</span></code> - <span class="green">Function</span>.  Called once after the stream
+ends.  Receives a single <span class="green">Object</span> with:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">fullText</span></code> - <span class="green">String</span>.  The complete response text
+(excluding thinking content).</li>
+<li><code class="docutils literal notranslate"><span class="pre">thinkingText</span></code> - <span class="green">String</span>.  The complete thinking/reasoning
+text (only present if the model produced thinking output).</li>
+<li><code class="docutils literal notranslate"><span class="pre">answer</span></code> - <span class="green">String</span>.  The answer portion after thinking
+(only present if <code class="docutils literal notranslate"><span class="pre">thinkingText</span></code> is present).</li>
+<li><code class="docutils literal notranslate"><span class="pre">serverResponse</span></code> - The raw HTTP response object.</li>
+<li><code class="docutils literal notranslate"><span class="pre">error</span></code> - Set if the query failed.</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<p>At least one of <code class="docutils literal notranslate"><span class="pre">perTokenCallback</span></code> or <code class="docutils literal notranslate"><span class="pre">finalCallback</span></code> must be provided.</p>
+</div>
+<div class="section" id="chat-example">
+<h3>Chat example<a class="headerlink" href="#chat-example" title="Permalink to this headline">¶</a></h3>
+<p>A basic chat completion with streaming output:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llm</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llm.js&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">llamaCpp</span><span class="p">({</span><span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="nx">port</span><span class="o">:</span> <span class="mi">8080</span><span class="p">});</span>
+
+<span class="nx">client</span><span class="p">.</span><span class="nx">params</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="mf">0.7</span><span class="p">,</span> <span class="nx">max_tokens</span><span class="o">:</span> <span class="mi">2048</span><span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">prompt</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>  <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>    <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;What is the capital of France?&quot;</span><span class="p">}</span>
+<span class="p">];</span>
+
+<span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span>
+    <span class="nx">prompt</span><span class="p">,</span>
+
+    <span class="c1">// per-token callback — print each token as it arrives</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">fprintf</span><span class="p">(</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;Error: %J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">done</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">thinking</span><span class="p">)</span>
+            <span class="nx">fprintf</span><span class="p">(</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;(thinking) %s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+        <span class="k">else</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="c1">// final callback — runs once when the stream ends</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">fprintf</span><span class="p">(</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;Query failed: %J\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\n\n--- Complete response ---\n%s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">fullText</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multi-turn-conversation">
+<h3>Multi-turn conversation<a class="headerlink" href="#multi-turn-conversation" title="Permalink to this headline">¶</a></h3>
+<p>To maintain a conversation, accumulate messages and send the full array
+on each turn.  The server is stateless — it needs the entire history
+every time.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">conversation</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">}</span>
+<span class="p">];</span>
+
+<span class="kd">function</span> <span class="nx">ask</span><span class="p">(</span><span class="nx">question</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">conversation</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="nx">question</span><span class="p">});</span>
+
+    <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">conversation</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">conversation</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">fullText</span><span class="p">});</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">fullText</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="nx">callback</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">ask</span><span class="p">(</span><span class="s2">&quot;What is the capital of France?&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">ask</span><span class="p">(</span><span class="s2">&quot;What is its population?&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cancelling-a-query">
+<h3>Cancelling a query<a class="headerlink" href="#cancelling-a-query" title="Permalink to this headline">¶</a></h3>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">cancel</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code> on the instance will abort the current stream
+on the next chunk.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// start a query</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;(cancelled or complete)\n&quot;</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// cancel it after 2 seconds</span>
+<span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">client</span><span class="p">.</span><span class="nx">cancel</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">},</span> <span class="mi">2000</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="overriding-params-per-query">
+<h3>Overriding params per query<a class="headerlink" href="#overriding-params-per-query" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">params</span></code> property can be saved and temporarily replaced for a
+side-query (e.g. a short classification task) without affecting the main
+conversation settings.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">savedParams</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">params</span><span class="p">;</span>
+<span class="nx">client</span><span class="p">.</span><span class="nx">params</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="nx">max_tokens</span><span class="o">:</span> <span class="mi">2048</span><span class="p">};</span>
+
+<span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">classifyPrompt</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">client</span><span class="p">.</span><span class="nx">params</span> <span class="o">=</span> <span class="nx">savedParams</span><span class="p">;</span>  <span class="c1">// restore original params</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Classification: %s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">fullText</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="thinking-reasoning-models">
+<h3>Thinking/reasoning models<a class="headerlink" href="#thinking-reasoning-models" title="Permalink to this headline">¶</a></h3>
+<p>Some models produce internal reasoning wrapped in <code class="docutils literal notranslate"><span class="pre">&lt;think&gt;...&lt;/think&gt;</span></code> tags
+or via a separate <code class="docutils literal notranslate"><span class="pre">reasoning_content</span></code> field (when llama-server is started
+with <code class="docutils literal notranslate"><span class="pre">--reasoning-format</span> <span class="pre">deepseek</span></code>).  The module handles both formats
+transparently:</p>
+<ul class="simple">
+<li>In the per-token callback, <code class="docutils literal notranslate"><span class="pre">res.thinking</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> for reasoning tokens
+and <code class="docutils literal notranslate"><span class="pre">false</span></code> for answer tokens.</li>
+<li>In the final callback, <code class="docutils literal notranslate"><span class="pre">res.thinkingText</span></code> contains the full reasoning
+and <code class="docutils literal notranslate"><span class="pre">res.answer</span></code> contains only the answer.  <code class="docutils literal notranslate"><span class="pre">res.fullText</span></code> contains
+the full non-thinking output.</li>
+</ul>
+<p>Note that thinking tokens consume the <code class="docutils literal notranslate"><span class="pre">max_tokens</span></code> budget but do not
+appear in <code class="docutils literal notranslate"><span class="pre">fullText</span></code>.  When using thinking models, set <code class="docutils literal notranslate"><span class="pre">max_tokens</span></code>
+high enough to accommodate both reasoning and answer (4096 or more is
+recommended, as reasoning can easily consume several thousand tokens
+before the visible answer begins).</p>
+</div>
+<div class="section" id="context-window-management">
+<h3>Context window management<a class="headerlink" href="#context-window-management" title="Permalink to this headline">¶</a></h3>
+<p>When a conversation grows long enough to exceed the server’s context
+window, the server will return an error.  There are two approaches to
+handling this:</p>
+<p><strong>llama-server (llama.cpp):</strong>  Start the server with the <code class="docutils literal notranslate"><span class="pre">--context-shift</span></code>
+flag to allow automatic context shifting — older tokens are discarded
+from the KV cache to make room for new ones.  This is a server-start
+flag and cannot be set per-request.  The context size is set with <code class="docutils literal notranslate"><span class="pre">-c</span></code>
+(e.g. <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">32768</span></code>).  When using
+<code class="docutils literal notranslate"><span class="pre">--parallel</span></code> for multiple slots, the context is divided evenly among
+slots.</p>
+<p>llama-server also exposes several useful REST endpoints beyond the
+OpenAI-compatible <code class="docutils literal notranslate"><span class="pre">/v1/</span></code> API:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">/props</span></code> — returns server properties including
+<code class="docutils literal notranslate"><span class="pre">default_generation_settings.n_ctx</span></code> (the configured context size).</li>
+<li><code class="docutils literal notranslate"><span class="pre">/slots</span></code> — returns per-slot information including <code class="docutils literal notranslate"><span class="pre">n_ctx</span></code> (the
+actual per-slot context size, which accounts for <code class="docutils literal notranslate"><span class="pre">--parallel</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">/health</span></code> — returns server health status.</li>
+</ul>
+<p>These can be queried with <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code> to discover the context size
+at runtime, for example to display a token usage indicator to the user.</p>
+<p><strong>Ollama:</strong>  Context shifting is handled automatically.  The context
+window size defaults to 2048 tokens but can be increased by passing
+<code class="docutils literal notranslate"><span class="pre">num_ctx</span></code> in the params (e.g. <code class="docutils literal notranslate"><span class="pre">client.params</span> <span class="pre">=</span> <span class="pre">{num_ctx:</span> <span class="pre">32768}</span></code>).
+Ollama will silently shift context when the window fills up.</p>
+</div>
+<div class="section" id="using-with-the-rampart-web-server">
+<h3>Using with the Rampart web server<a class="headerlink" href="#using-with-the-rampart-web-server" title="Permalink to this headline">¶</a></h3>
+<p>The module is designed to work well in
+<a class="reference internal" href="rampart-server.html#websockets"><span class="std std-ref">websocket scripts</span></a>.
+The <code class="docutils literal notranslate"><span class="pre">req</span></code> object in a websocket handler persists across messages, so
+an <code class="docutils literal notranslate"><span class="pre">llm</span></code> instance created during the handshake (<code class="docutils literal notranslate"><span class="pre">req.count</span> <span class="pre">==</span> <span class="pre">0</span></code>) can be
+reused for all subsequent messages in the connection.  See the
+<code class="docutils literal notranslate"><span class="pre">llmchat.js</span></code> example in the Rampart LLM demo for a complete working
+implementation.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llm</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llm.js&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">handler</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// handshake — create connection, store on req</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">llm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">llamaCpp</span><span class="p">({</span><span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="nx">port</span><span class="o">:</span> <span class="mi">8080</span><span class="p">});</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">llm</span><span class="p">.</span><span class="nx">params</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="mf">0.5</span><span class="p">};</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// subsequent messages</span>
+    <span class="kd">var</span> <span class="nx">userText</span> <span class="o">=</span> <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>  <span class="c1">// Buffer to string</span>
+
+    <span class="kd">var</span> <span class="nx">prompt</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>   <span class="nx">content</span><span class="o">:</span> <span class="nx">userText</span><span class="p">}</span>
+    <span class="p">];</span>
+
+    <span class="nx">req</span><span class="p">.</span><span class="nx">llm</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span>
+        <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">error</span> <span class="o">||</span> <span class="nx">res</span><span class="p">.</span><span class="nx">done</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+            <span class="nx">req</span><span class="p">.</span><span class="nx">wsSend</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+        <span class="p">},</span>
+        <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">req</span><span class="p">.</span><span class="nx">wsSend</span><span class="p">({</span><span class="nx">end</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">handler</span><span class="p">;</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="the-c-module-template-maker-utility">

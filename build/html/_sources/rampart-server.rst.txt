@@ -135,6 +135,13 @@ Where:
       thereof) to wait for a connected client to send a request. Default is no
       timeout/unlimited.
 
+    * ``maxBodySize``: A :green:`Number`, the maximum size in bytes of an HTTP
+      request body.  If a request body exceeds this limit, the server will
+      stop reading the body and return a ``413 Entity Too Large`` response
+      to the client.  For WebSocket connections, this limits the maximum
+      size of a single message.  Default is ``52428800`` (50 MB).  Set to
+      ``0`` to disable the limit (not recommended).
+
     * ``log``: A :green:`Boolean`, whether to log each request.  Access requests
       are logged to ``stdout`` and errors are logged to ``stderr`` unless
       ``accessLog`` and/or ``errorLog`` below are set.
@@ -1408,6 +1415,9 @@ Below is a full example:
         /* how long to wait before client sends
            a req or server can send a response */
         connectTimeout:20.0,
+
+        /* max request body size in bytes (default 50MB) */
+        maxBodySize: 52428800,
 
         /*** logging ***/
         log: true,           //turn logging on, by default goes to stdout/stderr

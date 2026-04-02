@@ -116,6 +116,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#shortcut-commands">Shortcut Commands</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#async-commands">_async Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#promise-async-await-support">Promise / async-await Support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#format">format</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#xread-block-async">xread_block_async</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#xread-auto-async">xread_auto_async</a></li>
@@ -359,6 +360,43 @@ asynchronous commands.</p>
 <code class="docutils literal notranslate"><span class="pre">bzpopmin_async</span></code> and <code class="docutils literal notranslate"><span class="pre">format_async</span></code> are equivalent to
 their non-async counterparts with the <code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> set to
 <code class="docutils literal notranslate"><span class="pre">{async:true}</span></code>.</div></blockquote>
+</div>
+<div class="section" id="promise-async-await-support">
+<h3>Promise / async-await Support<a class="headerlink" href="#promise-async-await-support" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>When the Rampart transpiler is active (via <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">-t</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code>), any async
+command may be called without a callback.  In this case, a
+<span class="green">Promise</span> is returned that resolves with the complete result
+(equivalent to the synchronous return value) or rejects on error.</p>
+<p>This applies to commands using <code class="docutils literal notranslate"><span class="pre">{async:true}</span></code> in the options
+<span class="green">Object</span> or the <code class="docutils literal notranslate"><span class="pre">*_async</span></code> shortcut functions.  It does not
+apply to <code class="docutils literal notranslate"><span class="pre">subscribe</span></code>, <code class="docutils literal notranslate"><span class="pre">psubscribe</span></code>, <code class="docutils literal notranslate"><span class="pre">xread_block_async</span></code> or
+<code class="docutils literal notranslate"><span class="pre">xread_auto_async</span></code>, which require a callback for their continuous
+event handling.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
+<span class="kd">var</span> <span class="nx">redis</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-redis&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">rcl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span>
+
+<span class="nx">async</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">await</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">async</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span> <span class="s2">&quot;mykey&quot;</span><span class="p">,</span> <span class="s2">&quot;myvalue&quot;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">get</span><span class="p">({</span><span class="nx">async</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span> <span class="s2">&quot;mykey&quot;</span><span class="p">);</span>
+    <span class="c1">// val === &quot;myvalue&quot;</span>
+
+    <span class="kd">var</span> <span class="nx">list</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">lrange</span><span class="p">({</span><span class="nx">async</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span> <span class="s2">&quot;mylist&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="c1">// list is the full Array, same as the synchronous return</span>
+
+    <span class="k">try</span> <span class="p">{</span>
+        <span class="nx">await</span> <span class="nx">rcl</span><span class="p">.</span><span class="nx">hget</span><span class="p">({</span><span class="nx">async</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span> <span class="s2">&quot;mykey&quot;</span><span class="p">,</span> <span class="s2">&quot;field&quot;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// e.message contains the Redis error</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">main</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
 </div>
 <div class="section" id="format">
 <h3>format<a class="headerlink" href="#format" title="Permalink to this headline">¶</a></h3>

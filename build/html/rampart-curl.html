@@ -112,8 +112,17 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#submit">submit()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#fetchasync">fetchAsync()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fetchasync">fetchAsync()</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#finally">finally()</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#submitasync">submitAsync()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#promise-async-await-support">Promise / async-await Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cancel">cancel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setcacert">setCaCert()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#encode">encode()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decode">decode()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cleanup">cleanup()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#default-ca-file">default_ca_file</a></li>
 </ul>
 </li>
@@ -396,16 +405,189 @@ which neet to have different option apply to each url.</dd>
 <div class="section" id="fetchasync">
 <h3>fetchAsync()<a class="headerlink" href="#fetchasync" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>The same as <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> above, except it requires a callback function
+<div><p>The same as <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> above, except it requires a callback function
 and waiting for socket data, retrieval of the document and the execution
-of the callback happens in the Rampart event loop.</div></blockquote>
+of the callback happens in the Rampart event loop.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>When called with a callback, returns an <span class="green">Object</span> with a
+single method <code class="docutils literal notranslate"><span class="pre">finally()</span></code>.  See <a class="reference internal" href="#finally">finally()</a> below.</dd>
+</dl>
+</div></blockquote>
+<div class="section" id="finally">
+<h4>finally()<a class="headerlink" href="#finally" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">finally()</span></code> method is available on the return value of
+<code class="docutils literal notranslate"><span class="pre">fetchAsync()</span></code> and <code class="docutils literal notranslate"><span class="pre">submitAsync()</span></code> when called with a callback.
+It registers a <span class="green">Function</span> that will be called after <strong>all</strong>
+async requests have completed.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url_list</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// called once per URL</span>
+<span class="p">}).</span><span class="k">finally</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// called once after all URLs have completed</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;All requests finished\n&quot;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="submitasync">
 <h3>submitAsync()<a class="headerlink" href="#submitasync" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>The same as <code class="docutils literal notranslate"><span class="pre">submit()</span></code> above, except that waiting for socket data,
+<div><p>The same as <code class="docutils literal notranslate"><span class="pre">submit()</span></code> above, except that waiting for socket data,
 retrieval of the document and the execution of the callback happens in
-the Rampart event loop.</div></blockquote>
+the Rampart event loop.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>When called with a callback, returns an <span class="green">Object</span> with a
+single method <code class="docutils literal notranslate"><span class="pre">finally()</span></code>.  See <a class="reference internal" href="#finally">finally()</a> above.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="promise-async-await-support">
+<h3>Promise / async-await Support<a class="headerlink" href="#promise-async-await-support" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>When the Rampart transpiler is active (via <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">-t</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>
+or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code>), <code class="docutils literal notranslate"><span class="pre">fetchAsync()</span></code> and <code class="docutils literal notranslate"><span class="pre">submitAsync()</span></code> support
+Promises and the <code class="docutils literal notranslate"><span class="pre">async</span></code>/<code class="docutils literal notranslate"><span class="pre">await</span></code> syntax.</p>
+<p><strong>Single URL, no callback</strong> — returns a <span class="green">Promise</span> that resolves
+with the result <span class="green">Object</span>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-curl&#39;</span><span class="p">);</span>
+
+<span class="nx">async</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// await a single request</span>
+    <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s1">&#39;https://example.com/&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">returnText</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;status: %d, length: %d\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+
+    <span class="c1">// error handling with try/catch</span>
+    <span class="k">try</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">res2</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s1">&#39;https://nonexistent.invalid/&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;error: %s\n&quot;</span><span class="p">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// parallel requests with Promise.all</span>
+    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">await</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span>
+        <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s1">&#39;https://example.com/page1&#39;</span><span class="p">),</span>
+        <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s1">&#39;https://example.com/page2&#39;</span><span class="p">)</span>
+    <span class="p">]);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;got %d results\n&quot;</span><span class="p">,</span> <span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">main</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><strong>Multiple URLs with callback</strong> — the callback fires once per URL as
+usual; the <span class="green">Promise</span> resolves when all URLs have completed:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-curl&#39;</span><span class="p">);</span>
+
+<span class="nx">async</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span>
+        <span class="p">[</span><span class="s1">&#39;https://example.com/a&#39;</span><span class="p">,</span> <span class="s1">&#39;https://example.com/b&#39;</span><span class="p">],</span>
+        <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;got %s: %d\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;all requests done\n&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">main</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><strong>submitAsync</strong> — works the same way.  A single request object without
+a callback returns a <span class="green">Promise</span>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">submitAsync</span><span class="p">({</span><span class="nx">url</span><span class="o">:</span> <span class="s1">&#39;https://example.com/&#39;</span><span class="p">,</span> <span class="nx">location</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+</pre></div>
+</div>
+<p><strong>In server modules</strong> — use <code class="docutils literal notranslate"><span class="pre">{defer:</span> <span class="pre">true}</span></code> with <code class="docutils literal notranslate"><span class="pre">req.reply()</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
+<span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-curl&#39;</span><span class="p">);</span>
+
+<span class="nx">async</span> <span class="kd">function</span> <span class="nx">handle</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/data&#39;</span><span class="p">);</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">reply</span><span class="p">({</span> <span class="nx">json</span><span class="o">:</span> <span class="p">{</span> <span class="nx">status</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span> <span class="p">}</span> <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">handle</span><span class="p">(</span><span class="nx">req</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">{</span> <span class="nx">defer</span><span class="o">:</span> <span class="kc">true</span> <span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Note:  Promise support requires the transpiler’s Promise polyfill.
+Without the transpiler, the original callback-based API is unchanged.</p>
+</div></blockquote>
+</div>
+<div class="section" id="cancel">
+<h3>cancel<a class="headerlink" href="#cancel" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">curl.cancel</span></code> <span class="green">Object</span> is a sentinel value.  When returned
+from a <code class="docutils literal notranslate"><span class="pre">chunkCallback</span></code> or <code class="docutils literal notranslate"><span class="pre">progressCallback</span></code> function, the current
+transfer is canceled.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-curl&#39;</span><span class="p">);</span>
+
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://example.com/largefile&#39;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">chunkCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">progress</span> <span class="o">&gt;</span> <span class="mi">1000000</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">cancel</span><span class="p">;</span>  <span class="c1">// stop after 1MB</span>
+    <span class="p">},</span>
+    <span class="nx">callback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;done, got %d bytes\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="setcacert">
+<h3>setCaCert()<a class="headerlink" href="#setcacert" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Set the default CA certificate bundle path for all subsequent requests.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">curl</span><span class="p">.</span><span class="nx">setCaCert</span><span class="p">(</span><span class="s1">&#39;/path/to/ca-bundle.crt&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where the argument is a <span class="green">String</span>, the path to a readable CA
+certificate file.  Throws an error if the file does not exist or is
+not readable.  The value is also reflected in <code class="docutils literal notranslate"><span class="pre">curl.default_ca_file</span></code>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="encode">
+<h3>encode()<a class="headerlink" href="#encode" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>URL-encode a string.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">encoded</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">encode</span><span class="p">(</span><span class="s1">&#39;hello world&amp;foo=bar&#39;</span><span class="p">);</span>
+<span class="c1">// &quot;hello%20world%26foo%3Dbar&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="decode">
+<h3>decode()<a class="headerlink" href="#decode" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>URL-decode a string.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">decoded</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="s1">&#39;hello%20world%26foo%3Dbar&#39;</span><span class="p">);</span>
+<span class="c1">// &quot;hello world&amp;foo=bar&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="cleanup">
+<h3>cleanup()<a class="headerlink" href="#cleanup" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Release all resources allocated by the Curl library’s global
+initialization.  Subsequent curl operations will re-initialize
+automatically.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">curl</span><span class="p">.</span><span class="nx">cleanup</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
 </div>
 <div class="section" id="default-ca-file">
 <h3>default_ca_file<a class="headerlink" href="#default-ca-file" title="Permalink to this headline">¶</a></h3>
@@ -688,6 +870,11 @@ the file out in chunks using a <code class="docutils literal notranslate"><span 
 <span class="p">);</span>
 </pre></div>
 </div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">noCopyBuffer</span></code> - a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code> the response
+<code class="docutils literal notranslate"><span class="pre">body</span></code> <span class="green">Buffer</span> is used directly from the Curl library
+without copying.  This can improve performance for large responses
+but the buffer must not be used after the next curl call.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">arrayType</span></code> - <span class="green">String</span> - How to translate arrays into
 parameters for <code class="docutils literal notranslate"><span class="pre">get</span></code> and <code class="docutils literal notranslate"><span class="pre">post</span></code> below.  See

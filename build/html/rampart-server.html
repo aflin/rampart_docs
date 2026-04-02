@@ -420,6 +420,13 @@ connecting client.  Default is no timeout/unlimited.</p>
 thereof) to wait for a connected client to send a request. Default is no
 timeout/unlimited.</p>
 </li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code>: A <span class="green">Number</span>, the maximum size in bytes of an HTTP
+request body.  If a request body exceeds this limit, the server will
+stop reading the body and return a <code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Entity</span> <span class="pre">Too</span> <span class="pre">Large</span></code> response
+to the client.  For WebSocket connections, this limits the maximum
+size of a single message.  Default is <code class="docutils literal notranslate"><span class="pre">52428800</span></code> (50 MB).  Set to
+<code class="docutils literal notranslate"><span class="pre">0</span></code> to disable the limit (not recommended).</p>
+</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">log</span></code>: A <span class="green">Boolean</span>, whether to log each request.  Access requests
 are logged to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and errors are logged to <code class="docutils literal notranslate"><span class="pre">stderr</span></code> unless
 <code class="docutils literal notranslate"><span class="pre">accessLog</span></code> and/or <code class="docutils literal notranslate"><span class="pre">errorLog</span></code> below are set.</p>
@@ -1622,6 +1629,9 @@ buffer.</p>
     <span class="cm">/* how long to wait before client sends</span>
 <span class="cm">       a req or server can send a response */</span>
     <span class="nx">connectTimeout</span><span class="o">:</span><span class="mf">20.0</span><span class="p">,</span>
+
+    <span class="cm">/* max request body size in bytes (default 50MB) */</span>
+    <span class="nx">maxBodySize</span><span class="o">:</span> <span class="mi">52428800</span><span class="p">,</span>
 
     <span class="cm">/*** logging ***/</span>
     <span class="nx">log</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>           <span class="c1">//turn logging on, by default goes to stdout/stderr</span>

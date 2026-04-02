@@ -99,6 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#rampart-philosophy">Rampart philosophy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-global-variable-and-functions">Rampart Global Variable and Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-globalize">rampart.globalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-localize">rampart.localize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-utils">rampart.utils</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-event">rampart.event</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rampart-event-on">rampart.event.on()</a></li>
@@ -405,6 +406,48 @@ the named properties will be copied.</td>
 
 <span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;printf&quot;</span><span class="p">]);</span>
 <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;only printf is a global var\n&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rampart-localize">
+<h3>rampart.localize<a class="headerlink" href="#rampart-localize" title="Permalink to this headline">¶</a></h3>
+<p>Put all or named properties of an <span class="green">Object</span> into the local scope
+of the calling function.  Localized names are accessible as if they were
+local variables, but do not pollute the global namespace.  When called
+from the global scope, the behavior is identical to <a class="reference internal" href="#rampart-globalize">rampart.globalize</a>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">localize</span><span class="p">(</span><span class="nx">var_obj</span> <span class="p">[,</span> <span class="nx">filterOrIgnore</span> <span class="p">[,</span> <span class="nx">ignoreConflicts</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
+<dt>Note:</dt>
+<dd>Names that are declared with <code class="docutils literal notranslate"><span class="pre">var</span></code> in the calling function are
+register-bound at compile time and cannot be overridden by <code class="docutils literal notranslate"><span class="pre">localize</span></code>.
+By default, attempting to localize a name that conflicts with a <code class="docutils literal notranslate"><span class="pre">var</span></code>
+declaration throws a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.  Setting <code class="docutils literal notranslate"><span class="pre">ignoreConflicts</span></code> to
+<code class="docutils literal notranslate"><span class="pre">true</span></code> causes the conflicting name to be silently skipped while
+still copying non-conflicting names.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">handleRequest</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">localize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;rampart.utils.* are now local to this function!\n&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/* with a filter */</span>
+<span class="kd">function</span> <span class="nx">handleRequest2</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">localize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;printf&quot;</span><span class="p">,</span> <span class="s2">&quot;sprintf&quot;</span><span class="p">]);</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;only printf and sprintf are local\n&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/* with ignore conflicts */</span>
+<span class="kd">function</span> <span class="nx">myFunc</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">printf</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span> <span class="cm">/* local var declaration */</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">localize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="cm">/* printf stays null (conflict skipped), other utils are localized */</span>
+    <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;this works: %s\n&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>

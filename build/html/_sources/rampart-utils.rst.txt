@@ -2143,6 +2143,152 @@ Note:
     for more information.
     
 
+getScopeVars
+''''''''''''
+
+Inspect variables visible at the current call scope.  This function can
+return all variables grouped by scope type, or look up a single variable
+by name.
+
+Usage:
+
+.. code-block:: javascript
+
+   var scopes = rampart.utils.getScopeVars();
+
+   /* or */
+
+   var result = rampart.utils.getScopeVars(varname);
+
+Where ``varname`` is an optional :green:`String` — the name of a single
+variable to look up.
+
+**Mode 1: No arguments** — returns an :green:`Object` with all variables
+grouped by scope:
+
+.. code-block:: javascript
+
+   var scopes = rampart.utils.getScopeVars();
+   /* scopes = {
+        local:   { x: 1, y: "hello" },
+        closure: { outerVar: 42 },
+        global:  { ... }
+      }
+   */
+
+The returned :green:`Object` has the following properties:
+
++------------+------------------+----------------------------------------------------------------+
+|Property    |Type              |Description                                                     |
++============+==================+================================================================+
+|local       |:green:`Object`   | Variables declared in the calling function (``var``             |
+|            |                  | declarations and formal parameters), with current values.      |
++------------+------------------+----------------------------------------------------------------+
+|closure     |:green:`Object`   | Variables from enclosing function scopes (parent declarative   |
+|            |                  | environments).  If multiple closure scopes exist, they are     |
+|            |                  | merged with inner scopes taking priority.                      |
++------------+------------------+----------------------------------------------------------------+
+|with        |:green:`Object`   | Present only if a ``with`` statement scope exists.  Contains   |
+|            |                  | the ``with`` target object.                                    |
++------------+------------------+----------------------------------------------------------------+
+|global      |:green:`Object`   | The global object.                                             |
++------------+------------------+----------------------------------------------------------------+
+
+**Mode 2: String argument** — looks up a single variable by name across
+all scopes (innermost first), returning an :green:`Object` describing
+where it was found:
+
+.. code-block:: javascript
+
+   var result = rampart.utils.getScopeVars("myVar");
+   /* result = { value: 42, scope: "closure" }
+      or undefined if not found */
+
++------------+------------------+----------------------------------------------------------------+
+|Property    |Type              |Description                                                     |
++============+==================+================================================================+
+|value       |any               | The current value of the variable.                             |
++------------+------------------+----------------------------------------------------------------+
+|scope       |:green:`String`   | The scope in which the variable was found: ``"local"``,        |
+|            |                  | ``"closure"``, ``"with"``, or ``"global"``.                    |
++------------+------------------+----------------------------------------------------------------+
+
+Return Value:
+   :green:`Object` or ``undefined``.  In Mode 1, always returns an
+   :green:`Object`.  In Mode 2, returns an :green:`Object` if the
+   variable was found, or ``undefined`` if it was not found in any scope.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.globalize(rampart.utils);
+
+   var globalVar = "gval";
+
+   function outer() {
+       var x = 10;
+
+       function inner() {
+           var y = 20;
+
+           /* inspect all scopes */
+           var scopes = getScopeVars();
+           printf("local y = %d\n", scopes.local.y);       // 20
+           printf("closure x = %d\n", scopes.closure.x);   // 10
+
+           /* look up a single variable */
+           var info = getScopeVars("x");
+           printf("x = %d (from %s scope)\n", info.value, info.scope);
+           // x = 10 (from closure scope)
+
+           var missing = getScopeVars("noSuchVar");
+           printf("missing = %s\n", typeof missing);        // undefined
+       }
+       inner();
+   }
+   outer();
+
+**collapse()** — The :green:`Object` returned by ``getScopeVars()`` (Mode 1)
+has a ``collapse()`` method that merges all scopes into a single flat
+:green:`Object`.  Scopes are applied outermost-first (global, then with,
+then closure, then local), so inner scopes shadow outer ones — matching
+JavaScript's actual variable resolution order.
+
+Variables added via ``rampart.localize()`` are included in the local scope.
+
+.. code-block:: javascript
+
+   rampart.globalize(rampart.utils);
+
+   var globalVar = "gval";
+
+   function outer() {
+       var x = 10;
+
+       function inner() {
+           var y = 20;
+
+           var scopes = getScopeVars();
+           var all = scopes.collapse();
+
+           printf("y = %d\n", all.y);             // 20 (local)
+           printf("x = %d\n", all.x);             // 10 (closure)
+           printf("globalVar = %s\n", all.globalVar); // "gval" (global)
+
+           /* local shadows global */
+           var rampart = "shadowed";
+           all = getScopeVars().collapse();
+           printf("rampart = %s\n", all.rampart);  // "shadowed"
+       }
+       inner();
+   }
+   outer();
+
+Return Value:
+   :green:`Object`.  A flat :green:`Object` with ``{name: value}`` entries
+   for every variable visible at the point of the ``getScopeVars()`` call.
+
 File Handle Utilities
 """""""""""""""""""""
 

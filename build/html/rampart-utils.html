@@ -135,6 +135,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#errorconfig">errorConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deepcopy">deepCopy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#eventcallback">eventCallback</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getscopevars">getScopeVars</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#file-handle-utilities">File Handle Utilities</a><ul>
@@ -2179,6 +2180,139 @@ rather than its reference.  Default is <code class="docutils literal notranslate
 <dd>In normal usage, this function should not be necessary.  If used, the callback function must
 not call any asynchronous functions.  See <a class="reference external" href="https://libevent.org/libevent-book/Ref1_libsetup.html">the libevent2 reference</a>
 for more information.</dd>
+</dl>
+</div>
+<div class="section" id="getscopevars">
+<h3>getScopeVars<a class="headerlink" href="#getscopevars" title="Permalink to this headline">¶</a></h3>
+<p>Inspect variables visible at the current call scope.  This function can
+return all variables grouped by scope type, or look up a single variable
+by name.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">scopes</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getScopeVars</span><span class="p">();</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getScopeVars</span><span class="p">(</span><span class="nx">varname</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">varname</span></code> is an optional <span class="green">String</span> — the name of a single
+variable to look up.</p>
+<p><strong>Mode 1: No arguments</strong> — returns an <span class="green">Object</span> with all variables
+grouped by scope:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">scopes</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getScopeVars</span><span class="p">();</span>
+<span class="cm">/* scopes = {</span>
+<span class="cm">     local:   { x: 1, y: &quot;hello&quot; },</span>
+<span class="cm">     closure: { outerVar: 42 },</span>
+<span class="cm">     global:  { ... }</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p>The returned <span class="green">Object</span> has the following properties:</p>
+<p><strong>Mode 2: String argument</strong> — looks up a single variable by name across
+all scopes (innermost first), returning an <span class="green">Object</span> describing
+where it was found:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getScopeVars</span><span class="p">(</span><span class="s2">&quot;myVar&quot;</span><span class="p">);</span>
+<span class="cm">/* result = { value: 42, scope: &quot;closure&quot; }</span>
+<span class="cm">   or undefined if not found */</span>
+</pre></div>
+</div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="19%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Property</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>value</td>
+<td>any</td>
+<td>The current value of the variable.</td>
+</tr>
+<tr class="row-odd"><td>scope</td>
+<td><span class="green">String</span></td>
+<td>The scope in which the variable was found: <code class="docutils literal notranslate"><span class="pre">&quot;local&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;closure&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;with&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Object</span> or <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.  In Mode 1, always returns an
+<span class="green">Object</span>.  In Mode 2, returns an <span class="green">Object</span> if the
+variable was found, or <code class="docutils literal notranslate"><span class="pre">undefined</span></code> if it was not found in any scope.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">globalVar</span> <span class="o">=</span> <span class="s2">&quot;gval&quot;</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">outer</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kd">function</span> <span class="nx">inner</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+        <span class="cm">/* inspect all scopes */</span>
+        <span class="kd">var</span> <span class="nx">scopes</span> <span class="o">=</span> <span class="nx">getScopeVars</span><span class="p">();</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;local y = %d\n&quot;</span><span class="p">,</span> <span class="nx">scopes</span><span class="p">.</span><span class="nx">local</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>       <span class="c1">// 20</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;closure x = %d\n&quot;</span><span class="p">,</span> <span class="nx">scopes</span><span class="p">.</span><span class="nx">closure</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>   <span class="c1">// 10</span>
+
+        <span class="cm">/* look up a single variable */</span>
+        <span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">getScopeVars</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">);</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;x = %d (from %s scope)\n&quot;</span><span class="p">,</span> <span class="nx">info</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span> <span class="nx">info</span><span class="p">.</span><span class="nx">scope</span><span class="p">);</span>
+        <span class="c1">// x = 10 (from closure scope)</span>
+
+        <span class="kd">var</span> <span class="nx">missing</span> <span class="o">=</span> <span class="nx">getScopeVars</span><span class="p">(</span><span class="s2">&quot;noSuchVar&quot;</span><span class="p">);</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;missing = %s\n&quot;</span><span class="p">,</span> <span class="k">typeof</span> <span class="nx">missing</span><span class="p">);</span>        <span class="c1">// undefined</span>
+    <span class="p">}</span>
+    <span class="nx">inner</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="nx">outer</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><strong>collapse()</strong> — The <span class="green">Object</span> returned by <code class="docutils literal notranslate"><span class="pre">getScopeVars()</span></code> (Mode 1)
+has a <code class="docutils literal notranslate"><span class="pre">collapse()</span></code> method that merges all scopes into a single flat
+<span class="green">Object</span>.  Scopes are applied outermost-first (global, then with,
+then closure, then local), so inner scopes shadow outer ones — matching
+JavaScript’s actual variable resolution order.</p>
+<p>Variables added via <code class="docutils literal notranslate"><span class="pre">rampart.localize()</span></code> are included in the local scope.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">globalVar</span> <span class="o">=</span> <span class="s2">&quot;gval&quot;</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">outer</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kd">function</span> <span class="nx">inner</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+        <span class="kd">var</span> <span class="nx">scopes</span> <span class="o">=</span> <span class="nx">getScopeVars</span><span class="p">();</span>
+        <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">scopes</span><span class="p">.</span><span class="nx">collapse</span><span class="p">();</span>
+
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;y = %d\n&quot;</span><span class="p">,</span> <span class="nx">all</span><span class="p">.</span><span class="nx">y</span><span class="p">);</span>             <span class="c1">// 20 (local)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;x = %d\n&quot;</span><span class="p">,</span> <span class="nx">all</span><span class="p">.</span><span class="nx">x</span><span class="p">);</span>             <span class="c1">// 10 (closure)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;globalVar = %s\n&quot;</span><span class="p">,</span> <span class="nx">all</span><span class="p">.</span><span class="nx">globalVar</span><span class="p">);</span> <span class="c1">// &quot;gval&quot; (global)</span>
+
+        <span class="cm">/* local shadows global */</span>
+        <span class="kd">var</span> <span class="nx">rampart</span> <span class="o">=</span> <span class="s2">&quot;shadowed&quot;</span><span class="p">;</span>
+        <span class="nx">all</span> <span class="o">=</span> <span class="nx">getScopeVars</span><span class="p">().</span><span class="nx">collapse</span><span class="p">();</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;rampart = %s\n&quot;</span><span class="p">,</span> <span class="nx">all</span><span class="p">.</span><span class="nx">rampart</span><span class="p">);</span>  <span class="c1">// &quot;shadowed&quot;</span>
+    <span class="p">}</span>
+    <span class="nx">inner</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="nx">outer</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Object</span>.  A flat <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">value}</span></code> entries
+for every variable visible at the point of the <code class="docutils literal notranslate"><span class="pre">getScopeVars()</span></code> call.</dd>
 </dl>
 </div>
 </div>

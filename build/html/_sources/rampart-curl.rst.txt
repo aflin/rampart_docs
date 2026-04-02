@@ -218,6 +218,29 @@ fetchAsync()
     and waiting for socket data, retrieval of the document and the execution
     of the callback happens in the Rampart event loop.
 
+    Return Value:
+        When called with a callback, returns an :green:`Object` with a
+        single method ``finally()``.  See `finally()`_ below.
+
+finally()
+"""""""""
+
+    The ``finally()`` method is available on the return value of
+    ``fetchAsync()`` and ``submitAsync()`` when called with a callback.
+    It registers a :green:`Function` that will be called after **all**
+    async requests have completed.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        curl.fetchAsync(url_list, options, function(res) {
+            // called once per URL
+        }).finally(function() {
+            // called once after all URLs have completed
+            printf("All requests finished\n");
+        });
+
 submitAsync()
 ~~~~~~~~~~~~~
 
@@ -225,11 +248,168 @@ submitAsync()
     retrieval of the document and the execution of the callback happens in
     the Rampart event loop.
 
+    Return Value:
+        When called with a callback, returns an :green:`Object` with a
+        single method ``finally()``.  See `finally()`_ above.
+
+Promise / async-await Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    When the Rampart transpiler is active (via ``rampart -t``, ``"use transpiler"``
+    or ``"use transpilerGlobally"``), ``fetchAsync()`` and ``submitAsync()`` support
+    Promises and the ``async``/``await`` syntax.
+
+    **Single URL, no callback** — returns a :green:`Promise` that resolves
+    with the result :green:`Object`:
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        rampart.globalize(rampart.utils);
+        var curl = require('rampart-curl');
+
+        async function main() {
+            // await a single request
+            var res = await curl.fetchAsync('https://example.com/', {returnText: true});
+            printf("status: %d, length: %d\n", res.status, res.text.length);
+
+            // error handling with try/catch
+            try {
+                var res2 = await curl.fetchAsync('https://nonexistent.invalid/');
+            } catch(e) {
+                printf("error: %s\n", e.message);
+            }
+
+            // parallel requests with Promise.all
+            var results = await Promise.all([
+                curl.fetchAsync('https://example.com/page1'),
+                curl.fetchAsync('https://example.com/page2')
+            ]);
+            printf("got %d results\n", results.length);
+        }
+
+        main();
+
+    **Multiple URLs with callback** — the callback fires once per URL as
+    usual; the :green:`Promise` resolves when all URLs have completed:
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        rampart.globalize(rampart.utils);
+        var curl = require('rampart-curl');
+
+        async function main() {
+            await curl.fetchAsync(
+                ['https://example.com/a', 'https://example.com/b'],
+                function(res) {
+                    printf("got %s: %d\n", res.url, res.status);
+                }
+            );
+            printf("all requests done\n");
+        }
+
+        main();
+
+    **submitAsync** — works the same way.  A single request object without
+    a callback returns a :green:`Promise`:
+
+    .. code-block:: javascript
+
+        var res = await curl.submitAsync({url: 'https://example.com/', location: true});
+
+    **In server modules** — use ``{defer: true}`` with ``req.reply()``:
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        var curl = require('rampart-curl');
+
+        async function handle(req) {
+            var res = await curl.fetchAsync('https://api.example.com/data');
+            req.reply({ json: { status: res.status } });
+        }
+
+        module.exports = function(req) {
+            handle(req);
+            return { defer: true };
+        };
+
+    Note:  Promise support requires the transpiler's Promise polyfill.
+    Without the transpiler, the original callback-based API is unchanged.
+
+cancel
+~~~~~~
+
+    The ``curl.cancel`` :green:`Object` is a sentinel value.  When returned
+    from a ``chunkCallback`` or ``progressCallback`` function, the current
+    transfer is canceled.
+
+    .. code-block:: javascript
+
+        var curl = require('rampart-curl');
+
+        curl.fetch('https://example.com/largefile', {
+            chunkCallback: function(res) {
+                if (res.progress > 1000000)
+                    return curl.cancel;  // stop after 1MB
+            },
+            callback: function(res) {
+                printf("done, got %d bytes\n", res.body.length);
+            }
+        });
+
+setCaCert()
+~~~~~~~~~~~
+
+    Set the default CA certificate bundle path for all subsequent requests.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        curl.setCaCert('/path/to/ca-bundle.crt');
+
+    Where the argument is a :green:`String`, the path to a readable CA
+    certificate file.  Throws an error if the file does not exist or is
+    not readable.  The value is also reflected in ``curl.default_ca_file``.
+
+encode()
+~~~~~~~~
+
+    URL-encode a string.
+
+    .. code-block:: javascript
+
+        var encoded = curl.encode('hello world&foo=bar');
+        // "hello%20world%26foo%3Dbar"
+
+decode()
+~~~~~~~~
+
+    URL-decode a string.
+
+    .. code-block:: javascript
+
+        var decoded = curl.decode('hello%20world%26foo%3Dbar');
+        // "hello world&foo=bar"
+
+cleanup()
+~~~~~~~~~
+
+    Release all resources allocated by the Curl library's global
+    initialization.  Subsequent curl operations will re-initialize
+    automatically.
+
+    .. code-block:: javascript
+
+        curl.cleanup();
+
 default_ca_file
 ~~~~~~~~~~~~~~~
 
-The read only variable ``curl.default_ca_file`` is a :green:`String`, the 
-location of where Curl expects to find the 
+The read only variable ``curl.default_ca_file`` is a :green:`String`, the
+location of where Curl expects to find the
 `CA Certificate Bundle file <https://curl.se/docs/caextract.html>`_\ .
 If this file does not exist on the filesystem, ``https`` requests must
 either provide an alternate location for the file or be set as insecure.
@@ -524,6 +704,11 @@ Note that `examples`_ are provided below.
                 }
             );
 
+
+    * ``noCopyBuffer`` - a :green:`Boolean`, if ``true`` the response
+      ``body`` :green:`Buffer` is used directly from the Curl library
+      without copying.  This can improve performance for large responses
+      but the buffer must not be used after the next curl call.
 
     * ``arrayType`` - :green:`String` - How to translate arrays into
       parameters for ``get`` and ``post`` below.  See

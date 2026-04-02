@@ -167,6 +167,44 @@ _async Commands
     their non-async counterparts with the ``options`` :green:`Object` set to
     ``{async:true}``.
 
+Promise / async-await Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    When the Rampart transpiler is active (via ``rampart -t``,
+    ``"use transpiler"`` or ``"use transpilerGlobally"``), any async
+    command may be called without a callback.  In this case, a
+    :green:`Promise` is returned that resolves with the complete result
+    (equivalent to the synchronous return value) or rejects on error.
+
+    This applies to commands using ``{async:true}`` in the options
+    :green:`Object` or the ``*_async`` shortcut functions.  It does not
+    apply to ``subscribe``, ``psubscribe``, ``xread_block_async`` or
+    ``xread_auto_async``, which require a callback for their continuous
+    event handling.
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        var redis = require("rampart-redis");
+        var rcl = new redis.init();
+
+        async function main() {
+            await rcl.set({async:true}, "mykey", "myvalue");
+            var val = await rcl.get({async:true}, "mykey");
+            // val === "myvalue"
+
+            var list = await rcl.lrange({async:true}, "mylist", 0, -1);
+            // list is the full Array, same as the synchronous return
+
+            try {
+                await rcl.hget({async:true}, "mykey", "field");
+            } catch(e) {
+                // e.message contains the Redis error
+            }
+        }
+
+        main();
+
 format
 ~~~~~~
 
