@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Rampart'
-copyright = '2025, Moat Crossing Systems'
+copyright = '2026, Moat Crossing Systems'
 author = 'Moat Crossing Systems'
 
 # The full version, including alpha/beta/rc tags
