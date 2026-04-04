@@ -158,6 +158,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#buffers-and-data">Buffers and Data</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#what-buffer-types-are-available-and-how-do-they-differ">What buffer types are available and how do they differ?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-handle-objects-with-cyclic-references">How do I handle objects with cyclic references?</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a><ul>
@@ -370,19 +371,26 @@ ECMAScript 2016 (ES7) through Duktape.  This includes <code class="docutils lite
 <p>For full ES2015+ support — including <code class="docutils literal notranslate"><span class="pre">async</span></code>/<code class="docutils literal notranslate"><span class="pre">await</span></code>, destructuring,
 arrow functions, <code class="docutils literal notranslate"><span class="pre">for...of</span></code>, <code class="docutils literal notranslate"><span class="pre">class</span></code> syntax, and Promises — place one
 of the following directives at the top of your script:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel&quot;</span><span class="p">;</span>      <span class="c1">// Full ES2015+ via the Babel transpiler (slower startup)</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span> <span class="c1">// ES2015+ via a fast, built-in C transpiler</span>
                   <span class="c1">//    OR</span>
-<span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span> <span class="c1">// Limited ES2015+ via a lighter transpiler (faster startup)</span>
+<span class="s2">&quot;use babel&quot;</span><span class="p">;</span>      <span class="c1">// Full ES2015+ via the Babel transpiler (much slower)</span>
 </pre></div>
 </div>
+<p>The built-in transpiler (<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>) is written in C and is
+significantly faster than Babel, which runs as JavaScript.  In both
+cases, the transpiled output is cached to disk (e.g.,
+<code class="docutils literal notranslate"><span class="pre">myscript.transpiled.js</span></code> or <code class="docutils literal notranslate"><span class="pre">myscript.babel.js</span></code>).  On subsequent
+runs, the cached version is reused if the source file has not changed,
+so the startup cost is only paid once.</p>
 <p>Note that Rampart’s non-standard extensions (template literal <code class="docutils literal notranslate"><span class="pre">sprintf</span></code>
-shortcuts and triple-backtick unescaped strings) do <strong>not</strong> work when
-Babel is enabled.</p>
+shortcuts and triple-backtick unescaped strings) work with
+<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> but do <strong>not</strong> work with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>.</p>
 </div>
 <div class="section" id="what-are-rampart-s-non-standard-javascript-extensions">
 <h3>What are Rampart’s non-standard JavaScript extensions?<a class="headerlink" href="#what-are-rampart-s-non-standard-javascript-extensions" title="Permalink to this headline">¶</a></h3>
-<p>Rampart adds two extensions to template literal syntax that are only
-available <strong>without</strong> <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>:</p>
+<p>Rampart adds two extensions to template literal syntax.  These work
+with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> or without any transpiler, but are <strong>not</strong>
+available with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>:</p>
 <p><strong>Template literal sprintf shortcut</strong> — embed format specifiers directly
 in template literals:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="s2">&quot;&lt;b&gt;world&lt;/b&gt;&quot;</span><span class="p">;</span>
@@ -397,8 +405,9 @@ literal characters:</p>
 // path === &quot;C:\\Users\\myfile.txt&quot;
 </pre></div>
 </div>
-<p>These are convenient shortcuts but are not part of the ECMAScript standard
-and will not work if you enable the Babel transpiler.</p>
+<p>These are Rampart-specific extensions and are not part of the ECMAScript
+standard.  They work with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> but not with
+<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>.</p>
 </div>
 <div class="section" id="are-operations-synchronous-or-asynchronous-by-default">
 <h3>Are operations synchronous or asynchronous by default?<a class="headerlink" href="#are-operations-synchronous-or-asynchronous-by-default" title="Permalink to this headline">¶</a></h3>
@@ -682,13 +691,13 @@ notified when matching keys are set.</p>
 <h3>Does Rampart support Promises and async/await?<a class="headerlink" href="#does-rampart-support-promises-and-async-await" title="Permalink to this headline">¶</a></h3>
 <p>Yes, but you must enable a transpiler by placing one of the following at
 the top of your script:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel&quot;</span><span class="p">;</span>      <span class="c1">// Full ES2015+ support via Babel</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span> <span class="c1">// ES2015+ via a fast, built-in C transpiler (recommended)</span>
                   <span class="c1">//     OR</span>
-<span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span> <span class="c1">// Lighter-weight alternative with async/await support</span>
+<span class="s2">&quot;use babel&quot;</span><span class="p">;</span>      <span class="c1">// Full ES2015+ via the Babel transpiler (much slower)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel&quot;</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span>
 
 <span class="kd">function</span> <span class="nx">fetchData</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="k">new</span> <span class="nb">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="p">=&gt;</span> <span class="p">{</span>
@@ -708,7 +717,7 @@ the top of your script:</p>
 advantage of this.  Their async variants — <code class="docutils literal notranslate"><span class="pre">curl.fetchAsync()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">curl.submitAsync()</span></code>, and Redis async commands — return Promises and
 work with <code class="docutils literal notranslate"><span class="pre">async</span></code>/<code class="docutils literal notranslate"><span class="pre">await</span></code> when a transpiler is enabled:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel&quot;</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-curl&quot;</span><span class="p">);</span>
 
@@ -1434,7 +1443,11 @@ specifiers plus several useful extensions:</p>
 <div class="section" id="how-do-fork-and-daemon-work">
 <h3>How do fork() and daemon() work?<a class="headerlink" href="#how-do-fork-and-daemon-work" title="Permalink to this headline">¶</a></h3>
 <p>These are real POSIX <code class="docutils literal notranslate"><span class="pre">fork()</span></code> and double-fork operations — familiar
-territory for C developers, but potentially new for Node.js developers.</p>
+territory for C developers, but potentially new for Node.js developers.
+Both work the same way: they return the child’s PID to the parent and
+<code class="docutils literal notranslate"><span class="pre">0</span></code> to the child.  The difference is that <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> double-forks and
+detaches from the controlling terminal, so the child runs as a
+background daemon.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
 <span class="c1">// fork() — create a child process</span>
@@ -1447,10 +1460,14 @@ territory for C developers, but potentially new for Node.js developers.</p>
     <span class="c1">// error</span>
 <span class="p">}</span>
 
-<span class="c1">// daemon() — double-fork to create a background daemon</span>
-<span class="nx">daemon</span><span class="p">();</span>
-<span class="c1">// execution continues here in the daemon process</span>
-<span class="c1">// original process exits</span>
+<span class="c1">// daemon() — same interface, but double-forks and detaches</span>
+<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">daemon</span><span class="p">();</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// original process — pid is the daemon&#39;s PID</span>
+    <span class="c1">// typically exit here</span>
+<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// daemon process — detached from terminal</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p><strong>Important:</strong> <code class="docutils literal notranslate"><span class="pre">fork()</span></code> and <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> cannot be used while threads
@@ -1712,6 +1729,36 @@ to convert between strings and buffers.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="how-do-i-handle-objects-with-cyclic-references">
+<h3>How do I handle objects with cyclic references?<a class="headerlink" href="#how-do-i-handle-objects-with-cyclic-references" title="Permalink to this headline">¶</a></h3>
+<p>JavaScript’s <code class="docutils literal notranslate"><span class="pre">JSON.stringify()</span></code> throws an error on objects that
+reference themselves.  Rampart provides a round-trip solution:</p>
+<p><strong>Serialize</strong> with <code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%!J&quot;,</span> <span class="pre">obj)</span></code> — cyclic references are
+replaced with <code class="docutils literal notranslate"><span class="pre">{&quot;_cyclic_ref&quot;:</span> <span class="pre">&quot;$&quot;}</span></code> markers instead of throwing:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="nx">count</span><span class="o">:</span> <span class="mi">42</span><span class="p">};</span>
+<span class="nx">obj</span><span class="p">.</span><span class="nx">self</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">;</span>  <span class="c1">// cyclic reference</span>
+
+<span class="kd">var</span> <span class="nx">json</span> <span class="o">=</span> <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%!J&quot;</span><span class="p">,</span> <span class="nx">obj</span><span class="p">);</span>
+<span class="c1">// &#39;{&quot;name&quot;:&quot;test&quot;, &quot;count&quot;:42, &quot;self&quot;:{&quot;_cyclic_ref&quot;: &quot;$&quot;}}&#39;</span>
+</pre></div>
+</div>
+<p><strong>Restore</strong> with <code class="docutils literal notranslate"><span class="pre">JSON.parse(json,</span> <span class="pre">true)</span></code> — passing <code class="docutils literal notranslate"><span class="pre">true</span></code> as the
+second argument tells Rampart to resolve the <code class="docutils literal notranslate"><span class="pre">_cyclic_ref</span></code> markers
+back into actual object references:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">restored</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">json</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="nx">restored</span><span class="p">.</span><span class="nx">self</span> <span class="o">===</span> <span class="nx">restored</span><span class="p">;</span>              <span class="c1">// true</span>
+<span class="nx">restored</span><span class="p">.</span><span class="nx">self</span><span class="p">.</span><span class="nx">self</span><span class="p">.</span><span class="nx">self</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>            <span class="c1">// &quot;test&quot;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">true</span></code> second argument to <code class="docutils literal notranslate"><span class="pre">JSON.parse()</span></code> is a Rampart extension
+— in standard JavaScript, the second argument is a reviver function.
+Note that <code class="docutils literal notranslate"><span class="pre">%J</span></code> (without <code class="docutils literal notranslate"><span class="pre">!</span></code>) will also fall back to this safe mode
+automatically if it detects that normal serialization would fail due to
+cyclic references.</p>
+</div>
 </div>
 <div class="section" id="deployment">
 <h2>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h2>
@@ -1843,6 +1890,19 @@ provides automatic type conversion between JavaScript and Python:</p>
 </table>
 <p>Note: Due to the Python GIL, Python code running in separate Rampart
 threads will execute in separate processes rather than true threads.</p>
+<p>The Rampart distribution also includes <code class="docutils literal notranslate"><span class="pre">python3r</span></code> and <code class="docutils literal notranslate"><span class="pre">pip3r</span></code> in its
+<code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory.  These are standalone Python and pip executables that
+share the same <code class="docutils literal notranslate"><span class="pre">site-packages</span></code> and library paths as the embedded Python
+in <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code>.  Use <code class="docutils literal notranslate"><span class="pre">pip3r</span></code> to install packages that will be
+available to both <code class="docutils literal notranslate"><span class="pre">python3r</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3r install requests
+</pre></div>
+</div>
+<p>Packages installed this way can then be imported from within Rampart:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">python</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-python&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">requests</span> <span class="o">=</span> <span class="nx">python</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="s2">&quot;requests&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>

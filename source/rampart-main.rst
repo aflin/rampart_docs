@@ -175,24 +175,24 @@ from the global scope, the behavior is identical to `rampart.globalize`_.
 
     rampart.localize(var_obj [, filterOrIgnore [, ignoreConflicts]]);
 
-+------------------+------------------+-----------------------------------------------------------+
-|Argument          |Type              |Description                                                |
-+==================+==================+===========================================================+
-|var_obj           |:green:`Object`   | The :green:`Object` with the properties to be localized.  |
-+------------------+------------------+-----------------------------------------------------------+
-|filterOrIgnore    |:green:`Array` or | If an :green:`Array`, only the named properties will be   |
++------------------+------------------+------------------------------------------------------------+
+|Argument          |Type              |Description                                                 |
++==================+==================+============================================================+
+|var_obj           |:green:`Object`   | The :green:`Object` with the properties to be localized.   |
++------------------+------------------+------------------------------------------------------------+
+|filterOrIgnore    |:green:`Array` or | If an :green:`Array`, only the named properties will be    |
 |                  |:green:`Boolean`  | copied (same convention as ``rampart.globalize``).         |
-|                  |                  +-----------------------------------------------------------+
+|                  |                  +------------------------------------------------------------+
 |                  |                  | If a :green:`Boolean` set ``true``, silently skip          |
 |                  |                  | properties that conflict with local variable               |
 |                  |                  | declarations.  Default is ``false`` (throw a               |
 |                  |                  | ``TypeError`` on conflict).                                |
-+------------------+------------------+-----------------------------------------------------------+
++------------------+------------------+------------------------------------------------------------+
 |ignoreConflicts   |:green:`Boolean`  | When ``filterOrIgnore`` is an :green:`Array`, this         |
 |                  |                  | optional third argument controls conflict behavior.        |
 |                  |                  | If ``true``, silently skip conflicts.  Default is          |
 |                  |                  | ``false`` (throw a ``TypeError``).                         |
-+------------------+------------------+-----------------------------------------------------------+
++------------------+------------------+------------------------------------------------------------+
 
 Return value:
    ``undefined``.

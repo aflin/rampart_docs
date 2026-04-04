@@ -173,7 +173,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#tree-sitter-license">Tree-sitter License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#activating-the-transpiler">Activating the Transpiler</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#why-use-the-transpiler-instead-of-babel">Why use the transpiler instead of Babel?</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#seeing-the-transpiled-script">Seeing the Transpiled script</a></li>
 </ul>
 </li>
 </ul>
@@ -419,6 +418,43 @@ from the global scope, the behavior is identical to <a class="reference internal
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">localize</span><span class="p">(</span><span class="nx">var_obj</span> <span class="p">[,</span> <span class="nx">filterOrIgnore</span> <span class="p">[,</span> <span class="nx">ignoreConflicts</span><span class="p">]]);</span>
 </pre></div>
 </div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="19%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Argument</th>
+<th class="head">Type</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>var_obj</td>
+<td><span class="green">Object</span></td>
+<td>The <span class="green">Object</span> with the properties to be localized.</td>
+</tr>
+<tr class="row-odd"><td rowspan="2">filterOrIgnore</td>
+<td rowspan="2"><span class="green">Array</span> or
+<span class="green">Boolean</span></td>
+<td>If an <span class="green">Array</span>, only the named properties will be
+copied (same convention as <code class="docutils literal notranslate"><span class="pre">rampart.globalize</span></code>).</td>
+</tr>
+<tr class="row-even"><td>If a <span class="green">Boolean</span> set <code class="docutils literal notranslate"><span class="pre">true</span></code>, silently skip
+properties that conflict with local variable
+declarations.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code> (throw a
+<code class="docutils literal notranslate"><span class="pre">TypeError</span></code> on conflict).</td>
+</tr>
+<tr class="row-odd"><td>ignoreConflicts</td>
+<td><span class="green">Boolean</span></td>
+<td>When <code class="docutils literal notranslate"><span class="pre">filterOrIgnore</span></code> is an <span class="green">Array</span>, this
+optional third argument controls conflict behavior.
+If <code class="docutils literal notranslate"><span class="pre">true</span></code>, silently skip conflicts.  Default is
+<code class="docutils literal notranslate"><span class="pre">false</span></code> (throw a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>).</td>
+</tr>
+</tbody>
+</table>
 <dl class="docutils">
 <dt>Return value:</dt>
 <dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
@@ -1596,18 +1632,11 @@ yet to be completed support).</p>
 </div>
 <div class="section" id="why-use-the-transpiler-instead-of-babel">
 <h3>Why use the transpiler instead of Babel?<a class="headerlink" href="#why-use-the-transpiler-instead-of-babel" title="Permalink to this headline">¶</a></h3>
-<p>Though babel has far better coverage of post-ES5 JavaScript, each time there is a new
-edit, it has to be run through babel, which can be slow.  The transpiler is
-several orders of magnitude faster than babel.
+<p>Though babel has better coverage of post-ES5 JavaScript, the transpiler is
+several orders of magnitude faster than babel.  Both save their transpiled
+output to disk (e.g., <code class="docutils literal notranslate"><span class="pre">myscript.transpiled.js</span></code> or <code class="docutils literal notranslate"><span class="pre">myscript.babel.js</span></code>)
+and reuse it on subsequent runs if the source has not changed.
 In addition, the transpiler keeps the <a class="reference internal" href="#extra-javascript-functionality">Extra JavaScript Functionality</a> listed above.</p>
-</div>
-<div class="section" id="seeing-the-transpiled-script">
-<h3>Seeing the Transpiled script<a class="headerlink" href="#seeing-the-transpiled-script" title="Permalink to this headline">¶</a></h3>
-<p>To examine and save the transpiled script (which, unlike with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>, is not
-saved to a file), a script can be run as such:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RPDEBUG</span><span class="o">=</span>transpiler rampart -t myscript.js <span class="m">2</span>&gt; myscript-transpiled.js
-</pre></div>
-</div>
 </div>
 </div>
 </div>

@@ -127,20 +127,28 @@ of the following directives at the top of your script:
 
 .. code-block:: javascript
 
-    "use babel";      // Full ES2015+ via the Babel transpiler (slower startup)
+    "use transpiler"; // ES2015+ via a fast, built-in C transpiler
                       //    OR
-    "use transpiler"; // Limited ES2015+ via a lighter transpiler (faster startup)
+    "use babel";      // Full ES2015+ via the Babel transpiler (much slower)
+
+The built-in transpiler (``"use transpiler"``) is written in C and is
+significantly faster than Babel, which runs as JavaScript.  In both
+cases, the transpiled output is cached to disk (e.g.,
+``myscript.transpiled.js`` or ``myscript.babel.js``).  On subsequent
+runs, the cached version is reused if the source file has not changed,
+so the startup cost is only paid once.
 
 Note that Rampart's non-standard extensions (template literal ``sprintf``
-shortcuts and triple-backtick unescaped strings) do **not** work when
-Babel is enabled.
+shortcuts and triple-backtick unescaped strings) work with
+``"use transpiler"`` but do **not** work with ``"use babel"``.
 
 
 What are Rampart's non-standard JavaScript extensions?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Rampart adds two extensions to template literal syntax that are only
-available **without** ``"use babel"``:
+Rampart adds two extensions to template literal syntax.  These work
+with ``"use transpiler"`` or without any transpiler, but are **not**
+available with ``"use babel"``:
 
 **Template literal sprintf shortcut** — embed format specifiers directly
 in template literals:
@@ -160,8 +168,9 @@ literal characters:
     var path = ```C:\Users\myfile.txt```;
     // path === "C:\\Users\\myfile.txt"
 
-These are convenient shortcuts but are not part of the ECMAScript standard
-and will not work if you enable the Babel transpiler.
+These are Rampart-specific extensions and are not part of the ECMAScript
+standard.  They work with ``"use transpiler"`` but not with
+``"use babel"``.
 
 
 Are operations synchronous or asynchronous by default?
@@ -507,15 +516,15 @@ the top of your script:
 
 .. code-block:: javascript
 
-    "use babel";      // Full ES2015+ support via Babel
+    "use transpiler"; // ES2015+ via a fast, built-in C transpiler (recommended)
                       //     OR
-    "use transpiler"; // Lighter-weight alternative with async/await support
+    "use babel";      // Full ES2015+ via the Babel transpiler (much slower)
 
 Example:
 
 .. code-block:: javascript
 
-    "use babel";
+    "use transpiler";
 
     function fetchData() {
         return new Promise(resolve => {
@@ -537,7 +546,7 @@ work with ``async``/``await`` when a transpiler is enabled:
 
 .. code-block:: javascript
 
-    "use babel";
+    "use transpiler";
 
     var curl = require("rampart-curl");
 
@@ -1300,6 +1309,10 @@ How do fork() and daemon() work?
 
 These are real POSIX ``fork()`` and double-fork operations — familiar
 territory for C developers, but potentially new for Node.js developers.
+Both work the same way: they return the child's PID to the parent and
+``0`` to the child.  The difference is that ``daemon()`` double-forks and
+detaches from the controlling terminal, so the child runs as a
+background daemon.
 
 .. code-block:: javascript
 
@@ -1315,10 +1328,14 @@ territory for C developers, but potentially new for Node.js developers.
         // error
     }
 
-    // daemon() — double-fork to create a background daemon
-    daemon();
-    // execution continues here in the daemon process
-    // original process exits
+    // daemon() — same interface, but double-forks and detaches
+    var pid = daemon();
+    if (pid > 0) {
+        // original process — pid is the daemon's PID
+        // typically exit here
+    } else if (pid == 0) {
+        // daemon process — detached from terminal
+    }
 
 **Important:** ``fork()`` and ``daemon()`` cannot be used while threads
 are open.  If you have created any ``rampart.thread`` instances, calling
@@ -1487,6 +1504,43 @@ to convert between strings and buffers.
     var combined = bprintf('%s%s', data, nbuf);
 
 
+How do I handle objects with cyclic references?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+JavaScript's ``JSON.stringify()`` throws an error on objects that
+reference themselves.  Rampart provides a round-trip solution:
+
+**Serialize** with ``sprintf("%!J", obj)`` — cyclic references are
+replaced with ``{"_cyclic_ref": "$"}`` markers instead of throwing:
+
+.. code-block:: javascript
+
+    rampart.globalize(rampart.utils);
+
+    var obj = {name: "test", count: 42};
+    obj.self = obj;  // cyclic reference
+
+    var json = sprintf("%!J", obj);
+    // '{"name":"test", "count":42, "self":{"_cyclic_ref": "$"}}'
+
+**Restore** with ``JSON.parse(json, true)`` — passing ``true`` as the
+second argument tells Rampart to resolve the ``_cyclic_ref`` markers
+back into actual object references:
+
+.. code-block:: javascript
+
+    var restored = JSON.parse(json, true);
+
+    restored.self === restored;              // true
+    restored.self.self.self.name;            // "test"
+
+The ``true`` second argument to ``JSON.parse()`` is a Rampart extension
+— in standard JavaScript, the second argument is a reviver function.
+Note that ``%J`` (without ``!``) will also fall back to this safe mode
+automatically if it detects that normal serialization would fail due to
+cyclic references.
+
+
 Deployment
 ----------
 
@@ -1619,3 +1673,20 @@ Type mapping:
 
 Note: Due to the Python GIL, Python code running in separate Rampart
 threads will execute in separate processes rather than true threads.
+
+The Rampart distribution also includes ``python3r`` and ``pip3r`` in its
+``bin/`` directory.  These are standalone Python and pip executables that
+share the same ``site-packages`` and library paths as the embedded Python
+in ``rampart-python``.  Use ``pip3r`` to install packages that will be
+available to both ``python3r`` and ``rampart-python``:
+
+.. code-block:: bash
+
+    pip3r install requests
+
+Packages installed this way can then be imported from within Rampart:
+
+.. code-block:: javascript
+
+    var python = require("rampart-python");
+    var requests = python.import("requests");
