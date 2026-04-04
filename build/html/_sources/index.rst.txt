@@ -27,3 +27,4 @@ Welcome to Rampart's documentation.
    The rampart-gm module <rampart-gm>
    Extras <rampart-extras>
    Tutorials <tutorialtoc>
+   FAQ <faq>
