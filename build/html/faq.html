@@ -139,7 +139,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-access-request-parameters">How do I access request parameters?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-websockets-work">How do WebSockets work?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-return-different-content-types">How do I return different content types?</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#how-do-i-generate-html-in-route-handlers">How do I generate HTML in route handlers?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-handle-async-operations-in-a-mapped-function">How do I handle async operations in a mapped function?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-generate-html-in-mapped-functions">How do I generate HTML in mapped functions?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-make-http-requests-from-rampart">How do I make HTTP requests from Rampart?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#why-don-t-my-variables-persist-between-requests">Why don’t my variables persist between requests?</a></li>
 </ul>
@@ -1028,7 +1029,11 @@ file name, content type, and data.</li>
 </div>
 <div class="section" id="how-do-websockets-work">
 <h3>How do WebSockets work?<a class="headerlink" href="#how-do-websockets-work" title="Permalink to this headline">¶</a></h3>
-<p>Prefix a route path with <code class="docutils literal notranslate"><span class="pre">&quot;ws:&quot;</span></code> in the map:</p>
+<p>With the standard server layout, place a WebSocket module in the
+<code class="docutils literal notranslate"><span class="pre">wsapps/</span></code> directory and it is automatically mapped — for example,
+<code class="docutils literal notranslate"><span class="pre">wsapps/chat.js</span></code> is served at <code class="docutils literal notranslate"><span class="pre">ws://wsapps/chat</span></code>.</p>
+<p>When using <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code> directly, prefix a path with
+<code class="docutils literal notranslate"><span class="pre">&quot;ws:&quot;</span></code> in the map:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
     <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
         <span class="s2">&quot;ws:/chat&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
@@ -1066,7 +1071,7 @@ across threads.</li>
 </div>
 <div class="section" id="how-do-i-return-different-content-types">
 <h3>How do I return different content types?<a class="headerlink" href="#how-do-i-return-different-content-types" title="Permalink to this headline">¶</a></h3>
-<p>Route functions return an <span class="green">Object</span> with a key that indicates the
+<p>Mapped functions return an <span class="green">Object</span> with a key that indicates the
 MIME type:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// HTML</span>
 <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span> <span class="s2">&quot;&lt;h1&gt;Hello&lt;/h1&gt;&quot;</span><span class="p">};</span>
@@ -1095,8 +1100,41 @@ MIME type:</p>
 others.  You can also set arbitrary <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> values via the
 <code class="docutils literal notranslate"><span class="pre">headers</span></code> property.</p>
 </div>
-<div class="section" id="how-do-i-generate-html-in-route-handlers">
-<h3>How do I generate HTML in route handlers?<a class="headerlink" href="#how-do-i-generate-html-in-route-handlers" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="how-do-i-handle-async-operations-in-a-mapped-function">
+<h3>How do I handle async operations in a mapped function?<a class="headerlink" href="#how-do-i-handle-async-operations-in-a-mapped-function" title="Permalink to this headline">¶</a></h3>
+<p>Mapped functions normally return a response synchronously.  When you
+need to do something asynchronous — fetch data from an external API,
+wait on a timer, or run work in a thread — return <code class="docutils literal notranslate"><span class="pre">{defer:</span> <span class="pre">true}</span></code>
+and call <code class="docutils literal notranslate"><span class="pre">req.reply()</span></code> later.  This frees the server thread to handle
+other requests while waiting.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-curl&quot;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">handler</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Start an async fetch — doesn&#39;t block the server thread</span>
+    <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/data&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">reply</span><span class="p">({</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span><span class="nx">results</span><span class="o">:</span> <span class="nx">data</span><span class="p">}});</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="nx">defer</span><span class="o">:</span> <span class="kc">true</span><span class="p">};</span>  <span class="c1">// don&#39;t send anything yet</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This also works with <code class="docutils literal notranslate"><span class="pre">setTimeout</span></code> and thread callbacks:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">slow_handler</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">reply</span><span class="p">({</span><span class="nx">txt</span><span class="o">:</span> <span class="s2">&quot;done waiting&quot;</span><span class="p">});</span>
+    <span class="p">},</span> <span class="mi">2000</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="nx">defer</span><span class="o">:</span> <span class="kc">true</span><span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">defer</span></code>, the response is sent as soon as the function returns,
+and the connection is closed before any async callback can reply.</p>
+</div>
+<div class="section" id="how-do-i-generate-html-in-mapped-functions">
+<h3>How do I generate HTML in mapped functions?<a class="headerlink" href="#how-do-i-generate-html-in-mapped-functions" title="Permalink to this headline">¶</a></h3>
 <p>The most common pattern uses template literals with Rampart’s sprintf
 format codes for safe output:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">search_page</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
@@ -1149,7 +1187,7 @@ instead of string concatenation:</p>
 <span class="c1">// With options</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
     <span class="nx">maxTime</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>                     <span class="c1">// timeout in seconds</span>
-    <span class="nx">header</span><span class="o">:</span> <span class="s2">&quot;Authorization: Bearer TOKEN&quot;</span>
+    <span class="nx">headers</span><span class="o">:</span> <span class="s2">&quot;Authorization: Bearer TOKEN&quot;</span>
 <span class="p">});</span>
 </pre></div>
 </div>
