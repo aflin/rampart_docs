@@ -885,7 +885,12 @@ Use ``req.query`` when you specifically need GET parameters.  Use
 How do WebSockets work?
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Prefix a route path with ``"ws:"`` in the map:
+With the standard server layout, place a WebSocket module in the
+``wsapps/`` directory and it is automatically mapped — for example,
+``wsapps/chat.js`` is served at ``ws://wsapps/chat``.
+
+When using ``rampart-server`` directly, prefix a path with
+``"ws:"`` in the map:
 
 .. code-block:: javascript
 
@@ -926,7 +931,7 @@ Key details:
 How do I return different content types?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Route functions return an :green:`Object` with a key that indicates the
+Mapped functions return an :green:`Object` with a key that indicates the
 MIME type:
 
 .. code-block:: javascript
@@ -958,7 +963,46 @@ others.  You can also set arbitrary ``Content-Type`` values via the
 ``headers`` property.
 
 
-How do I generate HTML in route handlers?
+How do I handle async operations in a mapped function?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mapped functions normally return a response synchronously.  When you
+need to do something asynchronous — fetch data from an external API,
+wait on a timer, or run work in a thread — return ``{defer: true}``
+and call ``req.reply()`` later.  This frees the server thread to handle
+other requests while waiting.
+
+.. code-block:: javascript
+
+    var curl = require("rampart-curl");
+
+    function handler(req) {
+        // Start an async fetch — doesn't block the server thread
+        curl.fetchAsync("https://api.example.com/data", function(res) {
+            var data = JSON.parse(res.text);
+            req.reply({json: {results: data}});
+        });
+
+        return {defer: true};  // don't send anything yet
+    }
+
+This also works with ``setTimeout`` and thread callbacks:
+
+.. code-block:: javascript
+
+    function slow_handler(req) {
+        setTimeout(function() {
+            req.reply({txt: "done waiting"});
+        }, 2000);
+
+        return {defer: true};
+    }
+
+Without ``defer``, the response is sent as soon as the function returns,
+and the connection is closed before any async callback can reply.
+
+
+How do I generate HTML in mapped functions?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The most common pattern uses template literals with Rampart's sprintf
@@ -1022,7 +1066,7 @@ Use ``rampart-curl``:
     // With options
     var res = curl.fetch(url, {
         maxTime: 10,                     // timeout in seconds
-        header: "Authorization: Bearer TOKEN"
+        headers: "Authorization: Bearer TOKEN"
     });
 
 ``curl.fetch()`` is synchronous and returns an :green:`Object` with
