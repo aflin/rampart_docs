@@ -2181,7 +2181,7 @@ The returned :green:`Object` has the following properties:
 +------------+------------------+----------------------------------------------------------------+
 |Property    |Type              |Description                                                     |
 +============+==================+================================================================+
-|local       |:green:`Object`   | Variables declared in the calling function (``var``             |
+|local       |:green:`Object`   | Variables declared in the calling function (``var``            |
 |            |                  | declarations and formal parameters), with current values.      |
 +------------+------------------+----------------------------------------------------------------+
 |closure     |:green:`Object`   | Variables from enclosing function scopes (parent declarative   |
