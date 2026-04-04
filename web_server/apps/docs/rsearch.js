@@ -299,8 +299,8 @@ function parse_html_file(file, tofile){
 .faq-question { cursor:pointer; position:relative; padding-right:30px !important; user-select:none; -webkit-user-select:none; transition:color 0.2s; font-size:1rem !important; font-weight:600; }
 .faq-question:hover { color:var(--rp-accent) !important; }
 .faq-item { margin-bottom:0.3em !important; padding-bottom:0 !important; }
-.faq-question::after { content:'+'; position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:1.4em; font-weight:300; color:var(--rp-accent); font-family:'Fira Code',monospace; }
-.faq-item.open .faq-question::after { content:'\\2212'; }
+.faq-question::after { content:'\\25B8'; position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:1.2em; color:#808080; transition:transform 0.2s; }
+.faq-item.open .faq-question::after { content:'\\25BE'; }
 .faq-answer { display:none; padding-top:0.5em; }
 .faq-item.open .faq-answer { display:block; }
 .faq-controls { margin-bottom:1em; font-size:0.85rem; }
