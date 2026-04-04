@@ -1577,17 +1577,8 @@ yet to be completed support).
 Why use the transpiler instead of Babel?
 """"""""""""""""""""""""""""""""""""""""
 
-Though babel has far better coverage of post-ES5 JavaScript, each time there is a new
-edit, it has to be run through babel, which can be slow.  The transpiler is
-several orders of magnitude faster than babel.
+Though babel has better coverage of post-ES5 JavaScript, the transpiler is
+several orders of magnitude faster than babel.  Both save their transpiled
+output to disk (e.g., ``myscript.transpiled.js`` or ``myscript.babel.js``)
+and reuse it on subsequent runs if the source has not changed.
 In addition, the transpiler keeps the `Extra JavaScript Functionality`_ listed above.
-
-Seeing the Transpiled script
-""""""""""""""""""""""""""""
-
-To examine and save the transpiled script (which, unlike with ``"use babel"``, is not
-saved to a file), a script can be run as such:
-
-.. code-block:: shell
-
-    RPDEBUG=transpiler rampart -t myscript.js 2> myscript-transpiled.js

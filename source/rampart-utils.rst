@@ -84,9 +84,13 @@ Extended (non-standard) formats:
       * If the ``0`` flag is given (e.g. ``%0B`` or ``%-080B``), and ``!``
         is not present, the output will not be padded with ``=`` characters.
 
-   * ``%U`` - url encode (or if ``!`` flag present, decode) a :green:`String`.
+   * ``%U`` - url encode (or if ``!`` flag present, decode) a :green:`String`
+     or :green:`Buffer`.  Without the ``!`` flag, :green:`Objects` are
+     converted to JSON first.
 
-   * ``%H`` - html encode (or if ``!`` flag present, decode) a :green:`String`.
+   * ``%H`` - html encode (or if ``!`` flag present, decode) a :green:`String`
+     or :green:`Buffer`.  Without the ``!`` flag, :green:`Objects` are
+     converted to JSON first.
 
    * ``%P`` - pretty print a :green:`String` or :green:`Buffer`.  Expects
      text with white space.  Format is ``%[!][-][i][.w]P`` where:
