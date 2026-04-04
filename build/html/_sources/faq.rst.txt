@@ -564,56 +564,16 @@ Without a transpiler, you can still use ``setTimeout``,
 What are the transpiler gotchas I should know about?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When using ``"use babel"`` or ``"use transpiler"``, be aware of these
-limitations:
+When using ``"use transpiler"``, be aware of these limitations:
 
-**const is not enforced at runtime.** The transpiler converts ``const``
-to ``var``, so reassignment will silently succeed instead of throwing a
-``TypeError``:
+* ``const`` is transpiled to ``var`` — reassignment silently succeeds.
+* ``await`` inside loops may not pause per-iteration.  Use
+  ``Promise.all()`` instead.
+* Destructuring combined with ``await`` (e.g.,
+  ``var {a, b} = await fn()``) may fail.  Await first, then destructure.
 
-.. code-block:: javascript
-
-    "use transpiler";
-
-    const x = 10;
-    x = 20;  // No error!  x is now 20.
-
-**await inside loops does not work per-iteration** with
-``"use transpiler"``.  The loop body runs without waiting:
-
-.. code-block:: javascript
-
-    "use transpiler";
-
-    // BROKEN — all iterations run without awaiting
-    for (var i = 0; i < urls.length; i++) {
-        var res = await curl.fetchAsync(urls[i]);  // does not pause
-    }
-
-    // WORKAROUND — collect promises, then await
-    var promises = urls.map(function(url) {
-        return curl.fetchAsync(url);
-    });
-    var results = await Promise.all(promises);
-
-**Destructuring combined with await does not work** with
-``"use transpiler"``:
-
-.. code-block:: javascript
-
-    "use transpiler";
-
-    // BROKEN
-    var {status, body} = await curl.fetchAsync(url);
-
-    // WORKAROUND — await first, then destructure
-    var res = await curl.fetchAsync(url);
-    var status = res.status;
-    var body = res.body;
-
-These limitations stem from the lighter-weight transpilation approach.
-``"use babel"`` handles more of these cases correctly but has slower
-startup.  Test your specific patterns if in doubt.
+``"use babel"`` handles more of these cases correctly but is much
+slower.  Test your specific patterns if in doubt.
 
 
 Why did my setTimeout callback fire late?
@@ -681,6 +641,60 @@ Key differences:
                             }
         }
     });
+
+
+How do I structure a Rampart web application?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With the standard server layout, app modules live in ``apps/`` and are
+automatically mapped to URLs.  A module can export a single handler
+function or an :green:`Object` mapping paths to different handlers:
+
+.. code-block:: javascript
+
+    // apps/myapp.js — multiple endpoints from one file
+    module.exports = {
+        "/":              index_page,
+        "/index.html":    index_page,
+        "/search.json":   search_handler,
+        "/autocomplete":  autocomplete_handler
+    };
+
+    function index_page(req) {
+        return {html: "<h1>My App</h1>"};
+    }
+
+    function search_handler(req) {
+        var q = req.query.q || "";
+        // ... search logic ...
+        return {json: {results: results}};
+    }
+
+A common pattern is to make scripts **dual-mode** — they serve as both
+web handlers and CLI setup tools:
+
+.. code-block:: javascript
+
+    rampart.globalize(rampart.utils);
+    var Sql = require("rampart-sql");
+    var db_path = serverConf ? serverConf.dataRoot + "/mydb"
+                             : process.scriptPath + "/../data/mydb";
+
+    if(module && module.exports) {
+        // Web server mode — export handlers
+        module.exports = {
+            "/":            index_page,
+            "/search.json": search
+        };
+    } else {
+        // CLI mode — build the database
+        var sql = new Sql.connection(db_path, true);
+        sql.exec("CREATE TABLE ...");
+        // ... import data ...
+    }
+
+Run ``rampart apps/myapp.js`` to set up the database, then start the
+server and the same script handles requests.
 
 
 What is web_server_conf.js and when should I use it?
@@ -835,6 +849,39 @@ The maximum body size defaults to 50 MB and can be changed with the
 ``maxBodySize`` option in ``server.start()``.
 
 
+How do I access request parameters?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are several sources of request data on the ``req`` object:
+
+.. code-block:: javascript
+
+    function handler(req) {
+        // URL query string: /search?q=hello&page=2
+        var q    = req.query.q || "";
+        var page = parseInt(req.query.page) || 1;
+
+        // req.params merges query + POST + cookies — use for flexibility
+        // (accepts both GET and POST for the same endpoint)
+        var q = req.params.q || "";
+
+        // Parsed POST body (form data or JSON)
+        var username = req.postData.content.username;
+
+        // Raw body as Buffer
+        var raw = req.body;
+
+        // HTTP method, headers, cookies, client IP
+        req.method;    // "GET", "POST", etc.
+        req.headers;   // request headers object
+        req.cookies;   // parsed cookies object
+        req.ip;        // client IP address
+    }
+
+Use ``req.query`` when you specifically need GET parameters.  Use
+``req.params`` when you want an endpoint to accept both GET and POST.
+
+
 How do WebSockets work?
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -911,6 +958,79 @@ others.  You can also set arbitrary ``Content-Type`` values via the
 ``headers`` property.
 
 
+How do I generate HTML in route handlers?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The most common pattern uses template literals with Rampart's sprintf
+format codes for safe output:
+
+.. code-block:: javascript
+
+    function search_page(req) {
+        var query = req.query.q || "";
+        var results = doSearch(query);
+        return {html: `
+    <!DOCTYPE html>
+    <html><body>
+      <h3>Results for: ${%H:query}</h3>
+      <pre>${%3J:results}</pre>
+    </body></html>
+        `};
+    }
+
+``${%H:variable}`` HTML-escapes the value (prevents XSS).  ``${%3J:var}``
+pretty-prints as JSON with 3-space indent.  These work with
+``"use transpiler"`` or without any transpiler (not with babel).
+
+For large responses, build content incrementally using the server buffer
+instead of string concatenation:
+
+.. code-block:: javascript
+
+    function large_page(req) {
+        req.put('<!DOCTYPE html><html><body>');
+        for (var i = 0; i < rows.length; i++) {
+            req.printf('<div class="item">%H</div>', rows[i].title);
+        }
+        return {html: '</body></html>'};
+    }
+
+
+How do I make HTTP requests from Rampart?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ``rampart-curl``:
+
+.. code-block:: javascript
+
+    var curl = require("rampart-curl");
+
+    // Simple GET
+    var res = curl.fetch("https://api.example.com/data");
+    if (res.status === 200) {
+        var data = JSON.parse(res.text);
+    }
+
+    // POST with form data
+    var res = curl.fetch("https://api.example.com/submit",
+        {post: "name=value&other=data"});
+
+    // POST with JSON
+    var res = curl.fetch("https://api.example.com/submit",
+        {postJSON: {name: "value"}});
+
+    // With options
+    var res = curl.fetch(url, {
+        maxTime: 10,                     // timeout in seconds
+        header: "Authorization: Bearer TOKEN"
+    });
+
+``curl.fetch()`` is synchronous and returns an :green:`Object` with
+``status``, ``text`` (response body as string), ``body`` (as buffer),
+and ``headers``.  For async HTTP requests, use ``curl.fetchAsync()``
+with a transpiler — see the ``rampart-curl`` documentation.
+
+
 Why don't my variables persist between requests?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -973,7 +1093,8 @@ beyond SQLite's FTS.
 
     sql.exec("CREATE TABLE docs (title VARCHAR(128), body VARCHAR(8000))");
     sql.exec("INSERT INTO docs VALUES(?, ?)", ["My Title", "The full text..."]);
-    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)");
+    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) " +
+        "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
 
     var results = sql.exec(
         "SELECT title FROM docs WHERE body LIKEP 'full text search'",
@@ -998,7 +1119,8 @@ or frequently updated tables, you should set up index maintenance.
 .. code-block:: javascript
 
     // Rebuild the index
-    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)");
+    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) " +
+        "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
 
     // Or optimize only if enough rows have changed
     sql.exec("ALTER INDEX docs_body_ftx OPTIMIZE HAVING COUNT(NewRows) > 1000");
@@ -1061,7 +1183,8 @@ searchable database:
     }
 
     // Create a full-text index
-    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)");
+    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) " +
+        "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
 
     // Search
     var results = sql.exec(
@@ -1109,6 +1232,43 @@ Each serves a different purpose:
   structure server.  Best for pub/sub messaging, real-time counters,
   queues, and scenarios where multiple processes or machines need to
   share state.  Requires a running Redis server.
+
+
+What is sql.one() and when should I use it?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``sql.one()`` is a shortcut that returns a single row as an
+:green:`Object`, or ``undefined`` if no rows match.  It is the most
+common query pattern in real Rampart applications:
+
+.. code-block:: javascript
+
+    // Single row lookup
+    var row = sql.one("SELECT * FROM users WHERE id = ?", [userId]);
+    if (row) {
+        printf("Found: %s\n", row.name);
+    }
+
+    // Check if a table exists
+    if (!sql.one("SELECT * FROM SYSTABLES WHERE NAME = 'users'")) {
+        sql.exec("CREATE TABLE users ...");
+    }
+
+Use ``sql.one()`` when you expect zero or one result.  Use
+``sql.exec()`` when you need multiple rows or a callback for row-by-row
+processing:
+
+.. code-block:: javascript
+
+    // Row-by-row callback — return false to stop early
+    sql.exec("SELECT * FROM docs WHERE body LIKEP ?",
+        {maxRows: 100},
+        [searchTerms],
+        function(row, i) {
+            // process each row; i is 0-based index
+            if (i >= 20) return false;  // stop after 20
+        }
+    );
 
 
 What is the difference between sql.exec() and sql.query()?
@@ -1307,55 +1467,26 @@ Both return an :green:`Object` with ``stdout``, ``stderr``,
 How do fork() and daemon() work?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-These are real POSIX ``fork()`` and double-fork operations — familiar
-territory for C developers, but potentially new for Node.js developers.
-Both work the same way: they return the child's PID to the parent and
-``0`` to the child.  The difference is that ``daemon()`` double-forks and
-detaches from the controlling terminal, so the child runs as a
-background daemon.
+Both are real POSIX operations available via ``rampart.utils``.  They
+have the same interface: return the child's PID to the parent and ``0``
+to the child.  ``daemon()`` double-forks and detaches from the terminal.
 
 .. code-block:: javascript
 
     rampart.globalize(rampart.utils);
 
-    // fork() — create a child process
-    var pid = fork();
+    var pid = fork();   // or daemon() for background process
     if (pid > 0) {
-        // parent process — pid is the child's PID
+        // parent — pid is the child's PID
     } else if (pid == 0) {
-        // child process
-    } else {
-        // error
+        // child (or daemon process)
     }
 
-    // daemon() — same interface, but double-forks and detaches
-    var pid = daemon();
-    if (pid > 0) {
-        // original process — pid is the daemon's PID
-        // typically exit here
-    } else if (pid == 0) {
-        // daemon process — detached from terminal
-    }
-
-**Important:** ``fork()`` and ``daemon()`` cannot be used while threads
-are open.  If you have created any ``rampart.thread`` instances, calling
-``fork()`` or ``daemon()`` will throw an error.
-
-For inter-process communication between forked processes, use
-``newPipe()``:
-
-.. code-block:: javascript
-
-    var pipe = newPipe();
-    var pid = fork(pipe);
-
-    if (pid > 0) {
-        pipe.write({message: "hello from parent"});
-    } else if (pid == 0) {
-        pipe.onRead(function(data) {
-            console.log(data.message);  // "hello from parent"
-        });
-    }
+**Note:** ``fork()`` and ``daemon()`` cannot be used while threads are
+open.  For IPC between forked processes, use ``newPipe()`` — see the
+``rampart-utils`` documentation for details.  For daemonizing the HTTP
+server, use ``server.start({daemon: true})`` or ``web_server_conf.js``
+instead.
 
 
 Buffers and Data
@@ -1448,60 +1579,18 @@ The following table summarizes what works in Rampart:
   ``map``, ``filter``, ``reduce``, ``sort``, ``indexOf``, etc.).
   Convert to an :green:`Array` first if needed.
 
-**Concatenating buffers:** The easiest and most efficient way to
-concatenate two buffers is with ``bprintf()``, which works with any
-buffer type and returns a plain buffer:
+**Concatenating buffers:** Use ``bprintf('%s%s', buf1, buf2)`` — works
+with any buffer type and returns a plain buffer.
 
-.. code-block:: javascript
+**Printf format codes and buffers:** ``%s``, ``%B``/``%!B``,
+``%U``/``%!U``, and ``%H``/``%!H`` all accept any buffer type as well
+as strings.
 
-    var combined = bprintf('%s%s', buf1, buf2);
-
-This works regardless of whether the arguments are plain buffers,
-Node.js Buffers, or TypedArrays.
-
-**Printf format codes and buffer types:** The ``%s``, ``%B``/``%!B``
-(base64), ``%U``/``%!U`` (URL encode), and ``%H``/``%!H`` (HTML encode)
-formats all accept any buffer type — plain buffers, Node.js Buffers,
-TypedArrays, and strings work interchangeably.
-
-**Practical guidance:**
-
-For most Rampart scripting, you will work with plain buffers (returned by
-``readFile()``, ``stringToBuffer()``, etc.) and Node.js Buffers (created
-with ``Buffer.from()`` / ``Buffer.alloc()``).  Use ``DataView`` when you
-need to read or write multi-byte values with explicit endianness.  Use
-``rampart.utils.stringToBuffer()`` and ``rampart.utils.bufferToString()``
-to convert between strings and buffers.
-
-.. code-block:: javascript
-
-    rampart.globalize(rampart.utils);
-
-    // rampart.utils functions return plain buffers
-    var data = readFile("/path/to/file");
-    var str  = bufferToString(data);
-    var buf  = stringToBuffer("hello");
-
-    // Node.js Buffer for richer API (slice, copy, typed read/write)
-    var nbuf = Buffer.from("hello");
-    var s    = nbuf.slice(0, 3);           // shared view
-    nbuf.copy(otherBuf, 0, 0, 5);         // copy bytes
-    var val  = nbuf.readUInt16LE(0);       // read little-endian uint16
-
-    // DataView for explicit endianness
-    var ab = new ArrayBuffer(8);
-    var dv = new DataView(ab);
-    dv.setFloat64(0, 3.14159, true);       // little-endian
-    var pi = dv.getFloat64(0, true);
-
-    // Hex and Base64 via rampart.utils
-    var hex = hexify(data);                // buffer to hex string
-    var raw = dehexify("deadbeef");        // hex string to buffer
-    var b64 = sprintf("%B", data);         // buffer to base64
-    var dec = sprintf("%!B", b64);         // base64 to string
-
-    // Concatenate any buffer types
-    var combined = bprintf('%s%s', data, nbuf);
+**Practical guidance:** Most Rampart code uses plain buffers (from
+``readFile()``, ``stringToBuffer()``) and Node.js Buffers (from
+``Buffer.from()``).  Use ``bufferToString()`` / ``stringToBuffer()``
+to convert.  Use ``hexify()`` / ``dehexify()`` for hex encoding,
+``sprintf("%B", data)`` / ``sprintf("%!B", b64)`` for base64.
 
 
 How do I handle objects with cyclic references?
@@ -1690,3 +1779,72 @@ Packages installed this way can then be imported from within Rampart:
 
     var python = require("rampart-python");
     var requests = python.import("requests");
+
+
+Vibe Coding with Rampart
+------------------------
+
+How do I use an LLM coding assistant to build Rampart applications?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Rampart includes an ``overview.md`` file in its documentation that is
+designed for LLM coding assistants.  Point the assistant at the
+documentation and the template web server, and describe what you want.
+
+Here is an example using Claude Code to build a full content management
+system from scratch:
+
+.. code-block:: bash
+
+    git clone https://github.com/aflin/rampart_docs.git
+    mkdir cms
+    cd cms
+    claude
+
+Then give it a prompt like:
+
+.. code-block:: none
+
+    Please use rampart to create a content management system that uses
+    codemirror to edit raw html, jodit as a wysiwyg editor, both included
+    from a cdn.  It should be friendly, easy to use, password protected and
+    integrated with the webserver to serve the content it builds as well as
+    allow management and editing from a separate endpoint.  You may use any
+    appropriate databasing system available in rampart, but also use
+    rampart-sql to make all content searchable, and have an option in the
+    cdn to add a standard site search.
+    For instructions on how to use rampart, see the documentation in
+    /usr/local/src/rampart_docs/source/ and start with the overview.md file.
+    For a template web server setup, use /usr/local/src/rampart/web_server/.
+
+The assistant reads the documentation, sets up the project structure from
+the template, and builds the application.  In this case, it produced a
+working CMS with the following structure:
+
+.. code-block:: none
+
+    cms/
+    ├── web_server_conf.js    # Server config
+    ├── apps/
+    │   ├── cms_db.js         # Database layer (rampart-sql + rampart-crypto)
+    │   ├── admin.js          # Admin interface (auth, page editor)
+    │   ├── site.js           # Public content server
+    │   └── search.js         # Search API endpoint
+    ├── html/                 # Static files
+    ├── data/cmsdb/           # SQL database
+    └── logs/                 # Access + error logs
+
+Features built automatically:
+
+* Admin panel with password-protected cookie sessions
+* Dual editor: visual (Jodit WYSIWYG) and HTML code (CodeMirror), both
+  from CDN, tab-switchable with sync
+* Page management: create, edit, delete, publish/draft, sort order
+* Full-text search via ``rampart-sql`` LIKEP with highlighted results
+* Public site with navigation and search bar
+* Start/stop/restart via ``rampart web_server_conf.js start``
+
+The key is pointing the assistant at ``overview.md`` as the starting
+point and the ``web_server/`` template for project structure.  The
+overview gives the LLM enough context to use Rampart's APIs correctly
+without writing Node.js code.

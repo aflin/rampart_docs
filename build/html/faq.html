@@ -132,11 +132,15 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#http-server">HTTP Server</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#how-does-rampart-server-compare-to-express-js">How does rampart-server compare to Express.js?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-structure-a-rampart-web-application">How do I structure a Rampart web application?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-is-web-server-conf-js-and-when-should-i-use-it">What is web_server_conf.js and when should I use it?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-serve-static-files">How do I serve static files?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-handle-post-data-and-file-uploads">How do I handle POST data and file uploads?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-access-request-parameters">How do I access request parameters?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-websockets-work">How do WebSockets work?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-return-different-content-types">How do I return different content types?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-generate-html-in-route-handlers">How do I generate HTML in route handlers?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-make-http-requests-from-rampart">How do I make HTTP requests from Rampart?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#why-don-t-my-variables-persist-between-requests">Why don’t my variables persist between requests?</a></li>
 </ul>
 </li>
@@ -145,6 +149,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#how-does-full-text-index-maintenance-work">How does full-text index maintenance work?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-build-a-full-text-search-over-documents-pdf-docx-etc">How do I build a full-text search over documents (PDF, DOCX, etc.)?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#when-should-i-use-rampart-sql-vs-rampart-lmdb-vs-rampart-redis">When should I use rampart-sql vs rampart-lmdb vs rampart-redis?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-sql-one-and-when-should-i-use-it">What is sql.one() and when should I use it?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-is-the-difference-between-sql-exec-and-sql-query">What is the difference between sql.exec() and sql.query()?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-prevent-sql-injection">How do I prevent SQL injection?</a></li>
 </ul>
@@ -168,6 +173,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#interoperability">Interoperability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#can-i-call-python-code-from-rampart">Can I call Python code from Rampart?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vibe-coding-with-rampart">Vibe Coding with Rampart</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-use-an-llm-coding-assistant-to-build-rampart-applications">How do I use an LLM coding assistant to build Rampart applications?</a></li>
 </ul>
 </li>
 </ul>
@@ -734,49 +743,16 @@ work with <code class="docutils literal notranslate"><span class="pre">async</sp
 </div>
 <div class="section" id="what-are-the-transpiler-gotchas-i-should-know-about">
 <h3>What are the transpiler gotchas I should know about?<a class="headerlink" href="#what-are-the-transpiler-gotchas-i-should-know-about" title="Permalink to this headline">¶</a></h3>
-<p>When using <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>, be aware of these
-limitations:</p>
-<p><strong>const is not enforced at runtime.</strong> The transpiler converts <code class="docutils literal notranslate"><span class="pre">const</span></code>
-to <code class="docutils literal notranslate"><span class="pre">var</span></code>, so reassignment will silently succeed instead of throwing a
-<code class="docutils literal notranslate"><span class="pre">TypeError</span></code>:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span>
-
-<span class="kr">const</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-<span class="nx">x</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>  <span class="c1">// No error!  x is now 20.</span>
-</pre></div>
-</div>
-<p><strong>await inside loops does not work per-iteration</strong> with
-<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>.  The loop body runs without waiting:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span>
-
-<span class="c1">// BROKEN — all iterations run without awaiting</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">urls</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">urls</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>  <span class="c1">// does not pause</span>
-<span class="p">}</span>
-
-<span class="c1">// WORKAROUND — collect promises, then await</span>
-<span class="kd">var</span> <span class="nx">promises</span> <span class="o">=</span> <span class="nx">urls</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span>
-<span class="p">});</span>
-<span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">await</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">promises</span><span class="p">);</span>
-</pre></div>
-</div>
-<p><strong>Destructuring combined with await does not work</strong> with
-<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span><span class="p">;</span>
-
-<span class="c1">// BROKEN</span>
-<span class="kd">var</span> <span class="p">{</span><span class="nx">status</span><span class="p">,</span> <span class="nx">body</span><span class="p">}</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span>
-
-<span class="c1">// WORKAROUND — await first, then destructure</span>
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">status</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">body</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>These limitations stem from the lighter-weight transpilation approach.
-<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> handles more of these cases correctly but has slower
-startup.  Test your specific patterns if in doubt.</p>
+<p>When using <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>, be aware of these limitations:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">const</span></code> is transpiled to <code class="docutils literal notranslate"><span class="pre">var</span></code> — reassignment silently succeeds.</li>
+<li><code class="docutils literal notranslate"><span class="pre">await</span></code> inside loops may not pause per-iteration.  Use
+<code class="docutils literal notranslate"><span class="pre">Promise.all()</span></code> instead.</li>
+<li>Destructuring combined with <code class="docutils literal notranslate"><span class="pre">await</span></code> (e.g.,
+<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">{a,</span> <span class="pre">b}</span> <span class="pre">=</span> <span class="pre">await</span> <span class="pre">fn()</span></code>) may fail.  Await first, then destructure.</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> handles more of these cases correctly but is much
+slower.  Test your specific patterns if in doubt.</p>
 </div>
 <div class="section" id="why-did-my-settimeout-callback-fire-late">
 <h3>Why did my setTimeout callback fire late?<a class="headerlink" href="#why-did-my-settimeout-callback-fire-late" title="Permalink to this headline">¶</a></h3>
@@ -837,6 +813,54 @@ and reloaded if changed on disk.  No server restart required.</li>
 <span class="p">});</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="how-do-i-structure-a-rampart-web-application">
+<h3>How do I structure a Rampart web application?<a class="headerlink" href="#how-do-i-structure-a-rampart-web-application" title="Permalink to this headline">¶</a></h3>
+<p>With the standard server layout, app modules live in <code class="docutils literal notranslate"><span class="pre">apps/</span></code> and are
+automatically mapped to URLs.  A module can export a single handler
+function or an <span class="green">Object</span> mapping paths to different handlers:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// apps/myapp.js — multiple endpoints from one file</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>              <span class="nx">index_page</span><span class="p">,</span>
+    <span class="s2">&quot;/index.html&quot;</span><span class="o">:</span>    <span class="nx">index_page</span><span class="p">,</span>
+    <span class="s2">&quot;/search.json&quot;</span><span class="o">:</span>   <span class="nx">search_handler</span><span class="p">,</span>
+    <span class="s2">&quot;/autocomplete&quot;</span><span class="o">:</span>  <span class="nx">autocomplete_handler</span>
+<span class="p">};</span>
+
+<span class="kd">function</span> <span class="nx">index_page</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span> <span class="s2">&quot;&lt;h1&gt;My App&lt;/h1&gt;&quot;</span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">search_handler</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">q</span> <span class="o">||</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="c1">// ... search logic ...</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">json</span><span class="o">:</span> <span class="p">{</span><span class="nx">results</span><span class="o">:</span> <span class="nx">results</span><span class="p">}};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A common pattern is to make scripts <strong>dual-mode</strong> — they serve as both
+web handlers and CLI setup tools:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">db_path</span> <span class="o">=</span> <span class="nx">serverConf</span> <span class="o">?</span> <span class="nx">serverConf</span><span class="p">.</span><span class="nx">dataRoot</span> <span class="o">+</span> <span class="s2">&quot;/mydb&quot;</span>
+                         <span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span> <span class="o">+</span> <span class="s2">&quot;/../data/mydb&quot;</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="nx">module</span> <span class="o">&amp;&amp;</span> <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Web server mode — export handlers</span>
+    <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span>            <span class="nx">index_page</span><span class="p">,</span>
+        <span class="s2">&quot;/search.json&quot;</span><span class="o">:</span> <span class="nx">search</span>
+    <span class="p">};</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// CLI mode — build the database</span>
+    <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="nx">db_path</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE TABLE ...&quot;</span><span class="p">);</span>
+    <span class="c1">// ... import data ...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Run <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">apps/myapp.js</span></code> to set up the database, then start the
+server and the same script handles requests.</p>
 </div>
 <div class="section" id="what-is-web-server-conf-js-and-when-should-i-use-it">
 <h3>What is web_server_conf.js and when should I use it?<a class="headerlink" href="#what-is-web-server-conf-js-and-when-should-i-use-it" title="Permalink to this headline">¶</a></h3>
@@ -973,6 +997,35 @@ file name, content type, and data.</li>
 <p>The maximum body size defaults to 50 MB and can be changed with the
 <code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code> option in <code class="docutils literal notranslate"><span class="pre">server.start()</span></code>.</p>
 </div>
+<div class="section" id="how-do-i-access-request-parameters">
+<h3>How do I access request parameters?<a class="headerlink" href="#how-do-i-access-request-parameters" title="Permalink to this headline">¶</a></h3>
+<p>There are several sources of request data on the <code class="docutils literal notranslate"><span class="pre">req</span></code> object:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">handler</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// URL query string: /search?q=hello&amp;page=2</span>
+    <span class="kd">var</span> <span class="nx">q</span>    <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">q</span> <span class="o">||</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">page</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">page</span><span class="p">)</span> <span class="o">||</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// req.params merges query + POST + cookies — use for flexibility</span>
+    <span class="c1">// (accepts both GET and POST for the same endpoint)</span>
+    <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">q</span> <span class="o">||</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+
+    <span class="c1">// Parsed POST body (form data or JSON)</span>
+    <span class="kd">var</span> <span class="nx">username</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">postData</span><span class="p">.</span><span class="nx">content</span><span class="p">.</span><span class="nx">username</span><span class="p">;</span>
+
+    <span class="c1">// Raw body as Buffer</span>
+    <span class="kd">var</span> <span class="nx">raw</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
+
+    <span class="c1">// HTTP method, headers, cookies, client IP</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">method</span><span class="p">;</span>    <span class="c1">// &quot;GET&quot;, &quot;POST&quot;, etc.</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">headers</span><span class="p">;</span>   <span class="c1">// request headers object</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">cookies</span><span class="p">;</span>   <span class="c1">// parsed cookies object</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">ip</span><span class="p">;</span>        <span class="c1">// client IP address</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">req.query</span></code> when you specifically need GET parameters.  Use
+<code class="docutils literal notranslate"><span class="pre">req.params</span></code> when you want an endpoint to accept both GET and POST.</p>
+</div>
 <div class="section" id="how-do-websockets-work">
 <h3>How do WebSockets work?<a class="headerlink" href="#how-do-websockets-work" title="Permalink to this headline">¶</a></h3>
 <p>Prefix a route path with <code class="docutils literal notranslate"><span class="pre">&quot;ws:&quot;</span></code> in the map:</p>
@@ -1041,6 +1094,69 @@ MIME type:</p>
 <code class="docutils literal notranslate"><span class="pre">css</span></code>, <code class="docutils literal notranslate"><span class="pre">js</span></code>, <code class="docutils literal notranslate"><span class="pre">bin</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code>, <code class="docutils literal notranslate"><span class="pre">jpg</span></code>, <code class="docutils literal notranslate"><span class="pre">gif</span></code>, and
 others.  You can also set arbitrary <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> values via the
 <code class="docutils literal notranslate"><span class="pre">headers</span></code> property.</p>
+</div>
+<div class="section" id="how-do-i-generate-html-in-route-handlers">
+<h3>How do I generate HTML in route handlers?<a class="headerlink" href="#how-do-i-generate-html-in-route-handlers" title="Permalink to this headline">¶</a></h3>
+<p>The most common pattern uses template literals with Rampart’s sprintf
+format codes for safe output:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">search_page</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">q</span> <span class="o">||</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">doSearch</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span> <span class="sb">`</span>
+<span class="sb">&lt;!DOCTYPE html&gt;</span>
+<span class="sb">&lt;html&gt;&lt;body&gt;</span>
+<span class="sb">  &lt;h3&gt;Results for: </span><span class="si">${</span><span class="o">%</span><span class="nx">H</span><span class="o">:</span><span class="nx">query</span><span class="si">}</span><span class="sb">&lt;/h3&gt;</span>
+<span class="sb">  &lt;pre&gt;</span><span class="si">${</span><span class="o">%</span><span class="mi">3</span><span class="nx">J</span><span class="o">:</span><span class="nx">results</span><span class="si">}</span><span class="sb">&lt;/pre&gt;</span>
+<span class="sb">&lt;/body&gt;&lt;/html&gt;</span>
+<span class="sb">    `</span><span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">${%H:variable}</span></code> HTML-escapes the value (prevents XSS).  <code class="docutils literal notranslate"><span class="pre">${%3J:var}</span></code>
+pretty-prints as JSON with 3-space indent.  These work with
+<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> or without any transpiler (not with babel).</p>
+<p>For large responses, build content incrementally using the server buffer
+instead of string concatenation:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">large_page</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;body&gt;&#39;</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">rows</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;item&quot;&gt;%H&lt;/div&gt;&#39;</span><span class="p">,</span> <span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">title</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">html</span><span class="o">:</span> <span class="s1">&#39;&lt;/body&gt;&lt;/html&gt;&#39;</span><span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-do-i-make-http-requests-from-rampart">
+<h3>How do I make HTTP requests from Rampart?<a class="headerlink" href="#how-do-i-make-http-requests-from-rampart" title="Permalink to this headline">¶</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-curl&quot;</span><span class="p">);</span>
+
+<span class="c1">// Simple GET</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/data&quot;</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">200</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// POST with form data</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/submit&quot;</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">post</span><span class="o">:</span> <span class="s2">&quot;name=value&amp;other=data&quot;</span><span class="p">});</span>
+
+<span class="c1">// POST with JSON</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/submit&quot;</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">postJSON</span><span class="o">:</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;value&quot;</span><span class="p">}});</span>
+
+<span class="c1">// With options</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">maxTime</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>                     <span class="c1">// timeout in seconds</span>
+    <span class="nx">header</span><span class="o">:</span> <span class="s2">&quot;Authorization: Bearer TOKEN&quot;</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">curl.fetch()</span></code> is synchronous and returns an <span class="green">Object</span> with
+<code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">text</span></code> (response body as string), <code class="docutils literal notranslate"><span class="pre">body</span></code> (as buffer),
+and <code class="docutils literal notranslate"><span class="pre">headers</span></code>.  For async HTTP requests, use <code class="docutils literal notranslate"><span class="pre">curl.fetchAsync()</span></code>
+with a transpiler — see the <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code> documentation.</p>
 </div>
 <div class="section" id="why-don-t-my-variables-persist-between-requests">
 <h3>Why don’t my variables persist between requests?<a class="headerlink" href="#why-don-t-my-variables-persist-between-requests" title="Permalink to this headline">¶</a></h3>
@@ -1119,7 +1235,8 @@ STRLST, VARBYTE, INDIRECT, GEOCODE</td>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE TABLE docs (title VARCHAR(128), body VARCHAR(8000))&quot;</span><span class="p">);</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;INSERT INTO docs VALUES(?, ?)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;My Title&quot;</span><span class="p">,</span> <span class="s2">&quot;The full text...&quot;</span><span class="p">]);</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) &quot;</span> <span class="o">+</span>
+    <span class="s2">&quot;WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;)&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
     <span class="s2">&quot;SELECT title FROM docs WHERE body LIKEP &#39;full text search&#39;&quot;</span><span class="p">,</span>
@@ -1139,7 +1256,8 @@ unindexed rows grows, the linear scan portion becomes slower.  For large
 or frequently updated tables, you should set up index maintenance.</p>
 <p><strong>Manual update</strong> — rebuild or optimize the index when convenient:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Rebuild the index</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) &quot;</span> <span class="o">+</span>
+    <span class="s2">&quot;WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;)&quot;</span><span class="p">);</span>
 
 <span class="c1">// Or optimize only if enough rows have changed</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;ALTER INDEX docs_body_ftx OPTIMIZE HAVING COUNT(NewRows) &gt; 1000&quot;</span><span class="p">);</span>
@@ -1193,7 +1311,8 @@ searchable database:</p>
 <span class="p">}</span>
 
 <span class="c1">// Create a full-text index</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) &quot;</span> <span class="o">+</span>
+    <span class="s2">&quot;WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;)&quot;</span><span class="p">);</span>
 
 <span class="c1">// Search</span>
 <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
@@ -1237,6 +1356,38 @@ structure server.  Best for pub/sub messaging, real-time counters,
 queues, and scenarios where multiple processes or machines need to
 share state.  Requires a running Redis server.</li>
 </ul>
+</div>
+<div class="section" id="what-is-sql-one-and-when-should-i-use-it">
+<h3>What is sql.one() and when should I use it?<a class="headerlink" href="#what-is-sql-one-and-when-should-i-use-it" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">sql.one()</span></code> is a shortcut that returns a single row as an
+<span class="green">Object</span>, or <code class="docutils literal notranslate"><span class="pre">undefined</span></code> if no rows match.  It is the most
+common query pattern in real Rampart applications:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Single row lookup</span>
+<span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM users WHERE id = ?&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">userId</span><span class="p">]);</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Found: %s\n&quot;</span><span class="p">,</span> <span class="nx">row</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Check if a table exists</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">sql</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM SYSTABLES WHERE NAME = &#39;users&#39;&quot;</span><span class="p">))</span> <span class="p">{</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE TABLE users ...&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">sql.one()</span></code> when you expect zero or one result.  Use
+<code class="docutils literal notranslate"><span class="pre">sql.exec()</span></code> when you need multiple rows or a callback for row-by-row
+processing:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Row-by-row callback — return false to stop early</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM docs WHERE body LIKEP ?&quot;</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">100</span><span class="p">},</span>
+    <span class="p">[</span><span class="nx">searchTerms</span><span class="p">],</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// process each row; i is 0-based index</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">i</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>  <span class="c1">// stop after 20</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="what-is-the-difference-between-sql-exec-and-sql-query">
 <h3>What is the difference between sql.exec() and sql.query()?<a class="headerlink" href="#what-is-the-difference-between-sql-exec-and-sql-query" title="Permalink to this headline">¶</a></h3>
@@ -1442,51 +1593,24 @@ specifiers plus several useful extensions:</p>
 </div>
 <div class="section" id="how-do-fork-and-daemon-work">
 <h3>How do fork() and daemon() work?<a class="headerlink" href="#how-do-fork-and-daemon-work" title="Permalink to this headline">¶</a></h3>
-<p>These are real POSIX <code class="docutils literal notranslate"><span class="pre">fork()</span></code> and double-fork operations — familiar
-territory for C developers, but potentially new for Node.js developers.
-Both work the same way: they return the child’s PID to the parent and
-<code class="docutils literal notranslate"><span class="pre">0</span></code> to the child.  The difference is that <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> double-forks and
-detaches from the controlling terminal, so the child runs as a
-background daemon.</p>
+<p>Both are real POSIX operations available via <code class="docutils literal notranslate"><span class="pre">rampart.utils</span></code>.  They
+have the same interface: return the child’s PID to the parent and <code class="docutils literal notranslate"><span class="pre">0</span></code>
+to the child.  <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> double-forks and detaches from the terminal.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
-<span class="c1">// fork() — create a child process</span>
-<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">fork</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">fork</span><span class="p">();</span>   <span class="c1">// or daemon() for background process</span>
 <span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// parent process — pid is the child&#39;s PID</span>
+    <span class="c1">// parent — pid is the child&#39;s PID</span>
 <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// child process</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="c1">// error</span>
-<span class="p">}</span>
-
-<span class="c1">// daemon() — same interface, but double-forks and detaches</span>
-<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">daemon</span><span class="p">();</span>
-<span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// original process — pid is the daemon&#39;s PID</span>
-    <span class="c1">// typically exit here</span>
-<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// daemon process — detached from terminal</span>
+    <span class="c1">// child (or daemon process)</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p><strong>Important:</strong> <code class="docutils literal notranslate"><span class="pre">fork()</span></code> and <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> cannot be used while threads
-are open.  If you have created any <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code> instances, calling
-<code class="docutils literal notranslate"><span class="pre">fork()</span></code> or <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> will throw an error.</p>
-<p>For inter-process communication between forked processes, use
-<code class="docutils literal notranslate"><span class="pre">newPipe()</span></code>:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pipe</span> <span class="o">=</span> <span class="nx">newPipe</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">fork</span><span class="p">(</span><span class="nx">pipe</span><span class="p">);</span>
-
-<span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">pipe</span><span class="p">.</span><span class="nx">write</span><span class="p">({</span><span class="nx">message</span><span class="o">:</span> <span class="s2">&quot;hello from parent&quot;</span><span class="p">});</span>
-<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">pipe</span><span class="p">.</span><span class="nx">onRead</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>  <span class="c1">// &quot;hello from parent&quot;</span>
-    <span class="p">});</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p><strong>Note:</strong> <code class="docutils literal notranslate"><span class="pre">fork()</span></code> and <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> cannot be used while threads are
+open.  For IPC between forked processes, use <code class="docutils literal notranslate"><span class="pre">newPipe()</span></code> — see the
+<code class="docutils literal notranslate"><span class="pre">rampart-utils</span></code> documentation for details.  For daemonizing the HTTP
+server, use <code class="docutils literal notranslate"><span class="pre">server.start({daemon:</span> <span class="pre">true})</span></code> or <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code>
+instead.</p>
 </div>
 </div>
 <div class="section" id="buffers-and-data">
@@ -1680,54 +1804,16 @@ or <span class="green">Buffer</span> as the fill value (e.g., <code class="docut
 <code class="docutils literal notranslate"><span class="pre">map</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">reduce</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code>, <code class="docutils literal notranslate"><span class="pre">indexOf</span></code>, etc.).
 Convert to an <span class="green">Array</span> first if needed.</li>
 </ul>
-<p><strong>Concatenating buffers:</strong> The easiest and most efficient way to
-concatenate two buffers is with <code class="docutils literal notranslate"><span class="pre">bprintf()</span></code>, which works with any
-buffer type and returns a plain buffer:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">combined</span> <span class="o">=</span> <span class="nx">bprintf</span><span class="p">(</span><span class="s1">&#39;%s%s&#39;</span><span class="p">,</span> <span class="nx">buf1</span><span class="p">,</span> <span class="nx">buf2</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>This works regardless of whether the arguments are plain buffers,
-Node.js Buffers, or TypedArrays.</p>
-<p><strong>Printf format codes and buffer types:</strong> The <code class="docutils literal notranslate"><span class="pre">%s</span></code>, <code class="docutils literal notranslate"><span class="pre">%B</span></code>/<code class="docutils literal notranslate"><span class="pre">%!B</span></code>
-(base64), <code class="docutils literal notranslate"><span class="pre">%U</span></code>/<code class="docutils literal notranslate"><span class="pre">%!U</span></code> (URL encode), and <code class="docutils literal notranslate"><span class="pre">%H</span></code>/<code class="docutils literal notranslate"><span class="pre">%!H</span></code> (HTML encode)
-formats all accept any buffer type — plain buffers, Node.js Buffers,
-TypedArrays, and strings work interchangeably.</p>
-<p><strong>Practical guidance:</strong></p>
-<p>For most Rampart scripting, you will work with plain buffers (returned by
-<code class="docutils literal notranslate"><span class="pre">readFile()</span></code>, <code class="docutils literal notranslate"><span class="pre">stringToBuffer()</span></code>, etc.) and Node.js Buffers (created
-with <code class="docutils literal notranslate"><span class="pre">Buffer.from()</span></code> / <code class="docutils literal notranslate"><span class="pre">Buffer.alloc()</span></code>).  Use <code class="docutils literal notranslate"><span class="pre">DataView</span></code> when you
-need to read or write multi-byte values with explicit endianness.  Use
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.stringToBuffer()</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart.utils.bufferToString()</span></code>
-to convert between strings and buffers.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
-
-<span class="c1">// rampart.utils functions return plain buffers</span>
-<span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;/path/to/file&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">str</span>  <span class="o">=</span> <span class="nx">bufferToString</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">buf</span>  <span class="o">=</span> <span class="nx">stringToBuffer</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">);</span>
-
-<span class="c1">// Node.js Buffer for richer API (slice, copy, typed read/write)</span>
-<span class="kd">var</span> <span class="nx">nbuf</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">from</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">s</span>    <span class="o">=</span> <span class="nx">nbuf</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>           <span class="c1">// shared view</span>
-<span class="nx">nbuf</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="nx">otherBuf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>         <span class="c1">// copy bytes</span>
-<span class="kd">var</span> <span class="nx">val</span>  <span class="o">=</span> <span class="nx">nbuf</span><span class="p">.</span><span class="nx">readUInt16LE</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>       <span class="c1">// read little-endian uint16</span>
-
-<span class="c1">// DataView for explicit endianness</span>
-<span class="kd">var</span> <span class="nx">ab</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ArrayBuffer</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">dv</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataView</span><span class="p">(</span><span class="nx">ab</span><span class="p">);</span>
-<span class="nx">dv</span><span class="p">.</span><span class="nx">setFloat64</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.14159</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>       <span class="c1">// little-endian</span>
-<span class="kd">var</span> <span class="nx">pi</span> <span class="o">=</span> <span class="nx">dv</span><span class="p">.</span><span class="nx">getFloat64</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-
-<span class="c1">// Hex and Base64 via rampart.utils</span>
-<span class="kd">var</span> <span class="nx">hex</span> <span class="o">=</span> <span class="nx">hexify</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>                <span class="c1">// buffer to hex string</span>
-<span class="kd">var</span> <span class="nx">raw</span> <span class="o">=</span> <span class="nx">dehexify</span><span class="p">(</span><span class="s2">&quot;deadbeef&quot;</span><span class="p">);</span>        <span class="c1">// hex string to buffer</span>
-<span class="kd">var</span> <span class="nx">b64</span> <span class="o">=</span> <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%B&quot;</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>         <span class="c1">// buffer to base64</span>
-<span class="kd">var</span> <span class="nx">dec</span> <span class="o">=</span> <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;%!B&quot;</span><span class="p">,</span> <span class="nx">b64</span><span class="p">);</span>         <span class="c1">// base64 to string</span>
-
-<span class="c1">// Concatenate any buffer types</span>
-<span class="kd">var</span> <span class="nx">combined</span> <span class="o">=</span> <span class="nx">bprintf</span><span class="p">(</span><span class="s1">&#39;%s%s&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">nbuf</span><span class="p">);</span>
-</pre></div>
-</div>
+<p><strong>Concatenating buffers:</strong> Use <code class="docutils literal notranslate"><span class="pre">bprintf('%s%s',</span> <span class="pre">buf1,</span> <span class="pre">buf2)</span></code> — works
+with any buffer type and returns a plain buffer.</p>
+<p><strong>Printf format codes and buffers:</strong> <code class="docutils literal notranslate"><span class="pre">%s</span></code>, <code class="docutils literal notranslate"><span class="pre">%B</span></code>/<code class="docutils literal notranslate"><span class="pre">%!B</span></code>,
+<code class="docutils literal notranslate"><span class="pre">%U</span></code>/<code class="docutils literal notranslate"><span class="pre">%!U</span></code>, and <code class="docutils literal notranslate"><span class="pre">%H</span></code>/<code class="docutils literal notranslate"><span class="pre">%!H</span></code> all accept any buffer type as well
+as strings.</p>
+<p><strong>Practical guidance:</strong> Most Rampart code uses plain buffers (from
+<code class="docutils literal notranslate"><span class="pre">readFile()</span></code>, <code class="docutils literal notranslate"><span class="pre">stringToBuffer()</span></code>) and Node.js Buffers (from
+<code class="docutils literal notranslate"><span class="pre">Buffer.from()</span></code>).  Use <code class="docutils literal notranslate"><span class="pre">bufferToString()</span></code> / <code class="docutils literal notranslate"><span class="pre">stringToBuffer()</span></code>
+to convert.  Use <code class="docutils literal notranslate"><span class="pre">hexify()</span></code> / <code class="docutils literal notranslate"><span class="pre">dehexify()</span></code> for hex encoding,
+<code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%B&quot;,</span> <span class="pre">data)</span></code> / <code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%!B&quot;,</span> <span class="pre">b64)</span></code> for base64.</p>
 </div>
 <div class="section" id="how-do-i-handle-objects-with-cyclic-references">
 <h3>How do I handle objects with cyclic references?<a class="headerlink" href="#how-do-i-handle-objects-with-cyclic-references" title="Permalink to this headline">¶</a></h3>
@@ -1903,6 +1989,66 @@ available to both <code class="docutils literal notranslate"><span class="pre">p
 <span class="kd">var</span> <span class="nx">requests</span> <span class="o">=</span> <span class="nx">python</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="s2">&quot;requests&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="vibe-coding-with-rampart">
+<h2>Vibe Coding with Rampart<a class="headerlink" href="#vibe-coding-with-rampart" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="how-do-i-use-an-llm-coding-assistant-to-build-rampart-applications">
+<h3>How do I use an LLM coding assistant to build Rampart applications?<a class="headerlink" href="#how-do-i-use-an-llm-coding-assistant-to-build-rampart-applications" title="Permalink to this headline">¶</a></h3>
+<p>Rampart includes an <code class="docutils literal notranslate"><span class="pre">overview.md</span></code> file in its documentation that is
+designed for LLM coding assistants.  Point the assistant at the
+documentation and the template web server, and describe what you want.</p>
+<p>Here is an example using Claude Code to build a full content management
+system from scratch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/aflin/rampart_docs.git
+mkdir cms
+<span class="nb">cd</span> cms
+claude
+</pre></div>
+</div>
+<p>Then give it a prompt like:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Please use rampart to create a content management system that uses
+codemirror to edit raw html, jodit as a wysiwyg editor, both included
+from a cdn.  It should be friendly, easy to use, password protected and
+integrated with the webserver to serve the content it builds as well as
+allow management and editing from a separate endpoint.  You may use any
+appropriate databasing system available in rampart, but also use
+rampart-sql to make all content searchable, and have an option in the
+cdn to add a standard site search.
+For instructions on how to use rampart, see the documentation in
+/usr/local/src/rampart_docs/source/ and start with the overview.md file.
+For a template web server setup, use /usr/local/src/rampart/web_server/.
+</pre></div>
+</div>
+<p>The assistant reads the documentation, sets up the project structure from
+the template, and builds the application.  In this case, it produced a
+working CMS with the following structure:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cms/
+├── web_server_conf.js    # Server config
+├── apps/
+│   ├── cms_db.js         # Database layer (rampart-sql + rampart-crypto)
+│   ├── admin.js          # Admin interface (auth, page editor)
+│   ├── site.js           # Public content server
+│   └── search.js         # Search API endpoint
+├── html/                 # Static files
+├── data/cmsdb/           # SQL database
+└── logs/                 # Access + error logs
+</pre></div>
+</div>
+<p>Features built automatically:</p>
+<ul class="simple">
+<li>Admin panel with password-protected cookie sessions</li>
+<li>Dual editor: visual (Jodit WYSIWYG) and HTML code (CodeMirror), both
+from CDN, tab-switchable with sync</li>
+<li>Page management: create, edit, delete, publish/draft, sort order</li>
+<li>Full-text search via <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> LIKEP with highlighted results</li>
+<li>Public site with navigation and search bar</li>
+<li>Start/stop/restart via <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">web_server_conf.js</span> <span class="pre">start</span></code></li>
+</ul>
+<p>The key is pointing the assistant at <code class="docutils literal notranslate"><span class="pre">overview.md</span></code> as the starting
+point and the <code class="docutils literal notranslate"><span class="pre">web_server/</span></code> template for project structure.  The
+overview gives the LLM enough context to use Rampart’s APIs correctly
+without writing Node.js code.</p>
 </div>
 </div>
 </div>
