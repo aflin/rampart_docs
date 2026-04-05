@@ -226,7 +226,8 @@ function parse_html_file(file, tofile){
             /* Footer / versions */
             footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
             footer p { color: var(--rp-text-dim); }
-            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-accent-dim) !important; }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
             .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
             .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
 
