@@ -1423,6 +1423,36 @@ or to a compression level (1-10).</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>When serving files using the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> prefix, the behavior of range requests
+can be controlled with two additional keys:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">noRangeCap</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, disables the
+<code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code> cap for open-ended range requests (e.g.
+<code class="docutils literal notranslate"><span class="pre">Range:</span> <span class="pre">bytes=0-</span></code>).  By default, open-ended ranges are limited to the
+size set by the <code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code> option in <a class="reference internal" href="#start">start()</a> above.
+Setting <code class="docutils literal notranslate"><span class="pre">noRangeCap</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code> allows the full file to be served in
+a single range response.</li>
+<li><code class="docutils literal notranslate"><span class="pre">noAcceptRanges</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, suppresses the
+<code class="docutils literal notranslate"><span class="pre">Accept-Ranges:</span> <span class="pre">bytes</span></code> response header.  This prevents the client from
+making subsequent range requests, which is useful when the response
+should be treated as a single non-resumable download.</li>
+</ul>
+<p>Note: These keys only apply when serving files with the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> prefix.
+They have no effect when returning data directly (e.g. as a
+<span class="green">String</span> or <span class="green">Buffer</span>).</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* serve a large video without range capping */</span>
+<span class="k">return</span> <span class="p">{</span>
+   <span class="nx">mp4</span><span class="o">:</span> <span class="s2">&quot;@/path/to/video.mp4&quot;</span><span class="p">,</span>
+   <span class="nx">noRangeCap</span><span class="o">:</span> <span class="kc">true</span>
+<span class="p">}</span>
+
+<span class="cm">/* serve a file without advertising range support */</span>
+<span class="k">return</span> <span class="p">{</span>
+   <span class="nx">bin</span><span class="o">:</span> <span class="s2">&quot;@/path/to/file.dat&quot;</span><span class="p">,</span>
+   <span class="nx">noAcceptRanges</span><span class="o">:</span> <span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div></blockquote>
 <div class="section" id="the-return-object-with-defer">
 <h4>The Return Object with Defer<a class="headerlink" href="#the-return-object-with-defer" title="Permalink to this headline">¶</a></h4>

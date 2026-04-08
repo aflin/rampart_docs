@@ -392,18 +392,21 @@ where you want concurrent execution:
         }
     });
 
-A persistent thread stays alive between calls, which avoids the overhead
-of copying global state on each invocation:
+All threads stay alive between calls and can be reused.  Normally, when
+a thread's event loop is empty and the parent thread is ready to exit,
+the thread closes automatically.  Passing ``true`` creates a
+**persistent** thread that prevents this auto-close, keeping the thread
+alive even when idle — it must be explicitly closed with ``thr.close()``:
 
 .. code-block:: javascript
 
-    var thr = new rampart.thread(true);  // persistent
+    var thr = new rampart.thread(true);  // persistent — won't auto-close
 
     thr.exec(doWork, firstJob, onDone);
     // later...
     thr.exec(doWork, secondJob, onDone);
 
-    // must explicitly close when finished
+    // must explicitly close, or the parent will wait forever
     thr.close();
 
 **Server threads** — ``rampart-server`` internally creates a pool of

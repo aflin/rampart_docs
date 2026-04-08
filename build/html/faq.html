@@ -600,15 +600,18 @@ where you want concurrent execution:</p>
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>A persistent thread stays alive between calls, which avoids the overhead
-of copying global state on each invocation:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>  <span class="c1">// persistent</span>
+<p>All threads stay alive between calls and can be reused.  Normally, when
+a thread’s event loop is empty and the parent thread is ready to exit,
+the thread closes automatically.  Passing <code class="docutils literal notranslate"><span class="pre">true</span></code> creates a
+<strong>persistent</strong> thread that prevents this auto-close, keeping the thread
+alive even when idle — it must be explicitly closed with <code class="docutils literal notranslate"><span class="pre">thr.close()</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>  <span class="c1">// persistent — won&#39;t auto-close</span>
 
 <span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">doWork</span><span class="p">,</span> <span class="nx">firstJob</span><span class="p">,</span> <span class="nx">onDone</span><span class="p">);</span>
 <span class="c1">// later...</span>
 <span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">doWork</span><span class="p">,</span> <span class="nx">secondJob</span><span class="p">,</span> <span class="nx">onDone</span><span class="p">);</span>
 
-<span class="c1">// must explicitly close when finished</span>
+<span class="c1">// must explicitly close, or the parent will wait forever</span>
 <span class="nx">thr</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
 </pre></div>
 </div>
