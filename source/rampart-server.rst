@@ -1190,6 +1190,39 @@ The Return Object
         compress: 5 // gzip compress output at medium level
      }
 
+  When serving files using the ``@`` prefix, the behavior of range requests
+  can be controlled with two additional keys:
+
+  * ``noRangeCap`` - A :green:`Boolean`.  If ``true``, disables the
+    ``defaultRangeMBytes`` cap for open-ended range requests (e.g.
+    ``Range: bytes=0-``).  By default, open-ended ranges are limited to the
+    size set by the ``defaultRangeMBytes`` option in `start()`_ above.
+    Setting ``noRangeCap`` to ``true`` allows the full file to be served in
+    a single range response.
+
+  * ``noAcceptRanges`` - A :green:`Boolean`.  If ``true``, suppresses the
+    ``Accept-Ranges: bytes`` response header.  This prevents the client from
+    making subsequent range requests, which is useful when the response
+    should be treated as a single non-resumable download.
+
+  Note: These keys only apply when serving files with the ``@`` prefix.
+  They have no effect when returning data directly (e.g. as a
+  :green:`String` or :green:`Buffer`).
+
+  .. code-block:: javascript
+
+     /* serve a large video without range capping */
+     return {
+        mp4: "@/path/to/video.mp4",
+        noRangeCap: true
+     }
+
+     /* serve a file without advertising range support */
+     return {
+        bin: "@/path/to/file.dat",
+        noAcceptRanges: true
+     }
+
 The Return Object with Defer
 """"""""""""""""""""""""""""
 
