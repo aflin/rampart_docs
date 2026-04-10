@@ -310,6 +310,126 @@ Where:
       function before serving a file (-i.e.  files from a mapped location such
       as the ``web_server/html/`` directory),  Default value is ``false``.
 
+    * ``authMod``: A :green:`Boolean`, :green:`String`, or
+      :green:`Function`.  Enable session-based authentication.
+
+      - ``true`` — loads the built-in ``rampart-auth.so`` module.
+        Requires ``authModConf`` to be set.
+      - A :green:`String` — loads a custom auth module by name or path.
+      - A :green:`Function` — uses an inline auth function.
+      - ``false`` or omitted — authentication is disabled (default).
+
+      The auth module exports a function that is called on every request.
+      For static files under protected paths (defined in ``authModConf``),
+      the function returns ``true`` to serve or ``false`` to deny.  For
+      app module requests, the function may modify ``req`` (e.g., setting
+      ``req.userAuth``) and return any truthy value to pass through to the
+      endpoint, return ``false`` for 403, or return ``{redirect: "/path"}``
+      for a 302 redirect.  Since ``req`` is passed by reference,
+      modifications are visible to the endpoint regardless of return value.
+
+      With the built-in ``rampart-auth.so`` (``authMod: true``), the
+      session check runs entirely in C — cookie extraction, LMDB lookup,
+      and access control happen without invoking the JavaScript interpreter.
+      With a custom :green:`Function` or third-party module, the auth
+      function is called via the Duktape C API before the endpoint handler
+      runs.  This is still faster than running the full endpoint (the
+      auth function runs instead of the endpoint on denied requests), but
+      it does execute the auth function's JavaScript.
+
+      See :doc:`rampart-auth` for full documentation, including the
+      ``auth.js`` administration module included in the sample web server.
+
+    * ``authModConf``: A :green:`String`.  Path to a JavaScript module
+      that exports the authentication configuration object.  Required when
+      ``authMod`` is ``true`` (the built-in module).  Optional for custom
+      auth modules and inline functions.
+
+      When provided, the server reads ``protectedPaths`` from the config
+      to determine which static file paths require authentication.  For
+      those paths, the server calls the auth function before serving the
+      file.  File paths not listed are served without any auth check.
+      Without ``authModConf``, the server has no protected path definitions
+      and all static files are served without gating — only app module
+      requests will have the auth function called.
+
+      See :doc:`rampart-auth` for configuration details.
+
+    * ``rateLimit``: An :green:`Object`.  Configure per-path rate limiting
+      using a token bucket algorithm.  Rate limiting runs in C before any
+      authentication, JavaScript, or file serving — a rate-limited request
+      receives a ``429 Too Many Requests`` response with no further
+      processing.
+
+      Each key in the object is a URL path prefix, and the value is an
+      object with the following properties:
+
+      - ``rate`` — :green:`Number`.  Maximum number of requests allowed
+        per time window (default: ``60``).
+      - ``window`` — :green:`Number`.  Time window in seconds
+        (default: ``60``).
+      - ``key`` — :green:`String`.  How to identify clients for rate
+        limiting (default: ``"ip"``):
+
+        - ``"ip"`` — rate limit by client IP address.  Fastest option.
+        - ``"fingerprint"`` — rate limit by a hash of the client's IP
+          address combined with the ``User-Agent``,
+          ``Accept-Language``, and ``Accept-Encoding`` headers.
+          Distinguishes different browsers behind the same IP (e.g.,
+          NAT or corporate networks).
+        - ``"cookie:name"`` — rate limit by the value of a specific
+          cookie.  Useful for per-session rate limiting.  If the cookie
+          is not present, falls back to IP.
+
+      Example:
+
+      .. code-block:: javascript
+
+          rateLimit: {
+              "/apps/auth/": {
+                  rate: 20,
+                  window: 60,
+                  key: "ip"
+              },
+              "/apps/api/": {
+                  rate: 100,
+                  window: 60,
+                  key: "fingerprint"
+              },
+              "/apps/premium/": {
+                  rate: 50,
+                  window: 60,
+                  key: "cookie:rp_session"
+              }
+          }
+
+      Path matching uses prefix comparison: a rule for ``"/apps/api/"``
+      applies to ``"/apps/api/search"``,
+      ``"/apps/api/users/list.html"``, etc.  When multiple prefixes
+      match, **all** matching rules are checked — a request must pass
+      every one.  This allows a global limit on ``"/"`` combined with
+      tighter per-path limits:
+
+      .. code-block:: javascript
+
+          rateLimit: {
+              "/":           {rate: 100, window: 60, key: "ip"},   // global
+              "/apps/auth/": {rate: 10,  window: 60, key: "ip"}    // tighter
+          }
+
+      A request to ``/apps/auth/login`` consumes a token from both the
+      ``"/"`` and ``"/apps/auth/"`` buckets.  It is denied if either
+      bucket is empty.  Paths not listed are not rate limited.
+
+      The rate limiter uses an in-memory hash table with per-bucket
+      locking for thread safety.  The number of hash buckets defaults
+      to 64 and can be changed at compile time with
+      ``-DRP_RATELIMIT_BUCKETS=128`` (must be a power of 2).
+
+      Tokens refill at a constant rate (``rate / window`` tokens per
+      second).  A client that stops sending requests will naturally
+      recover its full token allowance within one window period.
+
     * ``endFunc``: An :green:`Object` or :green:`Function`.
       A function to run after the completion of a JavaScript function
       callback from ``map`` below.
