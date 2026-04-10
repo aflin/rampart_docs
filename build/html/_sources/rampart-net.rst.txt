@@ -1207,15 +1207,34 @@ net.resolve()
     will occur immediately, potentially before the event loop starts,
     and block further execution while waiting for an answer.
 
-    Usage example:
+    Usage:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var hostobj = net.resolve(hostname[, type]);
+
+    Where:
+
+    * ``hostname`` is a :green:`String` - the host name to resolve.
+
+    * ``type`` is an optional :green:`String` - the DNS record type to query.
+      If omitted, the function performs a standard address lookup (using
+      ``getaddrinfo``) and returns an object with ``ip4addrs``, ``ip6addrs``,
+      etc.  If provided, a raw DNS query is performed for the specified record
+      type and the result is returned in a different format (see
+      `Typed DNS Queries`_ below).
+
+    **Address lookup (no type):**
 
     .. code-block:: javascript
 
         var net = require("rampart-net");
 
         var hostobj = net.resolve("yahoo.com");
-        
-        /* hostobj = 
+
+        /* hostobj =
             {
                "host": "yahoo.com",
                "ip4addrs": [
@@ -1253,6 +1272,165 @@ net.resolve()
                "ipv4": "74.6.231.21"
             }
 
+        */
+
+.. _typed-dns-queries:
+
+Typed DNS Queries
+"""""""""""""""""
+
+    When ``type`` is provided, ``net.resolve()`` performs a raw DNS query
+    using ``res_query`` (or ``DnsQuery_A`` on Windows/Cygwin) and returns an
+    :green:`Object` with the following properties:
+
+    * ``host`` - a :green:`String`, the hostname that was queried.
+
+    * ``type`` - a :green:`String`, the record type that was requested.
+
+    * ``records`` - an :green:`Array` of results.  The structure of each
+      element depends on the record type (see below).
+
+    If the query fails, the returned :green:`Object` will instead contain an
+    ``errMsg`` property with a description of the error.
+
+    Supported record types (case-insensitive):
+
+    * ``"A"`` — IPv4 address records.  Each element of ``records`` is a
+      :green:`String` (e.g. ``"93.184.216.34"``).
+
+    * ``"AAAA"`` — IPv6 address records.  Each element of ``records`` is a
+      :green:`String` (e.g. ``"2606:2800:220:1:248:1893:25c8:1946"``).
+
+    * ``"MX"`` — Mail exchanger records.  Each element of ``records`` is an
+      :green:`Object` with:
+
+      * ``priority`` - a :green:`Number`, the MX preference value (lower is
+        higher priority).
+      * ``exchange`` - a :green:`String`, the mail server hostname.
+
+    * ``"NS"`` — Name server records.  Each element of ``records`` is a
+      :green:`String` (the nameserver hostname).
+
+    * ``"CNAME"`` — Canonical name records.  Each element of ``records`` is a
+      :green:`String` (the canonical hostname).
+
+    * ``"PTR"`` — Pointer records.  Each element of ``records`` is a
+      :green:`String` (the pointed-to hostname).
+
+    * ``"TXT"`` — Text records.  Each element of ``records`` is a
+      :green:`String` (the concatenated text data of the record).
+
+    * ``"SOA"`` — Start of authority records.  Each element of ``records`` is
+      an :green:`Object` with:
+
+      * ``mname`` - a :green:`String`, the primary nameserver.
+      * ``rname`` - a :green:`String`, the responsible party's email (in DNS
+        notation, e.g. ``"dns-admin.google.com"``).
+      * ``serial`` - a :green:`Number`, the zone serial number.
+      * ``refresh`` - a :green:`Number`, the refresh interval in seconds.
+      * ``retry`` - a :green:`Number`, the retry interval in seconds.
+      * ``expire`` - a :green:`Number`, the expiry time in seconds.
+      * ``minimum`` - a :green:`Number`, the minimum TTL in seconds.
+
+    * ``"SRV"`` — Service locator records.  Each element of ``records`` is an
+      :green:`Object` with:
+
+      * ``priority`` - a :green:`Number`.
+      * ``weight`` - a :green:`Number`.
+      * ``port`` - a :green:`Number`.
+      * ``target`` - a :green:`String`, the target hostname.
+
+    **MX lookup example:**
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var mx = net.resolve("gmail.com", "MX");
+
+        /* mx =
+            {
+               "host": "gmail.com",
+               "type": "MX",
+               "records": [
+                  {
+                     "priority": 5,
+                     "exchange": "gmail-smtp-in.l.google.com"
+                  },
+                  {
+                     "priority": 10,
+                     "exchange": "alt1.gmail-smtp-in.l.google.com"
+                  },
+                  {
+                     "priority": 20,
+                     "exchange": "alt2.gmail-smtp-in.l.google.com"
+                  },
+                  {
+                     "priority": 30,
+                     "exchange": "alt3.gmail-smtp-in.l.google.com"
+                  },
+                  {
+                     "priority": 40,
+                     "exchange": "alt4.gmail-smtp-in.l.google.com"
+                  }
+               ]
+            }
+        */
+
+    **TXT lookup example:**
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var txt = net.resolve("example.com", "TXT");
+
+        /* txt =
+            {
+               "host": "example.com",
+               "type": "TXT",
+               "records": [
+                  "v=spf1 -all",
+                  "wgyf8z8cgv2qct8..."
+               ]
+            }
+        */
+
+    **SRV lookup example:**
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var srv = net.resolve("_sip._tcp.example.com", "SRV");
+
+        /* srv =
+            {
+               "host": "_sip._tcp.example.com",
+               "type": "SRV",
+               "records": [
+                  {
+                     "priority": 10,
+                     "weight": 60,
+                     "port": 5060,
+                     "target": "sip1.example.com"
+                  }
+               ]
+            }
+        */
+
+    **Error handling example:**
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        var res = net.resolve("nonexistent.invalid", "MX");
+
+        /* res =
+            {
+               "errMsg": "Host not found"
+            }
         */
 
 net.reverse()

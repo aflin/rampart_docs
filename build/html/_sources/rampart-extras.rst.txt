@@ -496,6 +496,286 @@ Command Line usage:
 
     > rampart /path/to/rampart-converter.js /path/to/document.ext
 
+rampart-email
+-------------
+
+The ``rampart-email.js`` module sends email via SMTP using the
+:ref:`rampart-curl module <rampart-curl:The rampart-curl module>` and
+:ref:`rampart-net module <rampart-net:The rampart-net module>`.  It supports
+direct delivery (MX lookup), local relay, authenticated SMTP, and Gmail
+with App Passwords.
+
+Loading the module
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: javascript
+
+    var email = require("rampart-email.js");
+
+send()
+~~~~~~
+
+    The ``send()`` function sends an email message using the specified
+    delivery method.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var result = email.send(options);
+
+    Where ``options`` is an :green:`Object` with the following properties:
+
+    * ``from`` - :green:`String` - **Required**.  The sender email address.
+
+    * ``to`` - :green:`String` or :green:`Array` of :green:`Strings` -
+      **Required**.  One or more recipient email addresses.
+
+    * ``subject`` - :green:`String` - The email subject line.  Default is
+      ``""``.
+
+    * ``message`` - :green:`String` or :green:`Object` - The message body.
+      If a :green:`String`, it is sent as plain text.  If an :green:`Object`,
+      it may contain:
+
+      * ``html`` - :green:`String` - HTML body (sent as ``text/html``).
+      * ``text`` - :green:`String` - Plain text body (sent as
+        ``text/plain``).
+      * ``attach`` - :green:`Array` of :green:`Objects` - File attachments.
+        Each :green:`Object` may have:
+
+        * ``data`` - :green:`String` or :green:`Buffer` - **Required**.  The
+          attachment data.  If a :green:`String` starting with ``@``, the
+          data is read from a file (e.g. ``"@/path/to/file.pdf"``).
+        * ``name`` - :green:`String` - The attachment filename.
+        * ``type`` - :green:`String` - The MIME type (e.g.
+          ``"application/pdf"``).
+        * ``cid`` - :green:`String` - Content-ID for inline images
+          referenced in the HTML body via ``<img src="cid:mycid">``.
+
+      If both ``html`` and ``text`` are provided, they are sent as
+      ``multipart/alternative``.
+
+    * ``cc`` - :green:`String` or :green:`Array` of :green:`Strings` -
+      Carbon copy recipients.  Added to both the ``Cc:`` header and the
+      envelope recipient list.
+
+    * ``reply-to`` - :green:`String` - Address for the ``Reply-To:`` header.
+
+    * ``date`` - :green:`Date` - The ``Date:`` header value.  Default is
+      ``new Date()``.
+
+    * ``method`` - :green:`String` - The delivery method.  One of
+      ``"direct"`` (default), ``"relay"``, ``"smtp"``, or ``"gmailApp"``.
+      See `Delivery Methods`_ below.
+
+    * ``timeout`` - :green:`Number` - Maximum total time in seconds for the
+      SMTP transaction.  Default is ``30``.
+
+    * ``connectTimeout`` - :green:`Number` - Maximum time in seconds to
+      establish a connection.  Default is ``10``.
+
+    * ``insecure`` - :green:`Boolean` - If ``true``, allow TLS connections
+      without verifying the server certificate.  For ``"direct"`` method,
+      this adds an insecure TLS fallback to the attempt sequence.  For
+      other methods, it is passed directly to the underlying
+      ``curl.fetch()`` call.  Default is ``false``.
+
+    Return Value:
+        An :green:`Object` with the following properties:
+
+        * ``ok`` - :green:`Boolean` - ``true`` if all recipients were
+          accepted.
+
+        * ``sent`` - :green:`Number` - Count of successful recipients.
+
+        * ``failed`` - :green:`Number` - Count of failed recipients.
+
+        * ``results`` - :green:`Array` of :green:`Objects`, one per
+          domain (for ``"direct"``) or one total (for other methods).
+          Each :green:`Object` contains:
+
+          * ``domain`` - :green:`String` - The recipient domain.
+          * ``rcpt`` - :green:`Array` of :green:`Strings` - The recipient
+            addresses in this group.
+          * ``ok`` - :green:`Boolean` - Whether this group was accepted.
+          * ``status`` - :green:`Number` - The SMTP status code (``250``
+            on success).
+          * ``mx`` - :green:`String` - The server that accepted (or
+            attempted) delivery.
+          * ``errMsg`` - :green:`String` - Error details on failure.
+          * ``sslMode`` - :green:`String` - (``"direct"`` only) The TLS
+            mode that succeeded: ``"ssl"``, ``"ssl+insecure"``, or
+            ``"no-ssl"``.
+
+.. _delivery-methods:
+
+Delivery Methods
+~~~~~~~~~~~~~~~~
+
+method: "direct"
+""""""""""""""""
+
+    The default method.  Looks up MX records for each recipient's domain
+    using ``net.resolve(domain, "MX")`` and connects directly to the
+    destination mail server on port 25.  Recipients sharing a domain are
+    batched into a single SMTP session.
+
+    The connection is attempted with verified TLS (STARTTLS) first, then
+    falls back to plain SMTP.  If ``insecure`` is ``true``, an additional
+    insecure TLS attempt is made between verified TLS and plain:
+
+    * Default: **ssl** → **plain**
+    * ``insecure: true``: **ssl** → **ssl+insecure** → **plain**
+    * ``requireSsl: true``: **ssl** only
+    * ``requireSsl: true`` + ``insecure: true``: **ssl** → **ssl+insecure**
+
+    If no MX records are found, the domain itself is tried as the mail
+    host per RFC 5321 section 5.1.
+
+    Additional options:
+
+    * ``requireSsl`` - :green:`Boolean` - If ``true``, do not fall back to
+      plain (unencrypted) SMTP.  Default is ``false``.
+
+    .. code-block:: javascript
+
+        var email = require("rampart-email.js");
+
+        var result = email.send({
+            from:    "me@myserver.com",
+            to:      "them@example.com",
+            subject: "Hello",
+            message: "Hi there"
+        });
+
+method: "relay"
+"""""""""""""""
+
+    Sends all recipients through a local or specified SMTP relay server
+    (e.g. Postfix), which handles onward delivery, retries, and queuing.
+
+    Note: the relay accepts the message into its queue immediately
+    (status 250).  Delivery errors occur asynchronously and are reported
+    in the relay's logs or as bounce emails to the sender, not in the
+    return value.
+
+    Additional options:
+
+    * ``relay`` - :green:`String` - The relay hostname.  Default is
+      ``"localhost"``.
+
+    * ``relayPort`` - :green:`Number` - The relay port.  Default is ``25``.
+
+    .. code-block:: javascript
+
+        email.send({
+            from:    "me@myserver.com",
+            to:      "them@example.com",
+            subject: "Hello",
+            message: "Hi there",
+            method:  "relay"
+        });
+
+method: "smtp"
+""""""""""""""
+
+    Sends through any authenticated SMTP server.  The full URL including
+    protocol and port must be provided.
+
+    Additional options:
+
+    * ``smtpUrl`` - :green:`String` - **Required**.  The SMTP server URL
+      (e.g. ``"smtps://smtp.example.com:465"``).
+
+    * ``user`` - :green:`String` - The authentication username.
+
+    * ``pass`` - :green:`String` - The authentication password.
+
+    .. code-block:: javascript
+
+        email.send({
+            from:    "me@example.com",
+            to:      "them@example.com",
+            subject: "Hello",
+            message: "Hi there",
+            method:  "smtp",
+            smtpUrl: "smtps://smtp.example.com:465",
+            user:    "me@example.com",
+            pass:    "mypassword"
+        });
+
+method: "gmailApp"
+""""""""""""""""""
+
+    Sends through Gmail's SMTP server (``smtps://smtp.gmail.com:465``)
+    using a Google App Password.  The SMTP URL is handled automatically.
+
+    Additional options:
+
+    * ``user`` - :green:`String` - **Required**.  Your full Gmail or Google
+      Workspace email address.
+
+    * ``pass`` - :green:`String` - **Required**.  The 16-character App
+      Password.
+
+    .. code-block:: javascript
+
+        email.send({
+            from:    "me@gmail.com",
+            to:      "them@example.com",
+            subject: "Hello",
+            message: "Hi there",
+            method:  "gmailApp",
+            user:    "me@gmail.com",
+            pass:    "xxxx xxxx xxxx xxxx"
+        });
+
+    **Creating a Gmail App Password:**
+
+    1. Go to ``myaccount.google.com``.
+    2. Click **Security** in the left sidebar.
+    3. Ensure **2-Step Verification** is enabled under "How you sign in to
+       Google".
+    4. Search for **App passwords** in the search bar at the top, or go
+       directly to ``myaccount.google.com/apppasswords``.
+    5. Enter a name (e.g. "rampart-email") and click **Create**.
+    6. Copy the 16-character password shown.
+
+    Note: "App passwords" will not appear if 2-Step Verification is not
+    enabled, or if a Google Workspace admin has disabled the feature.
+
+HTML email with attachment
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: javascript
+
+    var email = require("rampart-email.js");
+
+    var result = email.send({
+        from:    "me@gmail.com",
+        to:      ["alice@example.com", "bob@example.com"],
+        cc:      "boss@example.com",
+        subject: "Report attached",
+        message: {
+            html: '<p>See attached report.</p><img src="cid:logo">',
+            text: "See attached report.",
+            attach: [
+                {data: "@/tmp/report.pdf", name: "report.pdf",
+                 type: "application/pdf"},
+                {data: "@/tmp/logo.png", name: "logo.png",
+                 type: "image/png", cid: "logo"}
+            ]
+        },
+        method:  "gmailApp",
+        user:    "me@gmail.com",
+        pass:    "xxxx xxxx xxxx xxxx"
+    });
+
+    if (!result.ok)
+        rampart.utils.printf("Send failed: %3J\n", result.results);
+
+
 rampart-llm
 -----------
 

@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
@@ -119,8 +120,21 @@
 <li class="toctree-l2"><a class="reference internal" href="#websocket-client">websocket_client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-converter">rampart-converter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rampart-llm">rampart-llm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-email">rampart-email</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">Loading the module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#send">send()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delivery-methods">Delivery Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#method-direct">method: “direct”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#method-relay">method: “relay”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#method-smtp">method: “smtp”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#method-gmailapp">method: “gmailApp”</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#html-email-with-attachment">HTML email with attachment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-llm">rampart-llm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Loading the module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-connection">Creating a connection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#instance-properties">Instance properties</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#query">query()</a></li>
@@ -648,6 +662,275 @@ is either of:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="rampart-email">
+<h2>rampart-email<a class="headerlink" href="#rampart-email" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart-email.js</span></code> module sends email via SMTP using the
+<a class="reference internal" href="rampart-curl.html#the-rampart-curl-module"><span class="std std-ref">rampart-curl module</span></a> and
+<a class="reference internal" href="rampart-net.html#the-rampart-net-module"><span class="std std-ref">rampart-net module</span></a>.  It supports
+direct delivery (MX lookup), local relay, authenticated SMTP, and Gmail
+with App Passwords.</p>
+<div class="section" id="id2">
+<h3>Loading the module<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">email</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-email.js&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="send">
+<h3>send()<a class="headerlink" href="#send" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">send()</span></code> function sends an email message using the specified
+delivery method.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> with the following properties:</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">from</span></code> - <span class="green">String</span> - <strong>Required</strong>.  The sender email address.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">to</span></code> - <span class="green">String</span> or <span class="green">Array</span> of <span class="green">Strings</span> -
+<strong>Required</strong>.  One or more recipient email addresses.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">subject</span></code> - <span class="green">String</span> - The email subject line.  Default is
+<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">message</span></code> - <span class="green">String</span> or <span class="green">Object</span> - The message body.
+If a <span class="green">String</span>, it is sent as plain text.  If an <span class="green">Object</span>,
+it may contain:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">html</span></code> - <span class="green">String</span> - HTML body (sent as <code class="docutils literal notranslate"><span class="pre">text/html</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> - <span class="green">String</span> - Plain text body (sent as
+<code class="docutils literal notranslate"><span class="pre">text/plain</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">attach</span></code> - <span class="green">Array</span> of <span class="green">Objects</span> - File attachments.
+Each <span class="green">Object</span> may have:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code> - <span class="green">String</span> or <span class="green">Buffer</span> - <strong>Required</strong>.  The
+attachment data.  If a <span class="green">String</span> starting with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>, the
+data is read from a file (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;&#64;/path/to/file.pdf&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">name</span></code> - <span class="green">String</span> - The attachment filename.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> - <span class="green">String</span> - The MIME type (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;application/pdf&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">cid</span></code> - <span class="green">String</span> - Content-ID for inline images
+referenced in the HTML body via <code class="docutils literal notranslate"><span class="pre">&lt;img</span> <span class="pre">src=&quot;cid:mycid&quot;&gt;</span></code>.</li>
+</ul>
+</li>
+</ul>
+<p>If both <code class="docutils literal notranslate"><span class="pre">html</span></code> and <code class="docutils literal notranslate"><span class="pre">text</span></code> are provided, they are sent as
+<code class="docutils literal notranslate"><span class="pre">multipart/alternative</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">cc</span></code> - <span class="green">String</span> or <span class="green">Array</span> of <span class="green">Strings</span> -
+Carbon copy recipients.  Added to both the <code class="docutils literal notranslate"><span class="pre">Cc:</span></code> header and the
+envelope recipient list.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">reply-to</span></code> - <span class="green">String</span> - Address for the <code class="docutils literal notranslate"><span class="pre">Reply-To:</span></code> header.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">date</span></code> - <span class="green">Date</span> - The <code class="docutils literal notranslate"><span class="pre">Date:</span></code> header value.  Default is
+<code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Date()</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">method</span></code> - <span class="green">String</span> - The delivery method.  One of
+<code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;relay&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;smtp&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;gmailApp&quot;</span></code>.
+See <a class="reference internal" href="#id3">Delivery Methods</a> below.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - <span class="green">Number</span> - Maximum total time in seconds for the
+SMTP transaction.  Default is <code class="docutils literal notranslate"><span class="pre">30</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code> - <span class="green">Number</span> - Maximum time in seconds to
+establish a connection.  Default is <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">insecure</span></code> - <span class="green">Boolean</span> - If <code class="docutils literal notranslate"><span class="pre">true</span></code>, allow TLS connections
+without verifying the server certificate.  For <code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code> method,
+this adds an insecure TLS fallback to the attempt sequence.  For
+other methods, it is passed directly to the underlying
+<code class="docutils literal notranslate"><span class="pre">curl.fetch()</span></code> call.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with the following properties:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">ok</span></code> - <span class="green">Boolean</span> - <code class="docutils literal notranslate"><span class="pre">true</span></code> if all recipients were
+accepted.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sent</span></code> - <span class="green">Number</span> - Count of successful recipients.</li>
+<li><code class="docutils literal notranslate"><span class="pre">failed</span></code> - <span class="green">Number</span> - Count of failed recipients.</li>
+<li><code class="docutils literal notranslate"><span class="pre">results</span></code> - <span class="green">Array</span> of <span class="green">Objects</span>, one per
+domain (for <code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code>) or one total (for other methods).
+Each <span class="green">Object</span> contains:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">domain</span></code> - <span class="green">String</span> - The recipient domain.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rcpt</span></code> - <span class="green">Array</span> of <span class="green">Strings</span> - The recipient
+addresses in this group.</li>
+<li><code class="docutils literal notranslate"><span class="pre">ok</span></code> - <span class="green">Boolean</span> - Whether this group was accepted.</li>
+<li><code class="docutils literal notranslate"><span class="pre">status</span></code> - <span class="green">Number</span> - The SMTP status code (<code class="docutils literal notranslate"><span class="pre">250</span></code>
+on success).</li>
+<li><code class="docutils literal notranslate"><span class="pre">mx</span></code> - <span class="green">String</span> - The server that accepted (or
+attempted) delivery.</li>
+<li><code class="docutils literal notranslate"><span class="pre">errMsg</span></code> - <span class="green">String</span> - Error details on failure.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sslMode</span></code> - <span class="green">String</span> - (<code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code> only) The TLS
+mode that succeeded: <code class="docutils literal notranslate"><span class="pre">&quot;ssl&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ssl+insecure&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;no-ssl&quot;</span></code>.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="delivery-methods">
+<span id="id3"></span><h3>Delivery Methods<a class="headerlink" href="#delivery-methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="method-direct">
+<h4>method: “direct”<a class="headerlink" href="#method-direct" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>The default method.  Looks up MX records for each recipient’s domain
+using <code class="docutils literal notranslate"><span class="pre">net.resolve(domain,</span> <span class="pre">&quot;MX&quot;)</span></code> and connects directly to the
+destination mail server on port 25.  Recipients sharing a domain are
+batched into a single SMTP session.</p>
+<p>The connection is attempted with verified TLS (STARTTLS) first, then
+falls back to plain SMTP.  If <code class="docutils literal notranslate"><span class="pre">insecure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>, an additional
+insecure TLS attempt is made between verified TLS and plain:</p>
+<ul class="simple">
+<li>Default: <strong>ssl</strong> → <strong>plain</strong></li>
+<li><code class="docutils literal notranslate"><span class="pre">insecure:</span> <span class="pre">true</span></code>: <strong>ssl</strong> → <strong>ssl+insecure</strong> → <strong>plain</strong></li>
+<li><code class="docutils literal notranslate"><span class="pre">requireSsl:</span> <span class="pre">true</span></code>: <strong>ssl</strong> only</li>
+<li><code class="docutils literal notranslate"><span class="pre">requireSsl:</span> <span class="pre">true</span></code> + <code class="docutils literal notranslate"><span class="pre">insecure:</span> <span class="pre">true</span></code>: <strong>ssl</strong> → <strong>ssl+insecure</strong></li>
+</ul>
+<p>If no MX records are found, the domain itself is tried as the mail
+host per RFC 5321 section 5.1.</p>
+<p>Additional options:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">requireSsl</span></code> - <span class="green">Boolean</span> - If <code class="docutils literal notranslate"><span class="pre">true</span></code>, do not fall back to
+plain (unencrypted) SMTP.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">email</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-email.js&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="nx">from</span><span class="o">:</span>    <span class="s2">&quot;me@myserver.com&quot;</span><span class="p">,</span>
+    <span class="nx">to</span><span class="o">:</span>      <span class="s2">&quot;them@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">subject</span><span class="o">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
+    <span class="nx">message</span><span class="o">:</span> <span class="s2">&quot;Hi there&quot;</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="method-relay">
+<h4>method: “relay”<a class="headerlink" href="#method-relay" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Sends all recipients through a local or specified SMTP relay server
+(e.g. Postfix), which handles onward delivery, retries, and queuing.</p>
+<p>Note: the relay accepts the message into its queue immediately
+(status 250).  Delivery errors occur asynchronously and are reported
+in the relay’s logs or as bounce emails to the sender, not in the
+return value.</p>
+<p>Additional options:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">relay</span></code> - <span class="green">String</span> - The relay hostname.  Default is
+<code class="docutils literal notranslate"><span class="pre">&quot;localhost&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">relayPort</span></code> - <span class="green">Number</span> - The relay port.  Default is <code class="docutils literal notranslate"><span class="pre">25</span></code>.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="nx">from</span><span class="o">:</span>    <span class="s2">&quot;me@myserver.com&quot;</span><span class="p">,</span>
+    <span class="nx">to</span><span class="o">:</span>      <span class="s2">&quot;them@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">subject</span><span class="o">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
+    <span class="nx">message</span><span class="o">:</span> <span class="s2">&quot;Hi there&quot;</span><span class="p">,</span>
+    <span class="nx">method</span><span class="o">:</span>  <span class="s2">&quot;relay&quot;</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="method-smtp">
+<h4>method: “smtp”<a class="headerlink" href="#method-smtp" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Sends through any authenticated SMTP server.  The full URL including
+protocol and port must be provided.</p>
+<p>Additional options:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">smtpUrl</span></code> - <span class="green">String</span> - <strong>Required</strong>.  The SMTP server URL
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;smtps://smtp.example.com:465&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">user</span></code> - <span class="green">String</span> - The authentication username.</li>
+<li><code class="docutils literal notranslate"><span class="pre">pass</span></code> - <span class="green">String</span> - The authentication password.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="nx">from</span><span class="o">:</span>    <span class="s2">&quot;me@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">to</span><span class="o">:</span>      <span class="s2">&quot;them@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">subject</span><span class="o">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
+    <span class="nx">message</span><span class="o">:</span> <span class="s2">&quot;Hi there&quot;</span><span class="p">,</span>
+    <span class="nx">method</span><span class="o">:</span>  <span class="s2">&quot;smtp&quot;</span><span class="p">,</span>
+    <span class="nx">smtpUrl</span><span class="o">:</span> <span class="s2">&quot;smtps://smtp.example.com:465&quot;</span><span class="p">,</span>
+    <span class="nx">user</span><span class="o">:</span>    <span class="s2">&quot;me@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">pass</span><span class="o">:</span>    <span class="s2">&quot;mypassword&quot;</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="method-gmailapp">
+<h4>method: “gmailApp”<a class="headerlink" href="#method-gmailapp" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Sends through Gmail’s SMTP server (<code class="docutils literal notranslate"><span class="pre">smtps://smtp.gmail.com:465</span></code>)
+using a Google App Password.  The SMTP URL is handled automatically.</p>
+<p>Additional options:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">user</span></code> - <span class="green">String</span> - <strong>Required</strong>.  Your full Gmail or Google
+Workspace email address.</li>
+<li><code class="docutils literal notranslate"><span class="pre">pass</span></code> - <span class="green">String</span> - <strong>Required</strong>.  The 16-character App
+Password.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="nx">from</span><span class="o">:</span>    <span class="s2">&quot;me@gmail.com&quot;</span><span class="p">,</span>
+    <span class="nx">to</span><span class="o">:</span>      <span class="s2">&quot;them@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">subject</span><span class="o">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
+    <span class="nx">message</span><span class="o">:</span> <span class="s2">&quot;Hi there&quot;</span><span class="p">,</span>
+    <span class="nx">method</span><span class="o">:</span>  <span class="s2">&quot;gmailApp&quot;</span><span class="p">,</span>
+    <span class="nx">user</span><span class="o">:</span>    <span class="s2">&quot;me@gmail.com&quot;</span><span class="p">,</span>
+    <span class="nx">pass</span><span class="o">:</span>    <span class="s2">&quot;xxxx xxxx xxxx xxxx&quot;</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p><strong>Creating a Gmail App Password:</strong></p>
+<ol class="arabic simple">
+<li>Go to <code class="docutils literal notranslate"><span class="pre">myaccount.google.com</span></code>.</li>
+<li>Click <strong>Security</strong> in the left sidebar.</li>
+<li>Ensure <strong>2-Step Verification</strong> is enabled under “How you sign in to
+Google”.</li>
+<li>Search for <strong>App passwords</strong> in the search bar at the top, or go
+directly to <code class="docutils literal notranslate"><span class="pre">myaccount.google.com/apppasswords</span></code>.</li>
+<li>Enter a name (e.g. “rampart-email”) and click <strong>Create</strong>.</li>
+<li>Copy the 16-character password shown.</li>
+</ol>
+<p>Note: “App passwords” will not appear if 2-Step Verification is not
+enabled, or if a Google Workspace admin has disabled the feature.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="html-email-with-attachment">
+<h3>HTML email with attachment<a class="headerlink" href="#html-email-with-attachment" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">email</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-email.js&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
+    <span class="nx">from</span><span class="o">:</span>    <span class="s2">&quot;me@gmail.com&quot;</span><span class="p">,</span>
+    <span class="nx">to</span><span class="o">:</span>      <span class="p">[</span><span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;bob@example.com&quot;</span><span class="p">],</span>
+    <span class="nx">cc</span><span class="o">:</span>      <span class="s2">&quot;boss@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">subject</span><span class="o">:</span> <span class="s2">&quot;Report attached&quot;</span><span class="p">,</span>
+    <span class="nx">message</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">html</span><span class="o">:</span> <span class="s1">&#39;&lt;p&gt;See attached report.&lt;/p&gt;&lt;img src=&quot;cid:logo&quot;&gt;&#39;</span><span class="p">,</span>
+        <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;See attached report.&quot;</span><span class="p">,</span>
+        <span class="nx">attach</span><span class="o">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="s2">&quot;@/tmp/report.pdf&quot;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;report.pdf&quot;</span><span class="p">,</span>
+             <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;application/pdf&quot;</span><span class="p">},</span>
+            <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="s2">&quot;@/tmp/logo.png&quot;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;logo.png&quot;</span><span class="p">,</span>
+             <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;image/png&quot;</span><span class="p">,</span> <span class="nx">cid</span><span class="o">:</span> <span class="s2">&quot;logo&quot;</span><span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="nx">method</span><span class="o">:</span>  <span class="s2">&quot;gmailApp&quot;</span><span class="p">,</span>
+    <span class="nx">user</span><span class="o">:</span>    <span class="s2">&quot;me@gmail.com&quot;</span><span class="p">,</span>
+    <span class="nx">pass</span><span class="o">:</span>    <span class="s2">&quot;xxxx xxxx xxxx xxxx&quot;</span>
+<span class="p">});</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Send failed: %3J\n&quot;</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">results</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="rampart-llm">
 <h2>rampart-llm<a class="headerlink" href="#rampart-llm" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">rampart-llm.js</span></code> module provides a streaming interface to LLM servers
@@ -656,8 +939,8 @@ that expose an OpenAI-compatible API.  It supports both
 <a class="reference external" href="https://ollama.com/">Ollama</a>, and handles SSE parsing, thinking/reasoning
 model output, and cancellation.</p>
 <p>The module lives in the <code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> directory.</p>
-<div class="section" id="id2">
-<h3>Loading the module<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Loading the module<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llm</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llm.js&quot;</span><span class="p">);</span>
 </pre></div>
 </div>

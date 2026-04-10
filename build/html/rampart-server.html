@@ -38,7 +38,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Rampart 0.6.2 documentation" href="index.html"/>
-        <link rel="next" title="The rampart-net module" href="rampart-net.html"/>
+        <link rel="next" title="The rampart-auth module" href="rampart-auth.html"/>
         <link rel="prev" title="The rampart-sql Command Line Utilities" href="sql-utils.html"/> 
 
   
@@ -227,6 +227,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#key-to-mime-mappings">Key to Mime Mappings</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
@@ -594,6 +595,116 @@ Default value is <code class="docutils literal notranslate"><span class="pre">un
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFuncOnFile</span></code>: A <span class="green">Boolean</span>.  Whether to run the begin
 function before serving a file (-i.e.  files from a mapped location such
 as the <code class="docutils literal notranslate"><span class="pre">web_server/html/</span></code> directory),  Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">authMod</span></code>: A <span class="green">Boolean</span>, <span class="green">String</span>, or
+<span class="green">Function</span>.  Enable session-based authentication.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">true</span></code> — loads the built-in <code class="docutils literal notranslate"><span class="pre">rampart-auth.so</span></code> module.
+Requires <code class="docutils literal notranslate"><span class="pre">authModConf</span></code> to be set.</li>
+<li>A <span class="green">String</span> — loads a custom auth module by name or path.</li>
+<li>A <span class="green">Function</span> — uses an inline auth function.</li>
+<li><code class="docutils literal notranslate"><span class="pre">false</span></code> or omitted — authentication is disabled (default).</li>
+</ul>
+<p>The auth module exports a function that is called on every request.
+For static files under protected paths (defined in <code class="docutils literal notranslate"><span class="pre">authModConf</span></code>),
+the function returns <code class="docutils literal notranslate"><span class="pre">true</span></code> to serve or <code class="docutils literal notranslate"><span class="pre">false</span></code> to deny.  For
+app module requests, the function may modify <code class="docutils literal notranslate"><span class="pre">req</span></code> (e.g., setting
+<code class="docutils literal notranslate"><span class="pre">req.userAuth</span></code>) and return any truthy value to pass through to the
+endpoint, return <code class="docutils literal notranslate"><span class="pre">false</span></code> for 403, or return <code class="docutils literal notranslate"><span class="pre">{redirect:</span> <span class="pre">&quot;/path&quot;}</span></code>
+for a 302 redirect.  Since <code class="docutils literal notranslate"><span class="pre">req</span></code> is passed by reference,
+modifications are visible to the endpoint regardless of return value.</p>
+<p>With the built-in <code class="docutils literal notranslate"><span class="pre">rampart-auth.so</span></code> (<code class="docutils literal notranslate"><span class="pre">authMod:</span> <span class="pre">true</span></code>), the
+session check runs entirely in C — cookie extraction, LMDB lookup,
+and access control happen without invoking the JavaScript interpreter.
+With a custom <span class="green">Function</span> or third-party module, the auth
+function is called via the Duktape C API before the endpoint handler
+runs.  This is still faster than running the full endpoint (the
+auth function runs instead of the endpoint on denied requests), but
+it does execute the auth function’s JavaScript.</p>
+<p>See <a class="reference internal" href="rampart-auth.html"><span class="doc">The rampart-auth module</span></a> for full documentation, including the
+<code class="docutils literal notranslate"><span class="pre">auth.js</span></code> administration module included in the sample web server.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">authModConf</span></code>: A <span class="green">String</span>.  Path to a JavaScript module
+that exports the authentication configuration object.  Required when
+<code class="docutils literal notranslate"><span class="pre">authMod</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> (the built-in module).  Optional for custom
+auth modules and inline functions.</p>
+<p>When provided, the server reads <code class="docutils literal notranslate"><span class="pre">protectedPaths</span></code> from the config
+to determine which static file paths require authentication.  For
+those paths, the server calls the auth function before serving the
+file.  File paths not listed are served without any auth check.
+Without <code class="docutils literal notranslate"><span class="pre">authModConf</span></code>, the server has no protected path definitions
+and all static files are served without gating — only app module
+requests will have the auth function called.</p>
+<p>See <a class="reference internal" href="rampart-auth.html"><span class="doc">The rampart-auth module</span></a> for configuration details.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">rateLimit</span></code>: An <span class="green">Object</span>.  Configure per-path rate limiting
+using a token bucket algorithm.  Rate limiting runs in C before any
+authentication, JavaScript, or file serving — a rate-limited request
+receives a <code class="docutils literal notranslate"><span class="pre">429</span> <span class="pre">Too</span> <span class="pre">Many</span> <span class="pre">Requests</span></code> response with no further
+processing.</p>
+<p>Each key in the object is a URL path prefix, and the value is an
+object with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rate</span></code> — <span class="green">Number</span>.  Maximum number of requests allowed
+per time window (default: <code class="docutils literal notranslate"><span class="pre">60</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">window</span></code> — <span class="green">Number</span>.  Time window in seconds
+(default: <code class="docutils literal notranslate"><span class="pre">60</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">key</span></code> — <span class="green">String</span>.  How to identify clients for rate
+limiting (default: <code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code>):<ul>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code> — rate limit by client IP address.  Fastest option.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;fingerprint&quot;</span></code> — rate limit by a hash of the client’s IP
+address combined with the <code class="docutils literal notranslate"><span class="pre">User-Agent</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Accept-Language</span></code>, and <code class="docutils literal notranslate"><span class="pre">Accept-Encoding</span></code> headers.
+Distinguishes different browsers behind the same IP (e.g.,
+NAT or corporate networks).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;cookie:name&quot;</span></code> — rate limit by the value of a specific
+cookie.  Useful for per-session rate limiting.  If the cookie
+is not present, falls back to IP.</li>
+</ul>
+</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rateLimit</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;/apps/auth/&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">rate</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;/apps/api/&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">rate</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;fingerprint&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;/apps/premium/&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">rate</span><span class="o">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;cookie:rp_session&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Path matching uses prefix comparison: a rule for <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/&quot;</span></code>
+applies to <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/search&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/users/list.html&quot;</span></code>, etc.  When multiple prefixes
+match, <strong>all</strong> matching rules are checked — a request must pass
+every one.  This allows a global limit on <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> combined with
+tighter per-path limits:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rateLimit</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>           <span class="p">{</span><span class="nx">rate</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span> <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span><span class="p">},</span>   <span class="c1">// global</span>
+    <span class="s2">&quot;/apps/auth/&quot;</span><span class="o">:</span> <span class="p">{</span><span class="nx">rate</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>  <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span> <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span><span class="p">}</span>    <span class="c1">// tighter</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A request to <code class="docutils literal notranslate"><span class="pre">/apps/auth/login</span></code> consumes a token from both the
+<code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;/apps/auth/&quot;</span></code> buckets.  It is denied if either
+bucket is empty.  Paths not listed are not rate limited.</p>
+<p>The rate limiter uses an in-memory hash table with per-bucket
+locking for thread safety.  The number of hash buckets defaults
+to 64 and can be changed at compile time with
+<code class="docutils literal notranslate"><span class="pre">-DRP_RATELIMIT_BUCKETS=128</span></code> (must be a power of 2).</p>
+<p>Tokens refill at a constant rate (<code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">/</span> <span class="pre">window</span></code> tokens per
+second).  A client that stops sending requests will naturally
+recover its full token allowance within one window period.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
 A function to run after the completion of a JavaScript function
@@ -3469,7 +3580,7 @@ from the filesystem which end in <code class="docutils literal notranslate"><spa
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rampart-net.html" class="btn btn-neutral float-right" title="The rampart-net module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rampart-auth.html" class="btn btn-neutral float-right" title="The rampart-auth module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="sql-utils.html" class="btn btn-neutral" title="The rampart-sql Command Line Utilities" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

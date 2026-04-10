@@ -39,7 +39,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Rampart 0.6.2 documentation" href="index.html"/>
         <link rel="next" title="The rampart-html module" href="rampart-html.html"/>
-        <link rel="prev" title="The rampart-server HTTP module" href="rampart-server.html"/> 
+        <link rel="prev" title="The rampart-auth module" href="rampart-auth.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">The rampart-net module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#acknowledgment">Acknowledgment</a></li>
@@ -143,7 +144,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#resolver-resolve">resolver.resolve()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-reverse">resolver.reverse()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resolver-on">resolver.on()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#net-resolve">net.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-resolve">net.resolve()</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#typed-dns-queries">Typed DNS Queries</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#net-reverse">net.reverse()</a></li>
 </ul>
 </li>
@@ -1375,7 +1379,23 @@ events are <code class="docutils literal notranslate"><span class="pre">lookup</
 <div><p>Resolve a host name.  <strong>This function is not asynchronous</strong>.  The lookup
 will occur immediately, potentially before the event loop starts,
 and block further execution while waiting for an answer.</p>
-<p>Usage example:</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">hostobj</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">hostname</span><span class="p">[,</span> <span class="nx">type</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">hostname</span></code> is a <span class="green">String</span> - the host name to resolve.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> is an optional <span class="green">String</span> - the DNS record type to query.
+If omitted, the function performs a standard address lookup (using
+<code class="docutils literal notranslate"><span class="pre">getaddrinfo</span></code>) and returns an object with <code class="docutils literal notranslate"><span class="pre">ip4addrs</span></code>, <code class="docutils literal notranslate"><span class="pre">ip6addrs</span></code>,
+etc.  If provided, a raw DNS query is performed for the specified record
+type and the result is returned in a different format (see
+<a class="reference internal" href="#id2">Typed DNS Queries</a> below).</li>
+</ul>
+<p><strong>Address lookup (no type):</strong></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">hostobj</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;yahoo.com&quot;</span><span class="p">);</span>
@@ -1422,6 +1442,149 @@ and block further execution while waiting for an answer.</p>
 </pre></div>
 </div>
 </div></blockquote>
+<div class="section" id="typed-dns-queries">
+<span id="id2"></span><h4>Typed DNS Queries<a class="headerlink" href="#typed-dns-queries" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>When <code class="docutils literal notranslate"><span class="pre">type</span></code> is provided, <code class="docutils literal notranslate"><span class="pre">net.resolve()</span></code> performs a raw DNS query
+using <code class="docutils literal notranslate"><span class="pre">res_query</span></code> (or <code class="docutils literal notranslate"><span class="pre">DnsQuery_A</span></code> on Windows/Cygwin) and returns an
+<span class="green">Object</span> with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">host</span></code> - a <span class="green">String</span>, the hostname that was queried.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> - a <span class="green">String</span>, the record type that was requested.</li>
+<li><code class="docutils literal notranslate"><span class="pre">records</span></code> - an <span class="green">Array</span> of results.  The structure of each
+element depends on the record type (see below).</li>
+</ul>
+<p>If the query fails, the returned <span class="green">Object</span> will instead contain an
+<code class="docutils literal notranslate"><span class="pre">errMsg</span></code> property with a description of the error.</p>
+<p>Supported record types (case-insensitive):</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> — IPv4 address records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is a
+<span class="green">String</span> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;93.184.216.34&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;AAAA&quot;</span></code> — IPv6 address records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is a
+<span class="green">String</span> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;2606:2800:220:1:248:1893:25c8:1946&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;MX&quot;</span></code> — Mail exchanger records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is an
+<span class="green">Object</span> with:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">priority</span></code> - a <span class="green">Number</span>, the MX preference value (lower is
+higher priority).</li>
+<li><code class="docutils literal notranslate"><span class="pre">exchange</span></code> - a <span class="green">String</span>, the mail server hostname.</li>
+</ul>
+</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;NS&quot;</span></code> — Name server records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is a
+<span class="green">String</span> (the nameserver hostname).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;CNAME&quot;</span></code> — Canonical name records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is a
+<span class="green">String</span> (the canonical hostname).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;PTR&quot;</span></code> — Pointer records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is a
+<span class="green">String</span> (the pointed-to hostname).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;TXT&quot;</span></code> — Text records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is a
+<span class="green">String</span> (the concatenated text data of the record).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;SOA&quot;</span></code> — Start of authority records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is
+an <span class="green">Object</span> with:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">mname</span></code> - a <span class="green">String</span>, the primary nameserver.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rname</span></code> - a <span class="green">String</span>, the responsible party’s email (in DNS
+notation, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;dns-admin.google.com&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">serial</span></code> - a <span class="green">Number</span>, the zone serial number.</li>
+<li><code class="docutils literal notranslate"><span class="pre">refresh</span></code> - a <span class="green">Number</span>, the refresh interval in seconds.</li>
+<li><code class="docutils literal notranslate"><span class="pre">retry</span></code> - a <span class="green">Number</span>, the retry interval in seconds.</li>
+<li><code class="docutils literal notranslate"><span class="pre">expire</span></code> - a <span class="green">Number</span>, the expiry time in seconds.</li>
+<li><code class="docutils literal notranslate"><span class="pre">minimum</span></code> - a <span class="green">Number</span>, the minimum TTL in seconds.</li>
+</ul>
+</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;SRV&quot;</span></code> — Service locator records.  Each element of <code class="docutils literal notranslate"><span class="pre">records</span></code> is an
+<span class="green">Object</span> with:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">priority</span></code> - a <span class="green">Number</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">weight</span></code> - a <span class="green">Number</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">port</span></code> - a <span class="green">Number</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">target</span></code> - a <span class="green">String</span>, the target hostname.</li>
+</ul>
+</li>
+</ul>
+<p><strong>MX lookup example:</strong></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">mx</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;gmail.com&quot;</span><span class="p">,</span> <span class="s2">&quot;MX&quot;</span><span class="p">);</span>
+
+<span class="cm">/* mx =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;host&quot;: &quot;gmail.com&quot;,</span>
+<span class="cm">       &quot;type&quot;: &quot;MX&quot;,</span>
+<span class="cm">       &quot;records&quot;: [</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;priority&quot;: 5,</span>
+<span class="cm">             &quot;exchange&quot;: &quot;gmail-smtp-in.l.google.com&quot;</span>
+<span class="cm">          },</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;priority&quot;: 10,</span>
+<span class="cm">             &quot;exchange&quot;: &quot;alt1.gmail-smtp-in.l.google.com&quot;</span>
+<span class="cm">          },</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;priority&quot;: 20,</span>
+<span class="cm">             &quot;exchange&quot;: &quot;alt2.gmail-smtp-in.l.google.com&quot;</span>
+<span class="cm">          },</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;priority&quot;: 30,</span>
+<span class="cm">             &quot;exchange&quot;: &quot;alt3.gmail-smtp-in.l.google.com&quot;</span>
+<span class="cm">          },</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;priority&quot;: 40,</span>
+<span class="cm">             &quot;exchange&quot;: &quot;alt4.gmail-smtp-in.l.google.com&quot;</span>
+<span class="cm">          }</span>
+<span class="cm">       ]</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p><strong>TXT lookup example:</strong></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;TXT&quot;</span><span class="p">);</span>
+
+<span class="cm">/* txt =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;host&quot;: &quot;example.com&quot;,</span>
+<span class="cm">       &quot;type&quot;: &quot;TXT&quot;,</span>
+<span class="cm">       &quot;records&quot;: [</span>
+<span class="cm">          &quot;v=spf1 -all&quot;,</span>
+<span class="cm">          &quot;wgyf8z8cgv2qct8...&quot;</span>
+<span class="cm">       ]</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p><strong>SRV lookup example:</strong></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">srv</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;_sip._tcp.example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;SRV&quot;</span><span class="p">);</span>
+
+<span class="cm">/* srv =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;host&quot;: &quot;_sip._tcp.example.com&quot;,</span>
+<span class="cm">       &quot;type&quot;: &quot;SRV&quot;,</span>
+<span class="cm">       &quot;records&quot;: [</span>
+<span class="cm">          {</span>
+<span class="cm">             &quot;priority&quot;: 10,</span>
+<span class="cm">             &quot;weight&quot;: 60,</span>
+<span class="cm">             &quot;port&quot;: 5060,</span>
+<span class="cm">             &quot;target&quot;: &quot;sip1.example.com&quot;</span>
+<span class="cm">          }</span>
+<span class="cm">       ]</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+<p><strong>Error handling example:</strong></p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">&quot;nonexistent.invalid&quot;</span><span class="p">,</span> <span class="s2">&quot;MX&quot;</span><span class="p">);</span>
+
+<span class="cm">/* res =</span>
+<span class="cm">    {</span>
+<span class="cm">       &quot;errMsg&quot;: &quot;Host not found&quot;</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="net-reverse">
 <h3>net.reverse()<a class="headerlink" href="#net-reverse" title="Permalink to this headline">¶</a></h3>
@@ -1603,7 +1766,7 @@ function.</li>
         <a href="rampart-html.html" class="btn btn-neutral float-right" title="The rampart-html module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rampart-server.html" class="btn btn-neutral" title="The rampart-server HTTP module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rampart-auth.html" class="btn btn-neutral" title="The rampart-auth module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -12,6 +12,7 @@ Welcome to Rampart's documentation.
    Rampart Vector Functions <rampart-vector>
    The rampart-sql module <sqltoc>
    The rampart-server module <rampart-server>
+   The rampart-auth module <rampart-auth>
    The rampart-net module <rampart-net>
    The rampart-html module <rampart-html>
    The rampart-crypto module <rampart-crypto>

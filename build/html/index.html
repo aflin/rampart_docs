@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
@@ -908,6 +909,47 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-server.html#key-to-mime-mappings">Key to Mime Mappings</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#what-does-it-do">What does it do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#how-does-it-work">How does it work?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#enabling-authentication">Enabling Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#configuration-file">Configuration File</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-auth.html#configuration-properties">Configuration Properties</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#protected-paths">Protected Paths</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#the-auth-function-contract">The Auth Function Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#for-file-requests">For file requests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#for-app-module-requests">For app module requests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#the-req-userauth-object">The req.userAuth Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#csrf-protection">CSRF Protection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#custom-auth-modules">Custom Auth Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#the-auth-js-administration-module">The auth.js Administration Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#cli-administration">CLI Administration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#http-endpoints">HTTP Endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#programmatic-api">Programmatic API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#user-records-vs-session-records">User Records vs Session Records</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-auth.html#custom-properties-in-endpoint-callbacks">Custom Properties in Endpoint Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#session-data-model">Session Data Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#theme-support">Theme Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-auth.html#hooks-for-future-authentication-methods">Hooks for Future Authentication Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#security-considerations">Security Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-auth.html#quick-start">Quick Start</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rampart-net.html#preface">Preface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#acknowledgment">Acknowledgment</a></li>
@@ -961,7 +1003,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#resolver-resolve">resolver.resolve()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#resolver-reverse">resolver.reverse()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#resolver-on">resolver.on()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-net.html#net-resolve">net.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-net.html#net-resolve">net.resolve()</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-net.html#typed-dns-queries">Typed DNS Queries</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#net-reverse">net.reverse()</a></li>
 </ul>
 </li>
@@ -1480,8 +1525,21 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#websocket-client">websocket_client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#forkpty-term">forkpty-term</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-converter">rampart-converter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-llm">rampart-llm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-email">rampart-email</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#id2">Loading the module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#send">send()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#delivery-methods">Delivery Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-direct">method: “direct”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-relay">method: “relay”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-smtp">method: “smtp”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-gmailapp">method: “gmailApp”</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#html-email-with-attachment">HTML email with attachment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-llm">rampart-llm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#id4">Loading the module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#creating-a-connection">Creating a connection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#instance-properties">Instance properties</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#query">query()</a></li>
