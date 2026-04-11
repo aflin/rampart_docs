@@ -808,7 +808,8 @@ OAuth Plugins
 
 The auth system supports social login via a plugin architecture.
 Plugins are JavaScript files placed in the ``apps/auth-plugins/``
-directory.  Two plugins are included: Google and Facebook.
+directory.  Three plugins are included: Google, Facebook, and a generic
+OAuth 2.0 plugin that can be configured for any standard provider.
 
 When the server starts, ``auth.js`` scans the plugin directory and
 calls each plugin's ``init()`` function with the full auth configuration
@@ -1002,11 +1003,7 @@ provider with a small icon and label.  Icons are resolved in this
 order:
 
 1. The ``icon`` property in the provider's config (a URL to any image).
-2. A built-in favicon URL for well-known provider names (``google``,
-   ``facebook``, ``github``, ``twitter``, ``microsoft``, ``linkedin``,
-   ``discord``, ``gitlab``, ``apple``, ``slack``).
-3. The ``favicon.ico`` at the root of the provider's ``authorizeUrl``
-   domain (e.g., ``https://accounts.example.com/favicon.ico``).
+2. The ``favicon.ico`` from the provider's website.
 
 The button label defaults to the capitalized provider name (e.g.,
 ``github`` becomes ``Github``), with correct casing for well-known

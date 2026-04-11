@@ -974,7 +974,8 @@ built-in stylesheet.</p>
 <h3>OAuth Plugins<a class="headerlink" href="#oauth-plugins" title="Permalink to this headline">¶</a></h3>
 <p>The auth system supports social login via a plugin architecture.
 Plugins are JavaScript files placed in the <code class="docutils literal notranslate"><span class="pre">apps/auth-plugins/</span></code>
-directory.  Two plugins are included: Google and Facebook.</p>
+directory.  Three plugins are included: Google, Facebook, and a generic
+OAuth 2.0 plugin that can be configured for any standard provider.</p>
 <p>When the server starts, <code class="docutils literal notranslate"><span class="pre">auth.js</span></code> scans the plugin directory and
 calls each plugin’s <code class="docutils literal notranslate"><span class="pre">init()</span></code> function with the full auth configuration
 and an API object.  If the plugin’s required configuration is present
@@ -1158,11 +1159,7 @@ provider with a small icon and label.  Icons are resolved in this
 order:</p>
 <ol class="arabic simple">
 <li>The <code class="docutils literal notranslate"><span class="pre">icon</span></code> property in the provider’s config (a URL to any image).</li>
-<li>A built-in favicon URL for well-known provider names (<code class="docutils literal notranslate"><span class="pre">google</span></code>,
-<code class="docutils literal notranslate"><span class="pre">facebook</span></code>, <code class="docutils literal notranslate"><span class="pre">github</span></code>, <code class="docutils literal notranslate"><span class="pre">twitter</span></code>, <code class="docutils literal notranslate"><span class="pre">microsoft</span></code>, <code class="docutils literal notranslate"><span class="pre">linkedin</span></code>,
-<code class="docutils literal notranslate"><span class="pre">discord</span></code>, <code class="docutils literal notranslate"><span class="pre">gitlab</span></code>, <code class="docutils literal notranslate"><span class="pre">apple</span></code>, <code class="docutils literal notranslate"><span class="pre">slack</span></code>).</li>
-<li>The <code class="docutils literal notranslate"><span class="pre">favicon.ico</span></code> at the root of the provider’s <code class="docutils literal notranslate"><span class="pre">authorizeUrl</span></code>
-domain (e.g., <code class="docutils literal notranslate"><span class="pre">https://accounts.example.com/favicon.ico</span></code>).</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">favicon.ico</span></code> from the provider’s website.</li>
 </ol>
 <p>The button label defaults to the capitalized provider name (e.g.,
 <code class="docutils literal notranslate"><span class="pre">github</span></code> becomes <code class="docutils literal notranslate"><span class="pre">Github</span></code>), with correct casing for well-known
