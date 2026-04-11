@@ -288,8 +288,11 @@ Configuration Properties
 
     * ``oauth`` — :green:`Object` (optional).  Provider configurations
       for OAuth plugins.  Each key is a provider name matching the plugin
-      filename (e.g., ``google`` for ``auth-plugins/google.js``).  See
-      `OAuth Plugins`_ below.
+      filename (e.g., ``google`` for ``auth-plugins/google.js``), or a
+      name of your choice when using the generic plugin with
+      ``plugin: "generic"``.  Each entry may include ``icon`` (URL to a
+      small image for the login button) and ``label`` (display name).
+      See `OAuth Plugins`_ below.
 
     * ``displayCookie`` — :green:`Object` (optional).  When set, a
       second cookie is created on login containing selected session fields
@@ -899,12 +902,129 @@ To set up a Facebook app:
 5. Copy the App ID and App Secret into ``auth-conf.js``.
 6. The app must be in **Live** mode for non-developer users to log in.
 
+**Generic** (``auth-plugins/generic.js``)
+
+Handles any standard OAuth 2.0 or OpenID Connect provider through
+configuration.  Supports PKCE (Proof Key for Code Exchange) for
+providers that require it (e.g., Twitter/X).  A single plugin file
+can handle multiple providers — each entry in ``oauth`` with
+``plugin: "generic"`` gets its own pair of endpoints.
+
+Configuration (GitHub example):
+
+.. code-block:: javascript
+
+    oauth: {
+        github: {
+            plugin:       "generic",
+            authorizeUrl: "https://github.com/login/oauth/authorize",
+            tokenUrl:     "https://github.com/login/oauth/access_token",
+            userInfoUrl:  "https://api.github.com/user",
+            emailUrl:     "https://api.github.com/user/emails",
+            clientId:     "your-client-id",
+            clientSecret: "your-client-secret",
+            callbackUrl:  "https://example.com/apps/auth/oauth/github/callback",
+            scope:        "user:email",
+            fieldMap: {
+                id:       "id",
+                name:     "name",
+                email:    "email",
+                picture:  "avatar_url"
+            }
+        }
+    }
+
+Configuration (Twitter/X example with PKCE):
+
+.. code-block:: javascript
+
+    oauth: {
+        twitter: {
+            plugin:       "generic",
+            authorizeUrl: "https://twitter.com/i/oauth2/authorize",
+            tokenUrl:     "https://api.twitter.com/2/oauth2/token",
+            userInfoUrl:  "https://api.twitter.com/2/users/me?user.fields=profile_image_url",
+            clientId:     "your-client-id",
+            clientSecret: "your-client-secret",
+            callbackUrl:  "https://example.com/apps/auth/oauth/twitter/callback",
+            scope:        "users.read tweet.read",
+            pkce:         true,
+            fieldMap: {
+                id:       "id",
+                name:     "name",
+                email:    "email",
+                picture:  "profile_image_url"
+            }
+        }
+    }
+
+Generic plugin configuration properties:
+
+  * ``plugin`` — must be ``"generic"`` to select this plugin.
+  * ``authorizeUrl`` — the provider's authorization endpoint.
+  * ``tokenUrl`` — the provider's token exchange endpoint.
+  * ``userInfoUrl`` — the provider's user info endpoint (optional
+    if the provider returns an ``id_token`` JWT in the token response).
+  * ``clientId``, ``clientSecret`` — OAuth credentials from the provider.
+  * ``callbackUrl`` — your callback URL, registered with the provider.
+  * ``scope`` — space-separated scopes (default: ``"openid profile email"``).
+  * ``pkce`` — :green:`Boolean`, enable PKCE with S256 challenge method
+    (default: ``false``).
+  * ``emailUrl`` — :green:`String` (optional).  A separate endpoint to
+    fetch the user's email when the main profile does not include one.
+    Some providers (e.g., GitHub) require a separate API call to retrieve
+    email addresses.  The response may be an array of objects with
+    ``email``, ``primary``, and ``verified`` fields (GitHub format), an
+    array of strings, or an object with an ``email`` field.  The plugin
+    selects the primary verified email when available.
+  * ``fieldMap`` — :green:`Object`, maps standard field names to the
+    provider's field names.  Properties: ``id``, ``name``, ``email``,
+    ``picture``.  Defaults to OIDC standard names (``sub``, ``name``,
+    ``email``, ``picture``).
+
+The plugin handles two response formats automatically:
+
+  * **OIDC providers** — the ``id_token`` JWT in the token response
+    is decoded directly; no ``userInfoUrl`` fetch is needed.
+  * **Plain OAuth 2.0 providers** — the ``access_token`` is used to
+    fetch the user profile from ``userInfoUrl`` via
+    ``Authorization: Bearer`` header.
+
+If the user info response wraps the profile in a ``data`` object
+(as Twitter/X does), it is automatically unwrapped.
+
 Using OAuth on Login Pages
 """"""""""""""""""""""""""
 
 When plugins are loaded, the built-in login page at
-``/apps/auth/login`` automatically shows OAuth buttons for each active
-provider.  For custom login pages, link to the plugin's start endpoint
+``/apps/auth/login`` automatically shows a button for each active
+provider with a small icon and label.  Icons are resolved in this
+order:
+
+1. The ``icon`` property in the provider's config (a URL to any image).
+2. A built-in favicon URL for well-known provider names (``google``,
+   ``facebook``, ``github``, ``twitter``, ``microsoft``, ``linkedin``,
+   ``discord``, ``gitlab``, ``apple``, ``slack``).
+3. The ``favicon.ico`` at the root of the provider's ``authorizeUrl``
+   domain (e.g., ``https://accounts.example.com/favicon.ico``).
+
+The button label defaults to the capitalized provider name (e.g.,
+``github`` becomes ``Github``), with correct casing for well-known
+names (``GitHub``, ``LinkedIn``, etc.).  Override with the ``label``
+property:
+
+.. code-block:: javascript
+
+    oauth: {
+        github: {
+            plugin: "generic",
+            label:  "GitHub",           // custom display name
+            icon:   "/images/gh.png",   // custom icon (optional)
+            // ... other config ...
+        }
+    }
+
+For custom login pages, link to the plugin's start endpoint
 with an optional ``returnTo`` parameter:
 
 .. code-block:: html
@@ -1157,7 +1277,9 @@ Quick Start
        }
 
    Place the corresponding plugin file (e.g., ``google.js``) in
-   ``apps/auth-plugins/`` and restart the server.
+   ``apps/auth-plugins/``.  For other providers, use the generic
+   plugin with ``plugin: "generic"`` and configure the URLs and
+   field mapping for that provider.
 
 9. To show user info on static pages, add a display cookie:
 

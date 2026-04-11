@@ -498,8 +498,11 @@ sending endpoints.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">oauth</span></code> — <span class="green">Object</span> (optional).  Provider configurations
 for OAuth plugins.  Each key is a provider name matching the plugin
-filename (e.g., <code class="docutils literal notranslate"><span class="pre">google</span></code> for <code class="docutils literal notranslate"><span class="pre">auth-plugins/google.js</span></code>).  See
-<a class="reference internal" href="#oauth-plugins">OAuth Plugins</a> below.</p>
+filename (e.g., <code class="docutils literal notranslate"><span class="pre">google</span></code> for <code class="docutils literal notranslate"><span class="pre">auth-plugins/google.js</span></code>), or a
+name of your choice when using the generic plugin with
+<code class="docutils literal notranslate"><span class="pre">plugin:</span> <span class="pre">&quot;generic&quot;</span></code>.  Each entry may include <code class="docutils literal notranslate"><span class="pre">icon</span></code> (URL to a
+small image for the login button) and <code class="docutils literal notranslate"><span class="pre">label</span></code> (display name).
+See <a class="reference internal" href="#oauth-plugins">OAuth Plugins</a> below.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">displayCookie</span></code> — <span class="green">Object</span> (optional).  When set, a
 second cookie is created on login containing selected session fields
@@ -1058,12 +1061,124 @@ from Facebook.</li>
 <li>Copy the App ID and App Secret into <code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code>.</li>
 <li>The app must be in <strong>Live</strong> mode for non-developer users to log in.</li>
 </ol>
+<p><strong>Generic</strong> (<code class="docutils literal notranslate"><span class="pre">auth-plugins/generic.js</span></code>)</p>
+<p>Handles any standard OAuth 2.0 or OpenID Connect provider through
+configuration.  Supports PKCE (Proof Key for Code Exchange) for
+providers that require it (e.g., Twitter/X).  A single plugin file
+can handle multiple providers — each entry in <code class="docutils literal notranslate"><span class="pre">oauth</span></code> with
+<code class="docutils literal notranslate"><span class="pre">plugin:</span> <span class="pre">&quot;generic&quot;</span></code> gets its own pair of endpoints.</p>
+<p>Configuration (GitHub example):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">github</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">plugin</span><span class="o">:</span>       <span class="s2">&quot;generic&quot;</span><span class="p">,</span>
+        <span class="nx">authorizeUrl</span><span class="o">:</span> <span class="s2">&quot;https://github.com/login/oauth/authorize&quot;</span><span class="p">,</span>
+        <span class="nx">tokenUrl</span><span class="o">:</span>     <span class="s2">&quot;https://github.com/login/oauth/access_token&quot;</span><span class="p">,</span>
+        <span class="nx">userInfoUrl</span><span class="o">:</span>  <span class="s2">&quot;https://api.github.com/user&quot;</span><span class="p">,</span>
+        <span class="nx">emailUrl</span><span class="o">:</span>     <span class="s2">&quot;https://api.github.com/user/emails&quot;</span><span class="p">,</span>
+        <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>
+        <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;your-client-secret&quot;</span><span class="p">,</span>
+        <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://example.com/apps/auth/oauth/github/callback&quot;</span><span class="p">,</span>
+        <span class="nx">scope</span><span class="o">:</span>        <span class="s2">&quot;user:email&quot;</span><span class="p">,</span>
+        <span class="nx">fieldMap</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">id</span><span class="o">:</span>       <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="nx">name</span><span class="o">:</span>     <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+            <span class="nx">email</span><span class="o">:</span>    <span class="s2">&quot;email&quot;</span><span class="p">,</span>
+            <span class="nx">picture</span><span class="o">:</span>  <span class="s2">&quot;avatar_url&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Configuration (Twitter/X example with PKCE):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">twitter</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">plugin</span><span class="o">:</span>       <span class="s2">&quot;generic&quot;</span><span class="p">,</span>
+        <span class="nx">authorizeUrl</span><span class="o">:</span> <span class="s2">&quot;https://twitter.com/i/oauth2/authorize&quot;</span><span class="p">,</span>
+        <span class="nx">tokenUrl</span><span class="o">:</span>     <span class="s2">&quot;https://api.twitter.com/2/oauth2/token&quot;</span><span class="p">,</span>
+        <span class="nx">userInfoUrl</span><span class="o">:</span>  <span class="s2">&quot;https://api.twitter.com/2/users/me?user.fields=profile_image_url&quot;</span><span class="p">,</span>
+        <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>
+        <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;your-client-secret&quot;</span><span class="p">,</span>
+        <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://example.com/apps/auth/oauth/twitter/callback&quot;</span><span class="p">,</span>
+        <span class="nx">scope</span><span class="o">:</span>        <span class="s2">&quot;users.read tweet.read&quot;</span><span class="p">,</span>
+        <span class="nx">pkce</span><span class="o">:</span>         <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">fieldMap</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">id</span><span class="o">:</span>       <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="nx">name</span><span class="o">:</span>     <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+            <span class="nx">email</span><span class="o">:</span>    <span class="s2">&quot;email&quot;</span><span class="p">,</span>
+            <span class="nx">picture</span><span class="o">:</span>  <span class="s2">&quot;profile_image_url&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Generic plugin configuration properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">plugin</span></code> — must be <code class="docutils literal notranslate"><span class="pre">&quot;generic&quot;</span></code> to select this plugin.</li>
+<li><code class="docutils literal notranslate"><span class="pre">authorizeUrl</span></code> — the provider’s authorization endpoint.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tokenUrl</span></code> — the provider’s token exchange endpoint.</li>
+<li><code class="docutils literal notranslate"><span class="pre">userInfoUrl</span></code> — the provider’s user info endpoint (optional
+if the provider returns an <code class="docutils literal notranslate"><span class="pre">id_token</span></code> JWT in the token response).</li>
+<li><code class="docutils literal notranslate"><span class="pre">clientId</span></code>, <code class="docutils literal notranslate"><span class="pre">clientSecret</span></code> — OAuth credentials from the provider.</li>
+<li><code class="docutils literal notranslate"><span class="pre">callbackUrl</span></code> — your callback URL, registered with the provider.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scope</span></code> — space-separated scopes (default: <code class="docutils literal notranslate"><span class="pre">&quot;openid</span> <span class="pre">profile</span> <span class="pre">email&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">pkce</span></code> — <span class="green">Boolean</span>, enable PKCE with S256 challenge method
+(default: <code class="docutils literal notranslate"><span class="pre">false</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">emailUrl</span></code> — <span class="green">String</span> (optional).  A separate endpoint to
+fetch the user’s email when the main profile does not include one.
+Some providers (e.g., GitHub) require a separate API call to retrieve
+email addresses.  The response may be an array of objects with
+<code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">primary</span></code>, and <code class="docutils literal notranslate"><span class="pre">verified</span></code> fields (GitHub format), an
+array of strings, or an object with an <code class="docutils literal notranslate"><span class="pre">email</span></code> field.  The plugin
+selects the primary verified email when available.</li>
+<li><code class="docutils literal notranslate"><span class="pre">fieldMap</span></code> — <span class="green">Object</span>, maps standard field names to the
+provider’s field names.  Properties: <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">email</span></code>,
+<code class="docutils literal notranslate"><span class="pre">picture</span></code>.  Defaults to OIDC standard names (<code class="docutils literal notranslate"><span class="pre">sub</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>,
+<code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">picture</span></code>).</li>
+</ul>
+</div></blockquote>
+<p>The plugin handles two response formats automatically:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>OIDC providers</strong> — the <code class="docutils literal notranslate"><span class="pre">id_token</span></code> JWT in the token response
+is decoded directly; no <code class="docutils literal notranslate"><span class="pre">userInfoUrl</span></code> fetch is needed.</li>
+<li><strong>Plain OAuth 2.0 providers</strong> — the <code class="docutils literal notranslate"><span class="pre">access_token</span></code> is used to
+fetch the user profile from <code class="docutils literal notranslate"><span class="pre">userInfoUrl</span></code> via
+<code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span></code> header.</li>
+</ul>
+</div></blockquote>
+<p>If the user info response wraps the profile in a <code class="docutils literal notranslate"><span class="pre">data</span></code> object
+(as Twitter/X does), it is automatically unwrapped.</p>
 </div>
 <div class="section" id="using-oauth-on-login-pages">
 <h4>Using OAuth on Login Pages<a class="headerlink" href="#using-oauth-on-login-pages" title="Permalink to this headline">¶</a></h4>
 <p>When plugins are loaded, the built-in login page at
-<code class="docutils literal notranslate"><span class="pre">/apps/auth/login</span></code> automatically shows OAuth buttons for each active
-provider.  For custom login pages, link to the plugin’s start endpoint
+<code class="docutils literal notranslate"><span class="pre">/apps/auth/login</span></code> automatically shows a button for each active
+provider with a small icon and label.  Icons are resolved in this
+order:</p>
+<ol class="arabic simple">
+<li>The <code class="docutils literal notranslate"><span class="pre">icon</span></code> property in the provider’s config (a URL to any image).</li>
+<li>A built-in favicon URL for well-known provider names (<code class="docutils literal notranslate"><span class="pre">google</span></code>,
+<code class="docutils literal notranslate"><span class="pre">facebook</span></code>, <code class="docutils literal notranslate"><span class="pre">github</span></code>, <code class="docutils literal notranslate"><span class="pre">twitter</span></code>, <code class="docutils literal notranslate"><span class="pre">microsoft</span></code>, <code class="docutils literal notranslate"><span class="pre">linkedin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">discord</span></code>, <code class="docutils literal notranslate"><span class="pre">gitlab</span></code>, <code class="docutils literal notranslate"><span class="pre">apple</span></code>, <code class="docutils literal notranslate"><span class="pre">slack</span></code>).</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">favicon.ico</span></code> at the root of the provider’s <code class="docutils literal notranslate"><span class="pre">authorizeUrl</span></code>
+domain (e.g., <code class="docutils literal notranslate"><span class="pre">https://accounts.example.com/favicon.ico</span></code>).</li>
+</ol>
+<p>The button label defaults to the capitalized provider name (e.g.,
+<code class="docutils literal notranslate"><span class="pre">github</span></code> becomes <code class="docutils literal notranslate"><span class="pre">Github</span></code>), with correct casing for well-known
+names (<code class="docutils literal notranslate"><span class="pre">GitHub</span></code>, <code class="docutils literal notranslate"><span class="pre">LinkedIn</span></code>, etc.).  Override with the <code class="docutils literal notranslate"><span class="pre">label</span></code>
+property:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">github</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">plugin</span><span class="o">:</span> <span class="s2">&quot;generic&quot;</span><span class="p">,</span>
+        <span class="nx">label</span><span class="o">:</span>  <span class="s2">&quot;GitHub&quot;</span><span class="p">,</span>           <span class="c1">// custom display name</span>
+        <span class="nx">icon</span><span class="o">:</span>   <span class="s2">&quot;/images/gh.png&quot;</span><span class="p">,</span>   <span class="c1">// custom icon (optional)</span>
+        <span class="c1">// ... other config ...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For custom login pages, link to the plugin’s start endpoint
 with an optional <code class="docutils literal notranslate"><span class="pre">returnTo</span></code> parameter:</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/apps/auth/oauth/google?returnTo=/dashboard&quot;</span><span class="p">&gt;</span>
     Sign in with Google
@@ -1294,7 +1409,9 @@ expiry, CSRF, and lockout settings.</p>
 </pre></div>
 </div>
 <p>Place the corresponding plugin file (e.g., <code class="docutils literal notranslate"><span class="pre">google.js</span></code>) in
-<code class="docutils literal notranslate"><span class="pre">apps/auth-plugins/</span></code> and restart the server.</p>
+<code class="docutils literal notranslate"><span class="pre">apps/auth-plugins/</span></code>.  For other providers, use the generic
+plugin with <code class="docutils literal notranslate"><span class="pre">plugin:</span> <span class="pre">&quot;generic&quot;</span></code> and configure the URLs and
+field mapping for that provider.</p>
 </li>
 <li><p class="first">To show user info on static pages, add a display cookie:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">displayCookie</span><span class="o">:</span> <span class="p">{</span>
