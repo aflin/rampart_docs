@@ -124,7 +124,14 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#session-data-model">Session Data Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#theme-support">Theme Support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hooks-for-future-authentication-methods">Hooks for Future Authentication Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#oauth-plugins">OAuth Plugins</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#included-plugins">Included Plugins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-oauth-on-login-pages">Using OAuth on Login Pages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#oauth-user-records">OAuth User Records</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#writing-a-custom-plugin">Writing a Custom Plugin</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hooks-for-custom-authentication-flows">Hooks for Custom Authentication Flows</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#security-considerations">Security Considerations</a></li>
@@ -243,7 +250,9 @@ operations are not in the hot path of normal server functions.</p>
 <li>A pluggable architecture for custom auth modules</li>
 <li>A CLI administration tool</li>
 <li>An administrative web interface</li>
-<li>Hooks for future OAuth, 2FA, and email-based password reset flows</li>
+<li>OAuth plugin architecture with included Google and Facebook plugins</li>
+<li>Display cookie for showing user info on static pages</li>
+<li>Email-based password reset and verification flows</li>
 </ul>
 </div>
 <div class="section" id="how-does-it-work">
@@ -359,6 +368,27 @@ are supported.  It exports an object with the following properties:</p>
         <span class="c1">// For &quot;relay&quot;:    relay, relayPort</span>
     <span class="p">},</span>
 
+    <span class="c1">// OAuth providers (optional — enables OAuth plugin loading)</span>
+    <span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">google</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;your-client-id.apps.googleusercontent.com&quot;</span><span class="p">,</span>
+            <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;your-client-secret&quot;</span><span class="p">,</span>
+            <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://example.com/apps/auth/oauth/google/callback&quot;</span>
+        <span class="p">},</span>
+        <span class="nx">facebook</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;your-app-id&quot;</span><span class="p">,</span>
+            <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;your-app-secret&quot;</span><span class="p">,</span>
+            <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://example.com/apps/auth/oauth/facebook/callback&quot;</span><span class="p">,</span>
+            <span class="nx">apiVersion</span><span class="o">:</span>   <span class="s2">&quot;v21.0&quot;</span>  <span class="c1">// optional, defaults to &quot;v21.0&quot;</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="c1">// Display cookie (optional — client-readable cookie for static pages)</span>
+    <span class="nx">displayCookie</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">cookieName</span><span class="o">:</span> <span class="s2">&quot;rp_user&quot;</span><span class="p">,</span>                <span class="c1">// cookie name (default: &quot;rp_user&quot;)</span>
+        <span class="nx">fields</span><span class="o">:</span>     <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;picture&quot;</span><span class="p">]</span>        <span class="c1">// session fields to include</span>
+    <span class="p">},</span>
+
     <span class="c1">// Protected paths</span>
     <span class="nx">protectedPaths</span><span class="o">:</span> <span class="p">{</span>
         <span class="s2">&quot;/admin/&quot;</span><span class="o">:</span> <span class="p">{</span>
@@ -463,8 +493,35 @@ features are disabled.  Uses the <code class="docutils literal notranslate"><spa
 <li><code class="docutils literal notranslate"><span class="pre">relay</span></code>, <code class="docutils literal notranslate"><span class="pre">relayPort</span></code> — relay server for the <code class="docutils literal notranslate"><span class="pre">&quot;relay&quot;</span></code>
 method.</li>
 </ul>
-<p>A per-username cooldown (5 minutes) prevents abuse of email
+<p>A per-username cooldown (60 seconds) prevents abuse of email
 sending endpoints.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">oauth</span></code> — <span class="green">Object</span> (optional).  Provider configurations
+for OAuth plugins.  Each key is a provider name matching the plugin
+filename (e.g., <code class="docutils literal notranslate"><span class="pre">google</span></code> for <code class="docutils literal notranslate"><span class="pre">auth-plugins/google.js</span></code>).  See
+<a class="reference internal" href="#oauth-plugins">OAuth Plugins</a> below.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">displayCookie</span></code> — <span class="green">Object</span> (optional).  When set, a
+second cookie is created on login containing selected session fields
+in URL-safe base64-encoded JSON.  Unlike the session cookie, this
+cookie is <strong>not</strong> HttpOnly, so client-side JavaScript can read it to
+display the logged-in user’s name, picture, etc. on static pages
+that have no server-side processing.</p>
+<p>Properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">cookieName</span></code> — cookie name (default: <code class="docutils literal notranslate"><span class="pre">&quot;rp_user&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">fields</span></code> — <span class="green">Array</span> of <span class="green">Strings</span>, the session
+fields to include (default: <code class="docutils literal notranslate"><span class="pre">[&quot;name&quot;,</span> <span class="pre">&quot;picture&quot;]</span></code>).</li>
+</ul>
+<p>The cookie is set alongside the session cookie on login (including
+OAuth logins) and cleared on logout.  The value is URL-safe base64
+(using <code class="docutils literal notranslate"><span class="pre">-</span></code> and <code class="docutils literal notranslate"><span class="pre">_</span></code> instead of <code class="docutils literal notranslate"><span class="pre">+</span></code> and <code class="docutils literal notranslate"><span class="pre">/</span></code>), so client-side
+code must convert before calling <code class="docutils literal notranslate"><span class="pre">atob()</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">raw</span> <span class="o">=</span> <span class="nx">cookieValue</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/-/g</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/_/g</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">atob</span><span class="p">(</span><span class="nx">raw</span><span class="p">));</span>
+<span class="c1">// info.name, info.picture, etc.</span>
+</pre></div>
+</div>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">protectedPaths</span></code> — <span class="green">Object</span>.  Maps URL path prefixes to
 access rules.  See <a class="reference internal" href="#protected-paths">Protected Paths</a> below.</p>
@@ -889,10 +946,11 @@ attribute-based access control in endpoint callbacks:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">authMethod</span></code> field supports future authentication methods (OAuth,
-Google, Facebook) without schema changes.  Custom properties (like
-<code class="docutils literal notranslate"><span class="pre">editor</span></code> and <code class="docutils literal notranslate"><span class="pre">department</span></code> above) are application-defined and can be
-any JSON-serializable value.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">authMethod</span></code> field indicates how the user authenticated:
+<code class="docutils literal notranslate"><span class="pre">&quot;password&quot;</span></code> for email/password login, <code class="docutils literal notranslate"><span class="pre">&quot;google&quot;</span></code> for Google OAuth,
+<code class="docutils literal notranslate"><span class="pre">&quot;facebook&quot;</span></code> for Facebook OAuth, or any custom value from a plugin.
+Custom properties (like <code class="docutils literal notranslate"><span class="pre">editor</span></code> and <code class="docutils literal notranslate"><span class="pre">department</span></code> above) are
+application-defined and can be any JSON-serializable value.</p>
 </div>
 <div class="section" id="theme-support">
 <h3>Theme Support<a class="headerlink" href="#theme-support" title="Permalink to this headline">¶</a></h3>
@@ -909,8 +967,216 @@ any JSON-serializable value.</p>
 <p>If the theme module is not found, the admin pages render with a minimal
 built-in stylesheet.</p>
 </div>
-<div class="section" id="hooks-for-future-authentication-methods">
-<h3>Hooks for Future Authentication Methods<a class="headerlink" href="#hooks-for-future-authentication-methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="oauth-plugins">
+<h3>OAuth Plugins<a class="headerlink" href="#oauth-plugins" title="Permalink to this headline">¶</a></h3>
+<p>The auth system supports social login via a plugin architecture.
+Plugins are JavaScript files placed in the <code class="docutils literal notranslate"><span class="pre">apps/auth-plugins/</span></code>
+directory.  Two plugins are included: Google and Facebook.</p>
+<p>When the server starts, <code class="docutils literal notranslate"><span class="pre">auth.js</span></code> scans the plugin directory and
+calls each plugin’s <code class="docutils literal notranslate"><span class="pre">init()</span></code> function with the full auth configuration
+and an API object.  If the plugin’s required configuration is present
+(e.g., <code class="docutils literal notranslate"><span class="pre">oauth.google</span></code> in <code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code>), it activates and
+registers its endpoints.</p>
+<p><strong>How it works:</strong></p>
+<ol class="arabic simple">
+<li>The plugin registers a <em>start</em> endpoint and a <em>callback</em> endpoint.</li>
+<li>The start endpoint generates a random state token (stored in LMDB
+with a 10-minute expiry), then redirects the browser to the
+provider’s authorization page.</li>
+<li>The provider authenticates the user and redirects back to the
+callback URL with an authorization code and state token.</li>
+<li>The callback endpoint validates the state token, exchanges the code
+for an access token, fetches the user’s profile, and returns a
+<code class="docutils literal notranslate"><span class="pre">userData</span></code> object to <code class="docutils literal notranslate"><span class="pre">auth.js</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">auth.js</span></code> creates or updates the user record and creates a session.
+All cookie handling (session cookie and display cookie) is managed
+by <code class="docutils literal notranslate"><span class="pre">auth.js</span></code>, not the plugin.</li>
+</ol>
+<div class="section" id="included-plugins">
+<h4>Included Plugins<a class="headerlink" href="#included-plugins" title="Permalink to this headline">¶</a></h4>
+<p><strong>Google</strong> (<code class="docutils literal notranslate"><span class="pre">auth-plugins/google.js</span></code>)</p>
+<p>Uses OpenID Connect.  The user’s Google <code class="docutils literal notranslate"><span class="pre">sub</span></code> (subject identifier)
+becomes the username, prefixed with <code class="docutils literal notranslate"><span class="pre">google_</span></code>.</p>
+<p>Configuration:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">google</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;your-client-id.apps.googleusercontent.com&quot;</span><span class="p">,</span>
+        <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;your-client-secret&quot;</span><span class="p">,</span>
+        <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://example.com/apps/auth/oauth/google/callback&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Endpoints:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/apps/auth/oauth/google</span></code> — starts the OAuth flow.  Accepts
+an optional <code class="docutils literal notranslate"><span class="pre">returnTo</span></code> query parameter.</li>
+<li><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/apps/auth/oauth/google/callback</span></code> — handles the callback
+from Google.</li>
+</ul>
+</div></blockquote>
+<p>To set up a Google OAuth client:</p>
+<ol class="arabic simple">
+<li>Go to the <a class="reference external" href="https://console.cloud.google.com/">Google Cloud Console</a>.</li>
+<li>Create or select a project.</li>
+<li>Navigate to <strong>APIs &amp; Services &gt; Credentials</strong>.</li>
+<li>Create an <strong>OAuth 2.0 Client ID</strong> (Web application type).</li>
+<li>Add your callback URL to <strong>Authorized redirect URIs</strong>.</li>
+<li>Copy the Client ID and Client Secret into <code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code>.</li>
+</ol>
+<p><strong>Facebook</strong> (<code class="docutils literal notranslate"><span class="pre">auth-plugins/facebook.js</span></code>)</p>
+<p>Uses the Facebook Graph API.  The user’s Facebook ID becomes the
+username, prefixed with <code class="docutils literal notranslate"><span class="pre">fb_</span></code>.</p>
+<p>Configuration:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">facebook</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;your-app-id&quot;</span><span class="p">,</span>
+        <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;your-app-secret&quot;</span><span class="p">,</span>
+        <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://example.com/apps/auth/oauth/facebook/callback&quot;</span><span class="p">,</span>
+        <span class="nx">apiVersion</span><span class="o">:</span>   <span class="s2">&quot;v21.0&quot;</span>    <span class="c1">// optional, defaults to &quot;v21.0&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Endpoints:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/apps/auth/oauth/facebook</span></code> — starts the OAuth flow.
+Accepts an optional <code class="docutils literal notranslate"><span class="pre">returnTo</span></code> query parameter.</li>
+<li><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/apps/auth/oauth/facebook/callback</span></code> — handles the callback
+from Facebook.</li>
+</ul>
+</div></blockquote>
+<p>To set up a Facebook app:</p>
+<ol class="arabic simple">
+<li>Go to <a class="reference external" href="https://developers.facebook.com/">developers.facebook.com</a>.</li>
+<li>Create a new app (Consumer type).</li>
+<li>Add <strong>Facebook Login</strong> to the app.</li>
+<li>Under <strong>Facebook Login &gt; Settings</strong>, add your callback URL to
+<strong>Valid OAuth Redirect URIs</strong>.</li>
+<li>Copy the App ID and App Secret into <code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code>.</li>
+<li>The app must be in <strong>Live</strong> mode for non-developer users to log in.</li>
+</ol>
+</div>
+<div class="section" id="using-oauth-on-login-pages">
+<h4>Using OAuth on Login Pages<a class="headerlink" href="#using-oauth-on-login-pages" title="Permalink to this headline">¶</a></h4>
+<p>When plugins are loaded, the built-in login page at
+<code class="docutils literal notranslate"><span class="pre">/apps/auth/login</span></code> automatically shows OAuth buttons for each active
+provider.  For custom login pages, link to the plugin’s start endpoint
+with an optional <code class="docutils literal notranslate"><span class="pre">returnTo</span></code> parameter:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/apps/auth/oauth/google?returnTo=/dashboard&quot;</span><span class="p">&gt;</span>
+    Sign in with Google
+<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/apps/auth/oauth/facebook?returnTo=/dashboard&quot;</span><span class="p">&gt;</span>
+    Sign in with Facebook
+<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="oauth-user-records">
+<h4>OAuth User Records<a class="headerlink" href="#oauth-user-records" title="Permalink to this headline">¶</a></h4>
+<p>Users created via OAuth have the following properties:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nx">username</span><span class="o">:</span>      <span class="s2">&quot;google_123456789&quot;</span><span class="p">,</span>  <span class="c1">// or &quot;fb_123456789&quot;</span>
+    <span class="nx">name</span><span class="o">:</span>          <span class="s2">&quot;Alice Smith&quot;</span><span class="p">,</span>
+    <span class="nx">email</span><span class="o">:</span>         <span class="s2">&quot;alice@example.com&quot;</span><span class="p">,</span>
+    <span class="nx">picture</span><span class="o">:</span>       <span class="s2">&quot;https://...&quot;</span><span class="p">,</span>       <span class="c1">// profile picture URL</span>
+    <span class="nx">authMethod</span><span class="o">:</span>    <span class="s2">&quot;google&quot;</span><span class="p">,</span>            <span class="c1">// or &quot;facebook&quot;</span>
+    <span class="nx">oauthProvider</span><span class="o">:</span> <span class="s2">&quot;google&quot;</span><span class="p">,</span>            <span class="c1">// or &quot;facebook&quot;</span>
+    <span class="nx">oauthId</span><span class="o">:</span>       <span class="s2">&quot;google:123456789&quot;</span><span class="p">,</span>  <span class="c1">// or &quot;facebook:123456789&quot;</span>
+    <span class="nx">emailVerified</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">authLevel</span><span class="o">:</span>     <span class="mi">50</span>                   <span class="c1">// default level for new users</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>On subsequent logins, the user’s name, email, picture, and other
+provider data are updated from the provider’s response, keeping the
+local record in sync.</p>
+</div>
+<div class="section" id="writing-a-custom-plugin">
+<h4>Writing a Custom Plugin<a class="headerlink" href="#writing-a-custom-plugin" title="Permalink to this headline">¶</a></h4>
+<p>A plugin is a JavaScript file in <code class="docutils literal notranslate"><span class="pre">apps/auth-plugins/</span></code> that exports
+three properties:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// apps/auth-plugins/my-provider.js</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="s2">&quot;my-provider&quot;</span><span class="p">;</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">conf</span><span class="p">,</span> <span class="nx">api</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// conf is the full auth-conf.js object.</span>
+    <span class="c1">// api provides: init(), createUser(), getUser(), updateUser(),</span>
+    <span class="c1">//   login(), logout(), generateToken(), getDbPath(),</span>
+    <span class="c1">//   getCookieName(), refreshSessions(), createOAuthSession().</span>
+    <span class="c1">//</span>
+    <span class="c1">// Return true if the plugin should activate, false to skip.</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">conf</span><span class="p">.</span><span class="nx">oauth</span> <span class="o">||</span> <span class="o">!</span><span class="nx">conf</span><span class="p">.</span><span class="nx">oauth</span><span class="p">.</span><span class="nx">myProvider</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="c1">// store config, api references for later use</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">endpoints</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1">// Start endpoint — redirect to provider</span>
+    <span class="s2">&quot;/oauth/my-provider&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">returnTo</span> <span class="o">=</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">returnTo</span><span class="p">)</span>
+                     <span class="o">?</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">returnTo</span> <span class="o">:</span> <span class="s2">&quot;/&quot;</span><span class="p">;</span>
+
+        <span class="c1">// generate state token, store in LMDB, redirect to provider</span>
+        <span class="c1">// ...</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nx">status</span><span class="o">:</span> <span class="mi">302</span><span class="p">,</span>
+            <span class="nx">headers</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;location&quot;</span><span class="o">:</span> <span class="nx">providerAuthUrl</span><span class="p">}</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+    <span class="c1">// Callback endpoint — handle provider response</span>
+    <span class="s2">&quot;/oauth/my-provider/callback&quot;</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// validate state, exchange code for token, fetch profile</span>
+        <span class="c1">// ...</span>
+
+        <span class="c1">// return userData — auth.js handles session and cookies</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nx">ok</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="nx">returnTo</span><span class="o">:</span> <span class="nx">savedReturnTo</span><span class="p">,</span>
+            <span class="nx">userData</span><span class="o">:</span> <span class="p">{</span>
+                <span class="nx">username</span><span class="o">:</span>      <span class="s2">&quot;myprov_&quot;</span> <span class="o">+</span> <span class="nx">uniqueId</span><span class="p">,</span>
+                <span class="nx">name</span><span class="o">:</span>          <span class="s2">&quot;User Name&quot;</span><span class="p">,</span>
+                <span class="nx">email</span><span class="o">:</span>         <span class="s2">&quot;user@example.com&quot;</span><span class="p">,</span>
+                <span class="nx">picture</span><span class="o">:</span>       <span class="s2">&quot;https://...&quot;</span><span class="p">,</span>
+                <span class="nx">authMethod</span><span class="o">:</span>    <span class="s2">&quot;my-provider&quot;</span><span class="p">,</span>
+                <span class="nx">oauthProvider</span><span class="o">:</span> <span class="s2">&quot;my-provider&quot;</span><span class="p">,</span>
+                <span class="nx">oauthId</span><span class="o">:</span>       <span class="s2">&quot;my-provider:&quot;</span> <span class="o">+</span> <span class="nx">uniqueId</span><span class="p">,</span>
+                <span class="nx">emailVerified</span><span class="o">:</span> <span class="kc">true</span>
+            <span class="p">}</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The callback endpoint’s return value is handled by <code class="docutils literal notranslate"><span class="pre">auth.js</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If it has a <code class="docutils literal notranslate"><span class="pre">status</span></code> property (e.g., a redirect on error), it is
+passed through as-is.</li>
+<li>If it has <code class="docutils literal notranslate"><span class="pre">ok:</span> <span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">userData</span></code>, <code class="docutils literal notranslate"><span class="pre">auth.js</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">createOAuthSession(userData)</span></code> to create or update the user,
+create the session, and build all cookies (session cookie and
+display cookie).</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">ok</span></code> is falsy, the user is redirected to the login page with
+an error.</li>
+</ul>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">userData</span></code> object can contain any properties.  Standard fields
+(<code class="docutils literal notranslate"><span class="pre">username</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">picture</span></code>, <code class="docutils literal notranslate"><span class="pre">authMethod</span></code>,
+<code class="docutils literal notranslate"><span class="pre">oauthProvider</span></code>, <code class="docutils literal notranslate"><span class="pre">oauthId</span></code>, <code class="docutils literal notranslate"><span class="pre">emailVerified</span></code>) are recognized by
+<code class="docutils literal notranslate"><span class="pre">auth.js</span></code>; additional fields are stored on the user record and
+appear in <code class="docutils literal notranslate"><span class="pre">req.userAuth</span></code> after login.</p>
+</div>
+</div>
+<div class="section" id="hooks-for-custom-authentication-flows">
+<h3>Hooks for Custom Authentication Flows<a class="headerlink" href="#hooks-for-custom-authentication-flows" title="Permalink to this headline">¶</a></h3>
 <p>The configuration file supports optional callback hooks for extending
 the authentication flow:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
@@ -922,12 +1188,6 @@ the authentication flow:</p>
         <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">twoFactorEnabled</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">{</span><span class="nx">redirect</span><span class="o">:</span> <span class="s2">&quot;/apps/auth/2fa?user=&quot;</span> <span class="o">+</span> <span class="nx">user</span><span class="p">.</span><span class="nx">username</span><span class="p">};</span>
         <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">},</span>
-
-    <span class="c1">// Called when a password reset is requested.</span>
-    <span class="c1">// Use to send the reset link via email.</span>
-    <span class="nx">onPasswordResetRequest</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="nx">resetToken</span><span class="p">,</span> <span class="nx">resetUrl</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">sendEmail</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span> <span class="s2">&quot;Password Reset&quot;</span><span class="p">,</span> <span class="s2">&quot;Click: &quot;</span> <span class="o">+</span> <span class="nx">resetUrl</span><span class="p">);</span>
     <span class="p">},</span>
 
     <span class="c1">// Called after a session is created. Use for audit logging.</span>
@@ -967,7 +1227,7 @@ check, preventing user enumeration via response time measurement.</li>
 <li><strong>Session revocation</strong> occurs automatically on password changes
 and password resets.</li>
 <li><strong>Email cooldown</strong> — verification and password reset emails are
-limited to one per username per 5 minutes, preventing email
+limited to one per username per 60 seconds, preventing email
 bombing regardless of the number of source IPs.</li>
 <li><strong>Expired record cleanup</strong> — expired sessions, reset tokens,
 verification tokens, and lockout records are periodically cleaned
@@ -977,6 +1237,15 @@ is also available via <code class="docutils literal notranslate"><span class="pr
 starts as root and switches to an unprivileged user.</li>
 <li><strong>Open redirect protection</strong> — the <code class="docutils literal notranslate"><span class="pre">returnTo</span></code> parameter in
 login redirects is validated to be a local path.</li>
+<li><strong>OAuth state tokens</strong> — OAuth flows use a random state token
+stored in LMDB with a 10-minute expiry to prevent CSRF attacks
+during the authorization redirect.  The token is consumed on
+first use.</li>
+<li><strong>Display cookie</strong> — the optional display cookie is <strong>not</strong>
+HttpOnly and is readable by client-side JavaScript.  It should
+contain only non-sensitive display data (name, picture URL).
+It does not grant authentication — the HttpOnly session cookie
+is the sole source of auth.</li>
 <li><strong>Rate limiting</strong> — the server’s <code class="docutils literal notranslate"><span class="pre">rateLimit</span></code> configuration
 (see <a class="reference internal" href="rampart-server.html"><span class="doc">The rampart-server HTTP module</span></a>) can be used to limit requests to
 auth endpoints at the C level, before any JavaScript runs.</li>
@@ -1013,6 +1282,27 @@ rampart apps/auth.js
 </li>
 <li><p class="first">Edit <code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code> to configure protected paths, session
 expiry, CSRF, and lockout settings.</p>
+</li>
+<li><p class="first">To enable OAuth login, add provider credentials to <code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oauth</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">google</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">clientId</span><span class="o">:</span>     <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+        <span class="nx">clientSecret</span><span class="o">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+        <span class="nx">callbackUrl</span><span class="o">:</span>  <span class="s2">&quot;https://yourserver/apps/auth/oauth/google/callback&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Place the corresponding plugin file (e.g., <code class="docutils literal notranslate"><span class="pre">google.js</span></code>) in
+<code class="docutils literal notranslate"><span class="pre">apps/auth-plugins/</span></code> and restart the server.</p>
+</li>
+<li><p class="first">To show user info on static pages, add a display cookie:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">displayCookie</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">cookieName</span><span class="o">:</span> <span class="s2">&quot;rp_user&quot;</span><span class="p">,</span>
+    <span class="nx">fields</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;picture&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </li>
 </ol>
 </div>
