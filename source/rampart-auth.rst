@@ -37,7 +37,9 @@ Together, the C module and the JS module provide:
 - A pluggable architecture for custom auth modules
 - A CLI administration tool
 - An administrative web interface
-- Hooks for future OAuth, 2FA, and email-based password reset flows
+- OAuth plugin architecture with included Google and Facebook plugins
+- Display cookie for showing user info on static pages
+- Email-based password reset and verification flows
 
 How does it work?
 ~~~~~~~~~~~~~~~~~
@@ -157,6 +159,27 @@ are supported.  It exports an object with the following properties:
             // For "relay":    relay, relayPort
         },
 
+        // OAuth providers (optional — enables OAuth plugin loading)
+        oauth: {
+            google: {
+                clientId:     "your-client-id.apps.googleusercontent.com",
+                clientSecret: "your-client-secret",
+                callbackUrl:  "https://example.com/apps/auth/oauth/google/callback"
+            },
+            facebook: {
+                clientId:     "your-app-id",
+                clientSecret: "your-app-secret",
+                callbackUrl:  "https://example.com/apps/auth/oauth/facebook/callback",
+                apiVersion:   "v21.0"  // optional, defaults to "v21.0"
+            }
+        },
+
+        // Display cookie (optional — client-readable cookie for static pages)
+        displayCookie: {
+            cookieName: "rp_user",                // cookie name (default: "rp_user")
+            fields:     ["name", "picture"]        // session fields to include
+        },
+
         // Protected paths
         protectedPaths: {
             "/admin/": {
@@ -260,8 +283,37 @@ Configuration Properties
       - ``relay``, ``relayPort`` — relay server for the ``"relay"``
         method.
 
-      A per-username cooldown (5 minutes) prevents abuse of email
+      A per-username cooldown (60 seconds) prevents abuse of email
       sending endpoints.
+
+    * ``oauth`` — :green:`Object` (optional).  Provider configurations
+      for OAuth plugins.  Each key is a provider name matching the plugin
+      filename (e.g., ``google`` for ``auth-plugins/google.js``).  See
+      `OAuth Plugins`_ below.
+
+    * ``displayCookie`` — :green:`Object` (optional).  When set, a
+      second cookie is created on login containing selected session fields
+      in URL-safe base64-encoded JSON.  Unlike the session cookie, this
+      cookie is **not** HttpOnly, so client-side JavaScript can read it to
+      display the logged-in user's name, picture, etc. on static pages
+      that have no server-side processing.
+
+      Properties:
+
+      - ``cookieName`` — cookie name (default: ``"rp_user"``).
+      - ``fields`` — :green:`Array` of :green:`Strings`, the session
+        fields to include (default: ``["name", "picture"]``).
+
+      The cookie is set alongside the session cookie on login (including
+      OAuth logins) and cleared on logout.  The value is URL-safe base64
+      (using ``-`` and ``_`` instead of ``+`` and ``/``), so client-side
+      code must convert before calling ``atob()``:
+
+      .. code-block:: javascript
+
+          var raw = cookieValue.replace(/-/g, "+").replace(/_/g, "/");
+          var info = JSON.parse(atob(raw));
+          // info.name, info.picture, etc.
 
     * ``protectedPaths`` — :green:`Object`.  Maps URL path prefixes to
       access rules.  See `Protected Paths`_ below.
@@ -724,10 +776,11 @@ Session records are JSON objects containing all user properties
         "mustResetPassword": false
     }
 
-The ``authMethod`` field supports future authentication methods (OAuth,
-Google, Facebook) without schema changes.  Custom properties (like
-``editor`` and ``department`` above) are application-defined and can be
-any JSON-serializable value.
+The ``authMethod`` field indicates how the user authenticated:
+``"password"`` for email/password login, ``"google"`` for Google OAuth,
+``"facebook"`` for Facebook OAuth, or any custom value from a plugin.
+Custom properties (like ``editor`` and ``department`` above) are
+application-defined and can be any JSON-serializable value.
 
 Theme Support
 ~~~~~~~~~~~~~
@@ -747,8 +800,228 @@ The admin interface supports theming via an optional module at
 If the theme module is not found, the admin pages render with a minimal
 built-in stylesheet.
 
-Hooks for Future Authentication Methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OAuth Plugins
+~~~~~~~~~~~~~
+
+The auth system supports social login via a plugin architecture.
+Plugins are JavaScript files placed in the ``apps/auth-plugins/``
+directory.  Two plugins are included: Google and Facebook.
+
+When the server starts, ``auth.js`` scans the plugin directory and
+calls each plugin's ``init()`` function with the full auth configuration
+and an API object.  If the plugin's required configuration is present
+(e.g., ``oauth.google`` in ``auth-conf.js``), it activates and
+registers its endpoints.
+
+**How it works:**
+
+1. The plugin registers a *start* endpoint and a *callback* endpoint.
+2. The start endpoint generates a random state token (stored in LMDB
+   with a 10-minute expiry), then redirects the browser to the
+   provider's authorization page.
+3. The provider authenticates the user and redirects back to the
+   callback URL with an authorization code and state token.
+4. The callback endpoint validates the state token, exchanges the code
+   for an access token, fetches the user's profile, and returns a
+   ``userData`` object to ``auth.js``.
+5. ``auth.js`` creates or updates the user record and creates a session.
+   All cookie handling (session cookie and display cookie) is managed
+   by ``auth.js``, not the plugin.
+
+Included Plugins
+""""""""""""""""
+
+**Google** (``auth-plugins/google.js``)
+
+Uses OpenID Connect.  The user's Google ``sub`` (subject identifier)
+becomes the username, prefixed with ``google_``.
+
+Configuration:
+
+.. code-block:: javascript
+
+    oauth: {
+        google: {
+            clientId:     "your-client-id.apps.googleusercontent.com",
+            clientSecret: "your-client-secret",
+            callbackUrl:  "https://example.com/apps/auth/oauth/google/callback"
+        }
+    }
+
+Endpoints:
+
+  * ``GET /apps/auth/oauth/google`` — starts the OAuth flow.  Accepts
+    an optional ``returnTo`` query parameter.
+  * ``GET /apps/auth/oauth/google/callback`` — handles the callback
+    from Google.
+
+To set up a Google OAuth client:
+
+1. Go to the `Google Cloud Console <https://console.cloud.google.com/>`_.
+2. Create or select a project.
+3. Navigate to **APIs & Services > Credentials**.
+4. Create an **OAuth 2.0 Client ID** (Web application type).
+5. Add your callback URL to **Authorized redirect URIs**.
+6. Copy the Client ID and Client Secret into ``auth-conf.js``.
+
+**Facebook** (``auth-plugins/facebook.js``)
+
+Uses the Facebook Graph API.  The user's Facebook ID becomes the
+username, prefixed with ``fb_``.
+
+Configuration:
+
+.. code-block:: javascript
+
+    oauth: {
+        facebook: {
+            clientId:     "your-app-id",
+            clientSecret: "your-app-secret",
+            callbackUrl:  "https://example.com/apps/auth/oauth/facebook/callback",
+            apiVersion:   "v21.0"    // optional, defaults to "v21.0"
+        }
+    }
+
+Endpoints:
+
+  * ``GET /apps/auth/oauth/facebook`` — starts the OAuth flow.
+    Accepts an optional ``returnTo`` query parameter.
+  * ``GET /apps/auth/oauth/facebook/callback`` — handles the callback
+    from Facebook.
+
+To set up a Facebook app:
+
+1. Go to `developers.facebook.com <https://developers.facebook.com/>`_.
+2. Create a new app (Consumer type).
+3. Add **Facebook Login** to the app.
+4. Under **Facebook Login > Settings**, add your callback URL to
+   **Valid OAuth Redirect URIs**.
+5. Copy the App ID and App Secret into ``auth-conf.js``.
+6. The app must be in **Live** mode for non-developer users to log in.
+
+Using OAuth on Login Pages
+""""""""""""""""""""""""""
+
+When plugins are loaded, the built-in login page at
+``/apps/auth/login`` automatically shows OAuth buttons for each active
+provider.  For custom login pages, link to the plugin's start endpoint
+with an optional ``returnTo`` parameter:
+
+.. code-block:: html
+
+    <a href="/apps/auth/oauth/google?returnTo=/dashboard">
+        Sign in with Google
+    </a>
+    <a href="/apps/auth/oauth/facebook?returnTo=/dashboard">
+        Sign in with Facebook
+    </a>
+
+OAuth User Records
+""""""""""""""""""
+
+Users created via OAuth have the following properties:
+
+.. code-block:: javascript
+
+    {
+        username:      "google_123456789",  // or "fb_123456789"
+        name:          "Alice Smith",
+        email:         "alice@example.com",
+        picture:       "https://...",       // profile picture URL
+        authMethod:    "google",            // or "facebook"
+        oauthProvider: "google",            // or "facebook"
+        oauthId:       "google:123456789",  // or "facebook:123456789"
+        emailVerified: true,
+        authLevel:     50                   // default level for new users
+    }
+
+On subsequent logins, the user's name, email, picture, and other
+provider data are updated from the provider's response, keeping the
+local record in sync.
+
+Writing a Custom Plugin
+"""""""""""""""""""""""
+
+A plugin is a JavaScript file in ``apps/auth-plugins/`` that exports
+three properties:
+
+.. code-block:: javascript
+
+    // apps/auth-plugins/my-provider.js
+
+    exports.name = "my-provider";
+
+    exports.init = function(conf, api) {
+        // conf is the full auth-conf.js object.
+        // api provides: init(), createUser(), getUser(), updateUser(),
+        //   login(), logout(), generateToken(), getDbPath(),
+        //   getCookieName(), refreshSessions(), createOAuthSession().
+        //
+        // Return true if the plugin should activate, false to skip.
+
+        if (!conf.oauth || !conf.oauth.myProvider) return false;
+
+        // store config, api references for later use
+        return true;
+    };
+
+    exports.endpoints = {
+        // Start endpoint — redirect to provider
+        "/oauth/my-provider": function(req) {
+            var returnTo = (req.query && req.query.returnTo)
+                         ? req.query.returnTo : "/";
+
+            // generate state token, store in LMDB, redirect to provider
+            // ...
+
+            return {
+                status: 302,
+                headers: {"location": providerAuthUrl}
+            };
+        },
+
+        // Callback endpoint — handle provider response
+        "/oauth/my-provider/callback": function(req) {
+            // validate state, exchange code for token, fetch profile
+            // ...
+
+            // return userData — auth.js handles session and cookies
+            return {
+                ok: true,
+                returnTo: savedReturnTo,
+                userData: {
+                    username:      "myprov_" + uniqueId,
+                    name:          "User Name",
+                    email:         "user@example.com",
+                    picture:       "https://...",
+                    authMethod:    "my-provider",
+                    oauthProvider: "my-provider",
+                    oauthId:       "my-provider:" + uniqueId,
+                    emailVerified: true
+                }
+            };
+        }
+    };
+
+The callback endpoint's return value is handled by ``auth.js``:
+
+  * If it has a ``status`` property (e.g., a redirect on error), it is
+    passed through as-is.
+  * If it has ``ok: true`` and ``userData``, ``auth.js`` calls
+    ``createOAuthSession(userData)`` to create or update the user,
+    create the session, and build all cookies (session cookie and
+    display cookie).
+  * If ``ok`` is falsy, the user is redirected to the login page with
+    an error.
+
+The ``userData`` object can contain any properties.  Standard fields
+(``username``, ``name``, ``email``, ``picture``, ``authMethod``,
+``oauthProvider``, ``oauthId``, ``emailVerified``) are recognized by
+``auth.js``; additional fields are stored on the user record and
+appear in ``req.userAuth`` after login.
+
+Hooks for Custom Authentication Flows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The configuration file supports optional callback hooks for extending
 the authentication flow:
@@ -764,12 +1037,6 @@ the authentication flow:
             if (user.twoFactorEnabled)
                 return {redirect: "/apps/auth/2fa?user=" + user.username};
             return true;
-        },
-
-        // Called when a password reset is requested.
-        // Use to send the reset link via email.
-        onPasswordResetRequest: function(user, resetToken, resetUrl) {
-            sendEmail(user.email, "Password Reset", "Click: " + resetUrl);
         },
 
         // Called after a session is created. Use for audit logging.
@@ -813,7 +1080,7 @@ Security Considerations
       and password resets.
 
     * **Email cooldown** — verification and password reset emails are
-      limited to one per username per 5 minutes, preventing email
+      limited to one per username per 60 seconds, preventing email
       bombing regardless of the number of source IPs.
 
     * **Expired record cleanup** — expired sessions, reset tokens,
@@ -826,6 +1093,17 @@ Security Considerations
 
     * **Open redirect protection** — the ``returnTo`` parameter in
       login redirects is validated to be a local path.
+
+    * **OAuth state tokens** — OAuth flows use a random state token
+      stored in LMDB with a 10-minute expiry to prevent CSRF attacks
+      during the authorization redirect.  The token is consumed on
+      first use.
+
+    * **Display cookie** — the optional display cookie is **not**
+      HttpOnly and is readable by client-side JavaScript.  It should
+      contain only non-sensitive display data (name, picture URL).
+      It does not grant authentication — the HttpOnly session cookie
+      is the sole source of auth.
 
     * **Rate limiting** — the server's ``rateLimit`` configuration
       (see :doc:`rampart-server`) can be used to limit requests to
@@ -865,3 +1143,27 @@ Quick Start
 
 7. Edit ``auth-conf.js`` to configure protected paths, session
    expiry, CSRF, and lockout settings.
+
+8. To enable OAuth login, add provider credentials to ``auth-conf.js``:
+
+   .. code-block:: javascript
+
+       oauth: {
+           google: {
+               clientId:     "...",
+               clientSecret: "...",
+               callbackUrl:  "https://yourserver/apps/auth/oauth/google/callback"
+           }
+       }
+
+   Place the corresponding plugin file (e.g., ``google.js``) in
+   ``apps/auth-plugins/`` and restart the server.
+
+9. To show user info on static pages, add a display cookie:
+
+   .. code-block:: javascript
+
+       displayCookie: {
+           cookieName: "rp_user",
+           fields: ["name", "picture"]
+       }
