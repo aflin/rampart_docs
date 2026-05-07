@@ -102,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#getchar">getchar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#readfile">readFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#trim">trim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#minify">minify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stat">stat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#lstat">lstat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#exec">exec</a></li>
@@ -116,6 +117,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#mkdir">mkdir</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rmdir">rmdir</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#readdir">readDir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ziplist">zipList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zipget">zipGet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zipextract">zipExtract</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#copyfile">copyFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rmfile">rmFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#link">link</a></li>
@@ -1017,6 +1021,29 @@ character/byte boundary check.</dd>
 </pre></div>
 </div>
 </div>
+<div class="section" id="minify">
+<h3>minify<a class="headerlink" href="#minify" title="Permalink to this headline">¶</a></h3>
+<p>Minify JavaScript source code by removing unnecessary whitespace, stripping
+comments, and mangling (shortening) local variable names.  Global variables
+and object property names are preserved.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">minified</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">minify</span><span class="p">(</span><span class="nx">src</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">src</span></code> is a <span class="green">String</span> containing JavaScript source code.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">String</span>. The minified JavaScript code.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">src</span> <span class="o">=</span> <span class="s2">&quot;function add(first, second) {\n    return first + second;\n}&quot;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">min</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">minify</span><span class="p">(</span><span class="nx">src</span><span class="p">);</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">&quot;function add(a,b){return a+b;}&quot;</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="stat">
 <h3>stat<a class="headerlink" href="#stat" title="Permalink to this headline">¶</a></h3>
 <p>Return information on a file.</p>
@@ -1500,6 +1527,161 @@ beginning with <code class="docutils literal notranslate"><span class="pre">.</s
 <dt>Return Value:</dt>
 <dd><span class="green">Array</span>.  An <span class="green">Array</span> of <span class="green">Strings</span>, each filename in the directory.</dd>
 </dl>
+</div>
+<div class="section" id="ziplist">
+<h3>zipList<a class="headerlink" href="#ziplist" title="Permalink to this headline">¶</a></h3>
+<p>Read a zip archive’s central directory and return a description of every
+entry.  Does not extract, decompress or modify anything.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">entries</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipList</span><span class="p">(</span><span class="nx">zipPath</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">zipPath</span></code> is a <span class="green">String</span>, the path to a zip file on disk.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first"><span class="green">Object</span>.  Keys are entry names (as stored in the archive,
+so directory entries end with <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code>).  Each value is an
+<span class="green">Object</span> with these properties:</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="17%" />
+<col width="83%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Property</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>size</td>
+<td><span class="green">Number</span>. Uncompressed size in bytes.</td>
+</tr>
+<tr class="row-odd"><td>compressedSize</td>
+<td><span class="green">Number</span>. Stored size in bytes.</td>
+</tr>
+<tr class="row-even"><td>method</td>
+<td><span class="green">Number</span>. Compression method (<code class="docutils literal notranslate"><span class="pre">0</span></code> = stored, <code class="docutils literal notranslate"><span class="pre">8</span></code> = deflate).</td>
+</tr>
+<tr class="row-odd"><td>crc32</td>
+<td><span class="green">Number</span>. CRC-32 of the uncompressed bytes.</td>
+</tr>
+<tr class="row-even"><td>mode</td>
+<td><span class="green">Number</span>. Unix mode bits (file type + permissions).</td>
+</tr>
+<tr class="row-odd"><td>mtime</td>
+<td><span class="green">Date</span>. Modification time (omitted if the entry has none).</td>
+</tr>
+<tr class="row-even"><td>isFile</td>
+<td><span class="green">Boolean</span>. <code class="docutils literal notranslate"><span class="pre">true</span></code> for regular files.</td>
+</tr>
+<tr class="row-odd"><td>isDirectory</td>
+<td><span class="green">Boolean</span>. <code class="docutils literal notranslate"><span class="pre">true</span></code> for directory entries.</td>
+</tr>
+<tr class="row-even"><td>isSymbolicLink</td>
+<td><span class="green">Boolean</span>. <code class="docutils literal notranslate"><span class="pre">true</span></code> for symlink entries.</td>
+</tr>
+<tr class="row-odd"><td>permissions</td>
+<td><span class="green">String</span>. <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">-l</span></code>-style mode string, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;-rw-r--r--&quot;</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<p>Throws if the path is not a readable zip archive.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">e</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipList</span><span class="p">(</span><span class="s2">&quot;/tmp/release.zip&quot;</span><span class="p">);</span>
+<span class="c1">// { &quot;README.md&quot;: { size: 1024, isFile: true, ... },</span>
+<span class="c1">//   &quot;lib/&quot;:      { size: 0,    isDirectory: true, ... },</span>
+<span class="c1">//   &quot;lib/x.js&quot;:  { size: 5120, isFile: true, ... },</span>
+<span class="c1">//   ... }</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">name</span> <span class="k">in</span> <span class="nx">e</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">[</span><span class="nx">name</span><span class="p">].</span><span class="nx">isFile</span><span class="p">)</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">e</span><span class="p">[</span><span class="nx">name</span><span class="p">].</span><span class="nx">size</span><span class="p">,</span> <span class="s2">&quot;bytes&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="zipget">
+<h3>zipGet<a class="headerlink" href="#zipget" title="Permalink to this headline">¶</a></h3>
+<p>Read one entry from a zip archive into a <span class="green">Buffer</span>.  The entry is
+decompressed if it was stored with deflate.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipGet</span><span class="p">(</span><span class="nx">zipPath</span><span class="p">,</span> <span class="nx">entryName</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">zipPath</span></code> is a <span class="green">String</span> (path to the zip file on disk) and
+<code class="docutils literal notranslate"><span class="pre">entryName</span></code> is a <span class="green">String</span> naming an entry as it appears in
+<code class="docutils literal notranslate"><span class="pre">zipList()</span></code>’s output.  Symbolic-link entries are followed; the returned
+buffer is the contents of the link’s final target inside the archive.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Buffer</span>.  The uncompressed contents of the named entry.</dd>
+</dl>
+<p>Throws if the zip cannot be opened, the entry is missing, the entry uses
+an unsupported compression method, or a symlink chain cannot be resolved.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipGet</span><span class="p">(</span><span class="s2">&quot;/tmp/release.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;README.md&quot;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">bufferToString</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="zipextract">
+<h3>zipExtract<a class="headerlink" href="#zipextract" title="Permalink to this headline">¶</a></h3>
+<p>Extract some or all of a zip archive’s entries to a destination directory
+on disk.  File modes, modification times and symbolic links are preserved.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipExtract</span><span class="p">(</span><span class="nx">zipPath</span><span class="p">,</span> <span class="nx">destPath</span> <span class="p">[,</span> <span class="nx">entries</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">zipPath</span></code> – <span class="green">String</span>. The zip file on disk.</li>
+<li><code class="docutils literal notranslate"><span class="pre">destPath</span></code> – <span class="green">String</span>. The destination directory.  It and any
+intermediate directories implied by entry names will be created as
+needed.</li>
+<li><code class="docutils literal notranslate"><span class="pre">entries</span></code> – <span class="green">Array</span> of <span class="green">Strings</span>, optional.  If
+omitted (or <code class="docutils literal notranslate"><span class="pre">undefined</span></code> / <code class="docutils literal notranslate"><span class="pre">null</span></code>), every entry is extracted.
+If supplied, only entries whose name matches one of the listed
+names is extracted.  Names ending in <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> match every entry in
+that directory tree; bare names match exactly.</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Number</span>.  The count of entries actually written to disk.</dd>
+</dl>
+<p>Notes:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Path traversal is blocked: an entry name containing <code class="docutils literal notranslate"><span class="pre">..</span></code> segments
+that would resolve outside <code class="docutils literal notranslate"><span class="pre">destPath</span></code> is rejected.</li>
+<li>Symlinks are extracted as real symlinks (<code class="docutils literal notranslate"><span class="pre">symlink(target,</span> <span class="pre">path)</span></code>);
+the link target is taken verbatim from the archive without further
+validation.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chmod</span></code> and <code class="docutils literal notranslate"><span class="pre">utimensat</span></code> failures during metadata fixup are
+silently ignored so a bulk extract is not aborted by a single
+unprivileged operation.</li>
+</ul>
+</div></blockquote>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// unpack the entire archive</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipExtract</span><span class="p">(</span><span class="s2">&quot;/tmp/release.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;/opt/myapp/&quot;</span><span class="p">);</span>
+
+<span class="c1">// unpack just two specific files</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipExtract</span><span class="p">(</span><span class="s2">&quot;/tmp/release.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;/tmp/cfg/&quot;</span><span class="p">,</span>
+                         <span class="p">[</span><span class="s2">&quot;README.md&quot;</span><span class="p">,</span> <span class="s2">&quot;etc/default.conf&quot;</span><span class="p">]);</span>
+
+<span class="c1">// unpack everything under &quot;templates/&quot;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">zipExtract</span><span class="p">(</span><span class="s2">&quot;/tmp/release.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;/var/www/&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;templates/&quot;</span><span class="p">]);</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The bundle feature exposes three additional functions –
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadList()</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadGet(name)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadExtract(name|nameArray|null,</span> <span class="pre">destDir)</span></code> – which
+operate on the zip archive appended to <code class="docutils literal notranslate"><span class="pre">rampart</span></code> itself rather than
+on a zip file on disk.  See
+<a class="reference internal" href="rampart-extras.html#single-file-bundles"><span class="std std-ref">Single-File Bundles</span></a>.</p>
+</div>
 </div>
 <div class="section" id="copyfile">
 <h3>copyFile<a class="headerlink" href="#copyfile" title="Permalink to this headline">¶</a></h3>

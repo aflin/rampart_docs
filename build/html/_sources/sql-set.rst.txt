@@ -1295,6 +1295,97 @@ likepIndexThresh
     high-ranking hits.
 
 
+Vector Index Properties
+~~~~~~~~~~~~~~~~~~~~~~~
+
+These settings affect ``LIKEV`` queries against an
+:ref:`INDEX_VEC <sql:Vector Indexes>` (the ANN vector index).
+The ``likeV*`` properties mirror the corresponding ``likeP*`` properties
+for the LIKEP / Metamorph search path.
+
+The same value-form rules from the chapter intro apply: in tsql write
+``set name=value;`` with numbers; in JavaScript write
+``sql.set({name: value})``.
+
+
+likevRows
+"""""""""
+    Caps the number of candidate rows that the vec index returns to
+    the SQL layer in response to a ``LIKEV`` query (default ``1000``).
+    Mirrors :ref:`likepRows <sql-set:likepRows>` for vector search.
+
+    The candidate pool is the working set the SQL planner then filters
+    via any additional ``WHERE`` clauses and (optionally) re-ranks with
+    full-precision ``vecdist()``. A larger pool gives better recall
+    and a higher ceiling for re-rank quality, at the cost of more work
+    per query; a smaller pool is faster but may drop relevant hits.
+
+    Typical pattern when re-ranking with ``vecdist()``: set
+    ``likevRows`` to several times the desired final ``maxRows`` so
+    the re-rank step has enough candidates to choose from. Setting to
+    ``0`` is reserved and currently treated as the default.
+
+
+likevEf
+"""""""
+    **HNSW only.**  Per-query graph expansion factor — the
+    search-time recall/latency knob for HNSW indexes.  Default ``0``,
+    which leaves the index's build-time ``vec_efc`` setting in
+    effect.  A higher value increases recall at the cost of search
+    time; a lower value (down to a small fraction of ``vec_efc``)
+    trades recall for speed.
+
+    Useful when the same index is served at different recall/latency
+    points — for example, a low ``likevEf`` for autocomplete-style
+    first-pass scoring and a higher ``likevEf`` for the final ranked
+    list.
+
+
+likevPqNprobe
+"""""""""""""
+    **IVFPQ only.**  Per-query number of inverted-list clusters
+    scanned by an IVFPQ index — the IVFPQ analog of ``likevEf``.
+
+    Accepts an integer, or the literal string ``'auto'`` (the default).
+    In ``auto`` mode nprobe scales with the index's ``nlist`` as
+    ``max(8, nlist/128)``.  This produces empirically-good recall
+    across corpus sizes — at the default nlist=32768 (≈ 46M-row
+    indexes), auto resolves to nprobe=256, scanning ~0.78% of cells.
+
+    Concrete auto-mode resolutions:
+
+    +------------+----------+----------------------+
+    | nlist      | nprobe   | fraction of cells    |
+    +============+==========+======================+
+    | 256        | 8        | 3.1 %                |
+    +------------+----------+----------------------+
+    | 1024       | 8        | 0.78 %               |
+    +------------+----------+----------------------+
+    | 4096       | 32       | 0.78 %               |
+    +------------+----------+----------------------+
+    | 16384      | 128      | 0.78 %               |
+    +------------+----------+----------------------+
+    | 32768      | 256      | 0.78 %               |
+    +------------+----------+----------------------+
+    | 65536      | 512      | 0.78 %               |
+    +------------+----------+----------------------+
+
+    Higher = more candidates considered = better recall, at the cost
+    of more PQ-ADC work per query.  Capped at the index's
+    ``vec_pq_nlist`` (scanning every cluster is a full sealed-set
+    scan).
+
+    For most queries ``auto`` is correct.  Override with an explicit
+    integer when you specifically want trade more recall for less
+    latency (e.g. ``set likevpqnprobe=64`` for an interactive UI), or
+    more recall for more latency (``set likevpqnprobe=512``).  Setting
+    to a value > nlist is silently capped.
+
+    Pair with ``vecdist()`` re-rank (see
+    :ref:`Querying with LIKEV <rampart-sql:Querying with LIKEV>`)
+    to recover near-exact recall on top of the wider candidate pool.
+
+
 Indexing properties
 ~~~~~~~~~~~~~~~~~~~
 

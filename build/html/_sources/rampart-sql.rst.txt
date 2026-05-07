@@ -13,6 +13,19 @@ License
 Use of the ``rampart-sql`` module and the Texis library is governed by the
 `Rampart Source Available License <https://github.com/aflin/rampart/blob/main/LICENSE-rsal.txt>`_\ .
 
+Vector Index Acknowledgment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``CREATE VECTOR INDEX`` feature in ``rampart-sql`` is backed by two
+embedded engines:
+
+* `usearch <https://github.com/unum-cloud/usearch>`_, an HNSW
+  vector search engine by Ash Vardanian and Unum, used under the
+  `Apache License 2.0 <https://github.com/unum-cloud/usearch/blob/main/LICENSE>`_.
+* `FAISS <https://github.com/facebookresearch/faiss>`_, the IVFPQ
+  inverted-list / product-quantization index from Meta, used under the
+  `MIT License <https://github.com/facebookresearch/faiss/blob/main/LICENSE>`_.
+
 What does it do?
 ~~~~~~~~~~~~~~~~
 
@@ -257,6 +270,51 @@ The use of Parameters can make the handling of user input safe from
 `SQL injection <https://en.wikipedia.org/wiki/SQL_injection>`_\ .
 Note that if there is only one parameter, it still must be contained in an
 :green:`Array` or :green:`Object`.
+
+.. _sqllist:
+
+Sql.list() - IN-list parameters
+'''''''''''''''''''''''''''''''
+
+To bind a JavaScript :green:`Array` of values as a SQL ``IN (?)`` list,
+wrap it with ``Sql.list()``.  The wrapper carries an explicit signal
+that the parameter should be expanded into a list rather than treated
+as a single scalar:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+    var sql = new Sql.connection("./mytestdb");
+
+    /* numeric IN against an int or double column */
+    var res = sql.exec(
+        "select * from employees where Id in (?)",
+        [ Sql.list([101, 205, 309]) ]
+    );
+
+    /* string IN against a varchar column */
+    var res = sql.exec(
+        "select * from employees where Name in (?)",
+        [ Sql.list(["Alice", "Bob", "Carol"]) ]
+    );
+
+The argument to ``Sql.list()`` must be a non-empty :green:`Array` whose
+elements are **all** :green:`Numbers` or **all** :green:`Strings`.  Mixed
+types, ``NaN``, ``Infinity``, ``null``, or :green:`Boolean` values throw
+an error at the ``Sql.list()`` call.
+
+Numeric lists are bound as a SQL ``DOUBLE`` array; the underlying
+column may be any numeric type (``int``, ``int64``, ``uint64``,
+``double``, etc.) and Texis will convert at compare time.  String lists
+are bound as a Texis ``strlst`` (string list); ``WHERE varchcol IN (?)``
+matches when the column value is one of the strings in the list.
+
+.. note::
+    Values outside the JavaScript safe-integer range (``±2``\ :sup:`53`\ )
+    have already lost precision in JavaScript before reaching
+    ``Sql.list()``.  For exact comparisons against ``int64``/``uint64``
+    columns with values larger than 2\ :sup:`53`, pass the values as
+    :green:`Strings`: ``Sql.list(["9007199254740993", ...])``.
 
 .. _execopts:
 
@@ -1244,6 +1302,191 @@ Note:
 
 See also: :ref:`The addtable command line utility <sql-utils:The addtable Command Line Utility>`.
 
+Column Data Types
+-----------------
+
+Texis supports a broad set of column types. The summary below covers the
+types most commonly used from Rampart applications. For the full reference
+including precision, range, and conversion rules, see the
+`Texis data types documentation <https://docs.thunderstone.com/site/texisman/command_discussion-11.html>`_\ .
+
+A note on the ``var`` prefix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For most types, prefixing the type name with ``var`` makes it variable
+length. The size parameter behaves differently in each form:
+
+* On a fixed-length type — ``char(N)``, ``byte(N)`` — ``N`` is the
+  exact per-row size. Shorter values are padded; longer values are
+  truncated.
+* On a variable-length type — ``varchar(N)``, ``varbyte(N)``,
+  ``varlong(N)``, ``varint64(N)``, ``varuint64(N)`` — ``N`` is a
+  *hint*, not a limit. It controls only the initial in-memory
+  buffer size allocated for the field when rows are read; if an
+  incoming row's data exceeds ``N``, the buffer is resized
+  automatically. ``N`` does not affect on-disk storage (values are
+  always stored at their actual length), and inserts are never
+  rejected for exceeding it.
+
+  Practical guidance: pick ``N`` close to the *typical* (not
+  maximum) row size. Setting it too small wastes CPU on
+  reallocations during row reads; setting it too large wastes RAM
+  on oversized buffers in memory.
+
+For vector types, ``vec*`` and ``varvec*`` are aliases that both
+resolve to the same variable-length representation internally; the
+``(N)`` size parameter is parsed but advisory.
+
+Character and text
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - ``char(N)`` / ``character(N)``
+     - Fixed-length character data, exactly N bytes per row.
+   * - ``varchar(N)``
+     - Variable-length text; N is a typical-size hint, not a limit.
+   * - ``strlst``
+     - Delimiter-separated string list; supports set-style operators in SQL.
+
+Binary and blob
+~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - ``byte(N)``
+     - Fixed-length binary, exactly N bytes per row.
+   * - ``varbyte(N)``
+     - Variable-length binary; N is a typical-size hint, not a limit.
+   * - ``blob``
+     - Binary Large Object stored out-of-line; for large text, images, audio.
+   * - ``blobz``
+     - Compressed BLOB variant.
+   * - ``indirect``
+     - Stores a filename; the actual data lives outside the database.
+
+Integer
+~~~~~~~
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - ``smallint``
+     - 16-bit signed; range ±32,767.
+   * - ``int`` / ``integer``
+     - 32-bit signed; range ±2,147,483,647.
+   * - ``long``
+     - Platform-native long (typically 32- or 64-bit signed).
+   * - ``varlong(N)``
+     - Variable-length encoding of ``long``; N is a size hint.
+   * - ``int64``
+     - 64-bit signed.
+   * - ``varint64(N)``
+     - Variable-length encoding of ``int64``; N is a size hint.
+   * - ``uint64``
+     - 64-bit unsigned.
+   * - ``varuint64(N)``
+     - Variable-length encoding of ``uint64``; N is a size hint.
+   * - ``word`` / ``dword``
+     - 16-bit / 32-bit unsigned.
+
+Floating point
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - ``float``
+     - 32-bit IEEE-754 single-precision.
+   * - ``double``
+     - 64-bit IEEE-754 double-precision.
+
+Date and time
+~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - ``date``
+     - Seconds since 1970-01-01 UTC; accepts most date/time string forms on insert.
+   * - ``datestamp``
+     - Date-only stamp.
+   * - ``timestamp``
+     - Date+time stamp.
+   * - ``datetime``
+     - Higher-resolution date+time.
+
+Identifier and special
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 22 78
+   :header-rows: 1
+
+   * - Type
+     - Description
+   * - ``counter``
+     - 8-byte unique row identifier combining a timestamp and a sequence.
+   * - ``counteri``
+     - Indirect/secondary counter.
+   * - ``recid``
+     - Internal row identifier.
+
+Vector
+~~~~~~
+
+Vector types store an ordered sequence of numeric elements. They power
+``LIKEV`` similarity queries and ``CREATE VECTOR INDEX`` (see
+:ref:`CREATE VECTOR INDEX <sql-utils:CREATE VECTOR INDEX>`).
+
+.. list-table::
+   :widths: 28 14 58
+   :header-rows: 1
+
+   * - Type
+     - Element width
+     - Description
+   * - ``varvecF64`` / ``vecF64``
+     - 8 bytes (f64)
+     - High-precision research / scientific use.
+   * - ``varvecF32`` / ``vecF32``
+     - 4 bytes (f32)
+     - Natural precision; no quantization loss.
+   * - ``varvecF16`` / ``vecF16``
+     - 2 bytes (f16)
+     - Most embedding pipelines (llama.cpp, OpenAI Ada, etc.).
+   * - ``varvecBf16`` / ``vecBf16``
+     - 2 bytes (bf16)
+     - TPU / Google-style pipelines.
+   * - ``varvecI8`` / ``vecI8``
+     - 1 byte (i8)
+     - Reserved; indexing not yet enabled.
+   * - ``varvecU8`` / ``vecU8``
+     - 1 byte (u8)
+     - Reserved; indexing not yet enabled.
+
+A vector value can also be stored in a ``byte(N)`` or ``varbyte(N)``
+column as raw bytes; in that case ``CREATE VECTOR INDEX`` requires
+``WITH vec_dtype '<dtype>'`` so the index knows how to interpret the
+bytes.
+
 Database Indexing
 -----------------
 
@@ -1557,8 +1800,13 @@ Then adding a crontab entry like the following would execute the script at 2 am 
 scheduleUpdate()
 """"""""""""""""
 
-Auto Maintenance (currently experimental) of a text index is accomplished by scheduling a time
-for an index update using ``sql.scheduleUpdate()``.
+Auto Maintenance (currently experimental) of a fulltext or vector index is accomplished by
+scheduling a time for an ``OPTIMIZE`` pass using ``sql.scheduleUpdate()``.
+
+For vector indexes, ``OPTIMIZE`` folds accumulated inserts/updates from the delta tier
+back into the sealed index but does not retrain quantizers or rebuild the graph.  To
+schedule a full rebuild (e.g. when IVFPQ codebooks have drifted relative to the
+embedding distribution), use ``scheduleRebuild()`` below.
 
 Usage:
 
@@ -1583,8 +1831,10 @@ Where:
       If a :green:`String`, it will parse plain English values in minutes, hours, days or weeks.
       (i.e. "every third day" or "120 minutes");
 
-    * ``minRows``, is an optional :green:`Number` (default ``1000``), the threshold number of changed, deleted or added rows
-      needed to trigger an index rebuild when checked.
+    * ``minRows`` is an optional :green:`Number`, the threshold number of changed, deleted, or
+      added rows needed to trigger an index update when checked.  Default is ``1000`` for
+      fulltext indexes and ``10000`` for vector indexes (vector ``OPTIMIZE`` rewrites the
+      sealed index file, so a larger delta amortizes the cost better).
 
 Return Value:
 
@@ -1596,40 +1846,86 @@ Note:
 
     * If ``startTime`` is set to ``-1``, the record for the index is deleted.
 
-    * The index schedule is saved in a new table ``SYSUPDATE`` in the database in question.
+    * The schedule is saved in the ``SYSUPDATE`` table in the database in question.
 
     * The first time an index is scheduled for update on a database, an index monitor process is launched.
-      
+
     * The monitor for a database is also checked and relaunched if necessary every time ``new Sql.connection(database)``
       is called.
 
-    * If ``sql.scheduleUpdate`` is never run for a text index, the index will not be touched by
-      the  monitor process (i.e. in cases where the table/index is never or rarely updated, or 
+    * If ``sql.scheduleUpdate`` is never run for an index, the index will not be touched by
+      the monitor process (i.e. in cases where the table/index is never or rarely updated, or
       another method such as a cron job is used instead).
 
-    * Status and progress can be viewed in the relevant row in ``SYSUPDATE`` table. Columns ``PREVIOUS``
-      and ``LAST`` show the times of the next and previous start times (seconds from UNIX EPOCH).
-      ``PROGRESS`` is a ``double`` with value of ``0`` to ``1``.  ``STATUS`` is ``0`` for not currently
-      updating and ``1`` to ``3`` for the three stages needed to update a text index.  Indexing is complete
-      when ``STATUS`` is ``3`` and ``PROGRESS`` is ``1``, at which time ``STATUS`` will be reset to ``0``.
+    * Status and progress can be viewed in the relevant row of the ``SYSUPDATE`` table.
+      Useful columns:
+
+      * ``PREVIOUS`` and ``NEXT``: UNIX-epoch seconds for the previous and next scheduled run.
+      * ``ACTION``: ``OPTIMIZE`` or ``REBUILD`` for the in-progress operation; empty when idle.
+      * ``STAGE`` and ``NSTAGES``: current stage number and total stages for the in-progress
+        operation.  Stage count varies by index type (fulltext and HNSW: 3 stages;
+        IVFPQ ``REBUILD``: 4 stages).  When idle both are ``0``.
+      * ``STAGENAME``: human-readable label for the current stage (e.g. ``"indexing"``,
+        ``"training PQ subquantizers"``, ``"encoding"``).
+      * ``PROGRESS``: a ``double`` between ``0`` and ``1`` showing fractional progress within
+        the current stage.  Reported regardless of whether ``indexmeter`` was set on the
+        index.
+      * ``COMMENTS``: ``"completed at <timestamp>"`` on success, the error message on
+        failure, or ``"skipped: HAVING condition not met (NewRows = N)"`` when the
+        ``minRows`` gate short-circuited the run.
 
 Example viewing progress:
 
 .. code-block:: shell
 
-   tsql -d wdb "select convert(PREVIOUS, 'date') LAST, convert(NEXT, 'date') NEXT, STATUS, PROGRESS from SYSUPDATE where NAME='wtext_Text_ftx'"
+   tsql -d wdb "select convert(PREVIOUS, 'date') LAST, convert(NEXT, 'date') NEXT, ACTION, STAGE, NSTAGES, STAGENAME, PROGRESS from SYSUPDATE where NAME='wtext_Text_ftx'"
 
-       LAST         NEXT        STATUS      PROGRESS  
-   ------------+------------+------------+------------+
-   2024-08-10 00:00:02 2024-08-11 00:00:00            2     0.759494
+       LAST                NEXT          ACTION      STAGE   NSTAGES   STAGENAME    PROGRESS
+   -------------------+-------------------+----------+--------+---------+-----------+----------+
+   2026-05-04 02:00:02 2026-05-05 02:00:00 OPTIMIZE        2         3 indexing       0.759
 
    #when done:
 
-   tsql -d wdb "select convert(PREVIOUS, 'date') LAST, convert(NEXT, 'date') NEXT, STATUS, PROGRESS from SYSUPDATE where NAME='wtext_Text_ftx'"
+   tsql -d wdb "select convert(PREVIOUS, 'date') LAST, convert(NEXT, 'date') NEXT, ACTION, STAGE, NSTAGES, PROGRESS, COMMENTS from SYSUPDATE where NAME='wtext_Text_ftx'"
 
-       LAST         NEXT        STATUS      PROGRESS  
-   ------------+------------+------------+------------+
-   2024-08-11 00:00:32 2024-08-12 00:00:00            0     1
+       LAST                NEXT          ACTION   STAGE   NSTAGES   PROGRESS    COMMENTS
+   -------------------+-------------------+--------+--------+---------+----------+----------------------------+
+   2026-05-05 02:00:32 2026-05-06 02:00:00              0         0          0   completed at 2026-05-05 02:00:32
+
+
+scheduleRebuild()
+"""""""""""""""""
+
+Like ``scheduleUpdate()``, but schedules a full ``REBUILD`` instead of an ``OPTIMIZE``.
+
+Primarily useful for IVFPQ vector indexes, whose codebooks (k-means centroids and PQ
+subquantizers) become stale relative to the embedding distribution as new rows
+accumulate.  ``REBUILD`` retrains the codebooks from a reservoir sample of the current
+table, re-encodes every row, and atomically swaps in the new index.
+
+For HNSW vector indexes, ``REBUILD`` re-encodes from scratch (no codebooks involved,
+but it can be useful to compact the on-disk graph after heavy churn).
+
+For fulltext indexes, ``REBUILD`` is unusual — ``OPTIMIZE`` is generally sufficient.
+
+Usage:
+
+.. code-block:: javascript
+
+    sql.scheduleRebuild(indexName, startTime, Interval [,minRows]);
+
+Arguments and return value are identical to ``scheduleUpdate()``.
+
+Note:
+
+    * Each index has at most one schedule at a time; calling ``scheduleRebuild()`` after
+      ``scheduleUpdate()`` on the same index replaces the prior schedule (and vice versa).
+
+    * ``REBUILD`` is significantly more expensive than ``OPTIMIZE`` (it retrains and
+      re-encodes the full table).  A higher ``minRows`` threshold is recommended.
+
+    * Progress is reported via the same ``SYSUPDATE`` columns as ``scheduleUpdate()``;
+      the ``ACTION`` column will read ``REBUILD`` instead of ``OPTIMIZE``.
 
 Compound Indexes
 ~~~~~~~~~~~~~~~~
@@ -1651,6 +1947,390 @@ The following could be used to create a Compound Index on the appropriate fields
 
     CREATE FULLTEXT INDEX employees_NameBio_Start_date_cx ON
     employees(Name\Bio, Start_date);
+
+Vector Indexes
+~~~~~~~~~~~~~~
+
+A Vector Index is an Approximate-Nearest-Neighbor (ANN) index over a
+vector column, used to accelerate the SQL ``LIKEV`` operator for top-K
+similarity search.  Two backends are available:
+
+* **IVFPQ** (default) — FAISS inverted-list + product-quantization
+  index.  Mmap-backed (scales beyond RAM); needs ~10,000 rows
+  minimum to train; lossy approximation typically recovered with a
+  ``vecdist()`` re-rank pass.
+* **HNSW** — usearch graph index.  In-RAM; no minimum size; near-exact
+  distances out of the box.
+
+See `Choosing a backend`_ below for when each is appropriate.
+
+Per-row ``INSERT``, ``UPDATE``, and ``DELETE`` automatically update
+the index.  Search-time consistency is maintained without per-row
+``save_atomic`` cost via a small newrec / tombstone btree pair next
+to the sealed index; see `Maintenance`_ for the periodic OPTIMIZE
+step that folds those back in.
+
+Quick start
+""""""""""""
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+    var sql = new Sql.connection('/path/to/db', true);
+
+    sql.exec("create table emb (id int, v varvecF16(384));");
+    for (var i = 0; i < rows.length; i++)
+        sql.exec("insert into emb values (?, ?);",
+                 [rows[i].id, embed_text(rows[i].text)]);
+
+    // Default backend is IVFPQ (needs >= ~10k rows).  For small
+    // tables, force HNSW: WITH backend 'hnsw'
+    sql.exec("create vector index emb_vec on emb (v);");
+
+    // Top-10 nearest neighbors.  vecdist() re-rank lifts IVFPQ recall.
+    var hits = sql.exec(
+        "select id, vecdist(v, ?) d from emb where v likev ? " +
+        "order by 2 desc;",
+        [query_vec, query_vec], 10);
+
+The supported column types for the vector data are listed in
+`Column Data Types`_.  Typed ``varvec*`` columns auto-detect their
+dimensionality; ``byte`` and ``varbyte`` columns require
+``WITH vec_dtype '<dtype>'``.
+
+Choosing a backend
+""""""""""""""""""
+
+.. list-table::
+   :widths: 25 35 40
+   :header-rows: 1
+
+   * -
+     - HNSW
+     - IVFPQ
+   * - Minimum table size
+     - none
+     - ~10,000 rows (training floor)
+   * - On-disk size
+     - large (full vectors + graph)
+     - moderate (PQ codes in a preallocated container; see note below)
+   * - In-RAM footprint
+     - full graph resident
+     - mmap; kernel-paged
+   * - Native recall
+     - near-exact
+     - lossy; pair with ``vecdist()`` re-rank
+   * - Scales beyond RAM
+     - no
+     - yes
+   * - Distribution-shift sensitivity
+     - none
+     - codebooks need REBUILD if data shifts
+   * - Default
+     - opt-in via ``WITH backend 'hnsw'``
+     - default for new ``CREATE VECTOR INDEX``
+
+Rule of thumb for ``all-MiniLM-L6-v2``-class 384-dim vectors: skip
+the index entirely below ~2,000 rows (brute force is fine), HNSW
+between ~2k and ~10k rows, IVFPQ above that.
+
+Creating a Vector Index
+""""""""""""""""""""""""
+
+.. code-block:: sql
+
+    CREATE VECTOR INDEX <index_name> ON <table>(<column>)
+        [ WITH <option> [<option> ...] ]
+    ;
+
+``CREATE VEC INDEX`` is accepted as a shortcut.  The ``WITH`` clause
+accepts the options below.  Re-running ``CREATE VECTOR INDEX`` on an
+existing index of the same table+column is silently treated as
+``ALTER INDEX … OPTIMIZE`` (mirroring fulltext); WITH options other
+than ``indexmeter`` are ignored on re-CREATE.
+
+Common options (both backends):
+
+.. list-table::
+   :widths: 22 28 14 36
+   :header-rows: 1
+
+   * - option
+     - values
+     - default
+     - meaning
+   * - ``backend``
+     - ``'hnsw'``, ``'ivfpq'`` (aliases ``'usearch'``, ``'faiss'``)
+     - ``'ivfpq'``
+     - Selects backend.
+   * - ``vec_metric``
+     - ``'dot'``, ``'l2'`` (also ``'ip'`` / ``'inner'``)
+     - ``'dot'``
+     - For cosine similarity, store unit-normalized vectors and use
+       ``'dot'``.
+   * - ``vec_dtype``
+     - ``'f64'``, ``'f32'``, ``'f16'``, ``'bf16'``, ``'i8'``, ``'u8'``
+     - matches column
+     - Required on ``byte``/``varbyte`` columns.  On typed
+       ``varvec*`` columns it overrides the column's element type
+       (HNSW only — IVFPQ uses its own PQ quantization regardless).
+   * - ``indexmeter``
+     - ``'on'``, ``'off'``, ``'always'``, ...
+     - process default
+     - Build-time progress meter.  Also honored on
+       ``ALTER INDEX OPTIMIZE`` / ``REBUILD`` and on re-CREATE.
+
+HNSW-only options:
+
+.. list-table::
+   :widths: 22 28 14 36
+   :header-rows: 1
+
+   * - option
+     - values
+     - default
+     - meaning
+   * - ``vec_m``
+     - integer in ``[4, 1024]``
+     - 64
+     - Graph connectivity (max neighbors per node).
+   * - ``vec_efc``
+     - integer in ``[8, 4096]``
+     - 128
+     - Expansion factor at construction.
+   * - ``vec_scale``, ``vec_zero_point``, ``vec_calibrate``
+     - see below
+     - see below
+     - i8/u8 quantization controls.  See `i8 / u8 quantized indexes`_.
+
+IVFPQ-only options:
+
+.. list-table::
+   :widths: 22 28 14 36
+   :header-rows: 1
+
+   * - option
+     - values
+     - default
+     - meaning
+   * - ``vec_pq_nlist``
+     - integer ``>= 4`` (no upper cap when set explicitly)
+     - auto from row count: ``round_pow2(4·sqrt(N))``,
+       clamped to ``[64, 65536]``
+     - Number of inverted-list (coarse) clusters.  Powers of two are
+       conventional but not required when set explicitly.  The
+       auto-formula clamp is a sane-default ceiling, not a hard limit
+       — set a larger value with ``WITH vec_pq_nlist N`` if you need
+       it.
+   * - ``vec_pq_m``
+     - integer multiple of 4, in ``[8, 96]``
+     - auto: ``round4(dim/8)`` (e.g. 48 for dim=384)
+     - PQ subquantizers — bytes per row in the sealed segment.
+   * - ``vec_pq_nbits``
+     - 8
+     - 8
+     - Bits per PQ code.  Only ``8`` is supported in v1.
+   * - ``vec_pq_target_rows``
+     - positive integer
+     - 0 (use current row count)
+     - Hint for the auto-tuner when you intend to grow the table.
+   * - ``vec_pq_min_points_per_centroid``
+     - integer in ``[1, 39]``
+     - 39
+     - Lower values let the index build on smaller tables (each
+       centroid trains on fewer points; recall suffers).  Mostly a
+       test knob.
+
+Examples:
+
+.. code-block:: sql
+
+    -- Default (IVFPQ): tens of thousands of rows or more
+    CREATE VECTOR INDEX emb_vec ON emb (v);
+
+    -- HNSW for a smaller table; near-exact recall
+    CREATE VECTOR INDEX emb_vec ON emb (v) WITH backend 'hnsw';
+
+    -- IVFPQ with explicit shape (override the auto-tuner)
+    CREATE VECTOR INDEX emb_vec ON emb (v)
+        WITH backend 'ivfpq' vec_pq_nlist 1024 vec_pq_m 32;
+
+    -- HNSW, smaller graph
+    CREATE VECTOR INDEX emb_vec ON emb (v)
+        WITH backend 'hnsw' vec_m 32 vec_efc 256;
+
+    -- HNSW with i8 quantization
+    CREATE VECTOR INDEX emb_vec ON emb (v)
+        WITH backend 'hnsw' vec_dtype 'i8' vec_calibrate 'auto';
+
+    -- byte / varbyte column with explicit dtype
+    CREATE VECTOR INDEX emb_vec ON emb (v) WITH vec_dtype 'f16';
+
+i8 / u8 quantized indexes
+"""""""""""""""""""""""""
+
+**HNSW only.**  IVFPQ does its own product quantization (8-bit codes
+per subquantizer) regardless of column dtype — the ``vec_dtype``
+option is ignored for IVFPQ on typed ``varvec*`` columns.
+
+For HNSW workloads where the column stores full-precision vectors
+(``varvecF32``, ``varvecF16``, etc.) but the *index* should be
+smaller, use ``vec_dtype 'i8'`` (or ``'u8'``).  The column data
+stays at its declared precision; the index quantizes each vector to
+one byte per element on the way in.
+
+Default calibration is symmetric for ``i8``
+(``vec_scale = 1/127``, ``vec_zero_point = 0``) and
+asymmetric-centered for ``u8`` (``vec_scale = 1/127``,
+``vec_zero_point = 128``).  Both fit L2-normalized vectors in
+``[-1, 1]`` exactly.  For unnormalized data, either pass explicit
+``vec_scale`` and ``vec_zero_point`` (quote negative integers, e.g.
+``vec_zero_point '-10'``), or add ``vec_calibrate 'auto'`` to derive
+them from a pre-scan at build time.
+
+Native ``varvecI8`` / ``varvecU8`` columns are indexable directly;
+no conversion happens.
+
+Querying with LIKEV
+""""""""""""""""""""
+
+Basic top-K:
+
+.. code-block:: sql
+
+    SELECT id, $rank
+      FROM emb
+     WHERE v LIKEV ?
+     ORDER BY 2 DESC;
+
+* ``$rank`` is the per-row score, scaled to ``[-100000, 100000]``.
+  With unit-norm vectors the practical range is ``[0, 100000]``.
+* Use the ``maxRows`` parameter of ``exec()`` to retrieve top-K.
+* If the planner can't use the index — wrong column type, dimension
+  mismatch, or no index present — it falls back to brute force.
+  Results are identical, just slower.
+
+For IVFPQ (and any case where you want exact ranking on top of an
+approximate candidate set), pair ``LIKEV`` with ``vecdist()`` for a
+re-rank pass:
+
+.. code-block:: sql
+
+    SELECT id, vecdist(v, ?) d
+      FROM emb
+     WHERE v LIKEV ?
+     ORDER BY 2 DESC;
+
+``LIKEV`` returns up to :ref:`likevRows <sql-set:likevRows>`
+candidates (default 1000); ``ORDER BY vecdist(...) DESC`` re-ranks
+them at full precision.  This recovers near-exact recall on IVFPQ
+while still avoiding a full-table scan.  On HNSW the re-rank is
+usually unnecessary (native recall is already near-exact) but
+harmless.
+
+Vector predicates may be combined with regular ``WHERE`` clauses:
+
+.. code-block:: sql
+
+    SELECT id, $rank, label
+      FROM emb
+     WHERE v LIKEV ?
+       AND label = 'animal'
+     ORDER BY 2 DESC;
+
+The vector predicate uses the index; other predicates filter the
+returned candidates.
+
+INSERT, UPDATE, DELETE
+"""""""""""""""""""""""
+
+A vector index participates in the standard SQL update path:
+
+* ``INSERT`` adds the row's recid to a small ``_T.btr`` (newrec)
+  alongside the sealed index.  Searches consult both transparently.
+* ``DELETE`` adds the row's recid to ``_del.btr`` (tombstone).
+* ``UPDATE`` is delete+insert; the new vector lands in ``_T.btr``,
+  the old recid is tombstoned.
+
+Per-row mutations are durable on commit (no per-row rewrite of the
+sealed index file).  Over time the newrec/tombstone btrees grow and
+search latency drifts up; ``ALTER INDEX … OPTIMIZE`` folds them back
+into sealed.  See `Maintenance`_.
+
+A note on type matching: a typed ``varvec*`` column requires the
+inserted ``rampart.vector`` to be of the matching dtype.  The vector
+object's :ref:`conversion methods <rampart-vector:Vector Object Conversion Functions>`
+(``.toF32()``, ``.toF16()``, etc.) make the adjustment explicit:
+
+.. code-block:: javascript
+
+    var v = new rampart.vector('f16', [...]);
+    sql.exec("insert into emb values (?, ?);", [id, v.toF32()]);  // OK on varvecF32
+
+A ``byte`` or ``varbyte`` column accepts the raw bytes via
+``.toRaw()``.
+
+Maintenance
+"""""""""""
+
+``ALTER INDEX <name> OPTIMIZE`` folds the accumulated newrec /
+tombstone delta back into the sealed segment.  Searches stay live
+during the build (only the brief commit phase fences writes), and
+concurrent INSERTs landing during the build are picked up via a
+carry-forward step.  Returns immediately if the delta is empty.
+
+``ALTER INDEX <name> REBUILD`` re-encodes the entire table from
+scratch.  Use this if the embedding distribution has shifted (IVFPQ
+codebooks become stale) or if you want to reset to a clean baseline.
+Same atomic-swap semantics as OPTIMIZE.
+
+Re-running ``CREATE VECTOR INDEX <name> ON <table>(<col>) ...``
+against an existing index of the same table+column is silently a
+``OPTIMIZE`` of that index — same shape as fulltext's re-CREATE.
+``WITH`` options other than ``indexmeter`` are ignored.
+
+.. code-block:: sql
+
+    -- Periodic absorption (after bulk INSERTs)
+    ALTER INDEX emb_vec OPTIMIZE;
+
+    -- Heavy re-build (after distribution shift, model swap, etc.)
+    ALTER INDEX emb_vec REBUILD;
+
+    -- With progress meter
+    ALTER INDEX emb_vec OPTIMIZE WITH indexmeter 'on';
+
+Removing a Vector Index
+""""""""""""""""""""""""
+
+.. code-block:: sql
+
+    DROP INDEX emb_vec;
+
+Removes the SYSINDEX entry plus all on-disk artifacts:
+
+* HNSW: ``<index_name>.vec``, ``<index_name>_T.btr``,
+  ``<index_name>_del.btr``.
+* IVFPQ: ``<index_name>_H.idxpq``, ``<index_name>_I.idxpq``,
+  ``<index_name>_T.btr``, ``<index_name>_del.btr``.
+
+The vector column on the table itself is unaffected.
+
+.. note::
+
+   **IVFPQ on-disk file size.**  The inverted-list file
+   ``<index_name>_I.idxpq`` is written through FAISS's
+   ``OnDiskInvertedLists`` container, which **preallocates the file to
+   a fixed budget with growth headroom** rather than packing it tightly
+   to actual data.  A typical 46M-row, dim-384, ``pq_m=48`` index
+   occupies about 8 GiB on disk even though the actual PQ codes plus
+   row IDs are closer to 3 GiB.  This is intentional — the
+   preallocated slots let inverted lists grow in place to accommodate
+   incremental ``INSERT``/``UPDATE`` activity between rebuilds without
+   rewriting the file.  ``ALTER INDEX … REBUILD`` produces a fresh
+   container of the same shape; ``OPTIMIZE`` reuses the existing
+   container.  ``du`` will typically report less actual block usage
+   than the apparent file size; both numbers are normal.
 
 Removing Indexes
 ~~~~~~~~~~~~~~~~

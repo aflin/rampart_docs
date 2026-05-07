@@ -262,6 +262,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#tree-sitter-acknowledgement">Tree-sitter Acknowledgement</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#tree-sitter-license">Tree-sitter License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#activating-the-transpiler">Activating the Transpiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#transpiler-options">Transpiler Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#why-use-the-transpiler-instead-of-babel">Why use the transpiler instead of Babel?</a></li>
 </ul>
 </li>
@@ -284,6 +285,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#getchar">getchar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#readfile">readFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#trim">trim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#minify">minify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#stat">stat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#lstat">lstat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#exec">exec</a></li>
@@ -298,6 +300,9 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#mkdir">mkdir</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#rmdir">rmdir</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#readdir">readDir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#ziplist">zipList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#zipget">zipGet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#zipextract">zipExtract</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#copyfile">copyFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#rmfile">rmFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#link">link</a></li>
@@ -460,6 +465,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html">Preface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#acknowledgment">Acknowledgment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#vector-index-acknowledgment">Vector Index Acknowledgment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#what-does-it-do">What does it do?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#documentation-caveat">Documentation Caveat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#further-reading">Further Reading</a></li>
@@ -471,7 +477,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#connection-constructor">connection() constructor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#connect">connect()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#exec">exec()</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#exec-full-example">Exec Full Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#sql-list-in-list-parameters">Sql.list() - IN-list parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#query">query()</a></li>
@@ -484,51 +490,32 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#addtable">addTable()</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#a-note-on-the-var-prefix">A note on the <code class="docutils literal notranslate"><span class="pre">var</span></code> prefix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#character-and-text">Character and text</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#binary-and-blob">Binary and blob</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#integer">Integer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#floating-point">Floating point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#date-and-time">Date and time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#identifier-and-special">Identifier and special</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#vector">Vector</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-indexing">Database Indexing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#regular-indexes">Regular Indexes</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#non-unique-index">Non-Unique Index</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#unique-index">Unique Index</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#inverted-index">Inverted Index</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#fulltext-indexes">Fulltext Indexes</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#creating-a-fulltext-index">Creating A Fulltext Index</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#variations-of-fulltext-indexes">Variations of Fulltext Indexes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#updating-a-fulltext-index">Updating A Fulltext Index</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#word-expressions">Word Expressions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#text-index-maintenance">Text Index Maintenance</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#scheduleupdate">scheduleUpdate()</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#regular-indexes">Regular Indexes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#fulltext-indexes">Fulltext Indexes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#compound-indexes">Compound Indexes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#vector-indexes">Vector Indexes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#removing-indexes">Removing Indexes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#id10">Further Reading</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#stringformat">stringFormat()</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#escape-sequences">Escape Sequences</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#standard-formats">Standard Formats</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#standard-flags">Standard Flags</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#printing-date-time-values">Printing Date/Time Values</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#latitude-longitude-and-location">Latitude, Longitude and Location</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#other-format-codes">Other Format Codes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#extended-flags">Extended Flags</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#metamorph-hit-mark-up">Metamorph Hit Mark-up</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#stringformat">stringFormat()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#abstract">abstract()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#sandr">sandr()</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#replacement-strings">Replacement Strings:</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#sandr">sandr()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#sandr2">sandr2()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#rex">rex()</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#expressions">Expressions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#repetition-operators">Repetition Operators</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#discussion">Discussion</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#rex">rex()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#re2">re2()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#rexfile">rexFile()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#re2file">re2File()</a></li>
@@ -686,6 +673,12 @@
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#likepobeyintersects">likepObeyIntersects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#likepinfthresh">likepInfThresh</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#likepindexthresh">likepIndexThresh</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sql-set.html#vector-index-properties">Vector Index Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevrows">likevRows</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevef">likevEf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevpqnprobe">likevPqNprobe</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sql-set.html#indexing-properties">Indexing properties</a><ul>
@@ -972,6 +965,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#new-net-socket">new net.Socket()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#socket-connect">socket.connect()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#socket-write">socket.write()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-net.html#socket-starttls">socket.startTls()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#socket-on">socket.on()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#socket-off">socket.off()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-net.html#socket-once">socket.once()</a></li>
@@ -1529,19 +1523,28 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#use-with-letsencrypt">Use with Letsencrypt</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#single-file-bundles">Single-File Bundles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#what-a-bundle-is-and-is-not">What a Bundle Is (And Is Not)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#building-a-bundle">Building a Bundle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#how-a-bundle-starts">How a Bundle Starts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#the-zip-filesystem">The :zip:/ Filesystem</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#bundle-specific-js-apis">Bundle-Specific JS APIs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#use-with-the-web-server">Use With the Web Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#pre-compiled-caches">Pre-Compiled Caches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#native-modules-and-daemons">Native Modules and Daemons</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#what-is-not-supported">What Is Not Supported</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#running-a-specific-script-from-the-bundle">Running a Specific Script From the Bundle</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#websocket-client">websocket_client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#forkpty-term">forkpty-term</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-converter">rampart-converter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-email">rampart-email</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#id2">Loading the module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#send">send()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#delivery-methods">Delivery Methods</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-direct">method: “direct”</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-relay">method: “relay”</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-smtp">method: “smtp”</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rampart-extras.html#method-gmailapp">method: “gmailApp”</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#delivery-methods">Delivery Methods</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#html-email-with-attachment">HTML email with attachment</a></li>
 </ul>
 </li>

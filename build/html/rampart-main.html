@@ -172,6 +172,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#tree-sitter-acknowledgement">Tree-sitter Acknowledgement</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tree-sitter-license">Tree-sitter License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#activating-the-transpiler">Activating the Transpiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transpiler-options">Transpiler Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#why-use-the-transpiler-instead-of-babel">Why use the transpiler instead of Babel?</a></li>
 </ul>
 </li>
@@ -1626,6 +1627,68 @@ simply include the following at the beginning of the script:</p>
 first JavaScript text in the script.  However it may come after any comments
 or a hash-bang line.  It also should be the only text on the line, other
 than an optional comment.</p>
+</div>
+<div class="section" id="transpiler-options">
+<h3>Transpiler Options<a class="headerlink" href="#transpiler-options" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code>) directive
+optionally takes a <code class="docutils literal notranslate"><span class="pre">:</span></code> followed by an object literal of options.  The
+object literal uses JavaScript object literal syntax (unquoted identifier
+keys, <code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">false</span></code> values).</p>
+<p>Currently the only supported option is <code class="docutils literal notranslate"><span class="pre">functionSources</span></code>:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="15%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">Default</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">functionSources</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">true</span></code></td>
+<td><p class="first">When enabled (the default), the transpiler captures the original
+pre-transpile source text of each top-level <code class="docutils literal notranslate"><span class="pre">function</span></code> declaration,
+<code class="docutils literal notranslate"><span class="pre">function</span></code> expression, <code class="docutils literal notranslate"><span class="pre">arrow_function</span></code>, <code class="docutils literal notranslate"><span class="pre">generator_function</span></code>
+and <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">function</span></code>, and attaches it to the function so that
+<code class="docutils literal notranslate"><span class="pre">fn.toString()</span></code> returns the original source written by the user.
+Duktape’s built-in <code class="docutils literal notranslate"><span class="pre">Function.prototype.toString()</span></code> otherwise
+returns <code class="docutils literal notranslate"><span class="pre">&quot;function</span> <span class="pre">NAME()</span> <span class="pre">{</span> <span class="pre">[ecmascript</span> <span class="pre">code]</span> <span class="pre">}&quot;</span></code>, which is often
+not useful for debugging, logging or hot-reload tooling.</p>
+<p class="last">Setting this option to <code class="docutils literal notranslate"><span class="pre">false</span></code> disables the capture and reverts
+to Duktape’s built-in behavior.  Disable it if you want the smaller
+transpiled output (each captured function is stored twice — once as
+executable code, once as a string literal — which roughly doubles
+the output size for function-heavy source).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* default — fn.toString() returns the original source */</span>
+<span class="s2">&quot;use transpiler&quot;</span>
+
+<span class="kd">function</span> <span class="nx">greet</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="s2">&quot;hi &quot;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">;</span> <span class="p">}</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">greet</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
+<span class="c1">// -&gt; function greet(name) { return &quot;hi &quot; + name; }</span>
+</pre></div>
+</div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* opt-out — fn.toString() uses duktape&#39;s built-in form */</span>
+<span class="s2">&quot;use transpiler:{functionSources:false}&quot;</span>
+
+<span class="kd">function</span> <span class="nx">greet</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="s2">&quot;hi &quot;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">;</span> <span class="p">}</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">greet</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
+<span class="c1">// -&gt; function greet() { [ecmascript code] }</span>
+</pre></div>
+</div>
+<p>Note: function-source capture currently applies to <code class="docutils literal notranslate"><span class="pre">function</span></code>
+declarations, <code class="docutils literal notranslate"><span class="pre">function</span></code> expressions, <code class="docutils literal notranslate"><span class="pre">arrow</span></code> functions,
+<code class="docutils literal notranslate"><span class="pre">generator</span></code> functions and <code class="docutils literal notranslate"><span class="pre">async</span></code> functions.  Methods inside
+<code class="docutils literal notranslate"><span class="pre">class</span></code> bodies and object-literal method shorthand are not yet
+covered; their <code class="docutils literal notranslate"><span class="pre">toString()</span></code> still returns the built-in form.</p>
 <p>Example:</p>
 <p>Please see the <a class="reference external" href="https://github.com/aflin/rampart/blob/main/test/transpile-test.js">transpile-test.js file</a>
 to see which features are currently supported (and the disabled tests which show

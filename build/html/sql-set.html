@@ -93,6 +93,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html">Preface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#loading-the-javascript-module">Loading the Javascript Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-functions">Database Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-indexing">Database Indexing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql-server-funcs.html">Server Functions</a></li>
@@ -164,6 +165,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#likepobeyintersects">likepObeyIntersects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likepinfthresh">likepInfThresh</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likepindexthresh">likepIndexThresh</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vector-index-properties">Vector Index Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#likevrows">likevRows</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#likevef">likevEf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#likevpqnprobe">likevPqNprobe</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#indexing-properties">Indexing properties</a><ul>
@@ -1389,6 +1396,112 @@ will be considered for ranking.</p>
 and accuracy: the lower the setting, the faster queries can be
 processed, but the more queries may be dropping potentially
 high-ranking hits.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="vector-index-properties">
+<h2>Vector Index Properties<a class="headerlink" href="#vector-index-properties" title="Permalink to this headline">¶</a></h2>
+<p>These settings affect <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> queries against an
+<span class="xref std std-ref">INDEX_VEC</span> (the ANN vector index).
+The <code class="docutils literal notranslate"><span class="pre">likeV*</span></code> properties mirror the corresponding <code class="docutils literal notranslate"><span class="pre">likeP*</span></code> properties
+for the LIKEP / Metamorph search path.</p>
+<p>The same value-form rules from the chapter intro apply: in tsql write
+<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">name=value;</span></code> with numbers; in JavaScript write
+<code class="docutils literal notranslate"><span class="pre">sql.set({name:</span> <span class="pre">value})</span></code>.</p>
+<div class="section" id="likevrows">
+<h3>likevRows<a class="headerlink" href="#likevrows" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Caps the number of candidate rows that the vec index returns to
+the SQL layer in response to a <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> query (default <code class="docutils literal notranslate"><span class="pre">1000</span></code>).
+Mirrors <a class="reference internal" href="#likeprows"><span class="std std-ref">likepRows</span></a> for vector search.</p>
+<p>The candidate pool is the working set the SQL planner then filters
+via any additional <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clauses and (optionally) re-ranks with
+full-precision <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>. A larger pool gives better recall
+and a higher ceiling for re-rank quality, at the cost of more work
+per query; a smaller pool is faster but may drop relevant hits.</p>
+<p>Typical pattern when re-ranking with <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>: set
+<code class="docutils literal notranslate"><span class="pre">likevRows</span></code> to several times the desired final <code class="docutils literal notranslate"><span class="pre">maxRows</span></code> so
+the re-rank step has enough candidates to choose from. Setting to
+<code class="docutils literal notranslate"><span class="pre">0</span></code> is reserved and currently treated as the default.</p>
+</div></blockquote>
+</div>
+<div class="section" id="likevef">
+<h3>likevEf<a class="headerlink" href="#likevef" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><strong>HNSW only.</strong>  Per-query graph expansion factor — the
+search-time recall/latency knob for HNSW indexes.  Default <code class="docutils literal notranslate"><span class="pre">0</span></code>,
+which leaves the index’s build-time <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code> setting in
+effect.  A higher value increases recall at the cost of search
+time; a lower value (down to a small fraction of <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code>)
+trades recall for speed.</p>
+<p>Useful when the same index is served at different recall/latency
+points — for example, a low <code class="docutils literal notranslate"><span class="pre">likevEf</span></code> for autocomplete-style
+first-pass scoring and a higher <code class="docutils literal notranslate"><span class="pre">likevEf</span></code> for the final ranked
+list.</p>
+</div></blockquote>
+</div>
+<div class="section" id="likevpqnprobe">
+<h3>likevPqNprobe<a class="headerlink" href="#likevpqnprobe" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><strong>IVFPQ only.</strong>  Per-query number of inverted-list clusters
+scanned by an IVFPQ index — the IVFPQ analog of <code class="docutils literal notranslate"><span class="pre">likevEf</span></code>.</p>
+<p>Accepts an integer, or the literal string <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> (the default).
+In <code class="docutils literal notranslate"><span class="pre">auto</span></code> mode nprobe scales with the index’s <code class="docutils literal notranslate"><span class="pre">nlist</span></code> as
+<code class="docutils literal notranslate"><span class="pre">max(8,</span> <span class="pre">nlist/128)</span></code>.  This produces empirically-good recall
+across corpus sizes — at the default nlist=32768 (≈ 46M-row
+indexes), auto resolves to nprobe=256, scanning ~0.78% of cells.</p>
+<p>Concrete auto-mode resolutions:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="23%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">nlist</th>
+<th class="head">nprobe</th>
+<th class="head">fraction of cells</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>256</td>
+<td>8</td>
+<td>3.1 %</td>
+</tr>
+<tr class="row-odd"><td>1024</td>
+<td>8</td>
+<td>0.78 %</td>
+</tr>
+<tr class="row-even"><td>4096</td>
+<td>32</td>
+<td>0.78 %</td>
+</tr>
+<tr class="row-odd"><td>16384</td>
+<td>128</td>
+<td>0.78 %</td>
+</tr>
+<tr class="row-even"><td>32768</td>
+<td>256</td>
+<td>0.78 %</td>
+</tr>
+<tr class="row-odd"><td>65536</td>
+<td>512</td>
+<td>0.78 %</td>
+</tr>
+</tbody>
+</table>
+<p>Higher = more candidates considered = better recall, at the cost
+of more PQ-ADC work per query.  Capped at the index’s
+<code class="docutils literal notranslate"><span class="pre">vec_pq_nlist</span></code> (scanning every cluster is a full sealed-set
+scan).</p>
+<p>For most queries <code class="docutils literal notranslate"><span class="pre">auto</span></code> is correct.  Override with an explicit
+integer when you specifically want trade more recall for less
+latency (e.g. <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">likevpqnprobe=64</span></code> for an interactive UI), or
+more recall for more latency (<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">likevpqnprobe=512</span></code>).  Setting
+to a value &gt; nlist is silently capped.</p>
+<p>Pair with <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> re-rank (see
+<span class="xref std std-ref">Querying with LIKEV</span>)
+to recover near-exact recall on top of the wider candidate pool.</p>
 </div></blockquote>
 </div>
 </div>
