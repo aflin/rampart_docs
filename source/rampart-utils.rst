@@ -821,6 +821,34 @@ Example:
    'a line of text'
    */
 
+minify
+''''''
+
+Minify JavaScript source code by removing unnecessary whitespace, stripping
+comments, and mangling (shortening) local variable names.  Global variables
+and object property names are preserved.
+
+Usage:
+
+.. code-block:: javascript
+
+   var minified = rampart.utils.minify(src);
+
+Where ``src`` is a :green:`String` containing JavaScript source code.
+
+Return Value:
+   :green:`String`. The minified JavaScript code.
+
+Example:
+
+.. code-block:: javascript
+
+   var src = "function add(first, second) {\n    return first + second;\n}";
+   var min = rampart.utils.minify(src);
+   /* expected output:
+   "function add(a,b){return a+b;}"
+   */
+
 stat
 ''''
 
@@ -1372,6 +1400,144 @@ beginning with ``.`` (hidden files) will be included in the return value.
 
 Return Value:
    :green:`Array`.  An :green:`Array` of :green:`Strings`, each filename in the directory.
+
+
+zipList
+'''''''
+
+Read a zip archive's central directory and return a description of every
+entry.  Does not extract, decompress or modify anything.
+
+Usage:
+
+.. code-block:: javascript
+
+   var entries = rampart.utils.zipList(zipPath);
+
+Where ``zipPath`` is a :green:`String`, the path to a zip file on disk.
+
+Return Value:
+   :green:`Object`.  Keys are entry names (as stored in the archive,
+   so directory entries end with ``"/"``).  Each value is an
+   :green:`Object` with these properties:
+
+   ============== ================================================================
+   Property       Description
+   ============== ================================================================
+   size           :green:`Number`. Uncompressed size in bytes.
+   compressedSize :green:`Number`. Stored size in bytes.
+   method         :green:`Number`. Compression method (``0`` = stored, ``8`` = deflate).
+   crc32          :green:`Number`. CRC-32 of the uncompressed bytes.
+   mode           :green:`Number`. Unix mode bits (file type + permissions).
+   mtime          :green:`Date`. Modification time (omitted if the entry has none).
+   isFile         :green:`Boolean`. ``true`` for regular files.
+   isDirectory    :green:`Boolean`. ``true`` for directory entries.
+   isSymbolicLink :green:`Boolean`. ``true`` for symlink entries.
+   permissions    :green:`String`. ``ls -l``-style mode string, e.g. ``"-rw-r--r--"``.
+   ============== ================================================================
+
+Throws if the path is not a readable zip archive.
+
+.. code-block:: javascript
+
+   var e = rampart.utils.zipList("/tmp/release.zip");
+   // { "README.md": { size: 1024, isFile: true, ... },
+   //   "lib/":      { size: 0,    isDirectory: true, ... },
+   //   "lib/x.js":  { size: 5120, isFile: true, ... },
+   //   ... }
+
+   for (var name in e)
+       if (e[name].isFile)
+           console.log(name, e[name].size, "bytes");
+
+
+zipGet
+''''''
+
+Read one entry from a zip archive into a :green:`Buffer`.  The entry is
+decompressed if it was stored with deflate.
+
+Usage:
+
+.. code-block:: javascript
+
+   var buf = rampart.utils.zipGet(zipPath, entryName);
+
+Where ``zipPath`` is a :green:`String` (path to the zip file on disk) and
+``entryName`` is a :green:`String` naming an entry as it appears in
+``zipList()``\'s output.  Symbolic-link entries are followed; the returned
+buffer is the contents of the link's final target inside the archive.
+
+Return Value:
+   :green:`Buffer`.  The uncompressed contents of the named entry.
+
+Throws if the zip cannot be opened, the entry is missing, the entry uses
+an unsupported compression method, or a symlink chain cannot be resolved.
+
+.. code-block:: javascript
+
+   var b = rampart.utils.zipGet("/tmp/release.zip", "README.md");
+   console.log(rampart.utils.bufferToString(b));
+
+
+zipExtract
+''''''''''
+
+Extract some or all of a zip archive's entries to a destination directory
+on disk.  File modes, modification times and symbolic links are preserved.
+
+Usage:
+
+.. code-block:: javascript
+
+   var n = rampart.utils.zipExtract(zipPath, destPath [, entries]);
+
+Where:
+
+   * ``zipPath`` -- :green:`String`. The zip file on disk.
+   * ``destPath`` -- :green:`String`. The destination directory.  It and any
+     intermediate directories implied by entry names will be created as
+     needed.
+   * ``entries`` -- :green:`Array` of :green:`Strings`, optional.  If
+     omitted (or ``undefined`` / ``null``), every entry is extracted.
+     If supplied, only entries whose name matches one of the listed
+     names is extracted.  Names ending in ``"/"`` match every entry in
+     that directory tree; bare names match exactly.
+
+Return Value:
+   :green:`Number`.  The count of entries actually written to disk.
+
+Notes:
+
+   * Path traversal is blocked: an entry name containing ``..`` segments
+     that would resolve outside ``destPath`` is rejected.
+   * Symlinks are extracted as real symlinks (``symlink(target, path)``);
+     the link target is taken verbatim from the archive without further
+     validation.
+   * ``chmod`` and ``utimensat`` failures during metadata fixup are
+     silently ignored so a bulk extract is not aborted by a single
+     unprivileged operation.
+
+.. code-block:: javascript
+
+   // unpack the entire archive
+   rampart.utils.zipExtract("/tmp/release.zip", "/opt/myapp/");
+
+   // unpack just two specific files
+   rampart.utils.zipExtract("/tmp/release.zip", "/tmp/cfg/",
+                            ["README.md", "etc/default.conf"]);
+
+   // unpack everything under "templates/"
+   rampart.utils.zipExtract("/tmp/release.zip", "/var/www/", ["templates/"]);
+
+.. note::
+
+    The bundle feature exposes three additional functions --
+    ``rampart.utils.payloadList()``, ``rampart.utils.payloadGet(name)`` and
+    ``rampart.utils.payloadExtract(name|nameArray|null, destDir)`` -- which
+    operate on the zip archive appended to ``rampart`` itself rather than
+    on a zip file on disk.  See
+    :ref:`Single-File Bundles <rampart-extras:Single-File Bundles>`.
 
 
 copyFile

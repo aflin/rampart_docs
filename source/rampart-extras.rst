@@ -355,6 +355,344 @@ A root crontab entry will keep the certificate up to date:
 
     0 5 * * * /usr/bin/certbot renew --quiet --renew-hook "rampart /path/to/my/web_server/web_server_conf.js restart" 2>/dev/null
 
+Single-File Bundles
+-------------------
+
+The ``rampart`` executable can be turned into a self-contained, single-file
+application by appending a zip archive to it.  Scripts, ``require()``-able
+JavaScript and native modules, web-server static assets, configuration files
+and any other read-only resources can be packaged inside the zip and loaded
+by the runtime through a virtual ``:zip:/`` namespace.
+
+The resulting binary is a normal executable on Linux, macOS and FreeBSD.
+It can be copied or renamed, and runs without an installer or external
+files (other than what the application itself requires from disk at
+runtime, such as databases or log files).
+
+What a Bundle Is (And Is Not)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A bundle is, byte-for-byte:
+
+.. code-block:: none
+
+    [ rampart executable ][ standard zip archive ]
+
+That is all.  The zip End-of-Central-Directory marker is found by scanning
+backwards from the end of the file at startup; if found, every entry in the
+archive becomes accessible under a ``:zip:/`` virtual path.
+
+A bundle is **not** a container or chroot.  Unlike Docker, the bundle does
+not provide an isolated filesystem, network namespace, or live writable
+overlay:
+
+* The contents of the zip are **read-only**.  Anything you write to a
+  ``:zip:/...`` path is rejected with ``EROFS`` ("Read-only file system").
+* The zip contents are **frozen** at build time.  Edits to source files
+  during the run do not persist, and changes never propagate back to the
+  zip.  Re-bundle to update.
+* Outside the ``:zip:/`` namespace the process sees the **normal host
+  filesystem**.  Databases, log files, user uploads, sockets and so on
+  must live on disk.
+
+Think of it as "a shippable read-only resource pack glued onto the
+interpreter," not a runtime sandbox.
+
+Building a Bundle
+~~~~~~~~~~~~~~~~~
+
+Lay out everything you want inside the bundle in a directory::
+
+    mybundle/
+    ├── entry_script.js          # auto-run when the bundle is invoked
+    ├── auth-conf.js             # any other configs your app reads
+    ├── apps/                    # web_server JS apps
+    │   └── myapp.js
+    ├── html/                    # web_server static files
+    │   ├── index.html
+    │   └── css/style.css
+    ├── wsapps/                  # websocket apps
+    ├── modules/                 # require()-able JS modules (optional)
+    └── rampart-server.so        # any native modules your app uses
+        rampart-sql.so
+        ...
+
+Then create the bundle in two steps -- zip the directory, then concatenate
+it onto a copy of ``rampart``:
+
+.. code-block:: bash
+
+    #!/bin/bash
+    # mkapp.sh
+    cd mybundle
+    zip -qr ../payload.zip .
+    cd ..
+    cp /path/to/rampart mybundle-bin
+    cat payload.zip >> mybundle-bin
+    chmod +x mybundle-bin
+
+The result, ``mybundle-bin``, is a single executable that can be copied
+anywhere and run directly.
+
+How a Bundle Starts
+~~~~~~~~~~~~~~~~~~~
+
+When you invoke a bundle, ``rampart`` chooses what to run as follows:
+
+1. **Explicit script in the zip** --
+   ``mybundle-bin :zip:/path/foo.js [args...]`` runs ``foo.js`` from inside
+   the zip.  ``process.argv`` is unchanged from what the user typed
+   (``["mybundle-bin", ":zip:/path/foo.js", ...args]``), and
+   ``process.scriptPath`` is set to ``:zip:/path``.
+
+2. **Auto-run entry script** -- with no positional argument, ``rampart``
+   looks for one of these names at the zip root, in order:
+
+       ``entry_script.js``, ``entry-script.js``, ``entryScript.js``, ``entryscript.js``
+
+   The first match is run.  The script name is spliced into ``process.argv``
+   at index 1 so user code sees ``["mybundle-bin", "entry_script.js", ...args]``,
+   and ``process.scriptPath`` is set to ``:zip:`` (the zip root).
+
+3. **No bundle / no entry** -- behaves like the unbundled ``rampart``
+   executable: REPL with no args, runs a positional script if given, etc.
+
+The :zip:/ Filesystem
+~~~~~~~~~~~~~~~~~~~~~
+
+A script being prepared for bundling can be developed and tested
+unchanged, against ordinary disk files.  Plain relative requires and
+script-relative paths simply work in both contexts:
+
+.. code-block:: javascript
+
+    var helpers = require("helpers.js");      // resolves to ./helpers.js on disk
+                                               // or to :zip:/helpers.js when bundled
+
+    var conf = rampart.utils.readFile(
+        process.scriptPath + "/config.json", true);
+    // process.scriptPath is the script's directory on disk during testing,
+    // and ":zip:" (or a subdir thereof) at runtime inside a bundle.
+
+When you do need to be explicit -- for instance to extract a resource
+from the bundle, hash one of its entries, or list entries by prefix --
+the ``:zip:/`` prefix is recognised by every file-reading API in the
+runtime.  These all work transparently with either disk paths or
+``:zip:/`` paths:
+
+.. code-block:: javascript
+
+    var u = rampart.utils;
+
+    // require modules from the bundle (or from disk)
+    var helpers  = require(":zip:/lib/helpers.js");
+    var myAuth   = require(":zip:/auth-conf.js");
+
+    // generic file reads
+    var conf = u.readFile(":zip:/config.json", true);
+    var st   = u.stat(":zip:/apps/auth.js");
+    if (u.fileExists(":zip:/data.csv")) { /* ... */ }
+
+    var fh = u.fopen(":zip:/big.txt", "r");   // read-mode only
+    var line = u.readLine(fh);
+    fh.fclose();
+
+    // directory enumeration
+    var files = u.readdir(":zip:/apps");      // ["auth.js","priv","..."]
+
+    // hashFile, csv, totext, curl post-from-file all accept :zip:/
+    var sum = u.hashFile(":zip:/data.csv");
+    var rows = rampart.import.csvFile(":zip:/data.csv");
+    var text = require("rampart-totext").convertFile(":zip:/manual.pdf");
+
+    // SQL searchFile reads in-zip text directly
+    var hits = require("rampart-sql").searchFile("phrase",
+                                                  ":zip:/big-doc.txt");
+
+    // include() resolves zip first, then disk
+    rampart.include(":zip:/lib/setup.js");
+
+Trying to open a ``:zip:/`` path for writing fails with ``EROFS``:
+
+.. code-block:: javascript
+
+    u.fopen(":zip:/foo", "w");
+    // throws: Read-only file system
+
+Bundle-Specific JS APIs
+^^^^^^^^^^^^^^^^^^^^^^^
+
+A small set of utilities is exposed only when a zip payload is present
+(use ``if (rampart.utils.payloadGet) { ... }`` to feature-detect):
+
+``rampart.utils.payloadList()``
+    Returns an :green:`Object` mapping every entry's name to a
+    stat-like object (``size``, ``mode``, ``mtime`` (Date), ``isFile``,
+    ``isDirectory``, ``isSymlink``, ``permissions`` etc.).
+
+``rampart.utils.payloadGet(name)``
+    Returns the entry's contents as a :green:`Buffer` (decompressed).
+
+``rampart.utils.payloadExtract(name|nameArray|null, destDir)``
+    Extracts one entry, an array of entries, or every entry
+    (when first argument is ``null``) to ``destDir``.  File modes,
+    mtimes and symlinks are preserved.
+
+A second set works on **any** zip file on disk -- not the appended
+payload -- and is always available:
+
+``rampart.utils.zipList(zipPath)``
+``rampart.utils.zipGet(zipPath, name)``
+``rampart.utils.zipExtract(zipPath, name|nameArray|null, destDir)``
+
+These are useful for installers, update packages and similar tooling
+that needs to inspect a zip without unpacking it first.
+
+Use With the Web Server
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The standard webserver layout (see
+`Standard Server Layout`_) maps cleanly into a bundle.  The example
+``rampart/web_server`` directory ships with an ``entry_script.js``
+symlink pointing at ``web_server_conf.js``, so the same configuration
+file is used both as the script you run during development
+(``rampart web_server_conf.js start``) and as the auto-run entry script
+when the directory is bundled.  No second script to maintain.
+
+In ``web_server_conf.js`` set ``serverRoot`` to the script's directory
+in the normal way:
+
+.. code-block:: javascript
+
+    var working_directory = process.scriptPath;   // ":zip:" in a bundle
+
+    var serverConf = {
+        bindAll: true,
+        ipPort:  8088,
+
+        serverRoot: working_directory,            // becomes ":zip:"
+        // htmlRoot, appsRoot, wsappsRoot default to
+        //   serverRoot + "/html", "/apps", "/wsapps"
+    };
+
+The webserver will then serve static files out of ``:zip:/html/``, app
+modules out of ``:zip:/apps/``, websocket apps out of ``:zip:/wsapps/``
+and so on -- including ``Range:`` requests, gzip pre-cached pages
+(``foo.html.gz`` siblings), and ``Last-Modified`` based on the entry's
+zip-time mtime.
+
+**The two directories that cannot live in the bundle** are ``dataRoot``
+(LMDB / SQL databases, sessions, uploads) and ``logRoot`` (access /
+error logs), since both must be writable.  Compute them at runtime
+to a per-user, per-port location on disk:
+
+.. code-block:: javascript
+
+    if (rampart.utils.payloadGet) {  // true only when running as a bundle
+        var iam   = rampart.utils.exec('whoami').stdout.trim();
+        var home  = (iam === 'root') ? '/tmp' : (process.env.HOME || '/tmp');
+        var port  = serverConf.ipPort || 8088;
+        var rpdir = home + '/.rampart/' + iam + '_server_' + port;
+
+        rampart.utils.mkdir(rpdir + '/data', true);
+        rampart.utils.mkdir(rpdir + '/logs', true);
+
+        serverConf.dataRoot = rpdir + '/data';
+        serverConf.logRoot  = rpdir + '/logs';
+    }
+
+When ``dataRoot`` is set, modules that ask the server for a default DB
+location (``rampart-auth``, etc.) will use it -- specifically,
+``authMod`` defaults its LMDB to ``serverConf.dataRoot + "/auth"``
+rather than the read-only ``:zip:/data/auth``.
+
+Pre-Compiled Caches
+~~~~~~~~~~~~~~~~~~~
+
+Scripts that begin with ``"use transpiler"`` or ``"use babel"`` are
+normally re-transpiled on every load.  In a bundle, this still happens
+in memory but the on-disk cache file (``foo.transpiled.js`` /
+``foo.babel.js``) is **not** written to the user's working directory,
+since the bundle's own filesystem is read-only.
+
+If you want to skip the transpiler/babel step entirely at run time,
+pre-build the cache files at bundle-build time and ship them alongside
+the source:
+
+.. code-block:: none
+
+    mybundle/
+    ├── apps/
+    │   ├── myapp.js               # the source
+    │   └── myapp.transpiled.js    # pre-built cache; runtime uses this
+    └── ...
+
+The runtime will detect a same-named ``.transpiled.js`` (or ``.babel.js``)
+inside the zip, verify its mtime is no older than the source, and serve
+its bytes directly to the engine -- the transpiler library does not need
+to load.  This applies equally to the entry script and to anything
+``require()``\d from the zip.
+
+Native Modules and Daemons
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Native modules (``.so``) cannot be ``dlopen()``-ed from a memory buffer
+on POSIX systems, so the runtime extracts them to a unique
+``/tmp/rampart-zipso-XXXXXX`` file, ``dlopen()``\s the temp file, and
+``unlink()``\s it immediately.  The mapping survives the unlink via
+the dlopen handle, so no on-disk trace remains even if the process
+crashes mid-load.  Each ``.so`` entry is loaded at most once per
+process and shared by all worker threads.
+
+The same trick is used to launch ``texislockd`` (the SQL / vector-index
+lock daemon) when needed: the bundled binary is extracted, ``exec``\ed
+with a self-unlink flag and an idle-timeout flag, and removes its own
+on-disk file once running.
+
+What Is Not Supported
+~~~~~~~~~~~~~~~~~~~~~
+
+* **TLS key and certificate files must live on disk.**  ``sslKeyFile``
+  and ``sslCertFile`` paths are rejected if they begin with ``:zip:``.
+  This is intentional: shipping a private key inside a redistributable
+  binary is almost always a mistake, and OpenSSL loads these by path
+  internally (``SSL_CTX_use_PrivateKey_file`` etc.) so a ``:zip:`` path
+  could not be used end-to-end without staging the file to disk anyway.
+
+* **Modifications inside the zip never persist.**  A bundle is a
+  shipping format, not a working directory.  All mutable state must
+  go through ``serverConf.dataRoot`` (or some other on-disk path).
+
+* **Encrypted or password-protected zip entries are not supported.**
+  Compression methods 0 (stored) and 8 (deflate) are recognised; zip64,
+  encryption and the streaming "data descriptor" format are rejected
+  at bundle-load time.
+
+* **No incremental update.**  To change anything in the bundle, rebuild
+  the whole thing.  Bundles are typically a few MB to a few tens of MB,
+  so this is fast.
+
+Running a Specific Script From the Bundle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to the auto-run ``entry_script.js`` flow, you can run any
+script that lives inside the bundle by passing its ``:zip:/`` path on
+the command line:
+
+.. code-block:: bash
+
+    ./mybundle-bin :zip:/apps/admin.js add-user alice
+    ./mybundle-bin :zip:/maintenance/reindex.js
+    ./mybundle-bin :zip:/tools/dbcheck.js --verbose
+
+This lets one bundle act as a CLI multiplexer.  A common pattern is
+to have ``entry_script.js`` start the web server when invoked bare,
+and provide a number of admin / maintenance scripts under
+``:zip:/admin/...`` that the operator runs explicitly.  Both modes
+share the bundled assets and modules, but each invocation runs in a
+fresh process -- there is no daemon shared between the
+"start the server" run and the "run a one-off CLI" run.
+
 websocket_client
 ----------------
 

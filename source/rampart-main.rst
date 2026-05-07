@@ -1568,6 +1568,68 @@ first JavaScript text in the script.  However it may come after any comments
 or a hash-bang line.  It also should be the only text on the line, other
 than an optional comment.
 
+Transpiler Options
+""""""""""""""""""
+
+The ``"use transpiler"`` (or ``"use transpilerGlobally"``) directive
+optionally takes a ``:`` followed by an object literal of options.  The
+object literal uses JavaScript object literal syntax (unquoted identifier
+keys, ``true``/``false`` values).
+
+Currently the only supported option is ``functionSources``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 15 65
+
+   * - Option
+     - Default
+     - Description
+   * - ``functionSources``
+     - ``true``
+     - When enabled (the default), the transpiler captures the original
+       pre-transpile source text of each top-level ``function`` declaration,
+       ``function`` expression, ``arrow_function``, ``generator_function``
+       and ``async function``, and attaches it to the function so that
+       ``fn.toString()`` returns the original source written by the user.
+       Duktape's built-in ``Function.prototype.toString()`` otherwise
+       returns ``"function NAME() { [ecmascript code] }"``, which is often
+       not useful for debugging, logging or hot-reload tooling.
+
+       Setting this option to ``false`` disables the capture and reverts
+       to Duktape's built-in behavior.  Disable it if you want the smaller
+       transpiled output (each captured function is stored twice — once as
+       executable code, once as a string literal — which roughly doubles
+       the output size for function-heavy source).
+
+Examples:
+
+.. code-block:: javascript
+
+   /* default — fn.toString() returns the original source */
+   "use transpiler"
+
+   function greet(name) { return "hi " + name; }
+   console.log(greet.toString());
+   // -> function greet(name) { return "hi " + name; }
+
+
+.. code-block:: javascript
+
+   /* opt-out — fn.toString() uses duktape's built-in form */
+   "use transpiler:{functionSources:false}"
+
+   function greet(name) { return "hi " + name; }
+   console.log(greet.toString());
+   // -> function greet() { [ecmascript code] }
+
+
+Note: function-source capture currently applies to ``function``
+declarations, ``function`` expressions, ``arrow`` functions,
+``generator`` functions and ``async`` functions.  Methods inside
+``class`` bodies and object-literal method shorthand are not yet
+covered; their ``toString()`` still returns the built-in form.
+
 Example:
 
 Please see the `transpile-test.js file <https://github.com/aflin/rampart/blob/main/test/transpile-test.js>`_

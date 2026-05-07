@@ -177,6 +177,116 @@ socket.write()
 
         socket.connect(port, host);
 
+socket.startTls()
+~~~~~~~~~~~~~~~~~
+
+    Upgrade an already-connected plaintext socket to SSL/TLS, performing the
+    handshake on the existing TCP connection. This is the primitive that
+    makes "STARTTLS"-style protocols possible — you connect and speak the
+    protocol in the clear until the server says it is ready for TLS (e.g.
+    SMTP ``STARTTLS``, IMAP ``STARTTLS``, POP3 ``STLS``, LDAP StartTLS,
+    PostgreSQL ``SSLRequest``), then call ``startTls()`` to encrypt the rest
+    of the conversation. The socket object is unchanged after the upgrade:
+    subsequent ``socket.write()`` calls are encrypted, and subsequent
+    ``data`` events carry decrypted bytes.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        socket.startTls([options][, callback]);
+
+    Where ``options`` is an :green:`Object` with any of these optional keys
+    (all of them behave the same as in `socket.connect()`_ above):
+
+        * ``hostname`` - A :green:`String`.  Name to use for SNI and
+          certificate verification. Defaults to the ``host`` that was passed
+          to ``socket.connect()``.  Override only when you connected by IP
+          and the server certificate uses a different name.
+
+        * ``insecure`` - A :green:`Boolean`.  Whether to skip verification of
+          the server's certificate.  Default is ``false``.
+
+        * ``cacert`` - A :green:`String`.  Path to the CA certificate file.
+          Default is system dependent (same as in ``socket.connect()``).
+
+        * ``capath`` - A :green:`String`.  Path to a directory of CA
+          certificates.  No default.
+
+    And ``callback`` is a :green:`Function` that, if provided, is invoked
+    exactly once when the TLS handshake finishes (on success or failure).
+    It receives ``(err, info)`` where:
+
+        * ``err`` is ``null`` on success or a :green:`String` describing the
+          failure (e.g.  ``"wrong version number"``,
+          ``"certificate has expired"``).
+
+        * ``info`` on success is an :green:`Object` with:
+
+            * ``cipher`` - A :green:`String`, e.g.
+              ``"TLS_AES_256_GCM_SHA384"``.
+
+            * ``protocol`` - A :green:`String`, e.g. ``"TLSv1.3"``.
+
+    The same information is also emitted as an ``upgrade`` event (see
+    `socket.on()`_ below). The callback form and the event form can be used
+    together or interchangeably.
+
+    Calling ``startTls()`` on a socket that is not connected, is already
+    using TLS, or has a TLS upgrade in progress throws an error.  On a
+    handshake failure the ``upgrade`` listener (and callback) fires with the
+    error string, and the ``error`` event fires as well, and the socket is
+    closed.
+
+    Example - SMTP STARTTLS:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+        rampart.globalize(rampart.utils);
+
+        var sock  = new net.Socket();
+        var state = 'greeting';
+        var buf   = '';
+
+        sock.on('data', function(data) {
+            buf += bufferToString(data);
+            var idx;
+            while ((idx = buf.indexOf('\r\n')) >= 0) {
+                var line = buf.substring(0, idx);
+                buf = buf.substring(idx + 2);
+
+                if (state === 'greeting' && line.substring(0,3) === '220') {
+                    state = 'ehlo';
+                    sock.write('EHLO client.example.com\r\n');
+                }
+                else if (state === 'ehlo' && line.substring(0,4) === '250 ') {
+                    state = 'starttls';
+                    sock.write('STARTTLS\r\n');
+                }
+                else if (state === 'starttls' && line.substring(0,3) === '220') {
+                    state = 'upgrading';
+                    sock.startTls(function(err, info) {
+                        if (err) {
+                            printf("TLS handshake failed: %s\n", err);
+                            sock.destroy();
+                            return;
+                        }
+                        printf("TLS %s / %s\n", info.protocol, info.cipher);
+                        sock.write('EHLO client.example.com\r\n');
+                        state = 'done';
+                    });
+                }
+                else if (state === 'done' && line.substring(0,4) === '250 ') {
+                    sock.write('QUIT\r\n');
+                    sock.destroy();
+                }
+            }
+        });
+
+        sock.on('error', function(err) { printf("ERROR: %s\n", err); });
+        sock.connect(587, 'smtp.example.com');
+
 socket.on()
 ~~~~~~~~~~~
 
@@ -215,6 +325,13 @@ socket.on()
           timeout interval.  Note: "close" below will also be emitted.
 
         * ``close`` - emitted whenever a connection is terminated.
+
+        * ``upgrade`` - emitted when a TLS handshake initiated by
+          `socket.startTls()`_ finishes.  The callback receives
+          ``(err, info)`` - ``err`` is ``null`` on success or a
+          :green:`String` describing the failure; ``info`` on success is an
+          :green:`Object` with ``cipher`` and ``protocol`` strings.  See
+          `socket.startTls()`_ for details.
 
         * ``error``  - emitted upon error. Note: if no error callback is registered for a socket,
           rampart will throw an error instead.
