@@ -1,5 +1,5 @@
-The rampart-url module
-======================
+Rampart Extras
+==============
 
 Preface
 -------

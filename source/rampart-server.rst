@@ -245,6 +245,19 @@ Where:
       public", if not set or set ``true``.  If set ``false``, no header is
       sent.
 
+    * ``defaultCharset``: A :green:`String` or a :green:`Boolean`.  Charset
+      to append to the ``Content-Type`` header for ``text/*`` mime types.
+      The default is ``"utf-8"``.  Applies to both static files served from
+      the filesystem and dynamic responses returned from script handlers
+      (e.g. ``return {html: ...}``, ``return {txt: ...}``, etc.).  Set to
+      a :green:`String` such as ``"iso-8859-1"`` to use a different charset.
+      Set to ``false`` to disable, in which case no charset is appended and
+      the bare mime type is sent.
+
+      A response that explicitly sets its own ``Content-Type`` header (via
+      a ``headers`` property) is left untouched - whatever value is supplied
+      is sent verbatim, with no charset added.
+
     * ``defaultRangeMBytes``: a :green:`Number` (range 0.01 to 1000).  Set the
       default range size when sending a ``206 Partial Content`` response to an
       open ended request (e.g. ``range: 0-``), specified in megabytes.

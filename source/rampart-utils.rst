@@ -2459,6 +2459,156 @@ Return Value:
    :green:`Object`.  A flat :green:`Object` with ``{name: value}`` entries
    for every variable visible at the point of the ``getScopeVars()`` call.
 
+repl
+''''
+
+Create an interactive line editor backed by the same line-editing engine
+used by the built-in Rampart REPL.  Provides prompt, history, and
+multi-line editing (Ctrl-X toggle).
+
+Usage:
+
+.. code-block:: javascript
+
+   var r = rampart.utils.repl(options);
+
+   /* or */
+
+   var r = rampart.utils.repl(prompt);
+
+Where ``options`` is an :green:`Object` with the following optional keys
+(or ``prompt`` is a :green:`String` shortcut equivalent to passing
+``{prompt: prompt}``):
+
++-------------+-----------------+--------------------------------------------------------------+
+|Argument     |Type             |Description                                                   |
++=============+=================+==============================================================+
+|prompt       |:green:`String`  | Text drawn before each input line. Default is ``""``.        |
++-------------+-----------------+--------------------------------------------------------------+
+|history      |:green:`Number`  | Maximum number of history entries kept in memory.            |
+|             |                 | Default is ``1024``.                                         |
++-------------+-----------------+--------------------------------------------------------------+
+|historyFile  |:green:`String`  | Path to a history file. If the file exists, its contents     |
+|             |                 | are loaded into history (appended to anything already in     |
+|             |                 | memory) when ``repl()`` is called. The file is written       |
+|             |                 | after every successful line returned by ``.next()``.         |
+|             |                 | If the file does not yet exist it is created on first save.  |
++-------------+-----------------+--------------------------------------------------------------+
+
+Return Value:
+   :green:`Object`.  A handle with the following methods:
+
++------------+--------------------------------------------------------------------------+
+|Method      |Description                                                               |
++============+==========================================================================+
+|next()      | Block, draw the prompt, and return the next line typed by the user as a  |
+|            | :green:`String`. Returns :green:`null` on Ctrl-C with an empty line,     |
+|            | Ctrl-D on an empty line, or read failure / EOF.                          |
++------------+--------------------------------------------------------------------------+
+|refresh()   | Redraw the current prompt and line. Useful after async output (e.g. a    |
+|            | timer firing while the user is at the prompt) has clobbered the screen.  |
++------------+--------------------------------------------------------------------------+
+|close()    | Restore terminal modes and drop the handle's methods. Call when you no   |
+|            | longer plan to use this repl.                                            |
++------------+--------------------------------------------------------------------------+
+
+History methods (called on the ``rampart.utils.repl`` :green:`Function`
+itself, not on an instance):
+
++------------------------+--------------------------------------------------------------+
+|Method                  |Description                                                   |
++========================+==============================================================+
+|getHistory()            | Return the current in-memory history as an :green:`Array`    |
+|                        | of :green:`Strings`, oldest first.                           |
++------------------------+--------------------------------------------------------------+
+|replaceHistory(arr)     | Replace the in-memory history with ``arr`` (an               |
+|                        | :green:`Array` of :green:`Strings`). Existing entries are    |
+|                        | discarded.                                                   |
++------------------------+--------------------------------------------------------------+
+|appendHistory(arr)      | Append the contents of ``arr`` (an :green:`Array` of         |
+|                        | :green:`Strings`) to the end of the in-memory history        |
+|                        | without clearing existing entries.                           |
++------------------------+--------------------------------------------------------------+
+|refresh()               | Same as the instance method, but callable without a handle.  |
++------------------------+--------------------------------------------------------------+
+
+Note:
+   linenoise's history is process-global. ``getHistory``,
+   ``replaceHistory`` and ``appendHistory`` operate on that single global
+   buffer regardless of which ``repl()`` instance is active. They share
+   the same buffer with the built-in Rampart REPL if rampart is started
+   interactively.
+
+Example:
+
+.. code-block:: javascript
+
+   /* Echo lines; reload history from disk, then prepend a seed at the
+    * start of each session so the user has a few commands to up-arrow
+    * to as separators. The file accumulates every line typed across
+    * sessions. */
+
+   var r = rampart.utils.repl({
+       prompt: "echo> ",
+       historyFile: "/tmp/echo.hist"
+   });
+
+   rampart.utils.repl.appendHistory([
+       "/* new session */",
+       "help",
+       "quit"
+   ]);
+
+   while (true) {
+       var line = r.next();
+       if (line === null) break;
+       rampart.utils.printf("you said: %s\n", line);
+   }
+
+   r.close();
+
+   rampart.utils.printf("history: %J\n", rampart.utils.repl.getHistory());
+
+Keybindings:
+   The same keys as the built-in REPL are honored:
+
+   +--------------------+------------------------------------------------------+
+   |Key                 |Action                                                |
+   +====================+======================================================+
+   |Up / Down arrow     |Scroll through history.                               |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-A              |Move to beginning of line.                            |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-C              |Quit (if line is empty) — ``.next()`` returns         |
+   |                    |:green:`null`.                                        |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-C              |Reset line (if line is not empty).                    |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-D              |Quit (if line is empty) — ``.next()`` returns         |
+   |                    |:green:`null`.                                        |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-D              |Delete to right (if line is not empty).               |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-D              |Submit line (if in multi-line mode).                  |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-E              |Move to the end of line.                              |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-K              |Delete from current to the end of line.               |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-L              |Clear and refresh screen.                             |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-T              |Swap current character with previous.                 |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-U              |Delete current line.                                  |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-W              |Delete previous word.                                 |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-X              |Toggle multi-line editing mode (prompt color changes  |
+   |                    |while it is on).                                      |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-Z              |Suspend and drop to shell.                            |
+   +--------------------+------------------------------------------------------+
+
 File Handle Utilities
 """""""""""""""""""""
 
