@@ -1,5 +1,5 @@
-The rampart-url module
-======================
+Rampart Extras
+==============
 
 Preface
 -------
@@ -1882,3 +1882,174 @@ Simple Type Check:
     This allows you to, e.g., check for a :green:`Date Object` without getting ``"object"`` back as you would
     with ``typeof`` and obviates the need to use of ``instanceOf Date`` or ``Array.isArray()`` where is not cleanly
     codable in C. It is also the basis of the :ref:`rampart.utils.getType() JavaScript call <rampart-utils:getType>`.
+
+
+rampart-nodeshim Module
+-----------------------
+
+.. warning::
+
+    **Highly experimental.**  The API surface, coverage, and even the
+    module's existence are subject to change without notice.  This
+    layer may be substantially altered or dropped entirely in a future
+    release.  Don't rely on it for production work.
+
+``rampart-nodeshim`` is a compatibility layer that lets a subset of
+node.js **core-module** code run under rampart.  It assumes the reader
+is familiar with node's APIs; this section only enumerates the
+available submodules and notes the gaps.
+
+It is **not** a general node-compatibility layer for arbitrary npm
+packages.  There is no ``node_modules/`` resolver, no support for
+package.json ``exports`` / ``imports`` maps, no ESM, no native-addon
+loading, no transitive dependency installation.  The intent is to let
+*your own* code use node-style API names — ``require('path')``,
+``new Worker(...)``, ``fs.readFileSync(...)`` — without rewriting it
+against rampart's native modules.  Dropping a folder full of npm
+packages into a rampart project will not work; running a typical npm
+package against the shim usually will not work.
+
+.. note::
+
+    Most real-world node-style code uses ES2015+ syntax — ``let`` /
+    ``const``, arrow functions, classes, template literals,
+    ``async``/``await``, destructuring, spread/rest, optional
+    chaining, etc.  Duktape's parser only accepts ES5, so to run
+    such code under rampart you need one of:
+
+    * the ``-t`` command-line flag (transpiler) — recommended
+    * the ``-b`` command-line flag (Babel)
+    * a ``"use transpilerGlobally"`` or ``"use babelGlobally"``
+      directive at the top of the entry script
+
+    See :ref:`the transpiler section <rampart-main:Use Transpiler>`
+    for details.  Without one of these, the shim still loads, but
+    your *own* code is restricted to ES5 syntax.  The submodule
+    implementations themselves are ES5 internally, so the shim's
+    surface (``fs.readFileSync(...)``, ``new EventEmitter()``, etc.)
+    works either way — it's *your* call sites that need the
+    transpiler if they use modern syntax.
+
+Loading
+~~~~~~~
+
+The shim is split between one native module (``rampart-nodeshim.so``)
+and per-submodule re-export files in ``js_modules/``, so the node-style
+bare-name require works:
+
+.. code-block:: javascript
+
+    var fs   = require('fs');           // → js_modules/fs.js → nodeshim.fs
+    var path = require('path');
+    var wt   = require('worker_threads');
+    // ...and so on for the submodules listed below.
+
+The re-export files in ``js_modules/`` are one-liners:
+``module.exports = require('rampart-nodeshim').<name>;``.  Full list:
+``assert.js``, ``buffer.js``, ``console.js``, ``crypto.js``, ``dns.js``,
+``events.js``, ``fs.js``, ``module.js``, ``os.js``, ``path.js``,
+``perf_hooks.js``, ``process.js``, ``punycode.js`` (vendored Mathias
+Bynens v2.3.1 IDN library — standalone, not part of the ``.so``),
+``querystring.js``, ``string_decoder.js``, ``timers.js``, ``url.js``,
+``util.js``, ``worker_threads.js``, ``zlib.js``.
+
+Submodules and notable gaps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ``assert`` — sync surface, ``CallTracker``,
+  ``partialDeepStrictEqual``.  ``assert.rejects`` /
+  ``doesNotReject`` need ``Promise`` (``-t``).
+
+* ``buffer`` — global ``Buffer`` plus full ``readUInt*``/``writeUInt*``
+  family.  ``Buffer.{read,write}Big*Int64*`` blocked on duktape
+  ``BigInt``.  ``Blob``/``File`` are undefined stubs.
+
+* ``console`` — adds ``time``/``timeEnd``/``timeLog``/``table``/
+  ``group``/``groupEnd``/``groupCollapsed``/``count``/``countReset``/
+  ``clear`` to the global ``console``.  Exposes a ``Console`` class.
+
+* ``crypto`` — Hash/Hmac/Cipher/Decipher/Sign/Verify/pbkdf2/
+  randomBytes/randomUUID/timingSafeEqual.  Asymmetric key surface
+  (``KeyObject``, ``createPrivateKey``, ``publicEncrypt``,
+  ``generateKeyPair``, ``X509Certificate``, ``DiffieHellman``) not
+  implemented.  ``scrypt`` / ``hkdf`` not implemented.
+
+* ``dns`` — wraps ``rampart.net.Resolver`` with literal-IP fast path.
+  ``dns.promises`` only meaningful under ``-t``.
+
+* ``events`` — full ``EventEmitter`` with ``once``/
+  ``getEventListeners``/``setMaxListeners`` statics and ``newListener``/
+  ``removeListener`` events.  ``EventEmitterAsyncResource`` not
+  provided.
+
+* ``fs`` — sync API plus callback variants.  ``fs.openAsBlob`` and
+  ``fs.statSync({bigint:true})`` blocked on Blob/BigInt.  ``fs.watch``
+  uses ``inotify`` on Linux, polling on macOS/BSD (no ``kqueue``
+  backend).  ``fs.createReadStream``/``WriteStream`` are minimal until
+  the ``stream`` module lands — no pipe/pause/resume.
+
+* ``module`` — ``Module.builtinModules``, ``isBuiltin``,
+  ``createRequire``, ``wrap``.  No compile-cache / sourcemaps / ESM.
+
+* ``os`` — full surface on Linux.  On macOS/BSD: ``os.cpus()`` returns
+  stub entries (``model: "unknown"``, all-zero times); ``os.freemem()``
+  may return 0.  Real implementations are planned follow-ups.
+
+* ``path`` — POSIX + win32 + ``matchesGlob``.  Cyclic
+  ``path.posix.posix === path.posix`` is intentional (matches node).
+
+* ``perf_hooks`` — ``performance.now``/``mark``/``measure``/
+  ``getEntries`` and the entry classes.  ``timeOrigin`` is module-load
+  ``Date.now()``.  No ``PerformanceObserver``.
+
+* ``process`` — ``cwd``/``chdir``/``exit``/``argv``/``env``/``pid``/
+  ``platform``/``arch``/``versions``/``cpuUsage``/``resourceUsage``/
+  ``hrtime``/``memoryUsage``/``setuid``-family/``getuid``-family.  No
+  ``send``/``disconnect`` (worker IPC), no ``process.report``, no
+  permission model.
+
+* ``punycode`` — vendored Mathias Bynens v2.3.1 (full).
+
+* ``querystring`` — legacy node module, full coverage.
+
+* ``string_decoder`` — ``StringDecoder`` with chunk-boundary buffering
+  for utf-8 multibyte and utf-16le pair splits.  Encodings: utf-8,
+  utf-16le, latin1, ascii, base64, hex.
+
+* ``timers`` — re-exports the globals with ``ref``/``unref``/
+  ``hasRef``/``refresh`` stubs on the handle.  No ``timers/promises``.
+
+* ``url`` — WHATWG ``URL`` + ``URLSearchParams``, legacy
+  ``url.parse``/``format``/``resolve``, ``fileURLToPath``/
+  ``pathToFileURL``, ``domainToASCII``/``domainToUnicode``,
+  ``URL.parse``/``URL.canParse`` statics.
+
+* ``util`` — ``format``/``inspect``/``promisify``/``callbackify``/
+  ``inherits``/``deprecate``/``debuglog``/``isDeepStrictEqual``/
+  ``types.*``/``parseArgs``/``parseEnv``/``styleText``/``MIMEType``.
+  ``util.aborted`` and ``events.on`` async-iter blocked on
+  ``AbortSignal``.
+
+* ``worker_threads`` — ``Worker``, ``parentPort``, ``workerData``,
+  ``threadId``, ``isMainThread``, ``MessageChannel``/``MessagePort``,
+  ``BroadcastChannel``.  All messages are deep-copied (no
+  ``SharedArrayBuffer`` transfer; ``transferList`` is validated but
+  copies happen anyway).  ``worker.stdin``/``stdout``/``stderr`` are
+  ``null`` pending the ``stream`` module.  Worker scripts run via
+  ``eval`` (``{eval:true}``) or ``require()`` (file form), not as a
+  top-level program.
+
+* ``zlib`` — sync surface plus callback variants, backed by libdeflate.
+  ``unzipSync`` auto-detects gzip vs zlib framing.  ``crc32``/
+  ``adler32`` included.  Stream classes (``createGzip``,
+  ``createGunzip``, ``Brotli*``, ``Zstd*``) throw ``ENOSYS`` pending
+  the ``stream`` module.
+
+Not implemented
+~~~~~~~~~~~~~~~
+
+``async_hooks``, ``cluster``, ``dgram``, ``diagnostics_channel``,
+``domain``, ``http``/``https``/``http2``, ``inspector``,
+``net``/``tls`` (planned), ``repl``, ``stream``, ``child_process``,
+``readline``, ``tty``, ``vm``, ``node:test``, ``trace_events``,
+``v8``, ``wasi``.

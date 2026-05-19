@@ -155,6 +155,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -872,6 +873,138 @@ the file out in chunks using a <code class="docutils literal notranslate"><span 
 <span class="p">);</span>
 </pre></div>
 </div>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">xferCallback</span></code> - a <span class="green">Function</span>, a tick-driven transfer
+monitor.  Unlike <code class="docutils literal notranslate"><span class="pre">progressCallback</span></code> (which only fires when bytes
+arrive), <code class="docutils literal notranslate"><span class="pre">xferCallback</span></code> is driven by libcurl’s internal timer and
+fires regularly even when no data is flowing — during connection
+setup, TLS handshake, server prefill, or network stall.  This makes
+it the right hook for deadlines, low-bandwidth aborts, byte caps,
+and cross-thread cancellation.</p>
+<p>The function receives one <span class="green">Object</span> argument with the
+following properties:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Property</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dlNow</span></code></td>
+<td>bytes downloaded so far</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">dlTotal</span></code></td>
+<td>expected total download bytes; <code class="docutils literal notranslate"><span class="pre">0</span></code> if the server
+sent no <code class="docutils literal notranslate"><span class="pre">Content-Length</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ulNow</span></code></td>
+<td>bytes uploaded</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ulTotal</span></code></td>
+<td>expected total upload bytes</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">elapsed</span></code></td>
+<td>seconds since the request started</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">speedDl</span></code></td>
+<td>current download rate in bytes/sec</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">speedUl</span></code></td>
+<td>current upload rate in bytes/sec</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">connectTime</span></code></td>
+<td>seconds until TCP connection established;
+<code class="docutils literal notranslate"><span class="pre">0</span></code> until it happens</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">appConnectTime</span></code></td>
+<td>seconds until TLS handshake complete; <code class="docutils literal notranslate"><span class="pre">0</span></code> for HTTP</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">headerTime</span></code></td>
+<td>seconds until response headers arrived;
+<code class="docutils literal notranslate"><span class="pre">0</span></code> until they do</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">httpStatus</span></code></td>
+<td>HTTP status code; <code class="docutils literal notranslate"><span class="pre">0</span></code> until headers received</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">originalUrl</span></code></td>
+<td>the URL the script passed to fetch/Async,
+unchanged by any redirect</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">url</span></code></td>
+<td>effective URL after redirect chain (matches
+<code class="docutils literal notranslate"><span class="pre">originalUrl</span></code> if no redirects)</td>
+</tr>
+</tbody>
+</table>
+<p>Returning <code class="docutils literal notranslate"><span class="pre">false</span></code> from the callback aborts the transfer.
+libcurl reports the abort via <code class="docutils literal notranslate"><span class="pre">CURLE_ABORTED_BY_CALLBACK</span></code>; the
+final callback’s <code class="docutils literal notranslate"><span class="pre">r.errMsg</span></code> will contain <code class="docutils literal notranslate"><span class="pre">&quot;curl</span> <span class="pre">failed:</span>
+<span class="pre">Operation</span> <span class="pre">was</span> <span class="pre">aborted</span> <span class="pre">by</span> <span class="pre">an</span> <span class="pre">application</span> <span class="pre">callback&quot;</span></code>.</p>
+<p>Returning any other value — including <code class="docutils literal notranslate"><span class="pre">true</span></code>, an object, or no
+return at all (<code class="docutils literal notranslate"><span class="pre">undefined</span></code>) — continues the transfer. This
+matches rampart’s convention for other callback APIs where
+<code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">false</span></code> is the explicit “stop” signal and the default of
+doing nothing means “keep going.”  Errors thrown from the
+callback are caught and treated as “continue” — they do not abort.</p>
+<p>Common patterns:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Hard deadline */</span>
+<span class="kd">var</span> <span class="nx">deadline</span> <span class="o">=</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">+</span> <span class="mi">30000</span><span class="p">;</span>
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">xferCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">info</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nx">deadline</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="nx">cb</span><span class="p">);</span>
+
+<span class="cm">/* Low-bandwidth abort */</span>
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">xferCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">info</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">info</span><span class="p">.</span><span class="nx">speedDl</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">info</span><span class="p">.</span><span class="nx">speedDl</span> <span class="o">&lt;</span> <span class="mi">1024</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="nx">cb</span><span class="p">);</span>
+
+<span class="cm">/* Byte cap - bail if the response exceeds 10 MB */</span>
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">xferCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">info</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">info</span><span class="p">.</span><span class="nx">dlNow</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="o">*</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="nx">cb</span><span class="p">);</span>
+
+<span class="cm">/* Cross-thread cancel via shared state */</span>
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">xferCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">info</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;cancel&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="nx">cb</span><span class="p">);</span>
+
+<span class="cm">/* Bail before reading body on a server error */</span>
+<span class="nx">curl</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">xferCallback</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">info</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">info</span><span class="p">.</span><span class="nx">httpStatus</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">)</span> <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="nx">cb</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Available with <code class="docutils literal notranslate"><span class="pre">fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">fetchAsync</span></code>, <code class="docutils literal notranslate"><span class="pre">submit</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">submitAsync</span></code> — same surface across all four.  Not preserved
+across <code class="docutils literal notranslate"><span class="pre">addurl</span></code> chained calls.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">xferCallback</span></code> is not provided, libcurl’s tick is left
+disabled (<code class="docutils literal notranslate"><span class="pre">CURLOPT_NOPROGRESS=1</span></code>) and no overhead is incurred —
+the no-callback path is byte-for-byte identical to today.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">xferCallbackRate</span></code> - a <span class="green">Number</span>, the maximum
+invocation rate of <code class="docutils literal notranslate"><span class="pre">xferCallback</span></code> in calls per second.
+Default is <code class="docutils literal notranslate"><span class="pre">4</span></code> (one call every 250 ms).  A rate of <code class="docutils literal notranslate"><span class="pre">1</span></code> means
+one call per second, <code class="docutils literal notranslate"><span class="pre">10</span></code> means 100 ms between calls.
+Setting <code class="docutils literal notranslate"><span class="pre">0</span></code> removes the throttle and the callback fires on
+every libcurl tick.  Has no effect when <code class="docutils literal notranslate"><span class="pre">xferCallback</span></code> is not
+provided.</p>
+<p>libcurl’s own minimum tick is roughly 1 Hz; higher rates may be
+bounded by that floor during idle waits but will produce more
+frequent calls during active transfers.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">noCopyBuffer</span></code> - a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code> the response
 <code class="docutils literal notranslate"><span class="pre">body</span></code> <span class="green">Buffer</span> is used directly from the Curl library

@@ -795,6 +795,66 @@ Note:
     character/byte boundary check.
 
 
+writeFile
+'''''''''
+
+Write the contents of a :green:`String` or :green:`Buffer` to a file in one
+call.  Convenience wrapper around `fopen`_\ () + `fwrite`_\ () + `fclose`_\ ().
+Truncates an existing file by default.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.writeFile(path, data [, options]);
+
+Where:
+
+* ``path`` is a :green:`String`, the path to the file to be written.
+
+* ``data`` is a :green:`String` or :green:`Buffer` (any buffer type, including
+  :green:`Uint8Array`).
+
+* ``options`` is an optional :green:`Object` with the following properties:
+
+  * ``mode`` -- :green:`Number` or :green:`String` (octal).  File permissions
+    applied via ``fchmod`` after the bytes are written.  If unset, the
+    system ``umask`` determines mode.  See `chmod`_\ () for octal notation.
+
+  * ``flag`` -- :green:`String`, the ``fopen`` mode to use.  Defaults to
+    ``"w"`` (truncate).  Pass ``"a"`` to append, or use `appendFile`_\ ()
+    below for the common append case.
+
+Return Value:
+   ``undefined``.  Throws on I/O error.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.writeFile("/tmp/note.txt", "hello\n");
+   rampart.utils.writeFile("/tmp/key.bin", new Uint8Array([1,2,3]), {mode: 0o600});
+
+appendFile
+''''''''''
+
+Append the contents of a :green:`String` or :green:`Buffer` to a file.  Creates
+the file if it does not exist.  Equivalent to ``writeFile(path, data,
+{flag: "a"})``.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.appendFile(path, data [, options]);
+
+Arguments are the same as `writeFile`_\ () above; the ``flag`` option, if
+provided, overrides the default of ``"a"``.
+
+Return Value:
+   ``undefined``.  Throws on I/O error.
+
+
 trim
 ''''
 
@@ -923,6 +983,65 @@ Return Value:
    Same as `stat`_\ () with the addition of the property
    ``isSymbolicLink`` which is set ``true`` if the file is a symbolic link.
    ``readable`` and ``writable`` refer to the link, not the target.
+
+exists
+''''''
+
+Test whether a path resolves to anything accessible.  Convenience wrapper
+that returns ``false`` for missing paths and inaccessible parents (the
+errors `stat`_\ () would swallow into a ``false`` return) without forcing
+callers to examine the stat result.
+
+Usage:
+
+.. code-block:: javascript
+
+   var ok = rampart.utils.exists(path);
+
+Where ``path`` is a :green:`String`.
+
+Return Value:
+   :green:`Boolean`.  ``true`` if the path exists and is reachable,
+   ``false`` otherwise.
+
+statVfs
+'''''''
+
+Return filesystem statistics for the volume containing ``path`` -- block
+sizes, free space, inode counts and similar values reported by
+`statvfs (3) <https://man7.org/linux/man-pages/man3/statvfs.3.html>`_.
+
+Usage:
+
+.. code-block:: javascript
+
+   var info = rampart.utils.statVfs(path);
+
+Where ``path`` is a :green:`String`, any path on the volume of interest.
+
+Return Value:
+   :green:`Object` with the following properties:
+
+.. code-block:: javascript
+
+   {
+      "bsize":      Number,  /* filesystem block size                 */
+      "frsize":     Number,  /* fragment size                          */
+      "blocks":     Number,  /* total fragments                        */
+      "bfree":      Number,  /* free fragments                         */
+      "bavail":     Number,  /* free fragments available to non-root   */
+      "files":      Number,  /* total inodes                           */
+      "ffree":      Number,  /* free inodes                            */
+      "favail":     Number,  /* free inodes available to non-root      */
+      "fsid":       Number,  /* filesystem ID                          */
+      "flag":       Number,  /* mount flags                            */
+      "namemax":    Number,  /* maximum filename length                */
+      "totalBytes": Number,  /* convenience: frsize * blocks           */
+      "freeBytes":  Number,  /* convenience: frsize * bfree            */
+      "availBytes": Number   /* convenience: frsize * bavail           */
+   }
+
+Throws if the path cannot be resolved.
 
 exec
 ''''
@@ -1351,6 +1470,29 @@ which is likely not what was intended.
 Return Value:
    ``undefined``.
 
+mkdTemp
+'''''''
+
+Create a uniquely-named directory using `mkdtemp (3)
+<https://man7.org/linux/man-pages/man3/mkdtemp.3.html>`_.  Six random
+characters are appended to the supplied prefix and a new directory is
+created with mode ``0700`` (owner only).
+
+Usage:
+
+.. code-block:: javascript
+
+   var dir = rampart.utils.mkdTemp(prefix);
+
+Where ``prefix`` is a :green:`String` -- the full path leading up to the
+random suffix.  For example, ``"/tmp/build-"`` produces a directory like
+``/tmp/build-AbC123``.
+
+Return Value:
+   :green:`String`.  The full path of the newly created directory.  Throws
+   on failure (most commonly because the parent directory does not exist
+   or is not writable).
+
 rmdir
 '''''
 
@@ -1400,6 +1542,102 @@ beginning with ``.`` (hidden files) will be included in the return value.
 
 Return Value:
    :green:`Array`.  An :green:`Array` of :green:`Strings`, each filename in the directory.
+
+
+walkDir
+'''''''
+
+Recursively walk a directory tree, calling a JavaScript :green:`Function`
+for each entry encountered.  Used internally by `cp`_\ () and `rm`_\ ();
+also useful directly for custom traversals.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.walkDir(dir, callback [, options]);
+
+Where:
+
+* ``dir`` is a :green:`String`, the path to descend.
+
+* ``callback`` is a :green:`Function` ``callback(path, type, depth)`` invoked
+  per entry:
+
+  * ``path`` -- :green:`String`, the entry's full path (relative to ``dir``
+    if ``dir`` was relative).
+
+  * ``type`` -- :green:`String`, one of ``"file"``, ``"dir"``, ``"symlink"``,
+    or ``"other"``.
+
+  * ``depth`` -- :green:`Number`, depth from ``dir``.  The root passed in has
+    depth ``0``.
+
+  Returning ``false`` from the callback stops the walk (rampart's standard
+  callback-abort convention).
+
+* ``options`` is an optional :green:`Object`:
+
+  * ``followLinks`` -- :green:`Boolean`, default ``false``.  If ``true``,
+    symlinks are followed during the descent.
+
+  * ``postOrder`` -- :green:`Boolean`, default ``false``.  If ``true``,
+    directory entries are emitted *after* their contents (depth-first
+    leaves-then-branches).  Useful for safe recursive deletion.
+
+Return Value:
+   ``undefined``.
+
+Example:
+
+.. code-block:: javascript
+
+   /* Build an array of all .js files under the cwd */
+   var jsFiles = [];
+   rampart.utils.walkDir(".", function(p, t) {
+      if (t === "file" && /\.js$/.test(p)) jsFiles.push(p);
+   });
+
+glob
+''''
+
+Expand a wildcard pattern to a list of matching paths.  Supports ``*`` (any
+chars within a component), ``?`` (single char), ``[abc]`` / ``[a-z]`` /
+``[!abc]`` character classes, and ``**`` as a component meaning "any depth
+of subdirectories".  No brace expansion.
+
+Usage:
+
+.. code-block:: javascript
+
+   var matches = rampart.utils.glob(pattern [, options]);
+
+Where:
+
+* ``pattern`` is a :green:`String`, either relative or absolute.  Absolute
+  patterns start the search at ``/``; relative patterns start at ``options.cwd``
+  or the current working directory.
+
+* ``options`` is an optional :green:`Object`:
+
+  * ``cwd`` -- :green:`String`, the base directory for relative patterns.
+    Default ``"."``.
+
+  * ``dot`` -- :green:`Boolean`, default ``false``.  If ``true``, dotfiles
+    are included in matches.
+
+Return Value:
+   :green:`Array` of :green:`Strings`, the matching paths (may be empty).
+
+Example:
+
+.. code-block:: javascript
+
+   /* All .js files anywhere below ./src */
+   var src = rampart.utils.glob("**/*.js", {cwd: "./src"});
+
+   /* Absolute pattern */
+   var logs = rampart.utils.glob("/var/log/*.log");
 
 
 zipList
@@ -1559,13 +1797,70 @@ Where ``source`` is a :green:`String`, the file to be copied, ``destination`` is
 :green:`String`, the name of the target file and optional ``overWrite`` is a :green:`Boolean`
 which if ``true`` will overwrite ``destination`` if it exists.
 
+For directory trees, see `cp`_\ () below.
+
 Return Value:
    ``undefined``.
+
+cp
+''
+
+Copy a file or, with ``{recursive: true}``, an entire directory tree.
+Symbolic links are preserved unless ``dereference`` is set.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.cp(src, dest [, options]);
+
+Where:
+
+* ``src`` is a :green:`String`, the source file or directory.
+
+* ``dest`` is a :green:`String`, the destination path.
+
+* ``options`` is an optional :green:`Object`:
+
+  * ``recursive`` -- :green:`Boolean`, default ``false``.  Required when
+    ``src`` is a directory; throws otherwise.
+
+  * ``dereference`` -- :green:`Boolean`, default ``false``.  If ``true``,
+    follow symlinks (copy the target's contents).  If ``false``, replicate
+    the link as a link.
+
+  * ``preserveTimestamps`` -- :green:`Boolean`, default ``false``.  If
+    ``true``, copy ``atime`` and ``mtime`` from each source entry.
+
+  * ``force`` -- :green:`Boolean`, default ``false``.  If ``true``, ignore
+    missing-destination errors silently when running with
+    ``errorOnExist: true``.
+
+  * ``errorOnExist`` -- :green:`Boolean`, default ``false``.  If ``true``,
+    fail with ``EEXIST`` rather than silently overwriting an existing
+    destination file (uses ``O_EXCL`` internally).
+
+Return Value:
+   ``undefined``.  Throws on the first error encountered (a partial copy
+   may have already been written).
+
+Example:
+
+.. code-block:: javascript
+
+   /* Single file */
+   rampart.utils.cp("conf.json", "conf.json.bak");
+
+   /* Recursive deep copy */
+   rampart.utils.cp("/src/proj", "/backup/proj", {
+      recursive: true,
+      preserveTimestamps: true
+   });
 
 rmFile
 ''''''
 
-Delete a file.
+Delete a single file.
 
 Usage:
 
@@ -1575,8 +1870,44 @@ Usage:
 
 Where ``filename`` is a :green:`String`, the name of the file to be removed.
 
+For removing directory trees, see `rm`_\ () below.
+
 Return Value:
    ``undefined``.
+
+rm
+''
+
+Remove a file or, with ``{recursive: true}``, an entire directory tree
+(``rm -rf`` semantics).  Walks children before parents so directories are
+empty by the time they are removed.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.rm(path [, options]);
+
+Where:
+
+* ``path`` is a :green:`String`, the file or directory to remove.
+
+* ``options`` is an optional :green:`Object`:
+
+  * ``recursive`` -- :green:`Boolean`, default ``false``.  Required when
+    ``path`` is a non-empty directory.
+
+  * ``force`` -- :green:`Boolean`, default ``false``.  If ``true``, missing
+    paths are silently ignored (rather than throwing ``ENOENT``).
+
+Return Value:
+   ``undefined``.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.rm("/tmp/build", {recursive: true, force: true});
 
 link
 ''''
@@ -1619,6 +1950,25 @@ the to-be-created symlink.
 Return Value:
    ``undefined``.
 
+readLink
+''''''''
+
+Read the target path of a symbolic link.  The link target string is
+returned verbatim (it is *not* resolved to an absolute path -- use
+`realPath`_\ () for that).
+
+Usage:
+
+.. code-block:: javascript
+
+   var target = rampart.utils.readLink(path);
+
+Where ``path`` is a :green:`String`, the symlink itself.
+
+Return Value:
+   :green:`String`, the link's target.  Throws if ``path`` does not exist
+   or is not a symbolic link (``EINVAL``).
+
 chmod
 '''''
 
@@ -1631,9 +1981,8 @@ Usage:
    rampart.utils.chmod(path [, mode]);
 
 Where ``path`` is a :green:`String`, the file or directory upon which to be operated
-and ``mode`` is a :green:`Number` or :green:`String`, the octal permissions mode.  Any parent
-directories which do not exist will also be created.  Throws error if
-lacking permissions or if another error was encountered.
+and ``mode`` is a :green:`Number` or :green:`String`, the octal permissions mode.
+Throws error if lacking permissions or if another error was encountered.
 
 Note that ``mode`` is normally given as an octal.  As such it can be, e.g.,
 ``0755`` (octal number) or ``"755"`` (:green:`String` representation of an octal
@@ -1657,6 +2006,31 @@ Where ``path`` is a :green:`String`, not necessarily in canonical form.
 
 Return Value:
    A :green:`String`, the canonical form of the path.  Throws an error if path does not exist.
+
+truncate
+''''''''
+
+Truncate or extend a regular file to a given size in bytes.  Extending a
+file beyond its current size creates a hole; reading the hole returns NUL
+bytes.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.truncate(path, length);
+
+Where ``path`` is a :green:`String` and ``length`` is a :green:`Number`
+(non-negative).
+
+Return Value:
+   ``undefined``.  Throws if the file cannot be opened/modified.
+
+See also `truncate (2)
+<https://man7.org/linux/man-pages/man2/truncate.2.html>`_.  For truncating
+via an open file handle, see `fh.ftruncate`_\ () in the File Handle
+Utilities section, or `ftruncateFd`_\ () in the POSIX File Descriptor I/O
+section.
 
 touch
 '''''
@@ -1720,6 +2094,135 @@ Where ``source`` is a :green:`String`, the file to be renamed or moved, ``destin
 Return Value:
    ``undefined``.
 
+chown
+'''''
+
+Change the owning user and/or group of a file or directory.  Follows
+symbolic links (the target gets the new ownership); use `lchown`_\ ()
+to operate on the link itself.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.chown(path [, user] [, group]);
+
+   /* or */
+
+   rampart.utils.chown({path: path [, user: user] [, group: group]});
+
+Where:
+
+* ``path`` is a :green:`String`, the file or directory to modify.
+
+* ``user`` is a :green:`String` (account name, looked up via
+  ``getpwnam(3)``) or a :green:`Number` (uid).  Omit -- or pass a
+  negative number in positional form -- to leave the user unchanged.
+
+* ``group`` is a :green:`String` (group name, looked up via
+  ``getgrnam(3)``) or a :green:`Number` (gid).  Omit to leave the
+  group unchanged.
+
+Return Value:
+   ``undefined``.  Throws if the path does not exist, the named user/
+   group is unknown, or the caller lacks permission (typically only
+   root may change ``user``).
+
+Example:
+
+.. code-block:: javascript
+
+   /* By name */
+   rampart.utils.chown("/var/log/myapp", "www-data", "adm");
+
+   /* By id */
+   rampart.utils.chown("/srv/data", 1000, 1000);
+
+   /* Change group only, leave user alone */
+   rampart.utils.chown({path: "/srv/data", group: "deploy"});
+
+lchown
+''''''
+
+Change ownership of a symbolic link itself, *not* the link's target.
+Compare to ``chmod``/``chown`` which follow symlinks.  Useful for
+backup/restore tools and any code that needs to faithfully reproduce
+filesystem state.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.lchown(path, user, group);
+
+Where:
+
+* ``path`` is a :green:`String`, the symlink to modify.
+
+* ``user`` and ``group`` are each a :green:`String` (name -- looked up
+  via ``getpwnam``/``getgrnam``) or a :green:`Number` (uid/gid).  A
+  negative number leaves that side unchanged.
+
+Return Value:
+   ``undefined``.  Throws if the symlink does not exist or the caller
+   lacks permission.
+
+lchmod
+''''''
+
+Change permission bits on a symbolic link itself, where the platform
+supports it.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.lchmod(path, mode);
+
+Where ``mode`` follows the same conventions as `chmod`_\ () (integer
+like ``0o644`` or octal string like ``"644"``).
+
+Platform notes:
+   * macOS, FreeBSD: changes the symlink's own mode (uses ``lchmod(2)``).
+   * Linux: the kernel has no syscall to alter a symlink's mode bits
+     (and they aren't honored anyway).  This function throws with an
+     ``ENOSYS``-style message for actual symlinks, but falls through to
+     a plain `chmod`_\ () for non-symlink paths, so portable callers
+     don't have to special-case the not-a-symlink case.
+
+Return Value:
+   ``undefined``.
+
+lUtimes
+'''''''
+
+Set access and modification timestamps on a symbolic link itself.
+Like `touch`_\ () but operates on the link rather than its target.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.lUtimes(path, atime, mtime);
+
+   /* or */
+
+   rampart.utils.lUtimes(path, {setaccess: atime, setmodify: mtime});
+
+Where:
+
+* ``path`` is a :green:`String`, the symlink to modify.
+
+* ``atime`` / ``mtime`` are each a :green:`Number` (seconds since the
+  unix epoch) or a :green:`Date`.  Omitted timestamps default to the
+  current values on the link.
+
+Internally uses ``utimensat(…, AT_SYMLINK_NOFOLLOW)`` on Linux and
+``lutimes(3)`` elsewhere.
+
+Return Value:
+   ``undefined``.
+
 sleep
 '''''
 
@@ -1741,6 +2244,41 @@ Example:
 
    /* wait 1.5 seconds */
    rampart.utils.sleep(1.5);
+
+tmpDir
+''''''
+
+Return the system temporary directory.  Honors the standard environment
+variables ``TMPDIR``, ``TMP`` and ``TEMP`` in that order; falls back to
+``/tmp`` on POSIX systems.  The returned path is *not* validated to
+exist -- callers should create whatever subdirectory they need (often via
+`mkdTemp`_\ ()).
+
+Usage:
+
+.. code-block:: javascript
+
+   var tmp = rampart.utils.tmpDir();
+
+Return Value:
+   :green:`String`.  Trailing slashes are stripped.
+
+homeDir
+'''''''
+
+Return the current user's home directory.  Uses the ``HOME`` environment
+variable when set; otherwise calls ``getpwuid(geteuid())`` to look it up
+in ``/etc/passwd``.
+
+Usage:
+
+.. code-block:: javascript
+
+   var home = rampart.utils.homeDir();
+
+Return Value:
+   :green:`String`, the home directory.  Throws only if neither lookup
+   succeeds (extremely rare).
 
 getType
 '''''''
@@ -2459,12 +2997,294 @@ Return Value:
    :green:`Object`.  A flat :green:`Object` with ``{name: value}`` entries
    for every variable visible at the point of the ``getScopeVars()`` call.
 
+repl
+''''
+
+Create an interactive line editor backed by the same line-editing engine
+used by the built-in Rampart REPL.  Provides prompt, history, and
+multi-line editing (Ctrl-X toggle).
+
+Usage:
+
+.. code-block:: javascript
+
+   var r = rampart.utils.repl(options);
+
+   /* or */
+
+   var r = rampart.utils.repl(prompt);
+
+Where ``options`` is an :green:`Object` with the following optional keys
+(or ``prompt`` is a :green:`String` shortcut equivalent to passing
+``{prompt: prompt}``):
+
++----------------+-----------------+--------------------------------------------------------------+
+|Argument        |Type             |Description                                                   |
++================+=================+==============================================================+
+|prompt          |:green:`String`  | Text drawn before each input line. Default is ``""``.        |
++----------------+-----------------+--------------------------------------------------------------+
+|history         |:green:`Number`  | Maximum number of history entries kept in memory.            |
+|                |                 | Default is ``1024``.                                         |
++----------------+-----------------+--------------------------------------------------------------+
+|historyFile     |:green:`String`  | Path to a history file. If the file exists, its contents     |
+|                |                 | are loaded into history (appended to anything already in     |
+|                |                 | memory) when ``repl()`` is called. The file is written       |
+|                |                 | after every successful line returned by ``.next()``.         |
+|                |                 | If the file does not yet exist it is created on first save.  |
++----------------+-----------------+--------------------------------------------------------------+
+|redrawOnResume  |:green:`Boolean` | If ``true`` (default), on Ctrl-Z resume the screen content   |
+|                |                 | visible just before suspend is restored by replaying a       |
+|                |                 | captured copy of everything the REPL had written to          |
+|                |                 | ``stdout``. If ``false``, only the prompt and current edit   |
+|                |                 | line are redrawn at the cursor's current row (the behavior   |
+|                |                 | prior to the capture-and-replay feature being added).        |
++----------------+-----------------+--------------------------------------------------------------+
+|objectMode      |:green:`Boolean` | If ``true``, ``.next()`` returns an :green:`Object` with     |
+|                |                 | ``{text, status[, signal]}`` instead of the legacy           |
+|                |                 | :green:`String` / :green:`null` / :green:`false` return      |
+|                |                 | values. Required to distinguish a wake (see                  |
+|                |                 | ``rampart.utils.repl.interrupt()`` below) from a Ctrl-C      |
+|                |                 | cancel. Default ``false`` for backwards compatibility.       |
++----------------+-----------------+--------------------------------------------------------------+
+
+Return Value:
+   :green:`Object`.  A handle with the following methods:
+
++------------+--------------------------------------------------------------------------+
+|Method      |Description                                                               |
++============+==========================================================================+
+|next()      | Block, draw the prompt, and return the next line typed by the user.      |
+|            |                                                                          |
+|            | **Legacy mode** (default — ``objectMode: false``): the return value      |
+|            | distinguishes the three end-of-input cases:                              |
+|            |                                                                          |
+|            | * :green:`String` — a line of input (may be empty if the user just       |
+|            |   pressed Enter).                                                        |
+|            | * :green:`false` — Ctrl-C was pressed at an empty prompt, **or** the     |
+|            |   read was woken via ``rampart.utils.repl.interrupt()``. The two cases   |
+|            |   are indistinguishable in legacy mode; use ``objectMode`` if you need   |
+|            |   to tell them apart.                                                    |
+|            | * :green:`null` — Ctrl-D / EOF / read failure. Typically treated as      |
+|            |   "exit the REPL".                                                       |
+|            |                                                                          |
+|            | **objectMode** (when ``objectMode: true`` was passed to ``repl()``):     |
+|            | the return value is always an :green:`Object`:                           |
+|            |                                                                          |
+|            | * ``{text: <string>, status: 'ok'}`` — a line of input.                  |
+|            | * ``{text: '',       status: 'cancel'}`` — Ctrl-C at an empty prompt.    |
+|            | * ``{text: '',       status: 'eof'}`` — Ctrl-D / EOF / read failure.    |
+|            | * ``{text: '',       status: 'wake', signal: <string>}`` — the read was  |
+|            |   woken by ``rampart.utils.repl.interrupt(payload)``; ``signal`` carries |
+|            |   the bytes that were on the pipe at wake time (empty string if          |
+|            |   ``interrupt()`` was called with no argument).                          |
+|            |                                                                          |
+|            | In both modes, Ctrl-C pressed while a line *has content* is handled      |
+|            | internally: linenoise prints ``^C``, the line buffer is dropped, a       |
+|            | fresh prompt is drawn on the next row, and ``.next()`` keeps blocking    |
+|            | — it does **not** return.                                                |
++------------+--------------------------------------------------------------------------+
+|refresh()   | Redraw the current prompt and edit buffer at the cursor's current        |
+|            | position. Use this after any output has been written to the terminal     |
+|            | while ``.next()`` is blocked — for example, a timer callback or a        |
+|            | worker thread streaming output. Calling ``refresh()`` after the          |
+|            | external output completes restores the prompt visibly on a fresh line.   |
+|            |                                                                          |
+|            | Safe to call from a different thread than the one in ``.next()``,        |
+|            | provided no other writer is concurrently writing to ``stdout`` at the    |
+|            | same moment. linenoise's state (prompt text, edit buffer, cursor row     |
+|            | within the buffer) is not modified while ``.next()`` is parked in        |
+|            | ``read()``, so the cross-thread refresh sees consistent data.            |
++------------+--------------------------------------------------------------------------+
+|close()     | Restore terminal modes and drop the handle's methods. Call when you no   |
+|            | longer plan to use this repl.                                            |
++------------+--------------------------------------------------------------------------+
+
+Module-level methods (called on the ``rampart.utils.repl`` :green:`Function`
+itself, not on an instance):
+
++------------------------+--------------------------------------------------------------+
+|Method                  |Description                                                   |
++========================+==============================================================+
+|getHistory()            | Return the current in-memory history as an :green:`Array`    |
+|                        | of :green:`Strings`, oldest first.                           |
++------------------------+--------------------------------------------------------------+
+|replaceHistory(arr)     | Replace the in-memory history with ``arr`` (an               |
+|                        | :green:`Array` of :green:`Strings`). Existing entries are    |
+|                        | discarded.                                                   |
++------------------------+--------------------------------------------------------------+
+|appendHistory(arr)      | Append the contents of ``arr`` (an :green:`Array` of         |
+|                        | :green:`Strings`) to the end of the in-memory history        |
+|                        | without clearing existing entries.                           |
++------------------------+--------------------------------------------------------------+
+|refresh()               | Same as the instance ``refresh()`` method, but callable      |
+|                        | without holding a handle to the repl. Useful from worker     |
+|                        | threads or library code that does not have access to the     |
+|                        | repl object created by main.                                 |
++------------------------+--------------------------------------------------------------+
+|interrupt([payload])    | Wake any in-flight ``.next()`` read by writing to an         |
+|                        | internal pipe that linenoise polls alongside ``stdin``.      |
+|                        | The optional ``payload`` :green:`String` is delivered to     |
+|                        | the woken ``.next()`` call as the ``signal`` field of its    |
+|                        | result :green:`Object` (objectMode) — used to route on       |
+|                        | *why* the wake happened. Calling ``interrupt()`` with no     |
+|                        | argument (or ``""``) yields ``signal: ""``.                  |
+|                        |                                                              |
+|                        | Safe to call from any thread. If no ``.next()`` is currently |
+|                        | blocked, the payload is buffered and consumed by the next    |
+|                        | ``.next()`` call.                                            |
+|                        |                                                              |
+|                        | In legacy (non-objectMode) ``.next()``, a wake comes back as |
+|                        | :green:`false` — indistinguishable from Ctrl-C at empty      |
+|                        | prompt. Use ``objectMode`` if your caller needs to act on    |
+|                        | the wake (e.g. to read shared state put by the interrupter)  |
+|                        | versus a user cancel.                                        |
++------------------------+--------------------------------------------------------------+
+
+Note:
+   linenoise's history is process-global. ``getHistory``,
+   ``replaceHistory`` and ``appendHistory`` operate on that single global
+   buffer regardless of which ``repl()`` instance is active. They share
+   the same buffer with the built-in Rampart REPL if rampart is started
+   interactively.
+
+Example (legacy mode):
+
+.. code-block:: javascript
+
+   /* Echo lines; reload history from disk, then prepend a seed at the
+    * start of each session so the user has a few commands to up-arrow
+    * to as separators. The file accumulates every line typed across
+    * sessions. */
+
+   var r = rampart.utils.repl({
+       prompt: "echo> ",
+       historyFile: "/tmp/echo.hist"
+   });
+
+   rampart.utils.repl.appendHistory([
+       "/* new session */",
+       "help",
+       "quit"
+   ]);
+
+   while (true) {
+       var line = r.next();
+       if (line === null) break;                 /* Ctrl-D / EOF */
+       if (line === false) {                     /* Ctrl-C at empty prompt */
+           rampart.utils.printf("(ignored — use Ctrl-D to exit)\n");
+           continue;
+       }
+       rampart.utils.printf("you said: %s\n", line);
+   }
+
+   r.close();
+
+   rampart.utils.printf("history: %J\n", rampart.utils.repl.getHistory());
+
+Example (objectMode with ``interrupt()``):
+
+.. code-block:: javascript
+
+   /* Echo lines on the main thread while a worker thread fires an
+    * approval prompt every 5 seconds. The wake interrupts the
+    * .next() read; the caller routes on the `signal` field, asks
+    * the user a single-key question with getchar(1), and resumes
+    * the REPL — all without ever yielding the linenoise instance
+    * to another reader. */
+
+   rampart.globalize(rampart.utils);
+
+   function workerMain() {
+       rampart.globalize(rampart.utils);
+       while (true) {
+           sleep(5);
+           rampart.utils.repl.interrupt('approve');
+       }
+   }
+   var w = new rampart.thread();
+   w.exec(workerMain, null, function(){});
+
+   var r = repl({prompt: "echo> ", objectMode: true});
+
+   while (true) {
+       var res = r.next();
+       if (res.status === 'eof')    break;
+       if (res.status === 'cancel') { printf("(Ctrl-D to exit)\n"); continue; }
+       if (res.status === 'wake') {
+           if (res.signal === 'approve') {
+               printf("[approval] allow? [y/n]: ");
+               fflush({stream: "stdout"});
+               var ch = (getchar(1) || '').toLowerCase();
+               printf("%s\n", ch);
+               printf(ch === 'y' ? "[approved]\n" : "[denied]\n");
+           }
+           continue;
+       }
+       /* status === 'ok' */
+       printf("you said: %s\n", res.text);
+   }
+   r.close();
+
+Keybindings:
+   The same keys as the built-in REPL are honored:
+
+   +--------------------+------------------------------------------------------+
+   |Key                 |Action                                                |
+   +====================+======================================================+
+   |Up / Down arrow     |Scroll through history.                               |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-A              |Move to beginning of line.                            |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-C              |If line is empty: ``.next()`` returns :green:`false`  |
+   |                    |(legacy) or ``{status: 'cancel'}`` (objectMode). The  |
+   |                    |caller decides whether to treat this as cancel, exit, |
+   |                    |or both (e.g. on second press).                       |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-C              |If line is not empty: clear the line buffer and       |
+   |                    |redraw a fresh prompt on the next row. ``.next()``    |
+   |                    |does not return and keeps reading.                    |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-D              |Quit (if line is empty) — ``.next()`` returns         |
+   |                    |:green:`null` (legacy) or ``{status: 'eof'}``         |
+   |                    |(objectMode).                                         |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-D              |Delete to right (if line is not empty).               |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-D              |Submit line (if in multi-line mode).                  |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-E              |Move to the end of line.                              |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-K              |Delete from current to the end of line.               |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-L              |Clear and refresh screen.                             |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-T              |Swap current character with previous.                 |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-U              |Delete current line.                                  |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-W              |Delete previous word.                                 |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-X              |Toggle multi-line editing mode (prompt color changes  |
+   |                    |while it is on).                                      |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-Z              |Suspend and drop to shell.                            |
+   +--------------------+------------------------------------------------------+
+
 File Handle Utilities
 """""""""""""""""""""
 
 The functions `fprintf`_ (), `fseek`_\ (), `rewind`_\ (), `ftell`_\ (), `fflush`_\ (),
 `fread`_\ (), `fgets`_\ (), `fwrite`_\ (), and `readLine`_\ () take a filehandle, which may be obtained
 using `fopen`_\ () or `fopenBuffer`_\ ().
+
+In addition, every handle returned by `fopen`_\ () carries the methods
+`fh.fstat`_\ (), `fh.fsync`_\ (), `fh.fdatasync`_\ (), `fh.ftruncate`_\ (),
+`fh.fchmod`_\ (), `fh.fchown`_\ (), `fh.fUtimes`_\ (), and `fh.fileNo`_\ () --
+described in the *Handle stat/sync/truncate/chmod/chown/utimes* subsection
+near the end of this section.  For raw integer-fd I/O (with ``O_EXCL``,
+``pread``/``pwrite``, ``fsync``-style durability and event-loop
+integration), see the separate
+`POSIX File Descriptor I/O`_ section that follows.
 
 
 Calling Methods:
@@ -2966,6 +3786,788 @@ Example:
     rampart.utils.printf("%s\n%s\n", firstline, lastline);
 
     /* expected output: first and last line of file "./myfile.txt" */
+
+
+Handle stat/sync/truncate/chmod/chown/utimes
+""""""""""""""""""""""""""""""""""""""""""""
+
+The following methods are attached to every handle returned by
+`fopen`_\ ().  They operate on the open file via its underlying file
+descriptor and are the buffered-stdio counterpart to the raw
+fd-keyed functions in the next section.  Each method is invoked as
+``handle.METHOD(args)``.
+
+fh.fstat
+''''''''
+
+Return file status for the open handle.  Equivalent to calling
+`stat`_\ () on the path the handle was opened with, but works on the
+underlying file descriptor -- useful when the file may have been
+renamed or unlinked after opening.
+
+Usage:
+
+.. code-block:: javascript
+
+   var st = handle.fstat();
+
+Return Value:
+   :green:`Object`, same shape as `stat`_\ ().
+
+fh.fsync
+''''''''
+
+Flush stdio buffers and then call ``fsync(2)`` on the underlying file
+descriptor, blocking until all modified data and metadata are written
+to durable storage.  Required by the atomic write/rename/fsync pattern.
+
+Usage:
+
+.. code-block:: javascript
+
+   handle.fsync();
+
+Return Value:
+   ``undefined``.  Throws on I/O error.
+
+fh.fdatasync
+''''''''''''
+
+Like `fh.fsync`_ but only flushes file data (not metadata that doesn't
+affect future reads, such as access times).  On macOS, falls back to
+``fsync`` because the platform lacks ``fdatasync``.
+
+Usage:
+
+.. code-block:: javascript
+
+   handle.fdatasync();
+
+Return Value:
+   ``undefined``.
+
+fh.ftruncate
+''''''''''''
+
+Truncate or extend the open file to ``length`` bytes.  Stdio buffers are
+flushed first.
+
+Usage:
+
+.. code-block:: javascript
+
+   handle.ftruncate(length);
+
+Where ``length`` is a non-negative :green:`Number`.
+
+Return Value:
+   ``undefined``.
+
+See also `truncate`_\ () for the path-based equivalent.
+
+fh.fchmod
+'''''''''
+
+Change the file mode bits on the open handle.  Same mode semantics as
+`chmod`_\ () -- accepts a :green:`Number` or octal :green:`String`.
+
+Usage:
+
+.. code-block:: javascript
+
+   handle.fchmod(mode);
+
+Return Value:
+   ``undefined``.
+
+fh.fchown
+'''''''''
+
+Change the owning user and/or group on the open handle.  Either argument
+may be a numeric id or a name string.  Negative numbers leave that side
+unchanged.
+
+Usage:
+
+.. code-block:: javascript
+
+   handle.fchown(user, group);
+
+Return Value:
+   ``undefined``.
+
+fh.fUtimes
+''''''''''
+
+Set access and modification timestamps on the open handle.  Accepts
+either positional ``(atime, mtime)`` arguments, where each is a
+:green:`Number` (seconds since epoch) or :green:`Date`, or an options
+object matching `touch`_\ ()'s style.
+
+Usage:
+
+.. code-block:: javascript
+
+   handle.fUtimes(atime, mtime);
+
+   /* or */
+
+   handle.fUtimes({setaccess: atime, setmodify: mtime});
+
+Return Value:
+   ``undefined``.
+
+fh.fileNo
+'''''''''
+
+Return the integer file descriptor backing the handle, for use with the
+fd-keyed functions in the next section, or with system calls that take a
+``fd`` argument.
+
+Usage:
+
+.. code-block:: javascript
+
+   var fd = handle.fileNo();
+
+Return Value:
+   :green:`Number`.  ``-1`` if the handle is not backed by a real fd
+   (rare; happens for `fopenBuffer`_\ () handles).
+
+
+POSIX File Descriptor I/O
+"""""""""""""""""""""""""
+
+The functions in this section operate on raw POSIX integer file
+descriptors rather than stdio handles.  They expose primitives that the
+buffered `fopen`_\ () interface cannot:
+
+* Atomic create-or-fail via ``O_EXCL`` (lock files, atomic temp files
+  without TOCTOU races).
+* Positional I/O (`pread`/`pwrite` equivalents) for safe multi-threaded
+  access to a single file.
+* Direct durability primitives (`fsyncFd`_\ (), `fdatasyncFd`_\ ()).
+* Non-blocking I/O on FIFOs/sockets/pipes via ``O_NONBLOCK``.
+* Integration with the rampart event loop (libevent ``event_new`` takes
+  an integer fd).
+* The classic "write to tmp, fsync, rename, fsync(dir)" atomic-write
+  pattern for safe state-saving.
+
+For text-oriented buffered reading/writing, `fopen`_\ () remains the
+better choice.  Use these when you need durability, atomicity,
+non-blocking semantics, or event-loop integration.
+
+Open flag constants (rampart.utils.O)
+'''''''''''''''''''''''''''''''''''''
+
+The ``rampart.utils.O`` object holds integer constants for the
+``flags`` parameter of `open`_\ ().  Names mirror the POSIX
+``<fcntl.h>`` macros with the ``O_`` prefix dropped --
+``O_RDONLY`` is ``rampart.utils.O.RDONLY``, and so on.  The short
+namespace keeps call sites readable when several flags are OR'd
+together (typical usage is ``u.O.WRONLY | u.O.CREAT | u.O.EXCL``).
+
+Combine with bitwise OR.  Platform-specific constants are only
+present when supported by the host.
+
+================ ===================================================================
+Constant         Meaning
+================ ===================================================================
+``RDONLY``       Open for reading only.
+``WRONLY``       Open for writing only.
+``RDWR``         Open for reading and writing.
+``CREAT``        Create the file if it does not exist.
+``EXCL``         With ``CREAT``, fail if the file already exists (atomic create).
+``TRUNC``        If the file exists, truncate to zero length on open.
+``APPEND``       All writes are appended to the end of the file.
+``NONBLOCK``     Open in non-blocking mode (matters for FIFOs/sockets).
+``CLOEXEC``      Close the descriptor on ``exec(3)`` -- avoids leaking fds into children.
+``NOFOLLOW``     Refuse to open if the final path component is a symbolic link.
+``SYNC``         Each ``write`` blocks until data + metadata reach durable storage.
+``DSYNC``        Each ``write`` blocks until data (not metadata) reaches durable storage.
+``DIRECTORY``    Fail unless the path resolves to a directory (when supported).
+``NOCTTY``       Do not let an opened terminal device become the controlling tty.
+``DIRECT``       (Linux only)  Bypass the page cache.
+``NOATIME``      (Linux only)  Do not update ``atime`` on read.
+``SEEK_SET``     ``lseek`` whence: from start of file (also ``0``).
+``SEEK_CUR``     ``lseek`` whence: from current position (also ``1``).
+``SEEK_END``     ``lseek`` whence: from end of file (also ``2``).
+================ ===================================================================
+
+open
+''''
+
+Open a file by path, returning an integer file descriptor.  Equivalent to
+`open (2) <https://man7.org/linux/man-pages/man2/open.2.html>`_.
+
+Usage:
+
+.. code-block:: javascript
+
+   var fd = rampart.utils.open(path, flags [, mode]);
+
+   /* or */
+
+   var fd = rampart.utils.open({path: path, flags: flags [, mode: mode]});
+
+Where:
+
+* ``path`` is a :green:`String`.
+
+* ``flags`` is an integer bitmask built from the `Open flag constants (rampart.utils.O)`_.
+
+* ``mode`` is an optional :green:`Number` or octal :green:`String` --
+  permissions applied when ``O.CREAT`` is set and the file is newly
+  created.  Defaults to ``0644``.  Modified by the process umask.
+
+Return Value:
+   :green:`Number`, the integer file descriptor.  Throws on failure.
+
+Example:
+
+.. code-block:: javascript
+
+   var O = rampart.utils.O;
+
+   /* Atomic create-or-fail (classic lock file pattern) */
+   var fd = rampart.utils.open("/var/run/myapp.lock",
+                               O.WRONLY|O.CREAT|O.EXCL|O.CLOEXEC, 0o600);
+
+close
+'''''
+
+Close an integer file descriptor.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.close(fd);
+
+Return Value:
+   ``undefined``.
+
+read
+''''
+
+Read bytes from an open file descriptor.  Performs a single ``read(2)``
+syscall (or ``pread`` when ``position`` is given) and returns whatever
+bytes were obtained -- which may be fewer than ``length``.
+
+Usage:
+
+.. code-block:: javascript
+
+   var buf = rampart.utils.read(fd, length [, position]);
+
+Where:
+
+* ``fd`` is the integer file descriptor.
+
+* ``length`` is a :green:`Number`, the maximum number of bytes to read.
+
+* ``position`` is an optional :green:`Number`.  If supplied, ``pread`` is
+  used and the descriptor's offset is NOT advanced.  Useful for
+  multi-threaded random-access reads of one open file.
+
+Return Value:
+   :green:`Buffer`.  Will be zero-length if EOF has been reached at the
+   read position; will be shorter than ``length`` if the kernel returned
+   a short read.
+
+write
+'''''
+
+Write bytes to an open file descriptor.  Performs a single ``write(2)``
+syscall (or ``pwrite`` when ``position`` is given) and returns the number
+of bytes accepted -- which may be fewer than the input length on a short
+write.
+
+Usage:
+
+.. code-block:: javascript
+
+   var n = rampart.utils.write(fd, data [, position]);
+
+Where:
+
+* ``fd`` is the integer file descriptor.
+
+* ``data`` is a :green:`String` or :green:`Buffer`.
+
+* ``position`` is an optional :green:`Number`.  If supplied, ``pwrite`` is
+  used and the descriptor's offset is NOT advanced.
+
+Return Value:
+   :green:`Number`, bytes written.  Callers performing large writes should
+   loop until all bytes are accounted for.
+
+lseek
+'''''
+
+Reposition the file offset of an open file descriptor.
+
+Usage:
+
+.. code-block:: javascript
+
+   var pos = rampart.utils.lseek(fd, offset [, whence]);
+
+Where:
+
+* ``offset`` is a :green:`Number`, signed byte offset.
+
+* ``whence`` is an optional :green:`String` (``"SEEK_SET"``, ``"SEEK_CUR"``,
+  ``"SEEK_END"``) or the equivalent integer (``0`` / ``1`` / ``2``;
+  also exposed as ``rampart.utils.O.SEEK_SET`` etc. -- see
+  `Open flag constants (rampart.utils.O)`_).  Defaults to
+  ``"SEEK_SET"``.
+
+Return Value:
+   :green:`Number`, the new file offset.
+
+fstatFd
+'''''''
+
+Return file status for an open integer file descriptor.
+
+Usage:
+
+.. code-block:: javascript
+
+   var st = rampart.utils.fstatFd(fd);
+
+Return Value:
+   :green:`Object`, same shape as `stat`_\ ().
+
+fsyncFd
+'''''''
+
+Call ``fsync(2)`` on the descriptor.  Blocks until both data and metadata
+reach durable storage.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.fsyncFd(fd);
+
+fdatasyncFd
+'''''''''''
+
+Like `fsyncFd`_ but only flushes data (not metadata).  On macOS, falls
+back to ``fsync`` because the platform lacks ``fdatasync``.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.fdatasyncFd(fd);
+
+ftruncateFd
+'''''''''''
+
+Truncate or extend the file referenced by ``fd`` to ``length`` bytes.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.ftruncateFd(fd, length);
+
+fchmodFd
+''''''''
+
+Change permission bits on the open file descriptor.  Mode argument has
+the same shape as `chmod`_\ ().
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.fchmodFd(fd, mode);
+
+fchownFd
+''''''''
+
+Change owner and/or group on the open file descriptor.  Either argument
+may be a name :green:`String` or a numeric id; negative numbers leave
+that side unchanged.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.fchownFd(fd, user, group);
+
+futimesFd
+'''''''''
+
+Set access and modification timestamps on the open file descriptor.
+Accepts either positional ``(atime, mtime)`` arguments or an options
+object identical to `fh.fUtimes`_\ ()'s.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.futimesFd(fd, atime, mtime);
+
+   /* or */
+
+   rampart.utils.futimesFd(fd, {setaccess: atime, setmodify: mtime});
+
+Example: durable atomic write
+'''''''''''''''''''''''''''''
+
+The "write to tmp, fsync, rename" pattern -- needed whenever a partial
+write would corrupt important state -- requires `open`_\ () with
+``O.EXCL`` for the lock-free create and `fsyncFd`_\ () for the
+durability barrier.  Neither is available through `fopen`_\ ().
+
+.. code-block:: javascript
+
+   var u = rampart.utils, O = u.O;
+
+   function atomicWrite(path, data) {
+      var tmp = path + ".tmp." + process.pid;
+      var fd  = u.open(tmp, O.WRONLY|O.CREAT|O.EXCL|O.TRUNC, 0o644);
+      try {
+         /* Loop until all bytes are written -- write() may return short. */
+         var off = 0, total = data.length;
+         while (off < total) {
+            off += u.write(fd, data.slice ? data.slice(off) : data);
+         }
+         u.fsyncFd(fd);     /* the data is now durable */
+      } finally {
+         u.close(fd);
+      }
+      u.rename(tmp, path);  /* atomic on POSIX -- old or new, never partial */
+   }
+
+   atomicWrite("/etc/myapp/state.json", JSON.stringify({n: 42}));
+
+
+File Watching
+"""""""""""""
+
+Watch a file or directory for changes and invoke a JavaScript
+:green:`Function` when something happens.  On Linux, the kernel's
+`inotify (7) <https://man7.org/linux/man-pages/man7/inotify.7.html>`_
+interface is wired into rampart's libevent loop -- events arrive
+synchronously without polling overhead.  Other platforms automatically
+fall back to a polling backend that stats the path at a configurable
+interval.
+
+Watchers integrate into the same event loop that drives `setTimeout`,
+`setInterval`, the `forkpty`_ pseudo-terminal, and (when used)
+``rampart-server`` -- so callbacks fire on the current thread alongside
+other JavaScript work without blocking it.
+
+watch
+'''''
+
+Begin watching a path and return a watcher object.
+
+Usage:
+
+.. code-block:: javascript
+
+   var w = rampart.utils.watch(path, callback);
+
+   /* or */
+
+   var w = rampart.utils.watch(path, options, callback);
+
+   /* or */
+
+   var w = rampart.utils.watch(options, callback);
+
+Where:
+
+* ``path`` is a :green:`String`, the file or directory to watch.
+
+* ``callback`` is a :green:`Function` ``callback(event)`` invoked for each
+  filesystem event.  Returning ``false`` from the callback closes the
+  watcher.
+
+* ``options`` is an optional :green:`Object`:
+
+  * ``path`` -- :green:`String`, only meaningful when the path is being
+    supplied via the options object instead of as a positional argument.
+
+  * ``poll`` -- :green:`Boolean`, default ``false``.  If ``true``, force
+    the polling backend even on Linux.  Useful for files on filesystems
+    where inotify is unreliable (NFS, some FUSE mounts).
+
+  * ``interval`` -- :green:`Number`, default ``1000``.  Polling interval
+    in milliseconds.  Ignored under inotify.
+
+The ``event`` :green:`Object` passed to the callback has the following
+properties:
+
+============ ========================================================
+Property     Description
+============ ========================================================
+``type``     :green:`String`: ``"change"``, ``"create"``, ``"delete"``,
+             or ``"rename"``.
+``path``     :green:`String`: full path of the entry that changed.  For
+             a directory watch, this is the path of the affected child
+             (under inotify; the polling backend reports the watched
+             path itself).
+``isDir``    :green:`Boolean`: ``true`` if the entry is a directory.
+============ ========================================================
+
+Return Value:
+   :green:`Object`, the watcher.  Properties:
+
+   * ``path``     -- :green:`String`, the watched path.
+   * ``backend``  -- :green:`String`, ``"inotify"`` or ``"polling"``.
+   * ``close()``  -- :green:`Function`, stop watching (idempotent).
+
+Example:
+
+.. code-block:: javascript
+
+   /* Live-reload a config file */
+   var w = rampart.utils.watch("/etc/myapp/config.json", function(ev) {
+      if (ev.type === "change" || ev.type === "create")
+         reloadConfig();
+   });
+
+   /* Stop watching after the first event */
+   var w2 = rampart.utils.watch("/tmp/marker", function(ev) {
+      console.log("first event:", ev.type);
+      return false;   /* equivalent to w2.close() */
+   });
+
+   /* Force the polling backend with a custom interval */
+   var w3 = rampart.utils.watch({path: "/mnt/nfs/file", poll: true, interval: 500},
+                                 function(ev) { ... });
+
+
+Limitations
+^^^^^^^^^^^
+
+* **No recursive watching.**  Only the named path is watched; for a
+  directory, only its immediate contents trigger events.  Recursion can
+  be implemented in user code by walking the tree (`walkDir`_\ ()) and
+  installing a watcher per directory.
+
+* **No native kqueue backend.**  On macOS and the BSDs, the polling
+  backend is used.
+
+* **No event debouncing.**  Bursts of rapid changes produce a burst of
+  callbacks; the caller should debounce in JavaScript if needed.
+
+* **Polling fidelity.**  The polling backend compares ``mtime``, ``size``
+  and ``inode`` between ticks; changes that leave all three identical
+  (e.g. an in-place write of identical-size content within the same
+  wall-clock second) will be missed.
+
+
+Compression and Checksums
+"""""""""""""""""""""""""
+
+One-shot DEFLATE-family compression and decompression via the
+`libdeflate <https://github.com/ebiggers/libdeflate>`_ library, plus the
+two checksums it provides (CRC-32 and Adler-32).  All functions are
+synchronous and throw on error; no streaming API is exposed (libdeflate
+is one-shot only -- pass the full input as a single :green:`String` or
+:green:`Buffer`).
+
+For node-style asynchronous variants, plus the legacy stream classes
+(``zlib.Deflate``, ``zlib.Gzip``, etc.), see :ref:`require('zlib')
+<rampart-nodeshim:zlib>` in the nodeshim docs.  The synchronous functions
+below are the implementation those wrappers delegate to.
+
+gzip
+''''
+
+Compress data into the gzip container format (RFC 1952).
+
+Usage:
+
+.. code-block:: javascript
+
+   var compressed = rampart.utils.gzip(data [, level]);
+
+Where:
+
+* ``data`` is a :green:`String` or :green:`Buffer`.
+
+* ``level`` is an optional :green:`Number` -- compression level from
+  ``1`` (fastest) to ``12`` (best ratio).  Defaults to ``6``.  Values
+  outside the range are clamped.
+
+Return Value:
+   :green:`Buffer` -- the gzip-compressed bytes (including the gzip
+   header and footer).
+
+Example:
+
+.. code-block:: javascript
+
+   var u = rampart.utils;
+   var bytes = u.gzip("Hello, World!");
+   u.writeFile("hello.gz", bytes);
+
+gunzip
+''''''
+
+Decompress gzip-format data.
+
+Usage:
+
+.. code-block:: javascript
+
+   var raw = rampart.utils.gunzip(data);
+
+Where ``data`` is a :green:`String` or :green:`Buffer` containing gzip
+data (must start with the magic bytes ``0x1F 0x8B``).
+
+Return Value:
+   :green:`Buffer` -- the decompressed bytes.
+
+Throws:
+   * ``"bad compressed data"`` if the input is not valid gzip.
+   * If the decompressed output would exceed 256 MB (zip-bomb guard);
+     compose your own loop using `inflate`_\ () if you genuinely need
+     larger output.
+
+deflate
+'''''''
+
+Compress data into the zlib container format (RFC 1950 -- a deflate
+stream wrapped with a 2-byte header and a trailing Adler-32 checksum).
+
+Usage:
+
+.. code-block:: javascript
+
+   var compressed = rampart.utils.deflate(data [, level]);
+
+Where ``data`` and ``level`` are as for `gzip`_\ () above.
+
+Return Value:
+   :green:`Buffer` -- the zlib-wrapped compressed bytes.
+
+inflate
+'''''''
+
+Decompress zlib-format data.
+
+Usage:
+
+.. code-block:: javascript
+
+   var raw = rampart.utils.inflate(data);
+
+Where ``data`` is a :green:`String` or :green:`Buffer` containing zlib
+data.
+
+Return Value:
+   :green:`Buffer` -- the decompressed bytes.
+
+Throws if the input is not valid zlib data or if the decompressed
+output would exceed 256 MB.
+
+deflateRaw
+''''''''''
+
+Compress data into raw DEFLATE format (RFC 1951 -- no header, no footer,
+no checksum).  Useful when an outer protocol already provides framing
+and integrity checks (e.g., PNG's IDAT, ZIP file entries).
+
+Usage:
+
+.. code-block:: javascript
+
+   var compressed = rampart.utils.deflateRaw(data [, level]);
+
+Where ``data`` and ``level`` are as for `gzip`_\ ().
+
+Return Value:
+   :green:`Buffer` -- the raw deflate bytes.
+
+inflateRaw
+''''''''''
+
+Decompress raw DEFLATE-format data.
+
+Usage:
+
+.. code-block:: javascript
+
+   var raw = rampart.utils.inflateRaw(data);
+
+Where ``data`` is a :green:`String` or :green:`Buffer` containing raw
+deflate data.
+
+Return Value:
+   :green:`Buffer` -- the decompressed bytes.
+
+Throws on bad data or >256 MB output.
+
+crc32
+'''''
+
+Compute the CRC-32 checksum (IEEE 802.3 polynomial -- the same used by
+gzip and ZIP).
+
+Usage:
+
+.. code-block:: javascript
+
+   var sum = rampart.utils.crc32(data [, seed]);
+
+Where:
+
+* ``data`` is a :green:`String` or :green:`Buffer`.
+
+* ``seed`` is an optional :green:`Number`, the initial CRC-32 state.
+  Defaults to ``0``.  Pass a previous CRC-32 value here to extend the
+  checksum across multiple chunks of input.
+
+Return Value:
+   :green:`Number` -- the 32-bit unsigned CRC.
+
+Example:
+
+.. code-block:: javascript
+
+   var u = rampart.utils;
+   u.crc32("hello");                // -> 0x3610A686
+   /* incremental over two chunks */
+   var c = u.crc32("hel");
+   c = u.crc32("lo", c);
+   /* c === u.crc32("hello") */
+
+adler32
+'''''''
+
+Compute the Adler-32 checksum (RFC 1950 -- the checksum used inside the
+zlib container).  Faster than CRC-32 but with weaker collision
+resistance; appropriate for accidental-corruption detection, not for
+cryptographic integrity.
+
+Usage:
+
+.. code-block:: javascript
+
+   var sum = rampart.utils.adler32(data [, seed]);
+
+Where:
+
+* ``data`` is a :green:`String` or :green:`Buffer`.
+
+* ``seed`` is an optional :green:`Number`, the initial state.  Defaults
+  to ``1`` (the standard Adler-32 starting value -- *not* ``0``).  Pass
+  a previous Adler-32 value here to extend across chunks.
+
+Return Value:
+   :green:`Number` -- the 32-bit unsigned Adler-32.
+
 
 Rand, Hash and HyperLogLog
 """"""""""""""""""""""""""

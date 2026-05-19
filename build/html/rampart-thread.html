@@ -97,6 +97,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#new-rampart-thread">new rampart.thread()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#thr-exec">thr.exec()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#thr-close">thr.close()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thr-terminate">thr.terminate()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#thr-getid">thr.getId()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-getcurrentid">rampart.thread.getCurrentId()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a></li>
@@ -130,6 +131,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -395,6 +397,82 @@ created.</li>
 <dt>Return Value:</dt>
 <dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
+</div></blockquote>
+</div>
+<div class="section" id="thr-terminate">
+<h3>thr.terminate()<a class="headerlink" href="#thr-terminate" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Forcibly shut down a thread, discarding any future-scheduled events.
+Unlike <a class="reference internal" href="#thr-close">thr.close()</a>, which politely waits for the thread’s event loop
+to drain (and never returns control if subscriptions like
+<a class="reference internal" href="#rampart-thread-onget">rampart.thread.onGet()</a> keep the loop alive), <code class="docutils literal notranslate"><span class="pre">terminate()</span></code> causes
+the thread’s event loop to exit at the end of its current iteration.</p>
+<p>Behavior:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Any JavaScript callback that is <strong>currently executing</strong> in the
+thread completes naturally.  <code class="docutils literal notranslate"><span class="pre">terminate()</span></code> does not preempt
+running code.</li>
+<li>Any callback that is <strong>scheduled but has not yet started</strong> (for
+example, an unfired <code class="docutils literal notranslate"><span class="pre">thr.exec()</span></code> with a <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> still
+counting down, or a future <code class="docutils literal notranslate"><span class="pre">thread.onGet()</span></code> notification) will
+<strong>not</strong> run.  Its arguments and associated allocations are
+released.</li>
+<li>Any registered <code class="docutils literal notranslate"><span class="pre">thread.onGet()</span></code> subscriptions in the thread
+are torn down.  The thread’s event loop drains and the pthread
+exits.</li>
+<li>Calling <code class="docutils literal notranslate"><span class="pre">terminate()</span></code> on a thread that has already exited, or
+calling it more than once, is a safe no-op.</li>
+</ul>
+</div></blockquote>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
+
+<span class="c1">// ... while inside a threaded function or another thread</span>
+<span class="nx">thr</span><span class="p">.</span><span class="nx">terminate</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thread</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">thread</span><span class="p">();</span>
+
+<span class="c1">// worker registers an onGet subscription, then idles forever</span>
+<span class="nx">thr</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">thread</span><span class="p">.</span><span class="nx">onGet</span><span class="p">(</span><span class="s2">&quot;cmd&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">val</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;worker got:&quot;</span><span class="p">,</span> <span class="nx">val</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="c1">// give the worker time to subscribe, then send a message</span>
+<span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">thread</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s2">&quot;cmd&quot;</span><span class="p">,</span> <span class="s2">&quot;hello&quot;</span><span class="p">);</span>
+<span class="p">},</span> <span class="mi">100</span><span class="p">);</span>
+
+<span class="c1">// forcibly shut down the worker after 500ms.  thr.close() would</span>
+<span class="c1">// never succeed here because the onGet subscription keeps the</span>
+<span class="c1">// worker&#39;s event loop non-empty; terminate() does.</span>
+<span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">thr</span><span class="p">.</span><span class="nx">terminate</span><span class="p">();</span>
+<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
+</dl>
+<p>Notes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">terminate()</span></code> is asynchronous.  When it returns to the caller,
+the thread has been <em>asked</em> to shut down but may not have done so
+yet (the in-flight JavaScript callback, if any, finishes first).</li>
+<li>To wait for the thread to actually exit, use a
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> / <a class="reference internal" href="#rampart-thread-onget">rampart.thread.onGet()</a> acknowledgement
+pattern, or simply let the parent’s event loop run – the parent
+will not exit while any child thread is still running.</li>
+</ul>
+</div></blockquote>
 </div></blockquote>
 </div>
 <div class="section" id="thr-getid">

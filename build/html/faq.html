@@ -100,6 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -1837,11 +1838,24 @@ Buffer</th>
 are truncated to 0–255.</li>
 <li><code class="docutils literal notranslate"><span class="pre">Buffer.alloc(n,</span> <span class="pre">fill)</span></code> accepts a <span class="green">Number</span>, <span class="green">String</span>,
 or <span class="green">Buffer</span> as the fill value (e.g., <code class="docutils literal notranslate"><span class="pre">Buffer.alloc(4,</span> <span class="pre">0xFF)</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">Buffer.toString(&quot;hex&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">Buffer.toString(&quot;base64&quot;)</span></code> are
-<strong>not supported</strong>.  Use <code class="docutils literal notranslate"><span class="pre">rampart.utils.hexify()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%B&quot;,</span> <span class="pre">buf)</span></code> instead.</li>
-<li><code class="docutils literal notranslate"><span class="pre">buf.indexOf()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.includes()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.swap16()</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">buf.swap32()</span></code> are <strong>not available</strong>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">buf.toString(encoding)</span></code> accepts <code class="docutils literal notranslate"><span class="pre">utf8</span></code>, <code class="docutils literal notranslate"><span class="pre">hex</span></code>, <code class="docutils literal notranslate"><span class="pre">base64</span></code>,
+<code class="docutils literal notranslate"><span class="pre">base64url</span></code>, <code class="docutils literal notranslate"><span class="pre">latin1</span></code>/<code class="docutils literal notranslate"><span class="pre">binary</span></code>, <code class="docutils literal notranslate"><span class="pre">utf16le</span></code>/<code class="docutils literal notranslate"><span class="pre">ucs2</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">ascii</span></code>. <code class="docutils literal notranslate"><span class="pre">Buffer.from(string,</span> <span class="pre">encoding)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Buffer.byteLength(string,</span> <span class="pre">encoding)</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">buf.write(string[,</span> <span class="pre">offset][,</span> <span class="pre">length][,</span> <span class="pre">encoding])</span></code> accept the
+same set. <code class="docutils literal notranslate"><span class="pre">rampart.utils.hexify()</span></code> / <code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%B&quot;,</span> <span class="pre">buf)</span></code> are
+still available and remain the right choice when working with
+plain (non-Buffer) byte buffers.</li>
+<li><code class="docutils literal notranslate"><span class="pre">buf.indexOf()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.lastIndexOf()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.includes()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">buf.swap16()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.swap32()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.swap64()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">Buffer.isEncoding()</span></code> are available. <code class="docutils literal notranslate"><span class="pre">buf.keys()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">buf.values()</span></code> / <code class="docutils literal notranslate"><span class="pre">buf.entries()</span></code> return arrays (Node returns
+iterators).</li>
+<li><code class="docutils literal notranslate"><span class="pre">buf.readBigInt64BE()</span></code> / <code class="docutils literal notranslate"><span class="pre">writeBigInt64BE()</span></code> and the other
+<code class="docutils literal notranslate"><span class="pre">BigInt</span></code> variants are <strong>not</strong> available — Duktape does not
+implement <code class="docutils literal notranslate"><span class="pre">BigInt</span></code>. Use the 32-bit accessors and combine, or use
+<code class="docutils literal notranslate"><span class="pre">crypto.JSBI</span></code> from rampart-crypto where a bignum representation
+is needed.</li>
 <li>TypedArrays do <strong>not</strong> have higher-order methods (<code class="docutils literal notranslate"><span class="pre">forEach</span></code>,
 <code class="docutils literal notranslate"><span class="pre">map</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">reduce</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code>, <code class="docutils literal notranslate"><span class="pre">indexOf</span></code>, etc.).
 Convert to an <span class="green">Array</span> first if needed.</li>

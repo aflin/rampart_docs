@@ -238,6 +238,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -531,6 +532,18 @@ is started as root, <code class="docutils literal notranslate"><span class="pre"
 serving files off of the filesystem.  The default is “max-age=84600,
 public”, if not set or set <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If set <code class="docutils literal notranslate"><span class="pre">false</span></code>, no header is
 sent.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">defaultCharset</span></code>: A <span class="green">String</span> or a <span class="green">Boolean</span>.  Charset
+to append to the <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header for <code class="docutils literal notranslate"><span class="pre">text/*</span></code> mime types.
+The default is <code class="docutils literal notranslate"><span class="pre">&quot;utf-8&quot;</span></code>.  Applies to both static files served from
+the filesystem and dynamic responses returned from script handlers
+(e.g. <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{html:</span> <span class="pre">...}</span></code>, <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{txt:</span> <span class="pre">...}</span></code>, etc.).  Set to
+a <span class="green">String</span> such as <code class="docutils literal notranslate"><span class="pre">&quot;iso-8859-1&quot;</span></code> to use a different charset.
+Set to <code class="docutils literal notranslate"><span class="pre">false</span></code> to disable, in which case no charset is appended and
+the bare mime type is sent.</p>
+<p>A response that explicitly sets its own <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header (via
+a <code class="docutils literal notranslate"><span class="pre">headers</span></code> property) is left untouched - whatever value is supplied
+is sent verbatim, with no charset added.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code>: a <span class="green">Number</span> (range 0.01 to 1000).  Set the
 default range size when sending a <code class="docutils literal notranslate"><span class="pre">206</span> <span class="pre">Partial</span> <span class="pre">Content</span></code> response to an

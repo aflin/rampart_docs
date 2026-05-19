@@ -1617,11 +1617,24 @@ The following table summarizes what works in Rampart:
   are truncated to 0–255.
 * ``Buffer.alloc(n, fill)`` accepts a :green:`Number`, :green:`String`,
   or :green:`Buffer` as the fill value (e.g., ``Buffer.alloc(4, 0xFF)``).
-* ``Buffer.toString("hex")`` and ``Buffer.toString("base64")`` are
-  **not supported**.  Use ``rampart.utils.hexify()`` and
-  ``sprintf("%B", buf)`` instead.
-* ``buf.indexOf()``, ``buf.includes()``, ``buf.swap16()``, and
-  ``buf.swap32()`` are **not available**.
+* ``buf.toString(encoding)`` accepts ``utf8``, ``hex``, ``base64``,
+  ``base64url``, ``latin1``/``binary``, ``utf16le``/``ucs2``, and
+  ``ascii``. ``Buffer.from(string, encoding)``,
+  ``Buffer.byteLength(string, encoding)``, and
+  ``buf.write(string[, offset][, length][, encoding])`` accept the
+  same set. ``rampart.utils.hexify()`` / ``sprintf("%B", buf)`` are
+  still available and remain the right choice when working with
+  plain (non-Buffer) byte buffers.
+* ``buf.indexOf()``, ``buf.lastIndexOf()``, ``buf.includes()``,
+  ``buf.swap16()``, ``buf.swap32()``, ``buf.swap64()``, and
+  ``Buffer.isEncoding()`` are available. ``buf.keys()`` /
+  ``buf.values()`` / ``buf.entries()`` return arrays (Node returns
+  iterators).
+* ``buf.readBigInt64BE()`` / ``writeBigInt64BE()`` and the other
+  ``BigInt`` variants are **not** available — Duktape does not
+  implement ``BigInt``. Use the 32-bit accessors and combine, or use
+  ``crypto.JSBI`` from rampart-crypto where a bignum representation
+  is needed.
 * TypedArrays do **not** have higher-order methods (``forEach``,
   ``map``, ``filter``, ``reduce``, ``sort``, ``indexOf``, etc.).
   Convert to an :green:`Array` first if needed.

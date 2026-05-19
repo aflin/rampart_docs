@@ -1116,42 +1116,126 @@ Note that this non-standard syntax is not available when using
 Duktape/Node.js Buffer Binding Extras
 """""""""""""""""""""""""""""""""""""
 
-The Duktape JavaScript engine provides basic 
+The Duktape JavaScript engine provides basic
 `node.js Buffer <https://wiki.duktape.org/howtobuffers2x#node.js-buffer-bindings>`_
-support.  Rampart adds the following:
+support — the ``Buffer`` constructor, byte indexing, ``read*`` /
+``write*`` accessors for fixed-width integers and floats, ``slice``,
+``equals``, ``compare``, ``copy``, ``fill``, ``concat``, ``isBuffer``,
+``byteLength``, and a basic single-argument ``toString``. Rampart
+extends this with encoding-aware methods, additional factories, and
+several prototype helpers commonly used by node code.
 
-Buffer.alloc()
+Supported encodings
+'''''''''''''''''''
+
+The following encoding names are accepted by ``toString()``,
+``write()``, ``Buffer.from()``, and ``Buffer.byteLength()``. Names
+are case-insensitive and dashes (``utf-8``) are tolerated.
+
+* ``utf8`` (default)
+* ``hex``
+* ``base64``
+* ``base64url`` (URL/filename-safe alphabet, no padding)
+* ``latin1`` (also ``binary``)
+* ``utf16le`` (also ``ucs2``)
+* ``ascii``
+
+Static methods
 ''''''''''''''
 
-Allocate a new node.js style Buffer.
+* ``Buffer.alloc(size[, fill])`` — Allocate a new zero-filled
+  :green:`Buffer`. If ``fill`` (a :green:`String`, :green:`Buffer`,
+  or :green:`Number`) is given, the buffer is filled with that data,
+  repeating if shorter than ``size``.
 
-Usage:
+* ``Buffer.allocUnsafe(size)`` / ``Buffer.allocUnsafeSlow(size)`` —
+  Aliases of ``Buffer.alloc``. (Node returns uninitialized memory
+  for speed; rampart always zero-fills since the difference is
+  negligible at our typical sizes and the safety win is real.)
+
+* ``Buffer.from(data[, encoding])`` — Create a new :green:`Buffer`
+  from any of:
+
+    * A :green:`Buffer` or :green:`Uint8Array` (copies the bytes).
+    * An :green:`Array` of integers (each truncated to a byte).
+    * A :green:`String`. With no ``encoding``, the string is taken
+      as UTF-8. Otherwise it is decoded per the encoding name (e.g.
+      ``Buffer.from('aabbcc','hex')`` yields ``<Buffer aa bb cc>``).
+
+* ``Buffer.byteLength(input[, encoding])`` — Number of bytes
+  ``input`` occupies. For a :green:`Buffer`, returns its length
+  directly. For a :green:`String`, returns the byte count for the
+  given encoding (or UTF-8 by default).
+
+* ``Buffer.isEncoding(name)`` — Returns :green:`true` if ``name`` is
+  one of the supported encodings above.
+
+* ``Buffer.isBuffer(value)`` / ``Buffer.concat(list[, totalLen])`` /
+  ``Buffer.compare(a, b)`` — As in node.
+
+* ``Buffer.poolSize`` — Numeric property. Set to ``8192`` for
+  node-compat; rampart doesn't actually pool internally.
+
+Prototype methods
+'''''''''''''''''
+
+* ``buf.toString([encoding][, start][, end])`` — Decode the bytes in
+  the slice ``[start, end)`` per ``encoding``. Default encoding is
+  UTF-8.
+
+* ``buf.write(string[, offset][, length][, encoding])`` — Write a
+  string into the buffer using the given encoding. Returns the
+  number of bytes written. Argument-parsing follows node's flexible
+  shapes (``write(str)``, ``write(str, enc)``, ``write(str, offset, enc)``,
+  ``write(str, offset, length, enc)``).
+
+* ``buf.indexOf(value[, byteOffset][, encoding])`` /
+  ``buf.lastIndexOf(...)`` / ``buf.includes(...)`` — Locate
+  ``value`` in ``buf``. ``value`` may be a single byte (:green:`Number`),
+  a :green:`Buffer`, or a :green:`String` (interpreted in the given
+  encoding). ``indexOf`` / ``lastIndexOf`` return the byte index or
+  ``-1``; ``includes`` returns :green:`Boolean`.
+
+* ``buf.swap16()`` / ``buf.swap32()`` / ``buf.swap64()`` — Byte-swap
+  the buffer in place as an array of 16/32/64-bit values. Throws if
+  the buffer length isn't a multiple of 2/4/8.
+
+* ``buf.subarray([start][, end])`` — Returns a new :green:`Buffer`
+  over the requested slice. (Unlike a bare ``Uint8Array.subarray``,
+  this is a real ``Buffer`` so node's prototype methods are
+  available on it.)
+
+* ``buf.keys()`` / ``buf.values()`` / ``buf.entries()`` — Return
+  arrays of byte indexes, bytes, or ``[index, byte]`` pairs. (Node
+  returns iterators; arrays serve the common ``for...of`` use case.)
+
+* All of node's ``read*`` / ``write*`` accessors for fixed-width
+  integers and floats (e.g. ``readUInt32BE``, ``writeFloatLE``) are
+  provided by duktape's underlying Buffer and behave as in node.
+  The ``BigInt`` variants (``readBigInt64BE``, etc.) are not
+  available because duktape does not implement ``BigInt``.
+
+Examples
+''''''''
 
 .. code-block:: javascript
 
-    var newBuf = Buffer.alloc(size[, fill]);
+    /* hashing & base64 round-trip */
+    var hash = crypto.sha256("hello world", {returnType: "buffer"});
+    var b64  = hash.toString('base64');
+    var same = Buffer.from(b64, 'base64').equals(hash);   // true
 
-Where:
+    /* writing into a fixed-size buffer */
+    var b = Buffer.alloc(8);
+    b.write('aabbcc', 'hex');       // b is <Buffer aa bb cc 00 00 00 00 00>
 
-* ``size`` is a :green:`Number` - The size of the Buffer to be created.
+    /* finding bytes */
+    var needle = Buffer.from('world');
+    var pos = Buffer.from('hello world').indexOf(needle);   // 6
 
-* ``fill`` is a :green:`String` or :green:`Buffer` - If provided, buffer
-  will be initialized with this data.  If smaller than buffer, data will
-  repeat.  If not provided, the Buffer will be initialized with ``0``;
-
-Buffer.from()
-'''''''''''''
-
-Create a new node.js style Buffer from existing data.
-
-Usage:
-
-.. code-block:: javascript
-
-    var newBuf = Buffer.from(data);
-
-Where ``data`` is a :green:`String` or :green:`Buffer`, the data which will
-be copied into the new Buffer.
+    /* swap endianness */
+    var u32 = Buffer.from([0x01,0x02,0x03,0x04]);
+    u32.swap32();                                           // [0x04,0x03,0x02,0x01]
 
 setTimeout()
 """"""""""""

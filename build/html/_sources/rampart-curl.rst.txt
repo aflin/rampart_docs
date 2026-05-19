@@ -705,6 +705,124 @@ Note that `examples`_ are provided below.
             );
 
 
+    * ``xferCallback`` - a :green:`Function`, a tick-driven transfer
+      monitor.  Unlike ``progressCallback`` (which only fires when bytes
+      arrive), ``xferCallback`` is driven by libcurl's internal timer and
+      fires regularly even when no data is flowing — during connection
+      setup, TLS handshake, server prefill, or network stall.  This makes
+      it the right hook for deadlines, low-bandwidth aborts, byte caps,
+      and cross-thread cancellation.
+
+      The function receives one :green:`Object` argument with the
+      following properties:
+
+      +------------------+------------------------------------------------------+
+      | Property         | Description                                          |
+      +==================+======================================================+
+      | ``dlNow``        | bytes downloaded so far                              |
+      +------------------+------------------------------------------------------+
+      | ``dlTotal``      | expected total download bytes; ``0`` if the server   |
+      |                  | sent no ``Content-Length``                           |
+      +------------------+------------------------------------------------------+
+      | ``ulNow``        | bytes uploaded                                       |
+      +------------------+------------------------------------------------------+
+      | ``ulTotal``      | expected total upload bytes                          |
+      +------------------+------------------------------------------------------+
+      | ``elapsed``      | seconds since the request started                    |
+      +------------------+------------------------------------------------------+
+      | ``speedDl``      | current download rate in bytes/sec                   |
+      +------------------+------------------------------------------------------+
+      | ``speedUl``      | current upload rate in bytes/sec                     |
+      +------------------+------------------------------------------------------+
+      | ``connectTime``  | seconds until TCP connection established;            |
+      |                  | ``0`` until it happens                               |
+      +------------------+------------------------------------------------------+
+      |``appConnectTime``| seconds until TLS handshake complete; ``0`` for HTTP |
+      +------------------+------------------------------------------------------+
+      | ``headerTime``   | seconds until response headers arrived;              |
+      |                  | ``0`` until they do                                  |
+      +------------------+------------------------------------------------------+
+      | ``httpStatus``   | HTTP status code; ``0`` until headers received       |
+      +------------------+------------------------------------------------------+
+      | ``originalUrl``  | the URL the script passed to fetch/Async,            |
+      |                  | unchanged by any redirect                            |
+      +------------------+------------------------------------------------------+
+      | ``url``          | effective URL after redirect chain (matches          |
+      |                  | ``originalUrl`` if no redirects)                     |
+      +------------------+------------------------------------------------------+
+
+      Returning ``false`` from the callback aborts the transfer.
+      libcurl reports the abort via ``CURLE_ABORTED_BY_CALLBACK``; the
+      final callback's ``r.errMsg`` will contain ``"curl failed:
+      Operation was aborted by an application callback"``.
+
+      Returning any other value — including ``true``, an object, or no
+      return at all (``undefined``) — continues the transfer. This
+      matches rampart's convention for other callback APIs where
+      ``return false`` is the explicit "stop" signal and the default of
+      doing nothing means "keep going."  Errors thrown from the
+      callback are caught and treated as "continue" — they do not abort.
+
+      Common patterns:
+
+      .. code-block:: javascript
+
+         /* Hard deadline */
+         var deadline = Date.now() + 30000;
+         curl.fetchAsync(url, {
+             xferCallback: function(info){
+                 if (Date.now() > deadline) return false;
+             }
+         }, cb);
+
+         /* Low-bandwidth abort */
+         curl.fetchAsync(url, {
+             xferCallback: function(info) {
+                 if (info.speedDl > 0 && info.speedDl < 1024) return false;
+             }
+         }, cb);
+
+         /* Byte cap - bail if the response exceeds 10 MB */
+         curl.fetchAsync(url, {
+             xferCallback: function(info){
+                 if (info.dlNow > 10*1024*1024) return false;
+             }
+         }, cb);
+
+         /* Cross-thread cancel via shared state */
+         curl.fetchAsync(url, {
+             xferCallback: function(info) {
+                 if (rampart.thread.get('cancel') === true) return false;
+             }
+         }, cb);
+
+         /* Bail before reading body on a server error */
+         curl.fetchAsync(url, {
+             xferCallback: function(info){
+                 if (info.httpStatus >= 500) return false;
+             }
+         }, cb);
+
+      Available with ``fetch``, ``fetchAsync``, ``submit``, and
+      ``submitAsync`` — same surface across all four.  Not preserved
+      across ``addurl`` chained calls.
+
+      If ``xferCallback`` is not provided, libcurl's tick is left
+      disabled (``CURLOPT_NOPROGRESS=1``) and no overhead is incurred —
+      the no-callback path is byte-for-byte identical to today.
+
+    * ``xferCallbackRate`` - a :green:`Number`, the maximum
+      invocation rate of ``xferCallback`` in calls per second.
+      Default is ``4`` (one call every 250 ms).  A rate of ``1`` means
+      one call per second, ``10`` means 100 ms between calls.
+      Setting ``0`` removes the throttle and the callback fires on
+      every libcurl tick.  Has no effect when ``xferCallback`` is not
+      provided.
+
+      libcurl's own minimum tick is roughly 1 Hz; higher rates may be
+      bounded by that floor during idle waits but will produce more
+      frequent calls during active transfers.
+
     * ``noCopyBuffer`` - a :green:`Boolean`, if ``true`` the response
       ``body`` :green:`Buffer` is used directly from the Curl library
       without copying.  This can improve performance for large responses

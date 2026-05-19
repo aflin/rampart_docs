@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-url module &mdash; Rampart 0.6.2 documentation</title>
+  <title>Rampart Extras &mdash; Rampart 0.6.2 documentation</title>
   
 
   
@@ -101,6 +101,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -163,6 +164,12 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-cmodule">rampart-cmodule</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-macros-for-c-modules">Rampart Macros for C Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rampart-nodeshim-module">rampart-nodeshim Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading">Loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules-and-notable-gaps">Submodules and notable gaps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#not-implemented">Not implemented</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -211,7 +218,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>The rampart-url module</li>
+      <li>Rampart Extras</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -230,8 +237,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-rampart-url-module">
-<h1>The rampart-url module<a class="headerlink" href="#the-rampart-url-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="rampart-extras">
+<h1>Rampart Extras<a class="headerlink" href="#rampart-extras" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="preface">
 <h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="what-is-in-this-section">
@@ -1984,6 +1991,152 @@ with <code class="docutils literal notranslate"><span class="pre">typeof</span><
 codable in C. It is also the basis of the <a class="reference internal" href="rampart-utils.html#gettype"><span class="std std-ref">rampart.utils.getType() JavaScript call</span></a>.</p>
 </dd>
 </dl>
+</div>
+<div class="section" id="rampart-nodeshim-module">
+<h2>rampart-nodeshim Module<a class="headerlink" href="#rampart-nodeshim-module" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><strong>Highly experimental.</strong>  The API surface, coverage, and even the
+module’s existence are subject to change without notice.  This
+layer may be substantially altered or dropped entirely in a future
+release.  Don’t rely on it for production work.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">rampart-nodeshim</span></code> is a compatibility layer that lets a subset of
+node.js <strong>core-module</strong> code run under rampart.  It assumes the reader
+is familiar with node’s APIs; this section only enumerates the
+available submodules and notes the gaps.</p>
+<p>It is <strong>not</strong> a general node-compatibility layer for arbitrary npm
+packages.  There is no <code class="docutils literal notranslate"><span class="pre">node_modules/</span></code> resolver, no support for
+package.json <code class="docutils literal notranslate"><span class="pre">exports</span></code> / <code class="docutils literal notranslate"><span class="pre">imports</span></code> maps, no ESM, no native-addon
+loading, no transitive dependency installation.  The intent is to let
+<em>your own</em> code use node-style API names — <code class="docutils literal notranslate"><span class="pre">require('path')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Worker(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fs.readFileSync(...)</span></code> — without rewriting it
+against rampart’s native modules.  Dropping a folder full of npm
+packages into a rampart project will not work; running a typical npm
+package against the shim usually will not work.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Most real-world node-style code uses ES2015+ syntax — <code class="docutils literal notranslate"><span class="pre">let</span></code> /
+<code class="docutils literal notranslate"><span class="pre">const</span></code>, arrow functions, classes, template literals,
+<code class="docutils literal notranslate"><span class="pre">async</span></code>/<code class="docutils literal notranslate"><span class="pre">await</span></code>, destructuring, spread/rest, optional
+chaining, etc.  Duktape’s parser only accepts ES5, so to run
+such code under rampart you need one of:</p>
+<ul class="simple">
+<li>the <code class="docutils literal notranslate"><span class="pre">-t</span></code> command-line flag (transpiler) — recommended</li>
+<li>the <code class="docutils literal notranslate"><span class="pre">-b</span></code> command-line flag (Babel)</li>
+<li>a <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babelGlobally&quot;</span></code>
+directive at the top of the entry script</li>
+</ul>
+<p class="last">See <span class="xref std std-ref">the transpiler section</span>
+for details.  Without one of these, the shim still loads, but
+your <em>own</em> code is restricted to ES5 syntax.  The submodule
+implementations themselves are ES5 internally, so the shim’s
+surface (<code class="docutils literal notranslate"><span class="pre">fs.readFileSync(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">EventEmitter()</span></code>, etc.)
+works either way — it’s <em>your</em> call sites that need the
+transpiler if they use modern syntax.</p>
+</div>
+<div class="section" id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+<p>The shim is split between one native module (<code class="docutils literal notranslate"><span class="pre">rampart-nodeshim.so</span></code>)
+and per-submodule re-export files in <code class="docutils literal notranslate"><span class="pre">js_modules/</span></code>, so the node-style
+bare-name require works:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">fs</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>           <span class="c1">// → js_modules/fs.js → nodeshim.fs</span>
+<span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">wt</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;worker_threads&#39;</span><span class="p">);</span>
+<span class="c1">// ...and so on for the submodules listed below.</span>
+</pre></div>
+</div>
+<p>The re-export files in <code class="docutils literal notranslate"><span class="pre">js_modules/</span></code> are one-liners:
+<code class="docutils literal notranslate"><span class="pre">module.exports</span> <span class="pre">=</span> <span class="pre">require('rampart-nodeshim').&lt;name&gt;;</span></code>.  Full list:
+<code class="docutils literal notranslate"><span class="pre">assert.js</span></code>, <code class="docutils literal notranslate"><span class="pre">buffer.js</span></code>, <code class="docutils literal notranslate"><span class="pre">console.js</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto.js</span></code>, <code class="docutils literal notranslate"><span class="pre">dns.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">events.js</span></code>, <code class="docutils literal notranslate"><span class="pre">fs.js</span></code>, <code class="docutils literal notranslate"><span class="pre">module.js</span></code>, <code class="docutils literal notranslate"><span class="pre">os.js</span></code>, <code class="docutils literal notranslate"><span class="pre">path.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">perf_hooks.js</span></code>, <code class="docutils literal notranslate"><span class="pre">process.js</span></code>, <code class="docutils literal notranslate"><span class="pre">punycode.js</span></code> (vendored Mathias
+Bynens v2.3.1 IDN library — standalone, not part of the <code class="docutils literal notranslate"><span class="pre">.so</span></code>),
+<code class="docutils literal notranslate"><span class="pre">querystring.js</span></code>, <code class="docutils literal notranslate"><span class="pre">string_decoder.js</span></code>, <code class="docutils literal notranslate"><span class="pre">timers.js</span></code>, <code class="docutils literal notranslate"><span class="pre">url.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">util.js</span></code>, <code class="docutils literal notranslate"><span class="pre">worker_threads.js</span></code>, <code class="docutils literal notranslate"><span class="pre">zlib.js</span></code>.</p>
+</div>
+<div class="section" id="submodules-and-notable-gaps">
+<h3>Submodules and notable gaps<a class="headerlink" href="#submodules-and-notable-gaps" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">assert</span></code> — sync surface, <code class="docutils literal notranslate"><span class="pre">CallTracker</span></code>,
+<code class="docutils literal notranslate"><span class="pre">partialDeepStrictEqual</span></code>.  <code class="docutils literal notranslate"><span class="pre">assert.rejects</span></code> /
+<code class="docutils literal notranslate"><span class="pre">doesNotReject</span></code> need <code class="docutils literal notranslate"><span class="pre">Promise</span></code> (<code class="docutils literal notranslate"><span class="pre">-t</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">buffer</span></code> — global <code class="docutils literal notranslate"><span class="pre">Buffer</span></code> plus full <code class="docutils literal notranslate"><span class="pre">readUInt*</span></code>/<code class="docutils literal notranslate"><span class="pre">writeUInt*</span></code>
+family.  <code class="docutils literal notranslate"><span class="pre">Buffer.{read,write}Big*Int64*</span></code> blocked on duktape
+<code class="docutils literal notranslate"><span class="pre">BigInt</span></code>.  <code class="docutils literal notranslate"><span class="pre">Blob</span></code>/<code class="docutils literal notranslate"><span class="pre">File</span></code> are undefined stubs.</li>
+<li><code class="docutils literal notranslate"><span class="pre">console</span></code> — adds <code class="docutils literal notranslate"><span class="pre">time</span></code>/<code class="docutils literal notranslate"><span class="pre">timeEnd</span></code>/<code class="docutils literal notranslate"><span class="pre">timeLog</span></code>/<code class="docutils literal notranslate"><span class="pre">table</span></code>/
+<code class="docutils literal notranslate"><span class="pre">group</span></code>/<code class="docutils literal notranslate"><span class="pre">groupEnd</span></code>/<code class="docutils literal notranslate"><span class="pre">groupCollapsed</span></code>/<code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">countReset</span></code>/
+<code class="docutils literal notranslate"><span class="pre">clear</span></code> to the global <code class="docutils literal notranslate"><span class="pre">console</span></code>.  Exposes a <code class="docutils literal notranslate"><span class="pre">Console</span></code> class.</li>
+<li><code class="docutils literal notranslate"><span class="pre">crypto</span></code> — Hash/Hmac/Cipher/Decipher/Sign/Verify/pbkdf2/
+randomBytes/randomUUID/timingSafeEqual.  Asymmetric key surface
+(<code class="docutils literal notranslate"><span class="pre">KeyObject</span></code>, <code class="docutils literal notranslate"><span class="pre">createPrivateKey</span></code>, <code class="docutils literal notranslate"><span class="pre">publicEncrypt</span></code>,
+<code class="docutils literal notranslate"><span class="pre">generateKeyPair</span></code>, <code class="docutils literal notranslate"><span class="pre">X509Certificate</span></code>, <code class="docutils literal notranslate"><span class="pre">DiffieHellman</span></code>) not
+implemented.  <code class="docutils literal notranslate"><span class="pre">scrypt</span></code> / <code class="docutils literal notranslate"><span class="pre">hkdf</span></code> not implemented.</li>
+<li><code class="docutils literal notranslate"><span class="pre">dns</span></code> — wraps <code class="docutils literal notranslate"><span class="pre">rampart.net.Resolver</span></code> with literal-IP fast path.
+<code class="docutils literal notranslate"><span class="pre">dns.promises</span></code> only meaningful under <code class="docutils literal notranslate"><span class="pre">-t</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">events</span></code> — full <code class="docutils literal notranslate"><span class="pre">EventEmitter</span></code> with <code class="docutils literal notranslate"><span class="pre">once</span></code>/
+<code class="docutils literal notranslate"><span class="pre">getEventListeners</span></code>/<code class="docutils literal notranslate"><span class="pre">setMaxListeners</span></code> statics and <code class="docutils literal notranslate"><span class="pre">newListener</span></code>/
+<code class="docutils literal notranslate"><span class="pre">removeListener</span></code> events.  <code class="docutils literal notranslate"><span class="pre">EventEmitterAsyncResource</span></code> not
+provided.</li>
+<li><code class="docutils literal notranslate"><span class="pre">fs</span></code> — sync API plus callback variants.  <code class="docutils literal notranslate"><span class="pre">fs.openAsBlob</span></code> and
+<code class="docutils literal notranslate"><span class="pre">fs.statSync({bigint:true})</span></code> blocked on Blob/BigInt.  <code class="docutils literal notranslate"><span class="pre">fs.watch</span></code>
+uses <code class="docutils literal notranslate"><span class="pre">inotify</span></code> on Linux, polling on macOS/BSD (no <code class="docutils literal notranslate"><span class="pre">kqueue</span></code>
+backend).  <code class="docutils literal notranslate"><span class="pre">fs.createReadStream</span></code>/<code class="docutils literal notranslate"><span class="pre">WriteStream</span></code> are minimal until
+the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module lands — no pipe/pause/resume.</li>
+<li><code class="docutils literal notranslate"><span class="pre">module</span></code> — <code class="docutils literal notranslate"><span class="pre">Module.builtinModules</span></code>, <code class="docutils literal notranslate"><span class="pre">isBuiltin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">createRequire</span></code>, <code class="docutils literal notranslate"><span class="pre">wrap</span></code>.  No compile-cache / sourcemaps / ESM.</li>
+<li><code class="docutils literal notranslate"><span class="pre">os</span></code> — full surface on Linux.  On macOS/BSD: <code class="docutils literal notranslate"><span class="pre">os.cpus()</span></code> returns
+stub entries (<code class="docutils literal notranslate"><span class="pre">model:</span> <span class="pre">&quot;unknown&quot;</span></code>, all-zero times); <code class="docutils literal notranslate"><span class="pre">os.freemem()</span></code>
+may return 0.  Real implementations are planned follow-ups.</li>
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> — POSIX + win32 + <code class="docutils literal notranslate"><span class="pre">matchesGlob</span></code>.  Cyclic
+<code class="docutils literal notranslate"><span class="pre">path.posix.posix</span> <span class="pre">===</span> <span class="pre">path.posix</span></code> is intentional (matches node).</li>
+<li><code class="docutils literal notranslate"><span class="pre">perf_hooks</span></code> — <code class="docutils literal notranslate"><span class="pre">performance.now</span></code>/<code class="docutils literal notranslate"><span class="pre">mark</span></code>/<code class="docutils literal notranslate"><span class="pre">measure</span></code>/
+<code class="docutils literal notranslate"><span class="pre">getEntries</span></code> and the entry classes.  <code class="docutils literal notranslate"><span class="pre">timeOrigin</span></code> is module-load
+<code class="docutils literal notranslate"><span class="pre">Date.now()</span></code>.  No <code class="docutils literal notranslate"><span class="pre">PerformanceObserver</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">process</span></code> — <code class="docutils literal notranslate"><span class="pre">cwd</span></code>/<code class="docutils literal notranslate"><span class="pre">chdir</span></code>/<code class="docutils literal notranslate"><span class="pre">exit</span></code>/<code class="docutils literal notranslate"><span class="pre">argv</span></code>/<code class="docutils literal notranslate"><span class="pre">env</span></code>/<code class="docutils literal notranslate"><span class="pre">pid</span></code>/
+<code class="docutils literal notranslate"><span class="pre">platform</span></code>/<code class="docutils literal notranslate"><span class="pre">arch</span></code>/<code class="docutils literal notranslate"><span class="pre">versions</span></code>/<code class="docutils literal notranslate"><span class="pre">cpuUsage</span></code>/<code class="docutils literal notranslate"><span class="pre">resourceUsage</span></code>/
+<code class="docutils literal notranslate"><span class="pre">hrtime</span></code>/<code class="docutils literal notranslate"><span class="pre">memoryUsage</span></code>/<code class="docutils literal notranslate"><span class="pre">setuid</span></code>-family/<code class="docutils literal notranslate"><span class="pre">getuid</span></code>-family.  No
+<code class="docutils literal notranslate"><span class="pre">send</span></code>/<code class="docutils literal notranslate"><span class="pre">disconnect</span></code> (worker IPC), no <code class="docutils literal notranslate"><span class="pre">process.report</span></code>, no
+permission model.</li>
+<li><code class="docutils literal notranslate"><span class="pre">punycode</span></code> — vendored Mathias Bynens v2.3.1 (full).</li>
+<li><code class="docutils literal notranslate"><span class="pre">querystring</span></code> — legacy node module, full coverage.</li>
+<li><code class="docutils literal notranslate"><span class="pre">string_decoder</span></code> — <code class="docutils literal notranslate"><span class="pre">StringDecoder</span></code> with chunk-boundary buffering
+for utf-8 multibyte and utf-16le pair splits.  Encodings: utf-8,
+utf-16le, latin1, ascii, base64, hex.</li>
+<li><code class="docutils literal notranslate"><span class="pre">timers</span></code> — re-exports the globals with <code class="docutils literal notranslate"><span class="pre">ref</span></code>/<code class="docutils literal notranslate"><span class="pre">unref</span></code>/
+<code class="docutils literal notranslate"><span class="pre">hasRef</span></code>/<code class="docutils literal notranslate"><span class="pre">refresh</span></code> stubs on the handle.  No <code class="docutils literal notranslate"><span class="pre">timers/promises</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">url</span></code> — WHATWG <code class="docutils literal notranslate"><span class="pre">URL</span></code> + <code class="docutils literal notranslate"><span class="pre">URLSearchParams</span></code>, legacy
+<code class="docutils literal notranslate"><span class="pre">url.parse</span></code>/<code class="docutils literal notranslate"><span class="pre">format</span></code>/<code class="docutils literal notranslate"><span class="pre">resolve</span></code>, <code class="docutils literal notranslate"><span class="pre">fileURLToPath</span></code>/
+<code class="docutils literal notranslate"><span class="pre">pathToFileURL</span></code>, <code class="docutils literal notranslate"><span class="pre">domainToASCII</span></code>/<code class="docutils literal notranslate"><span class="pre">domainToUnicode</span></code>,
+<code class="docutils literal notranslate"><span class="pre">URL.parse</span></code>/<code class="docutils literal notranslate"><span class="pre">URL.canParse</span></code> statics.</li>
+<li><code class="docutils literal notranslate"><span class="pre">util</span></code> — <code class="docutils literal notranslate"><span class="pre">format</span></code>/<code class="docutils literal notranslate"><span class="pre">inspect</span></code>/<code class="docutils literal notranslate"><span class="pre">promisify</span></code>/<code class="docutils literal notranslate"><span class="pre">callbackify</span></code>/
+<code class="docutils literal notranslate"><span class="pre">inherits</span></code>/<code class="docutils literal notranslate"><span class="pre">deprecate</span></code>/<code class="docutils literal notranslate"><span class="pre">debuglog</span></code>/<code class="docutils literal notranslate"><span class="pre">isDeepStrictEqual</span></code>/
+<code class="docutils literal notranslate"><span class="pre">types.*</span></code>/<code class="docutils literal notranslate"><span class="pre">parseArgs</span></code>/<code class="docutils literal notranslate"><span class="pre">parseEnv</span></code>/<code class="docutils literal notranslate"><span class="pre">styleText</span></code>/<code class="docutils literal notranslate"><span class="pre">MIMEType</span></code>.
+<code class="docutils literal notranslate"><span class="pre">util.aborted</span></code> and <code class="docutils literal notranslate"><span class="pre">events.on</span></code> async-iter blocked on
+<code class="docutils literal notranslate"><span class="pre">AbortSignal</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">worker_threads</span></code> — <code class="docutils literal notranslate"><span class="pre">Worker</span></code>, <code class="docutils literal notranslate"><span class="pre">parentPort</span></code>, <code class="docutils literal notranslate"><span class="pre">workerData</span></code>,
+<code class="docutils literal notranslate"><span class="pre">threadId</span></code>, <code class="docutils literal notranslate"><span class="pre">isMainThread</span></code>, <code class="docutils literal notranslate"><span class="pre">MessageChannel</span></code>/<code class="docutils literal notranslate"><span class="pre">MessagePort</span></code>,
+<code class="docutils literal notranslate"><span class="pre">BroadcastChannel</span></code>.  All messages are deep-copied (no
+<code class="docutils literal notranslate"><span class="pre">SharedArrayBuffer</span></code> transfer; <code class="docutils literal notranslate"><span class="pre">transferList</span></code> is validated but
+copies happen anyway).  <code class="docutils literal notranslate"><span class="pre">worker.stdin</span></code>/<code class="docutils literal notranslate"><span class="pre">stdout</span></code>/<code class="docutils literal notranslate"><span class="pre">stderr</span></code> are
+<code class="docutils literal notranslate"><span class="pre">null</span></code> pending the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module.  Worker scripts run via
+<code class="docutils literal notranslate"><span class="pre">eval</span></code> (<code class="docutils literal notranslate"><span class="pre">{eval:true}</span></code>) or <code class="docutils literal notranslate"><span class="pre">require()</span></code> (file form), not as a
+top-level program.</li>
+<li><code class="docutils literal notranslate"><span class="pre">zlib</span></code> — sync surface plus callback variants, backed by libdeflate.
+<code class="docutils literal notranslate"><span class="pre">unzipSync</span></code> auto-detects gzip vs zlib framing.  <code class="docutils literal notranslate"><span class="pre">crc32</span></code>/
+<code class="docutils literal notranslate"><span class="pre">adler32</span></code> included.  Stream classes (<code class="docutils literal notranslate"><span class="pre">createGzip</span></code>,
+<code class="docutils literal notranslate"><span class="pre">createGunzip</span></code>, <code class="docutils literal notranslate"><span class="pre">Brotli*</span></code>, <code class="docutils literal notranslate"><span class="pre">Zstd*</span></code>) throw <code class="docutils literal notranslate"><span class="pre">ENOSYS</span></code> pending
+the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module.</li>
+</ul>
+</div>
+<div class="section" id="not-implemented">
+<h3>Not implemented<a class="headerlink" href="#not-implemented" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">async_hooks</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster</span></code>, <code class="docutils literal notranslate"><span class="pre">dgram</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_channel</span></code>,
+<code class="docutils literal notranslate"><span class="pre">domain</span></code>, <code class="docutils literal notranslate"><span class="pre">http</span></code>/<code class="docutils literal notranslate"><span class="pre">https</span></code>/<code class="docutils literal notranslate"><span class="pre">http2</span></code>, <code class="docutils literal notranslate"><span class="pre">inspector</span></code>,
+<code class="docutils literal notranslate"><span class="pre">net</span></code>/<code class="docutils literal notranslate"><span class="pre">tls</span></code> (planned), <code class="docutils literal notranslate"><span class="pre">repl</span></code>, <code class="docutils literal notranslate"><span class="pre">stream</span></code>, <code class="docutils literal notranslate"><span class="pre">child_process</span></code>,
+<code class="docutils literal notranslate"><span class="pre">readline</span></code>, <code class="docutils literal notranslate"><span class="pre">tty</span></code>, <code class="docutils literal notranslate"><span class="pre">vm</span></code>, <code class="docutils literal notranslate"><span class="pre">node:test</span></code>, <code class="docutils literal notranslate"><span class="pre">trace_events</span></code>,
+<code class="docutils literal notranslate"><span class="pre">v8</span></code>, <code class="docutils literal notranslate"><span class="pre">wasi</span></code>.</p>
+</div>
 </div>
 </div>
 

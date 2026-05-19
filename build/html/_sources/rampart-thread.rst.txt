@@ -208,6 +208,84 @@ thr.close()
     Return Value:
         ``undefined``.
 
+thr.terminate()
+~~~~~~~~~~~~~~~
+
+    Forcibly shut down a thread, discarding any future-scheduled events.
+    Unlike `thr.close()`_, which politely waits for the thread's event loop
+    to drain (and never returns control if subscriptions like
+    `rampart.thread.onGet()`_ keep the loop alive), ``terminate()`` causes
+    the thread's event loop to exit at the end of its current iteration.
+
+    Behavior:
+
+        * Any JavaScript callback that is **currently executing** in the
+          thread completes naturally.  ``terminate()`` does not preempt
+          running code.
+
+        * Any callback that is **scheduled but has not yet started** (for
+          example, an unfired ``thr.exec()`` with a ``threadDelay`` still
+          counting down, or a future ``thread.onGet()`` notification) will
+          **not** run.  Its arguments and associated allocations are
+          released.
+
+        * Any registered ``thread.onGet()`` subscriptions in the thread
+          are torn down.  The thread's event loop drains and the pthread
+          exits.
+
+        * Calling ``terminate()`` on a thread that has already exited, or
+          calling it more than once, is a safe no-op.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var thr = new rampart.thread();
+
+        // ... while inside a threaded function or another thread
+        thr.terminate();
+
+    Example:
+
+    .. code-block:: javascript
+
+      var thread = rampart.thread;
+
+      var thr = new thread();
+
+      // worker registers an onGet subscription, then idles forever
+      thr.exec(function() {
+          thread.onGet("cmd", function(key, val) {
+              console.log("worker got:", val);
+          });
+      });
+
+      // give the worker time to subscribe, then send a message
+      setTimeout(function() {
+          thread.put("cmd", "hello");
+      }, 100);
+
+      // forcibly shut down the worker after 500ms.  thr.close() would
+      // never succeed here because the onGet subscription keeps the
+      // worker's event loop non-empty; terminate() does.
+      setTimeout(function() {
+          thr.terminate();
+      }, 500);
+
+    Return Value:
+        ``undefined``.
+
+    Notes:
+
+        * ``terminate()`` is asynchronous.  When it returns to the caller,
+          the thread has been *asked* to shut down but may not have done so
+          yet (the in-flight JavaScript callback, if any, finishes first).
+
+        * To wait for the thread to actually exit, use a
+          `rampart.thread.put()`_ / `rampart.thread.onGet()`_ acknowledgement
+          pattern, or simply let the parent's event loop run -- the parent
+          will not exit while any child thread is still running.
+
 thr.getId()
 ~~~~~~~~~~~
 

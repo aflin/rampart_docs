@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -1366,7 +1367,7 @@ binary data in a <span class="green">Buffer</span>.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hash</span><span class="p">(</span><span class="nx">data</span><span class="p">[,</span> <span class="nx">hash_func</span><span class="p">][,</span> <span class="nx">return_buffer</span><span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hash</span><span class="p">(</span><span class="nx">data</span><span class="p">[,</span> <span class="nx">hash_func</span><span class="p">][,</span> <span class="nx">return_option</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1380,22 +1381,49 @@ hashed.</p>
 <code class="docutils literal notranslate"><span class="pre">rmd160</span></code>, <code class="docutils literal notranslate"><span class="pre">sha512-224</span></code>, <code class="docutils literal notranslate"><span class="pre">sha512-256</span></code>, <code class="docutils literal notranslate"><span class="pre">shake128</span></code>, <code class="docutils literal notranslate"><span class="pre">shake256</span></code>,
 <code class="docutils literal notranslate"><span class="pre">sm3</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">sha256</span></code>.</p>
 </li>
-<li><p class="first">return_buffer is a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code>, the output will be
-binary data in a <span class="green">Buffer</span>, and not hex encoded.</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">return_option</span></code> controls the type of the returned value. It may be
+either a <span class="green">Boolean</span> or an <span class="green">Object</span>:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">If omitted or <span class="green">false</span>, returns a hex-encoded <span class="green">String</span>
+(the default).</p>
+</li>
+<li><p class="first">If <span class="green">true</span>, returns a raw <span class="green">Buffer</span> (a duktape
+<code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>-style plain buffer). This is the historical
+“raw” form and is preserved unchanged.</p>
+</li>
+<li><p class="first">If an options <span class="green">Object</span> of the form
+<code class="docutils literal notranslate"><span class="pre">{returnType:</span> <span class="pre">&quot;hex&quot;</span> <span class="pre">|</span> <span class="pre">&quot;uint8array&quot;</span> <span class="pre">|</span> <span class="pre">&quot;buffer&quot;}</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;hex&quot;</span></code> — hex-encoded <span class="green">String</span> (same as default).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;uint8array&quot;</span></code> — raw <span class="green">Uint8Array</span> (same as <code class="docutils literal notranslate"><span class="pre">true</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;buffer&quot;</span></code> — a node-style <span class="green">Buffer</span> (a <code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>
+subclass with node’s prototype methods, e.g.
+<code class="docutils literal notranslate"><span class="pre">buf.toString('hex')</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.toString('base64')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">buf.indexOf(...)</span></code>).</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
 </li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>A <span class="green">String</span> or <span class="green">Buffer</span>, the hash of the data.</dd>
+<dd>A <span class="green">String</span>, <span class="green">Uint8Array</span>, or <span class="green">Buffer</span>,
+depending on <code class="docutils literal notranslate"><span class="pre">return_option</span></code> above. Default is hex
+<span class="green">String</span>.</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hash</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">,</span> <span class="s2">&quot;sha256&quot;</span><span class="p">);</span>
+<span class="cm">/* res == &#39;b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9&#39; */</span>
 
-<span class="cm">/*</span>
-<span class="cm">    res == &#39;b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9&#39;</span>
-<span class="cm">*/</span>
+<span class="cm">/* As a node-style Buffer (so .toString(&#39;base64&#39;) etc. work): */</span>
+<span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hash</span><span class="p">(</span><span class="s2">&quot;hello world&quot;</span><span class="p">,</span> <span class="s2">&quot;sha256&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">returnType</span><span class="o">:</span> <span class="s2">&quot;buffer&quot;</span><span class="p">});</span>
+<span class="kd">var</span> <span class="nx">b64</span> <span class="o">=</span> <span class="nx">buf</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;base64&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -1414,7 +1442,7 @@ value above.  Thus, using <code class="docutils literal notranslate"><span class
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hmac</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">[,</span> <span class="nx">hash_func</span><span class="p">][,</span> <span class="nx">return_buffer</span><span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hmac</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">[,</span> <span class="nx">hash_func</span><span class="p">][,</span> <span class="nx">return_option</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1431,14 +1459,29 @@ hashed.</p>
 <code class="docutils literal notranslate"><span class="pre">rmd160</span></code>, <code class="docutils literal notranslate"><span class="pre">sha512-224</span></code>, <code class="docutils literal notranslate"><span class="pre">sha512-256</span></code>,
 <code class="docutils literal notranslate"><span class="pre">sm3</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">sha256</span></code>.</p>
 </li>
-<li><p class="first">return_buffer is a <span class="green">Boolean</span>, if <code class="docutils literal notranslate"><span class="pre">true</span></code>, the output will be
-binary data in a <span class="green">Buffer</span>, and not hex encoded.</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">return_option</span></code> controls the type of the returned value. It
+may be either a <span class="green">Boolean</span> or an <span class="green">Object</span>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If omitted or <span class="green">false</span>, returns a hex-encoded
+<span class="green">String</span> (the default).</li>
+<li>If <span class="green">true</span>, returns a raw <span class="green">Buffer</span> (a duktape
+<code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>-style plain buffer). Preserved unchanged for
+backward compatibility.</li>
+<li>If an options <span class="green">Object</span> of the form
+<code class="docutils literal notranslate"><span class="pre">{returnType:</span> <span class="pre">&quot;hex&quot;</span> <span class="pre">|</span> <span class="pre">&quot;uint8array&quot;</span> <span class="pre">|</span> <span class="pre">&quot;buffer&quot;}</span></code>, selects
+the corresponding return shape. <code class="docutils literal notranslate"><span class="pre">&quot;buffer&quot;</span></code> yields a
+node-style <span class="green">Buffer</span> whose prototype includes
+<code class="docutils literal notranslate"><span class="pre">toString('hex'|'base64'|...)</span></code>, <code class="docutils literal notranslate"><span class="pre">indexOf</span></code>, etc.</li>
+</ul>
+</div></blockquote>
 </li>
 </ul>
 </div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>A <span class="green">String</span> or <span class="green">Buffer</span>, the hmac hash of the data.</dd>
+<dd>A <span class="green">String</span>, <span class="green">Uint8Array</span>, or <span class="green">Buffer</span>,
+depending on <code class="docutils literal notranslate"><span class="pre">return_option</span></code>.</dd>
 </dl>
 </div>
 </div>
@@ -1446,18 +1489,50 @@ binary data in a <span class="green">Buffer</span>, and not hex encoded.</p>
 <h2>Random<a class="headerlink" href="#random" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="rand">
 <h3>rand<a class="headerlink" href="#rand" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">rand()</span></code> function returns random generated bytes in a buffer.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">rand()</span></code> function returns random generated bytes.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="nx">nBytes</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="nx">nBytes</span><span class="p">[,</span> <span class="nx">return_option</span><span class="p">]);</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">nBytes</span></code> is the number of bytes to return.</p>
+<p>Where:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">nBytes</span></code> is the number of bytes to return.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">return_option</span></code> controls the type of the returned value. When
+omitted, <code class="docutils literal notranslate"><span class="pre">rand()</span></code> returns a raw <span class="green">Uint8Array</span> (historical
+default — note this is unlike <code class="docutils literal notranslate"><span class="pre">hash</span></code> / <code class="docutils literal notranslate"><span class="pre">hmac</span></code>, which default
+to hex). It may also be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><span class="green">true</span> — same as omitted (raw <span class="green">Uint8Array</span>).</li>
+<li><span class="green">false</span> — returns a hex-encoded <span class="green">String</span>.</li>
+<li>An options <span class="green">Object</span> of the form
+<code class="docutils literal notranslate"><span class="pre">{returnType:</span> <span class="pre">&quot;hex&quot;</span> <span class="pre">|</span> <span class="pre">&quot;uint8array&quot;</span> <span class="pre">|</span> <span class="pre">&quot;buffer&quot;}</span></code> to select
+the return shape. <code class="docutils literal notranslate"><span class="pre">&quot;buffer&quot;</span></code> returns a node-style
+<span class="green">Buffer</span>.</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>a <span class="green">Buffer</span> with <code class="docutils literal notranslate"><span class="pre">nBytes</span></code> bytes of random data.</dd>
+<dd>A <span class="green">Uint8Array</span>, <span class="green">Buffer</span>, or <span class="green">String</span>
+depending on <code class="docutils literal notranslate"><span class="pre">return_option</span></code>. Default is <span class="green">Uint8Array</span> of
+<code class="docutils literal notranslate"><span class="pre">nBytes</span></code> bytes.</dd>
 </dl>
+<p>Examples:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">raw</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="mi">16</span><span class="p">);</span>                                  <span class="c1">// Uint8Array</span>
+<span class="kd">var</span> <span class="nx">hex</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="nx">returnType</span><span class="o">:</span> <span class="s2">&quot;hex&quot;</span><span class="p">});</span>             <span class="c1">// string of 32 hex chars</span>
+<span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">rand</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="nx">returnType</span><span class="o">:</span> <span class="s2">&quot;buffer&quot;</span><span class="p">});</span>          <span class="c1">// node-style Buffer</span>
+<span class="cm">/* buf.toString(&#39;base64&#39;) works directly */</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="randnum">
 <h3>randnum<a class="headerlink" href="#randnum" title="Permalink to this headline">¶</a></h3>
