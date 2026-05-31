@@ -76,8 +76,17 @@ Notable extras:
       ``ipv6Port``.
 
     * ``redirPort``    - :green:`Number`, when launching a secure ``https``
-      server, also launch a ``http`` server using this port to redirect
-      requests to the https server (assuming default port ``443``).
+      server, also listen on this port for plain ``http`` and 301-redirect
+      every request to the ``https`` listener.  This runs in-process via
+      the underlying
+      :ref:`httpRedirect <rampart-server:tls-certificates>` option; no
+      separate daemon is spawned.  The redirect ``Location:`` header
+      includes the actual ``https`` port automatically, so non-standard
+      configurations (e.g. https on ``:8443``) work without further setup.
+      For full control (e.g. ``passthrough:`` paths for ACME
+      ``/.well-known/acme-challenge/`` renewals), set ``httpRedirect``
+      directly in ``web_server_conf.js``; rampart-webserver will respect
+      it instead of building one from ``redirPort``.
 
     * ``redir``        - :green:`Boolean`, if true, set ``redirPort`` to
       ``80``.
@@ -114,8 +123,8 @@ Notable extras:
       and that the root index.html file can be reached (every 60 seconds). 
       Default is false.
 
-    * ``stop``         - :green:`Boolean`, if true, stop the server, along
-      with the redirect server and monitor processes if either was launched.
+    * ``stop``         - :green:`Boolean`, if true, stop the server (along
+      with the monitor process, if launched).
 
 Building a command line utility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -164,8 +173,8 @@ as such:
     --ipPort             Number. Set ipv4 port
     --ipv6Port           Number. Set ipv6 port
     --port               Number. Set both ipv4 and ipv6 port
-    --redirPort          Number. Launch http->https redirect server and set port
-    --redir              Bool.   Launch http->https redirect server and set to port 80
+    --redirPort          Number. Listen on this port and 301-redirect to the https server (in-process)
+    --redir              Bool.   Equivalent to --redirPort 80
     --htmlRoot           String. Root directory from which to serve files
     --appsRoot           String. Root directory from which to serve apps
     --wsappsRoot         String. Root directory from which to serve wsapps
@@ -186,7 +195,7 @@ as such:
     --developerMode      Bool.   Whether script errors result in 500 and return a stack trace.  Otherwise 404
     --letsencrypt        String. If using letsencrypt, the 'domain.tld' name for automatic setup of https
                          (assumes --secure true and looks for '/etc/letsencrypt/live/domain.tld/' directory)
-                         (if redir is set, also map ./letsencrypt-wd/.well-known/ --> http://mydom.com/.well-known/)
+                         (if redir is set, also map ./letsencrypt_wd/.well-known/ --> http://mydom.com/.well-known/)
                          (if set to "setup", don\'t start https server, but do map ".well-known/" for http)
                          (sets port:443 unless set otherwise)
     --rootScripts        Bool.   Whether to treat *.js files in htmlRoot as apps (not secure)
@@ -335,7 +344,7 @@ the desired domain name with ``example.com``:
     # start the http webserver in letsencrypt setup mode (don't start https)
     root@example.com:/path/to/my/web_server# rampart ./web_server_conf.js letssetup
 
-    # verify redirect server has mapped .well-known/
+    # verify the .well-known/ directory was created under letsencrypt_wd/
     root@example.com:/path/to/my/web_server# ls -a letsencrypt_wd/
     .  ..  .well-known
 
@@ -1884,6 +1893,41 @@ Simple Type Check:
     codable in C. It is also the basis of the :ref:`rampart.utils.getType() JavaScript call <rampart-utils:getType>`.
 
 
+Intl and WHATWG
+---------------
+
+Rampart implements substantial subsets of two standards bodies' web/JS
+platform globals:
+
+- **Intl** (ECMA-402, the ECMAScript Internationalization API) —
+  ``Intl.Collator``, ``Intl.DateTimeFormat``, ``Intl.NumberFormat``,
+  ``Intl.PluralRules``, ``Intl.RelativeTimeFormat``, ``Intl.ListFormat``,
+  ``Intl.DisplayNames``, ``Intl.Segmenter``, ``Intl.Locale``, and the
+  ``Intl.getCanonicalLocales`` / ``Intl.supportedValuesOf`` statics.
+  Backed by vendored ICU4C.
+- **WHATWG / W3C Web Platform APIs** — ``fetch``, ``URL``,
+  ``Headers`` / ``Request`` / ``Response`` / ``FormData``,
+  ``Blob`` / ``File``, the ``ReadableStream`` / ``WritableStream`` /
+  ``TransformStream`` family, ``WebSocket``, ``XMLHttpRequest``,
+  ``crypto`` (Web Crypto), ``structuredClone``, ``queueMicrotask``,
+  ``EventTarget`` / ``Event`` and subclasses, ``EventSource``,
+  ``localStorage`` / ``sessionStorage``, ``caches``, and more.
+
+Both surfaces are **lazy-loaded**: ``rampart-intl.so`` and
+``rampart-whatwg.so`` are only ``dlopen()``-ed when JS first references
+one of the relevant names.  Scripts that never touch these globals pay
+zero startup cost.
+
+Conformance is **partial and experimental**.  Intl tracks ECMA-402
+through what ICU exposes natively; WHATWG / W3C conformance is
+strongest for APIs that don't assume a browser/DOM context (Web Crypto,
+URL, mimesniff, ``data:`` URLs, value-stream APIs, HTTP/1.1 ``fetch``)
+and weaker or absent for anything needing ``document`` / ``window`` /
+``iframe``, ``WebAssembly``, HTTP/2 streaming upload, or ``br`` /
+``zstd`` content-encoding (servers fall back to ``gzip``).  Behaviors
+may change as the implementations track upstream test suites.
+
+
 rampart-nodeshim Module
 -----------------------
 
@@ -1895,19 +1939,32 @@ rampart-nodeshim Module
     release.  Don't rely on it for production work.
 
 ``rampart-nodeshim`` is a compatibility layer that lets a subset of
-node.js **core-module** code run under rampart.  It assumes the reader
-is familiar with node's APIs; this section only enumerates the
-available submodules and notes the gaps.
+node.js **core-module** code, and some npm packages, run under rampart.
+It assumes the reader is familiar with node's APIs; this section only
+enumerates the available submodules and notes the gaps.
 
-It is **not** a general node-compatibility layer for arbitrary npm
-packages.  There is no ``node_modules/`` resolver, no support for
-package.json ``exports`` / ``imports`` maps, no ESM, no native-addon
-loading, no transitive dependency installation.  The intent is to let
-*your own* code use node-style API names — ``require('path')``,
-``new Worker(...)``, ``fs.readFileSync(...)`` — without rewriting it
-against rampart's native modules.  Dropping a folder full of npm
-packages into a rampart project will not work; running a typical npm
-package against the shim usually will not work.
+**Prefer rampart's native modules.**  Where rampart provides a module
+for the task (``rampart.utils``, ``rampart.sql``, ``rampart.crypto``,
+``rampart.curl``, the HTTP server, and the others documented here), use
+it.  Those modules are mostly written in C and are considerably faster
+than the equivalent node packages running through this layer.  nodeshim
+is for portability — reusing existing node-style code — not for speed.
+
+Most code run through nodeshim requires the **transpiler** (``-t``); see
+the note below.  It loads **JavaScript only** — compiled native add-ons
+(``.node`` binaries) are not supported.
+
+It does **not** provide full node compatibility.  There is no ESM, no
+native-addon loading, and no transitive dependency installation (you
+supply the ``node_modules/`` tree yourself).  Coverage of the core
+modules is partial (see the gaps noted below).  The intent is to let
+node-style code — both *your own* (``require('path')``,
+``fs.readFileSync(...)``) and many pure-JavaScript npm packages — run
+with little or no modification.  Under the transpiler, a installed
+``node_modules/`` package resolves by bare name (``require('cheerio')``),
+honoring its package.json ``main``/``exports`` entry.  Whether any given
+package works is best-effort and varies by package; see *Tested
+libraries* below.
 
 .. note::
 
@@ -1928,7 +1985,9 @@ package against the shim usually will not work.
     implementations themselves are ES5 internally, so the shim's
     surface (``fs.readFileSync(...)``, ``new EventEmitter()``, etc.)
     works either way — it's *your* call sites that need the
-    transpiler if they use modern syntax.
+    transpiler if they use modern syntax.  npm packages are almost
+    always written in modern JavaScript, so in practice running one
+    through nodeshim requires ``-t`` in nearly all cases.
 
 Loading
 ~~~~~~~
@@ -2044,6 +2103,16 @@ Submodules and notable gaps
   ``adler32`` included.  Stream classes (``createGzip``,
   ``createGunzip``, ``Brotli*``, ``Zstd*``) throw ``ENOSYS`` pending
   the ``stream`` module.
+
+Tested libraries
+~~~~~~~~~~~~~~~~
+
+A number of popular npm libraries have been exercised against nodeshim
+(under ``-t``), among them ``axios``, ``cheerio``, ``commander``,
+``csv-parse``, ``fastify``, ``fs-extra``, ``glob``, ``koa``,
+``markdown-it``, ``node-fetch``, ``pino``, ``rimraf``, ``yaml`` and
+``zod``.  Coverage varies by library and is expanding; treat
+compatibility as best-effort rather than guaranteed.
 
 Not implemented
 ~~~~~~~~~~~~~~~

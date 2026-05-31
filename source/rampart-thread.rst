@@ -45,14 +45,72 @@ new rampart.thread()
 
         var thr = new rampart.thread([persist]);
 
+            /* or, with an options object */
+
+        var thr = new rampart.thread([options]);
+
     Where ``persist`` is a :green:`Boolean`, whether to create a
     `persistent` thread that will keep the thread open when the thread's
-    event loop is empty and a parent thread is otherwise ready to exit. 
+    event loop is empty and a parent thread is otherwise ready to exit.
 
     Normally at the end of a script, the main thread's event loop waits for
     any child threads to finish pending events and allow it to exit.  This
     option thus requires an explicit `thr.close()`_ for a parent thread to
     completely exit.
+
+    Alternatively, an ``options`` :green:`Object` may be passed with the
+    following keys:
+
+        * ``keepOpen`` - a :green:`Boolean`, equivalent to the ``persist``
+          argument above.
+
+        * ``bare`` - a :green:`Boolean`.  When ``true``, the new thread is
+          created with a **minimal** JavaScript heap: only ECMAScript
+          primordials (``Math``, ``JSON``, ``Array``, ``Object``,
+          ``Promise``, ``Map``/``Set``, etc.) plus the
+          ``rampart.thread``/``rampart.event``/``rampart.lock``
+          message-passing surface are installed.
+
+          The bare thread does **not** receive:
+
+            - The rest of the ``rampart`` namespace (``rampart.utils``,
+              ``rampart.crypto``, ``rampart.sql``, ``rampart.import``,
+              ``rampart.vector``, etc.).
+            - The ``process`` global.
+            - The ``require()`` function.
+            - WHATWG / Web platform globals (``URL``, ``crypto``, ``Blob``,
+              etc.) — these are not installed and their lazy getters are
+              not present.
+            - Any properties from the parent thread's ``globalThis`` —
+              the normal "copy of globals at thread creation" step is
+              skipped (compare to the bullet under `thr.exec()`_
+              Caveats: "Only global variables are copied to threads at
+              the time of creation").
+
+          This is useful for building sandboxed execution environments —
+          for example, the rampart-nodeshim ``vm`` module uses a bare
+          thread per ``vm.createContext()`` to give each sandbox its own
+          ECMAScript realm with no access to the host's ``rampart``
+          surface or globals.  Bare threads can still communicate with
+          the parent via ``rampart.thread.put`` / ``onGet`` / ``getwait``
+          / ``waitfor`` / ``del`` because the ``rampart.thread`` surface
+          is installed.
+
+    Examples:
+
+    .. code-block:: javascript
+
+        /* Legacy boolean — persistent thread. */
+        var thr1 = new rampart.thread(true);
+
+        /* Options-object form — equivalent. */
+        var thr2 = new rampart.thread({ keepOpen: true });
+
+        /* Bare (sandbox) thread with no host-global leakage. */
+        var thr3 = new rampart.thread({ bare: true });
+
+        /* Both options together are supported. */
+        var thr4 = new rampart.thread({ bare: true, keepOpen: true });
 
     Return Value:
         An :green:`Object` with two functions: `exec` and `close`.

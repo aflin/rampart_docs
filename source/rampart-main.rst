@@ -77,8 +77,9 @@ following:
 
 * Event loop using ``libevent2``.
 
-* ECMA 2015, 2016, 2017 and 2018 support using the `Babel <https://babeljs.io/>`_
-  JavaScript transpiler.
+* ECMA 2015 through ES2022 support (including class fields, private
+  methods, nullish coalescing, and optional chaining) using the
+  `Babel <https://babeljs.io/>`_ JavaScript transpiler.
 
 * Full Text Search and SQL databasing via ``rampart-sql``.
 
@@ -99,11 +100,31 @@ following:
 * Asynchronous networking and socket functions via ``rampart-net``.
 
 * Python interpreter, running python functions and sharing variables via
-  ``rampart-python`` 
+  ``rampart-python``
 
 * Simple Event functions via `rampart.event`_\ .
 
 * `Extra JavaScript Functionality`_\ .
+
+* Lazy-loaded **Intl** (ECMA-402) support — full surface
+  (``DateTimeFormat``, ``NumberFormat``, ``Collator``, ``Segmenter``,
+  etc.) backed by vendored ICU4C; ``rampart-intl.so`` is only loaded on
+  first access.  See :ref:`Intl <rampart-main:Intl>`.
+
+* Lazy-loaded **WHATWG / W3C Web Platform APIs** (experimental) —
+  ``fetch``, ``URL``, ``Headers``/``Request``/``Response``,
+  ``Blob``/``File``, the ``ReadableStream`` family, ``WebSocket``,
+  ``XMLHttpRequest``, ``crypto`` (Web Crypto), ``structuredClone``,
+  ``EventTarget``, and more, via ``rampart-whatwg.so``.  Partial
+  conformance — strongest where no browser DOM is required.  See
+  :ref:`WHATWG / W3C Web Platform APIs (experimental) <rampart-main:WHATWG / W3C Web Platform APIs (experimental)>`.
+
+* Optional **Node.js compatibility shim** (experimental) — a subset of
+  node's core modules (``fs``, ``path``, ``util``, ``events``, ``url``,
+  ``crypto``, ``stream``, ``buffer``, ``process`` extras, etc.) via
+  ``require('rampart-nodeshim')``, for porting node-style code.  Prefer
+  rampart's native modules for new code.  See
+  :ref:`rampart-nodeshim Module <rampart-extras:rampart-nodeshim Module>`.
 
 Rampart philosophy 
 ~~~~~~~~~~~~~~~~~~ 
@@ -772,6 +793,157 @@ Where ``newname`` is the new name for the current process.
 Return Value:
    ``undefined``.
 
+nCpu
+""""
+
+The value of ``process.nCpu`` is a :green:`Number`, the count of online
+logical CPUs as reported by ``sysconf(_SC_NPROCESSORS_ONLN)``.  Set once
+at startup; not affected by subsequent CPU hot-plug events.
+
+getTotalMem
+"""""""""""
+
+Get the total physical RAM installed in the system, in megabytes.
+
+Usage:
+
+.. code-block:: javascript
+
+   var mb = process.getTotalMem();
+
+Return Value:
+   :green:`Number`. Total physical memory in MB.
+
+Implementation: ``sysinfo(2)`` on Linux, ``sysctl HW_MEMSIZE`` on
+macOS, ``sysctl HW_PHYSMEM`` on FreeBSD.
+
+getFreeMem
+""""""""""
+
+Get the amount of memory currently available to the system, in
+megabytes.
+
+Usage:
+
+.. code-block:: javascript
+
+   var mb = process.getFreeMem();
+
+Return Value:
+   :green:`Number`. Available memory in MB.
+
+Implementation: ``sysinfo(2)`` on Linux.  On macOS, sums ``free`` +
+``inactive`` + ``speculative`` pages from ``host_statistics64(
+HOST_VM_INFO64)`` — matching node's convention, since macOS aggressively
+keeps reusable pages in the inactive list.  On FreeBSD, uses
+``sysctlbyname("vm.stats.vm.v_free_count")``.
+
+uptime
+""""""
+
+Get process uptime in seconds (matches ``process.uptime()`` in
+Node.js, Deno, Bun, and other JavaScript runtimes).
+
+Usage:
+
+.. code-block:: javascript
+
+   var sec = process.uptime();
+
+Return Value:
+   :green:`Number`. Seconds since *this rampart process* started.
+
+Implementation: ``clock_gettime(CLOCK_MONOTONIC)``.  The origin is
+captured on the first call across any context, so workers see the
+parent-process lifetime (matching node's worker_threads behavior).
+
+For seconds since the operating system booted (was the historical
+meaning of ``process.uptime()`` in rampart, now under a separate
+name), see `systemUptime`_.
+
+systemUptime
+""""""""""""
+
+Get system uptime in seconds.
+
+Usage:
+
+.. code-block:: javascript
+
+   var sec = process.systemUptime();
+
+Return Value:
+   :green:`Number`. Seconds since system boot.
+
+Implementation: ``sysinfo(2)`` on Linux, ``sysctl KERN_BOOTTIME``
+(boot ``timeval`` subtracted from wall-clock now) on macOS / *BSD.
+Falls back to ``CLOCK_MONOTONIC`` if the platform-native call fails.
+
+Equivalent to node's ``os.uptime()`` (rampart's nodeshim ``os``
+module delegates here).
+
+getCpuInfo
+""""""""""
+
+Get per-core CPU information, in the same shape node's ``os.cpus()``
+returns.
+
+Usage:
+
+.. code-block:: javascript
+
+   var cpus = process.getCpuInfo();
+   // cpus[i] = {
+   //    model: <String>,        // CPU model string ("unknown" if unavailable)
+   //    speed: <Number>,        // MHz (0 if not reported by the platform)
+   //    times: {
+   //       user: <ms>, nice: <ms>, sys: <ms>, idle: <ms>, irq: <ms>
+   //    }
+   // }
+
+Return Value:
+   :green:`Array` of per-core objects.
+
+Implementation: ``/proc/stat`` + ``/proc/cpuinfo`` on Linux;
+``host_processor_info(PROCESSOR_CPU_LOAD_INFO)`` plus ``sysctlbyname(
+"machdep.cpu.brand_string")`` and ``hw.cpufrequency_max``/
+``hw.cpufrequency`` on macOS; ``kern.cp_times`` plus ``hw.model`` and
+``dev.cpu.0.freq`` on FreeBSD.
+
+On Apple Silicon, ``hw.cpufrequency_max`` is not available and
+``speed`` will be ``0`` — matching node/libuv's behavior.  On macOS,
+``nice`` and ``irq`` are always ``0`` (the platform does not separate
+them from ``sys``/``user``).
+
+setMaxMem
+"""""""""
+
+Set a hard upper bound on the virtual address space the current
+process may use.  Once set, ``malloc``/buffer allocations that would
+push the process over this limit fail.
+
+Usage:
+
+.. code-block:: javascript
+
+   var mb = process.setMaxMem(amount);
+
+Where ``amount`` is either:
+
+   * a :green:`Number` — the limit in MB
+   * a :green:`String` ending in ``%`` — a percentage of
+     ``getTotalMem()`` (e.g. ``"75%"``)
+
+Return Value:
+   :green:`Number`. The limit actually set, in MB.
+
+Implementation: ``setrlimit(RLIMIT_AS, ...)``.  Note that on macOS,
+``RLIMIT_AS`` is accepted by ``setrlimit`` but **not enforced** by the
+kernel — the call returns success and ``getTotalMem``/``getFreeMem``
+report unchanged values, but allocations above the limit will still
+succeed.  Effective on Linux and FreeBSD.  Cannot be raised above
+any system-imposed hard limit.
+
 Using the require Function to Import Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -934,25 +1106,69 @@ Modules are searched for in the following order:
 Extra JavaScript Functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A subset of post ES5 JavaScript syntax is supported when not using
-`babel <ECMAScript 2015+ and Babel.js>`_ below.  It is provided
-experimentally (unsupported) and is limited in scope. 
+Rampart provides a broad set of ES2015+ standard-library methods and
+globals, so most modern JavaScript runs without
+`babel <ECMAScript 2015+ and Babel.js>`_ or the
+`transpiler <ECMAScript 2015+ with transpiler>`_.  These aim to match
+the ECMAScript specification; only the rampart-specific extensions
+are flagged.  For language *syntax* beyond ES5 (``class``, arrow
+functions, ``async``/``await``, destructuring, ``for…of``,
+``...spread``, etc.), see the
+`transpiler <ECMAScript 2015+ with transpiler>`_.
 
-Object.values()
-"""""""""""""""
+Object Methods
+""""""""""""""
 
-Return an :green:`Array` containing the values of an object.
+* ``Object.values(obj)`` — Returns an :green:`Array` of the object's
+  own enumerable values.  Also accepts a :green:`String` (returns char
+  array) or :green:`Buffer` (passthrough).
+* ``Object.hasOwn(obj, prop)`` — :green:`Boolean`; safer than
+  ``obj.hasOwnProperty(prop)`` when ``obj`` lacks a prototype chain.
+* ``Object.fromEntries(iter)`` — Builds an object from an array of
+  ``[key, value]`` pairs (inverse of ``Object.entries``).
+* ``Object.groupBy(items, keyFn)`` — Groups items by the result of
+  ``keyFn``.  Returns a null-prototype object whose values are arrays
+  of items sharing a key.  Accepts any iterable.
 
 .. code-block:: javascript
 
-   var obj = {
-      key1: "val1",
-      key2: "val2"
-   }
+   Object.values({a:1, b:2});                    /* [1, 2] */
+   Object.fromEntries([['a',1],['b',2]]);        /* {a:1, b:2} */
+   Object.groupBy([1.1, 2.5, 1.7], Math.floor);  /* {1:[1.1,1.7], 2:[2.5]} */
 
-   console.log(Object.values(obj));
-   /* expected output:
-      ["val1","val2"]              */
+Array Methods
+"""""""""""""
+
+Standard prototype methods on :green:`Array.prototype`:
+``find``, ``findIndex``, ``includes``, ``flat`` (default depth 1;
+``Infinity`` supported), ``flatMap``, ``at`` (negative indices),
+``findLast``, ``findLastIndex``.
+
+Static methods on :green:`Array`: ``Array.from(iterable[, mapFn])``
+(strings, array-likes, iterables) and ``Array.of(...args)``.
+
+Iteration surface: ``arr.keys()``, ``arr.values()``, ``arr.entries()``,
+and ``arr[Symbol.iterator]()`` all return spec iterators.  Note that
+``for…of`` and spread *syntax* still require the
+`transpiler <ECMAScript 2015+ with transpiler>`_, but the underlying
+iterators work in vanilla Rampart via ``.next()`` and
+``Array.from(...)``.
+
+.. code-block:: javascript
+
+   [1,2,3,4].findLast(function(x){return x < 4;});   /* 3 */
+   [1,[2,[3]]].flat(Infinity);                       /* [1,2,3] */
+   Array.from('abc', function(c){return c.toUpperCase();});  /* ['A','B','C'] */
+
+String Methods
+""""""""""""""
+
+* ``str.trimStart()`` / ``str.trimEnd()`` — trim whitespace at one end.
+* ``str.replaceAll(search, repl)`` — string-only ``search``; replaces
+  every occurrence.
+* ``str.matchAll(regex)`` — returns an iterator over global-regex
+  matches (each match includes capture groups).  Throws
+  ``TypeError`` if ``regex`` is a non-global :green:`RegExp` (per spec).
 
 Template Literals
 """""""""""""""""
@@ -1206,8 +1422,11 @@ Prototype methods
   available on it.)
 
 * ``buf.keys()`` / ``buf.values()`` / ``buf.entries()`` — Return
-  arrays of byte indexes, bytes, or ``[index, byte]`` pairs. (Node
-  returns iterators; arrays serve the common ``for...of`` use case.)
+  iterators (following the ES2015 iterator protocol — ``next()`` +
+  ``[Symbol.iterator]`` returning ``{value, done}``) over byte
+  indexes, bytes, or ``[index, byte]`` pairs (inherited from
+  :green:`%TypedArray%.prototype`).  ``buf[Symbol.iterator]()`` is
+  also available so ``Buffer`` is iterable.
 
 * All of node's ``read*`` / ``write*`` accessors for fixed-width
   integers and floats (e.g. ``readUInt32BE``, ``writeFloatLE``) are
@@ -1236,6 +1455,134 @@ Examples
     /* swap endianness */
     var u32 = Buffer.from([0x01,0x02,0x03,0x04]);
     u32.swap32();                                           // [0x04,0x03,0x02,0x01]
+
+TypedArray Methods
+""""""""""""""""""
+
+Rampart attaches the ES2015+ iteration helpers to the shared
+:green:`%TypedArray%.prototype`, so every typed array
+(``Uint8Array``, ``Int8Array``, ``Float32Array``, …) and ``Buffer``
+inherits them in one shot:
+
+``forEach``, ``map``, ``filter``, ``reduce``, ``reduceRight``, ``some``,
+``every``, ``find``, ``findIndex``, ``findLast``, ``findLastIndex``,
+``at``, ``slice``, ``fill``, ``copyWithin``, ``reverse``, ``sort``
+(numeric, not lexicographic), ``indexOf``, ``lastIndexOf``,
+``includes``, ``join``, ``keys``, ``values``, ``entries``, and
+``[Symbol.iterator]`` (aliased to ``values``).  ``Buffer``'s richer
+string-aware ``indexOf`` / ``lastIndexOf`` / ``includes`` shadow these
+for ``Buffer`` instances via the prototype chain.
+
+TextEncoder / TextDecoder
+"""""""""""""""""""""""""
+
+Rampart provides ``TextEncoder`` and ``TextDecoder`` modeled on the
+WHATWG encoding spec.  Supported encodings:
+``utf-8``, ``utf-16le``, ``utf-16be``, ``iso-8859-1`` (also
+``latin1``, ``binary``), ``us-ascii``, plus the standard aliases
+(``ucs-2``, ``csisolatin1``, ``iso646-us``, …).  Unknown labels throw
+``RangeError``.  Input may be a ``Buffer``, ``Uint8Array``,
+``ArrayBuffer``, or any ``TypedArray`` view.
+
+.. code-block:: javascript
+
+   new TextEncoder().encode('hello');                /* Uint8Array of 5 bytes */
+   new TextDecoder('utf-16le').decode(buf);          /* decode wide chars   */
+
+Map and Set
+"""""""""""
+
+Rampart provides full ES2015 ``Map`` and ``Set``:
+
+* ``Map``: ``set``, ``get``, ``has``, ``delete``, ``clear``,
+  ``forEach``, ``entries``, ``keys``, ``values``, ``size`` (getter),
+  and ``[Symbol.iterator]`` → ``entries``.
+* ``Set``: ``add``, ``has``, ``delete``, ``clear``, ``forEach``,
+  ``values``, ``keys``, ``entries``, ``size`` (getter), and
+  ``[Symbol.iterator]`` → ``values``.
+
+Both constructors accept any iterable for initial population.
+Iterators produce ``{value, done}`` result objects and are themselves
+iterable.
+
+console Extras
+""""""""""""""
+
+Alongside the standard ``log`` / ``error`` / ``warn`` / ``info`` /
+``debug`` / ``trace`` / ``dir`` / ``assert``, Rampart adds the
+following node-style methods:
+
+* ``console.time(label?)`` / ``timeLog(label?, ...extras)`` /
+  ``timeEnd(label?)`` — millisecond timers; label defaults to
+  ``"default"``.
+* ``console.count(label?)`` / ``countReset(label?)``.
+* ``console.group(label?)`` / ``groupCollapsed(label?)`` /
+  ``groupEnd()`` — indent-based grouping.
+* ``console.clear()``.
+* ``console.table(data, columns?)`` — tabular formatter.
+
+Proxy.revocable
+"""""""""""""""
+
+``Proxy.revocable(target, handler)`` returns ``{proxy, revoke}``.
+Calling ``revoke()`` makes every subsequent trap on ``proxy`` throw
+``TypeError``.
+
+WHATWG / W3C Web Platform APIs (experimental)
+"""""""""""""""""""""""""""""""""""""""""""""
+
+Rampart includes a substantial subset of browser Web Platform globals
+— ``fetch``, ``URL``, ``Headers``/``Request``/``Response``/``FormData``,
+``Blob``/``File``, the ``ReadableStream`` / ``WritableStream`` /
+``TransformStream`` family, ``WebSocket``, ``XMLHttpRequest``,
+``crypto`` (Web Crypto), ``structuredClone``, ``queueMicrotask``,
+``EventSource``, ``localStorage`` / ``sessionStorage``, and more.
+
+Like ``Intl``, the surface is **lazy-loaded**: ``rampart-whatwg.so`` is
+only ``dlopen()``-ed when JS first references one of these names.
+Scripts that never touch a Web Platform API pay zero startup cost.
+
+Conformance is **partial and experimental** — strongest for APIs that
+don't assume a browser/DOM context (Web Crypto, URL, mimesniff, data:
+URLs, value-stream APIs, HTTP/1.1 ``fetch``); weaker or absent for
+anything needing ``document`` / ``window`` / ``iframe``, ``WebAssembly``,
+HTTP/2 streaming upload, or ``br`` / ``zstd`` content-encoding (servers
+fall back to ``gzip``).  Behaviors may change as the implementation
+tracks the WPT suite.
+
+Intl
+""""
+
+``globalThis.Intl`` is installed as a lazy getter — on first access
+it loads the ICU4C-backed ``rampart-intl`` module (~37 MB of bundled
+locale data), which assigns ``globalThis.Intl``.  Scripts that never
+touch ``Intl`` pay nothing.
+
+All eight ECMA-402 constructors are available once loaded:
+``DateTimeFormat``, ``NumberFormat``, ``Collator``, ``PluralRules``,
+``RelativeTimeFormat``, ``ListFormat``, ``DisplayNames``, ``Locale``,
+``Segmenter``, ``DurationFormat``, plus ``Intl.getCanonicalLocales``
+and ``Intl.supportedValuesOf``.  Behaves per
+`MDN's Intl reference <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl>`_.
+
+Other Globals
+"""""""""""""
+
+* ``globalThis`` and ``global`` — both reference the global object
+  (Rampart adds the node-style ``global`` alias alongside
+  ``globalThis``).
+* ``JSON.parse(text[, reviver])`` — extended to accept a
+  :green:`Buffer` as ``text``.  When ``reviver === true``, walks the
+  parsed tree and resolves ``{"_cyclic_ref":"$.path"}`` placeholders
+  produced by ``rampart.utils.sprintf("%!J", obj)`` back into shared
+  references, restoring cyclic graphs.  This is a **rampart-specific**
+  reviver convention; passing a function reviver behaves per spec.
+* ``eval`` — when the transpiler is in effect (``-t`` or
+  ``"use transpiler"``), the source is lowered before evaluation.
+  Otherwise behaves as standard ES5 ``eval``.
+* ``new Function(...)`` — bodies are run through the transpiler so
+  ES2015+ syntax (classes, ``async``, generators) compiles inside
+  dynamically-built functions.
 
 setTimeout()
 """"""""""""
@@ -1450,9 +1797,10 @@ include:
 
 * `Duktape <https://duktape.org/guide.html#builtin-duktape>`_
 * `CBOR <https://duktape.org/guide.html#builtin-cbor>`_
-* `TextEncoder <https://duktape.org/guide.html#builtin-textencoder>`_
-* `TextDecoder <https://duktape.org/guide.html#builtin-textdecoder>`_
 * `performance <https://duktape.org/guide.html#builtin-performance>`_
+
+(``TextEncoder`` and ``TextDecoder`` are documented above under
+`TextEncoder / TextDecoder`_.)
 
 For more information, see the `Duktape Guide <https://duktape.org/guide.html>`_
 
@@ -1481,7 +1829,7 @@ Activating Babel
 """"""""""""""""
 
 A slightly modified version of babel.js (currently babel-standalone v
-7.11.1) and the associated collection of polyfills (babel-polyfill.js) are
+7.12.17) and the associated collection of polyfills (babel-polyfill.js) are
 included in the Rampart distribution.  To use ECMA 2015+ features of
 JavaScript, simply include the following at the beginning of the script:
 
@@ -1519,9 +1867,24 @@ Example:
    `);
 
 The ``"use babel"`` directive optionally takes a ``:`` followed by babel
-options.  Without options ``"use babel"`` is equivalent to 
-``"use babel:{ presets: ['env'], retainLines: true }"``.  See 
-`babel documentation <https://babeljs.io/docs/en/babel-preset-env>`_ 
+options on the same line.  Without options ``"use babel"`` is equivalent
+to (shown wrapped for readability; the directive itself must be on one
+physical line)::
+
+   "use babel:{ presets: ['env'],
+                plugins: ['proposal-class-properties',
+                          'proposal-private-methods',
+                          'proposal-private-property-in-object',
+                          'proposal-nullish-coalescing-operator',
+                          'proposal-optional-chaining'],
+                retainLines: true }"
+
+The default plugin list enables ES2020/2022 class fields, private
+fields/methods, nullish coalescing (``??``), and optional chaining
+(``?.``) on top of ``preset-env``.  Specifying any explicit ``plugins:``
+or ``presets:`` in the directive replaces this default — include the
+plugins you need in the override.  See
+`babel documentation <https://babeljs.io/docs/en/babel-preset-env>`_
 for more information on possible options.
 
 A simple example in 
