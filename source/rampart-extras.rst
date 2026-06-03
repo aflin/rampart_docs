@@ -542,17 +542,27 @@ A small set of utilities is exposed only when a zip payload is present
 ``rampart.utils.payloadGet(name)``
     Returns the entry's contents as a :green:`Buffer` (decompressed).
 
-``rampart.utils.payloadExtract(name|nameArray|null, destDir)``
-    Extracts one entry, an array of entries, or every entry
-    (when first argument is ``null``) to ``destDir``.  File modes,
-    mtimes and symlinks are preserved.
+``rampart.utils.payloadExtract(destDir [, filterArray])``
+    Extracts payload entries under ``destDir``.  Without ``filterArray``
+    (or with ``undefined``/``null``) every entry is written.  When
+    ``filterArray`` is given, only entries whose name equals an element
+    OR begins with ``"<element>/"`` are extracted -- so a single name
+    selects a whole subtree.  Leading ``"./"`` and trailing ``"/"`` are
+    stripped from each filter element, so ``"web_server"``, ``"./web_server"``,
+    ``"web_server/"`` and ``"./web_server/"`` all select the same entries.
+    File modes, mtimes and symlinks are preserved; the in-zip path is
+    preserved relative to ``destDir`` (entry ``html/index.html`` lands
+    at ``destDir/html/index.html``).  Returns the number of files written.
+    Refuses to extract entries whose path contains a ``..`` segment or
+    starts with ``/`` (zip-slip protection).
 
 A second set works on **any** zip file on disk -- not the appended
 payload -- and is always available:
 
 ``rampart.utils.zipList(zipPath)``
 ``rampart.utils.zipGet(zipPath, name)``
-``rampart.utils.zipExtract(zipPath, name|nameArray|null, destDir)``
+``rampart.utils.zipExtract(zipPath, destDir [, filterArray])``
+    Same filter semantics as ``payloadExtract``.
 
 These are useful for installers, update packages and similar tooling
 that needs to inspect a zip without unpacking it first.
@@ -2044,8 +2054,8 @@ Submodules and notable gaps
 * ``fs`` — sync API plus callback variants.  ``fs.openAsBlob`` and
   ``fs.statSync({bigint:true})`` blocked on Blob/BigInt.  ``fs.watch``
   uses ``inotify`` on Linux, polling on macOS/BSD (no ``kqueue``
-  backend).  ``fs.createReadStream``/``WriteStream`` are minimal until
-  the ``stream`` module lands — no pipe/pause/resume.
+  backend).  ``fs.createReadStream``/``WriteStream`` are minimal; for
+  full stream behavior use the ``stream`` module directly.
 
 * ``module`` — ``Module.builtinModules``, ``isBuiltin``,
   ``createRequire``, ``wrap``.  No compile-cache / sourcemaps / ESM.
@@ -2100,9 +2110,66 @@ Submodules and notable gaps
 
 * ``zlib`` — sync surface plus callback variants, backed by libdeflate.
   ``unzipSync`` auto-detects gzip vs zlib framing.  ``crc32``/
-  ``adler32`` included.  Stream classes (``createGzip``,
-  ``createGunzip``, ``Brotli*``, ``Zstd*``) throw ``ENOSYS`` pending
-  the ``stream`` module.
+  ``adler32`` included.  Stream classes (``createGzip``/``createGunzip``
+  etc.) are backed by the WHATWG ``CompressionStream`` and integrate
+  with the ``stream`` module; ``Brotli*`` / ``Zstd*`` are not supported.
+
+* ``stream`` — ``Readable``/``Writable``/``Duplex``/``Transform``/
+  ``PassThrough`` plus ``pipeline``/``finished`` and WHATWG interop
+  (``Readable.toWeb``/``fromWeb``).  Backed by WHATWG streams
+  internally.  Flowing (``'data'``) and paused (``'readable'`` +
+  ``read()``) modes, ``for await…of`` async iteration, backpressure
+  and ``'drain'`` are supported.
+
+* ``http`` / ``https`` — ``createServer`` (backed by ``rampart.server``)
+  and a ``request``/``get`` client (backed by ``rampart.curl``), with
+  ``IncomingMessage``/``ServerResponse``, headers and streaming bodies.
+  Not a byte-for-byte port of node's HTTP internals; some advanced
+  socket/agent options are absent.
+
+* ``net`` — ``Socket``/``Server`` TCP surface (``createServer``,
+  ``connect``), backed by ``rampart.net``.  ``'data'``/``'end'``/
+  ``'error'``/``'close'`` events, multi-connection.  No Unix-domain
+  sockets, no ``net.BlockList``.
+
+* ``tls`` — minimum-viable stub: it loads, but the actual TLS
+  operations throw ``ERR_NOT_IMPLEMENTED``.  Use ``https`` (curl-backed)
+  for client TLS.
+
+* ``child_process`` — ``spawn``/``exec``/``execFile`` with stdio pipes,
+  signals, ``env`` and ``cwd``, via fresh ``fork(2)``/``execvp(2)``
+  natives (not a wrapper around ``rampart.utils.exec``).  ``fork()``
+  (Node IPC channel) is not implemented.
+
+* ``readline`` — ``createInterface``/``Interface``/
+  ``emitKeypressEvents``.  Tier 1 programmatic (stream input → ``'line'``)
+  and Tier 2 terminal (raw mode, VT100 key decoding, history, tab
+  completion).  Pure JS over the ``tty`` primitives; no async-iterator
+  interface.
+
+* ``repl`` — a ``REPLServer`` over paired input/output streams (eval,
+  output formatting, basic dot-commands).  Pairs with ``readline``.
+
+* ``tty`` — ``isatty``, ``ReadStream``/``WriteStream`` with
+  ``setRawMode``/``isTTY``/``columns``/``rows``/``getWindowSize``.
+
+* ``vm`` — ``runInNewContext``/``runInThisContext``/``compileFunction``
+  and ``Script``, backed by a bare ``rampart.thread`` sandbox.  Cross-realm
+  ``instanceof`` differs from node (prototypes are preserved through the
+  marshaller).  ``vm.SourceTextModule``/``SyntheticModule`` throw — no ESM.
+
+* ``async_hooks`` — primarily ``AsyncLocalStorage`` (store binding
+  propagates across ``await``, ``.then`` chains, ``setTimeout`` and
+  microtasks).  The low-level ``createHook`` surface is minimal.
+
+* ``diagnostics_channel`` — ``channel``/``subscribe``/``unsubscribe``/
+  ``hasSubscribers`` (synchronous publish).
+
+* ``http2`` — thin shim; loads with a partial surface, not a full HTTP/2
+  implementation.
+
+* ``v8`` — informational surface (``getHeapStatistics`` etc.) and
+  ``serialize``/``deserialize``; not a real V8 binding.
 
 Tested libraries
 ~~~~~~~~~~~~~~~~
@@ -2117,8 +2184,5 @@ compatibility as best-effort rather than guaranteed.
 Not implemented
 ~~~~~~~~~~~~~~~
 
-``async_hooks``, ``cluster``, ``dgram``, ``diagnostics_channel``,
-``domain``, ``http``/``https``/``http2``, ``inspector``,
-``net``/``tls`` (planned), ``repl``, ``stream``, ``child_process``,
-``readline``, ``tty``, ``vm``, ``node:test``, ``trace_events``,
-``v8``, ``wasi``.
+``cluster``, ``dgram``, ``domain``, ``inspector``, ``node:test``,
+``trace_events``, ``wasi``.
