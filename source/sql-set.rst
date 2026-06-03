@@ -1329,11 +1329,29 @@ likevRows
 likevEf
 """""""
     **HNSW only.**  Per-query graph expansion factor — the
-    search-time recall/latency knob for HNSW indexes.  Default ``0``,
-    which leaves the index's build-time ``vec_efc`` setting in
-    effect.  A higher value increases recall at the cost of search
-    time; a lower value (down to a small fraction of ``vec_efc``)
-    trades recall for speed.
+    search-time recall/latency knob for HNSW indexes.  The per-query
+    analog of the build-time ``vec_efc`` option
+    (see :ref:`Creating a Vector Index <rampart-sql:Creating a Vector Index>`).
+
+    Accepted values:
+
+    * **``0`` (default)** — sentinel meaning "use the index's
+      build-time ``vec_efc``" (which defaults to ``128``).  No change
+      from index build time.
+    * **Positive integer** — overrides ``vec_efc`` for the duration of
+      the session.  Practical envelope is the same as ``vec_efc``:
+      roughly ``[8, 4096]``.  Higher = more recall, more time per
+      query; lower = faster, less recall.
+
+    Out-of-band guidance:
+
+    * Setting ``likevEf`` below the requested top-K (``maxRows``)
+      cripples recall — usearch needs at least ``k`` candidates in
+      its working frontier to fill a top-K result.  Keep
+      ``likevEf >= maxRows``.
+    * Setting it above a few thousand rarely helps — the graph
+      walk just keeps widening the frontier without surfacing new
+      neighbors.
 
     Useful when the same index is served at different recall/latency
     points — for example, a low ``likevEf`` for autocomplete-style
