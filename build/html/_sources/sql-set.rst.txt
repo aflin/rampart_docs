@@ -1458,8 +1458,7 @@ llamaEmbed
     The output dimensionality of every ``embed()`` call is determined
     by the loaded model — typical values are 384
     (``all-MiniLM-L6-v2``), 768 (``BGE-base``), 1024 / 1536
-    (``OpenAI Ada``-class models served via llama.cpp), etc.  Plan your
-    ``varvec*`` column width to match.
+    (``OpenAI Ada``-class models served via llama.cpp), etc.
 
     No default — ``embed()`` raises a runtime error if no model has
     been loaded.
