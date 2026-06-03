@@ -1437,11 +1437,30 @@ the re-rank step has enough candidates to choose from. Setting to
 <h3>likevEf<a class="headerlink" href="#likevef" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p><strong>HNSW only.</strong>  Per-query graph expansion factor — the
-search-time recall/latency knob for HNSW indexes.  Default <code class="docutils literal notranslate"><span class="pre">0</span></code>,
-which leaves the index’s build-time <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code> setting in
-effect.  A higher value increases recall at the cost of search
-time; a lower value (down to a small fraction of <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code>)
-trades recall for speed.</p>
+search-time recall/latency knob for HNSW indexes.  The per-query
+analog of the build-time <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code> option
+(see <a class="reference internal" href="rampart-sql.html#vector-indexes"><span class="std std-ref">Vector Indexes</span></a> for the
+full set of HNSW build options).</p>
+<p>Accepted values:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">0</span></code> <strong>(default)</strong> — sentinel meaning “use the index’s
+build-time <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code>” (which defaults to <code class="docutils literal notranslate"><span class="pre">128</span></code>).  No change
+from index build time.</li>
+<li><strong>Positive integer</strong> — overrides <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code> for the duration of
+the session.  Practical envelope is the same as <code class="docutils literal notranslate"><span class="pre">vec_efc</span></code>:
+roughly <code class="docutils literal notranslate"><span class="pre">[8,</span> <span class="pre">4096]</span></code>.  Higher = more recall, more time per
+query; lower = faster, less recall.</li>
+</ul>
+<p>Out-of-band guidance:</p>
+<ul class="simple">
+<li>Setting <code class="docutils literal notranslate"><span class="pre">likevEf</span></code> below the requested top-K (<code class="docutils literal notranslate"><span class="pre">maxRows</span></code>)
+cripples recall — usearch needs at least <code class="docutils literal notranslate"><span class="pre">k</span></code> candidates in
+its working frontier to fill a top-K result.  Keep
+<code class="docutils literal notranslate"><span class="pre">likevEf</span> <span class="pre">&gt;=</span> <span class="pre">maxRows</span></code>.</li>
+<li>Setting it above a few thousand rarely helps — the graph
+walk just keeps widening the frontier without surfacing new
+neighbors.</li>
+</ul>
 <p>Useful when the same index is served at different recall/latency
 points — for example, a low <code class="docutils literal notranslate"><span class="pre">likevEf</span></code> for autocomplete-style
 first-pass scoring and a higher <code class="docutils literal notranslate"><span class="pre">likevEf</span></code> for the final ranked
@@ -1523,6 +1542,8 @@ used by the <a class="reference internal" href="sql-server-funcs.html#embed"><sp
 <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s auto-coercion of string parameters to vectors.  See
 <a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> for the end-to-end
 pipeline these settings fit into.</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">name=value;</span></code> is not available for the following properties.
+They must be set in JavaScript as <code class="docutils literal notranslate"><span class="pre">sql.set({name:</span> <span class="pre">value})</span></code>.</p>
 <div class="section" id="llamaembed">
 <h3>llamaEmbed<a class="headerlink" href="#llamaembed" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -1573,7 +1594,7 @@ shared model (default <code class="docutils literal notranslate"><span class="pr
 </pre></div>
 </div>
 <ul class="simple">
-<li><strong>``true`` (default)</strong> — concurrent <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls from
+<li><code class="docutils literal notranslate"><span class="pre">true</span></code> <strong>(default)</strong> — concurrent <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls from
 multiple SQL worker threads run in parallel on GPU (separate
 CUDA streams) or multi-core CPU (separate per-context scratch
 buffers).  This is the right choice for any bulk-embed workload
@@ -1582,7 +1603,7 @@ loaded once into VRAM / RAM regardless of thread count
 (llama.cpp internally deduplicates), so the cost is one
 <code class="docutils literal notranslate"><span class="pre">llama_context</span></code> per thread — modest, typically a few hundred
 MB on GPU.</li>
-<li><strong>``false``</strong> — all <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls serialize through a single
+<li><code class="docutils literal notranslate"><span class="pre">false</span></code> — all <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls serialize through a single
 <code class="docutils literal notranslate"><span class="pre">llama_context</span></code> guarded by an internal mutex.  Useful in
 memory-constrained environments where the per-thread context
 cost is prohibitive, or in single-threaded workloads where the

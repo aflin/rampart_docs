@@ -1417,6 +1417,9 @@ used by the :ref:`embed() <sql-server-funcs:embed>` SQL function and by
 :ref:`Vector Search <rampart-sql:Vector Search>` for the end-to-end
 pipeline these settings fit into.
 
+Using ``set name=value;`` is not available for the following properties.
+They must be set in JavaScript as ``sql.set({name: value})``.
+
 
 llamaEmbed
 """"""""""

@@ -1971,7 +1971,7 @@ to the sealed index; see `Maintenance`_ for the periodic OPTIMIZE
 step that folds those back in.
 
 Quick start
-""""""""""""
+"""""""""""
 
 .. code-block:: javascript
 
@@ -2035,7 +2035,7 @@ the index entirely below ~2,000 rows (brute force is fine), HNSW
 between ~2k and ~10k rows, IVFPQ above that.
 
 Creating a Vector Index
-""""""""""""""""""""""""
+"""""""""""""""""""""""
 
 .. code-block:: sql
 
@@ -2192,7 +2192,7 @@ Native ``varvecI8`` / ``varvecU8`` columns are indexable directly;
 no conversion happens.
 
 Querying with LIKEV
-""""""""""""""""""""
+"""""""""""""""""""
 
 Basic top-K:
 
@@ -2209,7 +2209,7 @@ Basic top-K:
 * If the planner can't use the index — wrong column type, dimension
   mismatch, or no index present — it falls back to brute force.
   Results are identical, just slower.
-* **``$rank`` is exact at the column's stored precision** for both
+* ``$rank`` **is exact at the column's stored precision** for both
   HNSW and IVFPQ.  The index returns a candidate pool (up to
   :ref:`likevRows <sql-set:likevRows>` rows, default 1000) ordered by
   the backend's native score; each candidate is then re-scored
@@ -2263,7 +2263,7 @@ The vector predicate uses the index; other predicates filter the
 returned candidates.
 
 INSERT, UPDATE, DELETE
-"""""""""""""""""""""""
+""""""""""""""""""""""
 
 A vector index participates in the standard SQL update path:
 
@@ -2322,7 +2322,7 @@ against an existing index of the same table+column is silently a
     ALTER INDEX emb_vec OPTIMIZE WITH indexmeter 'on';
 
 Removing a Vector Index
-""""""""""""""""""""""""
+"""""""""""""""""""""""
 
 .. code-block:: sql
 
@@ -2545,7 +2545,7 @@ authoritative reference; a brief overview:
   unit-norm vectors the practical range is ``[0, 100000]``; sort
   ``ORDER BY ... DESC``.
 * Use the ``maxRows`` parameter of ``exec()`` to retrieve top-K.
-* **``$rank`` is exact at the column's stored precision** — the value is
+* ``$rank`` **is exact at the column's stored precision** — the value is
   computed per-row by ``rp_vector_distance`` on the actual stored column
   bytes, not on the index's quantized representation.  The IVFPQ
   approximation only affects which rows are returned as candidates (and
