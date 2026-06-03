@@ -2384,7 +2384,7 @@ A *semantic vector* (also called an *embedding*) is a fixed-length array of
 floats that represents a piece of text in a continuous space, such that two
 texts with similar meaning have vectors that are close together.  Embeddings
 are produced by a model (typically loaded once into the SQL engine via
-``set llamaEmbed = '/path/to/model.gguf'``); similarity is measured by dot
+``sql.set({llamaEmbed:'/path/to/model.gguf'});``); similarity is measured by dot
 product or L2 distance and reported by ``LIKEV`` and ``vecdist()``.
 
 The typical end-to-end pipeline:

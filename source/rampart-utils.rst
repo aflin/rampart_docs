@@ -3072,7 +3072,7 @@ Return Value:
 |            |                                                                          |
 |            | * ``{text: <string>, status: 'ok'}`` — a line of input.                  |
 |            | * ``{text: '',       status: 'cancel'}`` — Ctrl-C at an empty prompt.    |
-|            | * ``{text: '',       status: 'eof'}`` — Ctrl-D / EOF / read failure.    |
+|            | * ``{text: '',       status: 'eof'}`` — Ctrl-D / EOF / read failure.     |
 |            | * ``{text: '',       status: 'wake', signal: <string>}`` — the read was  |
 |            |   woken by ``rampart.utils.repl.interrupt(payload)``; ``signal`` carries |
 |            |   the bytes that were on the pipe at wake time (empty string if          |

@@ -98,10 +98,8 @@ Configuring and Starting the Server
 start()
 """""""
 
-The server is configured and started using the ``start()`` function.
-Options are passed to the function in a single :green:`Object`.
-
-Usage:
+The server is configured and started by calling ``start()`` with a single
+options :green:`Object`.
 
 .. code-block:: javascript
 
@@ -109,502 +107,655 @@ Usage:
 
    server.start(Options);
 
-Where:
-   ``Options`` is an :green:`Object` with the following properties:
-
-    * ``bind`` - An :green:`Array` of :green:`Strings`, with each :green:`String`
-      representing an ip address and port.  If not specified, the server will
-      bind to port 8088 on the loopback device (i.e. 127.0.0.1, which is only
-      accessible from the same machine), using the following default value:
-
-      ``[ "[::1]:8088", "127.0.0.1:8088" ]``.
-
-      When specifying an Ipv6 address, bracket notation is required (e.g.
-      ``[2001:db8::1111:2222]:80``) while a dot-decimal notation is used for
-      ipv4 (e.g. ``172.16.254.1:80``).  To bind to all ip addresses using port 80,
-      the following may be used:
-
-      ``[ "[::]:80", "0.0.0.0:80" ]``.
-
-    * ``scriptTimeout``: A :green:`Number`, amount of time in seconds (or fraction
-      thereof) to wait for a script to run before canceling the request and
-      returning a ``500 Internal Server Error`` timeout message to the
-      connecting client.  Default is no timeout/unlimited.
-
-    * ``connectTimeout``: A :green:`Number`, amount of time in seconds (or fraction
-      thereof) to wait for a connected client to send a request. Default is no
-      timeout/unlimited.
-
-    * ``maxBodySize``: A :green:`Number`, the maximum size in bytes of an HTTP
-      request body.  If a request body exceeds this limit, the server will
-      stop reading the body and return a ``413 Entity Too Large`` response
-      to the client.  For WebSocket connections, this limits the maximum
-      size of a single message.  Default is ``52428800`` (50 MB).  Set to
-      ``0`` to disable the limit (not recommended).
-
-    * ``log``: A :green:`Boolean`, whether to log each request.  Access requests
-      are logged to ``stdout`` and errors are logged to ``stderr`` unless
-      ``accessLog`` and/or ``errorLog`` below are set.
-
-    * ``accessLog``: A :green:`String`, the location of the access log.  The
-      default, if not specified is to log to ``stdout``.  If given, the log
-      file will be closed and re-opened upon sending the rampart executable
-      a ``USR1`` signal, which allows log rotation.
-
-    * ``errorLog``: A :green:`String`, the location of the error log.  The
-      default, if not specified is to log to ``stderr``. If given, the log
-      file will be closed and re-opened upon sending the rampart executable
-      a ``USR1`` signal, which allows log rotation.
-
-    * ``logIpFromHeader``: A :green:`String`, a header name to use for logging
-      the ip address of the request.  In cases where the server is behind a proxy
-      such as nginx, instead of logging ``127.0.0.1``, setting, e.g.
-      ``proxy_set_header Remote_address $remote_addr;`` in the appropriate section
-      of ``/etc/nginx/nginx.conf``, and setting ``logIpFromHeader: "Remote_address"``
-      here will log the ip address of the client connecting to nginx, rather than the
-      ip address of the nginx proxy server.
-
-    * ``daemon``: A :green:`Boolean`, whether to fork and detach from the
-      controlling terminal.  If ``true``, the ``start()`` function will return
-      the pid of the server. Otherwise the pid of the current process is
-      returned. The default is ``false``.
-
-    * ``useThreads``: A :green:`Boolean`, whether the server is multi-threaded.
-      If ``true`` and ``threads`` below is not set, the server will create a
-      threadpool consisting of one thread per cpu core.  If set ``false``, it is
-      equivalent to setting ``useThreads`` to ``true`` and ``threads`` to ``1``.
-      The default is ``true``.
-
-    * ``threads``: A :green:`Number`, the number of threads to create for the
-      server thread pool.  The default, if ``useThreads`` is ``true`` or is
-      unset, is the number of cpu cores on the current system.
-
-    * ``maxRead``: A :green:`Number`, the largest single read from a client
-      allowed in the event loop.  If reading data larger than this, it will
-      be done in multiple cycles of the event loop in order to allow the
-      servicing of other requests.  A high number can make receiving large
-      requests unfairly slow down other clients, especially if the server is
-      not using multiple threads.  A low number will slow down the reading
-      of data over the specified size. Default is ``65536``.
-
-    * ``maxWrite``: A :green:`Number`, the largest single write to a client
-      allowed in the event loop.  If writing data larger than this, it will
-      be done in multiple cycles of the event loop in order to allow the
-      servicing of other requests.  A high number can make sending large
-      replies unfairly slow down other clients, especially if the server is
-      not using multiple threads.  A low number will slow down the writing
-      of data over the specified size. Default is ``65536``.
-
-    * ``secure``: A :green:`Boolean`, whether to use SSL/TLS layer for serving
-      via the ``https`` protocol.  Default is ``false``.  If ``true``, the
-      ``sslKeyFile`` and ``sslCertFile`` parameters must also be set.
-
-    * ``sslKeyFile``: A :green:`String`, the location of the ssl key file for
-      serving via the ``https`` protocol.  An example, if using
-      `letsencrypt <https://letsencrypt.org/>`_ for "example.com" might be
-      ``"/etc/letsencrypt/live/example.com/privkey.pem"``.  This setting has
-      no effect unless ``secure`` is ``true``.
-
-    * ``sslCertFile``: A :green:`String`, the location of the ssl cert file for
-      serving via the ``https`` protocol.  An example, if using
-      `letsencrypt <https://letsencrypt.org/>`_ for "example.com" might be
-      ``"/etc/letsencrypt/live/example.com/fullchain.pem"``.  This setting has
-      no effect unless ``secure`` is ``true``.
-
-    * ``sslMinVersion``:  A :green:`String`, the minimum SSL/TLS version to use.
-      Possible values are ``ssl3``, ``tls1``, ``tls1.1`` or ``tls1.2``.  The
-      default is ``tls1.2``. This setting has no effect unless ``secure`` is ``true``.
-
-    * ``notFoundFunc``: A :green:`Function` to handle ``404 Not Found`` responses.
-      See `Mapped Functions`_ below.
-
-    * ``developerMode``: A :green:`Boolean`, whether to run the server in a
-      developer mode.  If ``true``, JavaScript and other errors will cause
-      the server to return a ``500 Internal Error`` message, with the error
-      and error line numbers printed.  If false, JavaScript errors will
-      result in the generic ``404 Not Found Page`` or alternatively, if set
-      ``notFoundFunc`` will be called and the request object (``req``) will
-      contain the key ``errMsg`` (``req.errMsg``), with the error message.
-
-    * ``directoryFunc``: A :green:`Function` to handle directory listings from
-      the filesystem, if no ``index.html`` file exists in the requested
-      directory.  May also be set to ``true`` to use the built-in function.
-      If set ``false`` (the default), a "403 Forbidden" response is sent
-      where a directory listing is requested and no index.html file exists.
-      See `Built-in Directory Function`_ below for more information.
-
-    * ``user``: A :green:`String`, the user account which the server will switch
-      to after binding to the specified ip address and port.  Only valid if
-      server is started as ``root``.  This setting is used for binding to
-      privileged ports as ``root`` and then dropping privileges.  If the server
-      is started as root, ``user`` must be set.
-
-    * ``cacheControl``: A :green:`String` or a :green:`Boolean`.  If a
-      :green:`String` - the text to set the "Cache-Control" header when
-      serving files off of the filesystem.  The default is "max-age=84600,
-      public", if not set or set ``true``.  If set ``false``, no header is
-      sent.
-
-    * ``defaultCharset``: A :green:`String` or a :green:`Boolean`.  Charset
-      to append to the ``Content-Type`` header for ``text/*`` mime types.
-      The default is ``"utf-8"``.  Applies to both static files served from
-      the filesystem and dynamic responses returned from script handlers
-      (e.g. ``return {html: ...}``, ``return {txt: ...}``, etc.).  Set to
-      a :green:`String` such as ``"iso-8859-1"`` to use a different charset.
-      Set to ``false`` to disable, in which case no charset is appended and
-      the bare mime type is sent.
-
-      A response that explicitly sets its own ``Content-Type`` header (via
-      a ``headers`` property) is left untouched - whatever value is supplied
-      is sent verbatim, with no charset added.
-
-    * ``defaultRangeMBytes``: a :green:`Number` (range 0.01 to 1000).  Set the
-      default range size when sending a ``206 Partial Content`` response to an
-      open ended request (e.g. ``range: 0-``), specified in megabytes.
-      The default value is ``8`` for eight megabytes.
-
-    * ``compressFiles``: A :green:`Boolean` or :green:`Array`.  Whether to
-      use gzip compression for files served from the filesystem.  Default is
-      ``false``.  If an :green:`Array`. is given, it is a list of file
-      extension which will be compressed.  If ``true`` - the following default
-      :green:`Array` of extensions will be used:
-      ``["html", "css", "js", "json, "xml", "txt", "text", "htm"]``.
-
-      Note that compressed files will be cached in a directory named
-      ".gzipcache/" in the directory in which the files are located.
-      Compressed cached files are updated based on the date of the original.
-      The webserver's ``user`` must have write permissions in the directory
-      in which the files are located in order for compressed files to be
-      cached.
-
-    * ``compressScripts``:  A :green:`Boolean`. Whether to compress the
-      output from scripts by default.  If not set, the default is ``false``.
-      This can be overridden in the return value from a script using the key
-      ``compress`` set to a :green:`Boolean` or a compression level (1-10).
-      See the last example in `The Return Object`_ below.
-
-    * ``compressLevel``: A :green:`Number`. The default level of compression
-      used for files and scripts.  Must be an integer between 1 and 10. The
-      default, if not specified, is ``1``.
-
-    * ``compressMinSize``: A :green:`Number`. The minimum size in bytes any file or
-      script output must be in order for the content to be compressed.  The default,
-      if not specified, is ``1000``.
-
-    * ``appendProcTitle``: A :green:`Boolean`. Whether to append the process
-      title (as seen in utilities like ``ps``) with the ip address and port
-      number of the server.  The default if not specified is ``false``.
-
-    * ``postForkFunc``: A :green:`Function`. Function to be executed after
-      the server forks but before server threads are created, if
-      ``daemon`` is ``true``.
-
-    * ``beginFunc``: An :green:`Object` or :green:`Function`.
-      A function to run at the beginning of each JavaScript function or on
-      file load as specified in ``map`` below.  This can be a global
-      function (i.e.  ``beginFunc: myglobalbeginfunc``), an inline function
-      (i.e.  ``beginFunc: function(req){...}``), or an object (i.e.
-      ``{module: working_directory+'/apps/beginfunc.js'}``) specifying the
-      path of a module.
-      The function, like all server callback functions, is passed ``req``, which if
-      altered will be reflected in the call of the normal callback for the
-      requested page.  Returning false will skip the normal callback and
-      send a 404 Not Found page.  Returning an :green:`Object` (i.e. ``{html:myhtml}``)
-      will skip the normal callback and send the content from that :green:`Object`.
-      When the provided function is called before the loading of a file, the
-      ``req`` :green:`Object` ``fsPath`` property will be set to the file being
-      retrieved.  If ``req.fsPath`` is set to a new path and the function returns
-      true, the updated file will be sent instead.
-      For websocket connections, it is run only before the first connect
-      (i.e., when ``req.count == 0``, see `Websockets`_ below).
-      Default value is ``undefined``.
-
-    * ``beginFuncOnFile``: A :green:`Boolean`.  Whether to run the begin
-      function before serving a file (-i.e.  files from a mapped location such
-      as the ``web_server/html/`` directory),  Default value is ``false``.
-
-    * ``authMod``: A :green:`Boolean`, :green:`String`, or
-      :green:`Function`.  Enable session-based authentication.
-
-      - ``true`` — loads the built-in ``rampart-auth.so`` module.
-        Requires ``authModConf`` to be set.
-      - A :green:`String` — loads a custom auth module by name or path.
-      - A :green:`Function` — uses an inline auth function.
-      - ``false`` or omitted — authentication is disabled (default).
-
-      The auth module exports a function that is called on every request.
-      For static files under protected paths (defined in ``authModConf``),
-      the function returns ``true`` to serve or ``false`` to deny.  For
-      app module requests, the function may modify ``req`` (e.g., setting
-      ``req.userAuth``) and return any truthy value to pass through to the
-      endpoint, return ``false`` for 403, or return ``{redirect: "/path"}``
-      for a 302 redirect.  Since ``req`` is passed by reference,
-      modifications are visible to the endpoint regardless of return value.
-
-      With the built-in ``rampart-auth.so`` (``authMod: true``), the
-      session check runs entirely in C — cookie extraction, LMDB lookup,
-      and access control happen without invoking the JavaScript interpreter.
-      With a custom :green:`Function` or third-party module, the auth
-      function is called via the Duktape C API before the endpoint handler
-      runs.  This is still faster than running the full endpoint (the
-      auth function runs instead of the endpoint on denied requests), but
-      it does execute the auth function's JavaScript.
-
-      See :doc:`rampart-auth` for full documentation, including the
-      ``auth.js`` administration module included in the sample web server.
-
-    * ``authModConf``: A :green:`String`.  Path to a JavaScript module
-      that exports the authentication configuration object.  Required when
-      ``authMod`` is ``true`` (the built-in module).  Optional for custom
-      auth modules and inline functions.
-
-      When provided, the server reads ``protectedPaths`` from the config
-      to determine which static file paths require authentication.  For
-      those paths, the server calls the auth function before serving the
-      file.  File paths not listed are served without any auth check.
-      Without ``authModConf``, the server has no protected path definitions
-      and all static files are served without gating — only app module
-      requests will have the auth function called.
-
-      See :doc:`rampart-auth` for configuration details.
-
-    * ``rateLimit``: An :green:`Object`.  Configure per-path rate limiting
-      using a token bucket algorithm.  Rate limiting runs in C before any
-      authentication, JavaScript, or file serving — a rate-limited request
-      receives a ``429 Too Many Requests`` response with no further
-      processing.
-
-      Each key in the object is a URL path prefix, and the value is an
-      object with the following properties:
-
-      - ``rate`` — :green:`Number`.  Maximum number of requests allowed
-        per time window (default: ``60``).
-      - ``window`` — :green:`Number`.  Time window in seconds
-        (default: ``60``).
-      - ``key`` — :green:`String`.  How to identify clients for rate
-        limiting (default: ``"ip"``):
-
-        - ``"ip"`` — rate limit by client IP address.  Fastest option.
-        - ``"fingerprint"`` — rate limit by a hash of the client's IP
-          address combined with the ``User-Agent``,
-          ``Accept-Language``, and ``Accept-Encoding`` headers.
-          Distinguishes different browsers behind the same IP (e.g.,
-          NAT or corporate networks).
-        - ``"cookie:name"`` — rate limit by the value of a specific
-          cookie.  Useful for per-session rate limiting.  If the cookie
-          is not present, falls back to IP.
-
-      Example:
-
-      .. code-block:: javascript
-
-          rateLimit: {
-              "/apps/auth/": {
-                  rate: 20,
-                  window: 60,
-                  key: "ip"
-              },
-              "/apps/api/": {
-                  rate: 100,
-                  window: 60,
-                  key: "fingerprint"
-              },
-              "/apps/premium/": {
-                  rate: 50,
-                  window: 60,
-                  key: "cookie:rp_session"
-              }
-          }
-
-      Path matching uses prefix comparison: a rule for ``"/apps/api/"``
-      applies to ``"/apps/api/search"``,
-      ``"/apps/api/users/list.html"``, etc.  When multiple prefixes
-      match, **all** matching rules are checked — a request must pass
-      every one.  This allows a global limit on ``"/"`` combined with
-      tighter per-path limits:
-
-      .. code-block:: javascript
-
-          rateLimit: {
-              "/":           {rate: 100, window: 60, key: "ip"},   // global
-              "/apps/auth/": {rate: 10,  window: 60, key: "ip"}    // tighter
-          }
-
-      A request to ``/apps/auth/login`` consumes a token from both the
-      ``"/"`` and ``"/apps/auth/"`` buckets.  It is denied if either
-      bucket is empty.  Paths not listed are not rate limited.
-
-      The rate limiter uses an in-memory hash table with per-bucket
-      locking for thread safety.  The number of hash buckets defaults
-      to 64 and can be changed at compile time with
-      ``-DRP_RATELIMIT_BUCKETS=128`` (must be a power of 2).
-
-      Tokens refill at a constant rate (``rate / window`` tokens per
-      second).  A client that stops sending requests will naturally
-      recover its full token allowance within one window period.
-
-    * ``endFunc``: An :green:`Object` or :green:`Function`.
-      A function to run after the completion of a JavaScript function
-      callback from ``map`` below.
-      Like ``beginFunc``, it will also receive the `req` object.  In
-      addition, `req.reply` will be set to the return value of the normal
-      server callback function mapped in ``map`` below and req.reply can be
-      modified before it is sent.
-      For websocket connections, it is run after websockets disconnects and
-      after the req.wsOnDisconnect callback, if any.  `req.reply` is an
-      empty object, modifying it has no effect and return value from endFunc
-      has no effect. End function is never run on file requests. The default
-      value is ``undefined``.
-
-
-    * ``logFunc``: An :green:`Object` or :green:`Function`.
-      A function to run after data has been written to the client and in place of
-      normal logging (``log`` above must be ``true``).  The callback function
-      will be passed two parameters (i.e. ``myloggingfunc (logdata, logline)``)
-      where the first is an :green:`Object` with the following properties:
-      ``addr``, ``dateStr``, ``method``, ``path``, ``query``, ``protocol`` and
-      ``code``.  All are :green:`Strings`, except ``code``, which is a :green:`Number` (i.e. ``200``);
-      The second parameter is the log line that would normally be written but for this
-      function.  The filehandles ``rampart.utils.accessLog`` and ``rampart.utils.errorLog``
-      can be used to write to the ``accessLog`` and ``errorLog`` set above, or if unset
-      to ``stdout`` and ``stderr``.
-
-      Examples:
-
-      .. code-block:: javascript
-
-        function myloggingfunc (logdata, logline) {
-            if(logdata.code != 200)
-                rampart.utils.fprintf(rampart.utils.accessLog,
-                    '%s %s "%s %s%s%s %d"\n',
-                    logdata.addr, logdata.dateStr, logdata.method,
-                    logdata.path, logdata.query?"?":"", logdata.query,
-                    logdata.code );
-            else
-                rampart.utils.fprintf(rampart.utils.accessLog,
-                    "%s\n", logline);
+There are two configuration shapes; pick the one that matches your
+deployment, then consult `Option reference`_ below.
+
+* **Single-listener** - ``bind:`` at the top level, every option also at the
+  top level.  Right when one process serves one set of routes on one port
+  (or several IPs sharing identical config).  This is the original
+  ``rampart-server`` shape.
+
+* **Multi-listener** - ``listen:`` at the top level, an array of
+  listener-block :green:`Objects`.  Use when you need different SSL certs
+  on different ports, mixed http+https in one process, or different
+  routing per port.  ``bind:`` and ``listen:`` are mutually exclusive.
+
+The single-listener shape
+'''''''''''''''''''''''''
+
+.. code-block:: javascript
+
+    server.start({
+        bind: '0.0.0.0:8088',
+        map:  { '/': '/var/www/html' },
+        threads: 4,
+        // ...other top-level options as needed
+    });
+
+Every option goes at the top level.  Multiple ip:port pairs are supported
+via an array (``bind: ['0.0.0.0:8088', '[::]:8088']``); all share the same
+configuration.
+
+The multi-listener shape (``listen:[]``)
+''''''''''''''''''''''''''''''''''''''''
+
+.. code-block:: javascript
+
+    server.start({
+        listen: [
+            { bind: '0.0.0.0:80',
+              map:  { '/': '/var/www/html' } },
+            { bind: '0.0.0.0:443', secure: true,
+              sslKeyFile:  '/etc/letsencrypt/live/example.com/privkey.pem',
+              sslCertFile: '/etc/letsencrypt/live/example.com/fullchain.pem',
+              map:  { '/': '/var/www/html' } },
+            { bind: '10.0.0.5:8443', secure: true,
+              sslKeyFile: 'admin.key', sslCertFile: 'admin.crt',
+              map: { '/': '/var/www/admin' } },
+        ],
+        threads: 4,                    // top-level options apply across listeners
+    });
+
+Each block becomes its own listener with its own routing table, optional
+SSL configuration, and optional per-listener timeouts and body-size limit.
+All listeners share a single worker thread pool, so adding listeners does
+not multiply the number of worker threads or JavaScript contexts.
+
+**Required inside a block.** ``bind`` and ``map``.
+
+**Allowed inside a block** (overrides top-level if also set there):
+``secure``, ``sslKeyFile``, ``sslCertFile``, ``connectTimeout``,
+``scriptTimeout``, ``maxBodySize``.
+
+**Process-global options** (``threads``, ``daemon``, ``user``, ``mimeMap``,
+log options, etc.) and routing-related options that are currently
+process-wide (``notFoundFunc``, ``authMod``, ``rateLimit``, ``compress*``,
+``directoryFunc``, ``logFunc``, ``cacheControl``, ``defaultCharset``,
+``beginFunc``/``endFunc``, ``defaultRangeMBytes``, ``sslMinVersion``)
+go at the top level.  Putting any of them inside a block is rejected by
+the validator.
+
+**Inheritance.** When a per-listener option (say ``connectTimeout: 5``)
+is set at the top level and not inside a block, the top-level value
+applies to that block.  Block-level values override.
+
+**Mixed http and https.** Combine plain and ``secure: true`` blocks in
+one array.  For the common "redirect plain http to https" pattern see
+the ``httpRedirect`` option in the TLS section below - it runs in the
+same process as the secure listener and does not need a separate
+daemon.
+
+Option reference
+''''''''''''''''
+
+Each option below is tagged with its *scope*:
+
+* *per-listener* - may appear inside a ``listen:`` block, and at the top
+  level (where it acts as a default that blocks inherit when unset).
+  Also valid at the top level in the single-listener shape.
+* *top-level* - process-global; only valid at the top level of the
+  options object.
+
+**Bind and listener**
+
+* ``bind`` *(per-listener)* - An :green:`Array` of :green:`Strings`, with
+  each :green:`String` representing an ip address and port.  If not
+  specified, the server will bind to port 8088 on the loopback device
+  (i.e. 127.0.0.1, which is only accessible from the same machine), using
+  the following default value:
+
+  ``[ "[::1]:8088", "127.0.0.1:8088" ]``.
+
+  When specifying an Ipv6 address, bracket notation is required (e.g.
+  ``[2001:db8::1111:2222]:80``) while a dot-decimal notation is used for
+  ipv4 (e.g. ``172.16.254.1:80``).  To bind to all ip addresses using
+  port 80, the following may be used:
+
+  ``[ "[::]:80", "0.0.0.0:80" ]``.
+
+* ``listen`` *(top-level)* - An :green:`Array` of listener-block
+  :green:`Objects`.  Each block becomes one listener; see
+  `The multi-listener shape (listen:[])`_ above for the full block
+  schema, allowed/rejected keys, and inheritance rules.  Mutually
+  exclusive with top-level ``bind:``.
+
+.. _tls-certificates:
+
+**TLS / certificates**
+
+* ``secure`` *(per-listener)* - A :green:`Boolean`, whether to use SSL/TLS
+  layer for serving via the ``https`` protocol.  Default is ``false``.
+  If ``true``, the ``sslKeyFile`` and ``sslCertFile`` parameters must
+  also be set (in the same block or inherited from the top level).
+
+* ``sslKeyFile`` *(per-listener)* - A :green:`String`, the location of
+  the ssl key file for serving via the ``https`` protocol.  An example,
+  if using `letsencrypt <https://letsencrypt.org/>`_ for "example.com"
+  might be ``"/etc/letsencrypt/live/example.com/privkey.pem"``.  This
+  setting has no effect unless ``secure`` is ``true``.
+
+* ``sslCertFile`` *(per-listener)* - A :green:`String`, the location of
+  the ssl cert file for serving via the ``https`` protocol.  An example,
+  if using `letsencrypt <https://letsencrypt.org/>`_ for "example.com"
+  might be ``"/etc/letsencrypt/live/example.com/fullchain.pem"``.  This
+  setting has no effect unless ``secure`` is ``true``.
+
+* ``sslMinVersion`` *(top-level)* - A :green:`String`, the minimum
+  SSL/TLS version to use.  Possible values are ``ssl3``, ``tls1``,
+  ``tls1.1`` or ``tls1.2``.  The default is ``tls1.2``.  Applies to
+  every secure listener; no per-block override in v1.
+
+* ``httpRedirect`` *(top-level)* - A :green:`Number`, :green:`String`,
+  or :green:`Object`.  Adds an in-process plain-HTTP listener that
+  301-redirects every request to ``https://`` on the secure listener.
+  Replaces the legacy two-daemon pattern - no extra fork, no separate
+  pid to track.  Requires at least one secure listener.  Three accepted
+  forms:
+
+  * ``httpRedirect: 80`` - listens on ``0.0.0.0:80`` and ``[::]:80``.
+
+  * ``httpRedirect: "10.0.0.5:80"`` - listens on a specific socket.
+
+  * ``httpRedirect: {port: 80, passthrough: {"/.well-known/": "/path/to/dir/"}}``
+    - same as the number form, plus a list of URL prefixes that are
+    served from the named filesystem directory instead of being
+    redirected.  Typical use: the ACME ``/.well-known/acme-challenge/``
+    path for letsencrypt cert renewals.  ``bind: "ip:port"`` may be
+    used in place of ``port`` for a specific socket.
+
+  When the HTTPS target port is non-standard (anything other than 443)
+  it is appended to the redirect ``Location:`` header automatically.
+
+**Threads and I/O limits**
+
+* ``useThreads`` *(top-level)* - A :green:`Boolean`, whether the server
+  is multi-threaded.  If ``true`` and ``threads`` below is not set,
+  the server will create a threadpool consisting of one thread per cpu
+  core.  If set ``false``, it is equivalent to setting ``useThreads``
+  to ``true`` and ``threads`` to ``1``.  The default is ``true``.
+
+* ``threads`` *(top-level)* - A :green:`Number`, the number of threads
+  to create for the server thread pool.  The default, if ``useThreads``
+  is ``true`` or is unset, is the number of cpu cores on the current
+  system.  In multi-listener mode the pool is shared across every
+  listener - one pool, one set of JavaScript contexts.
+
+* ``maxRead`` *(top-level)* - A :green:`Number`, the largest single read
+  from a client allowed in the event loop.  If reading data larger than
+  this, it will be done in multiple cycles of the event loop in order
+  to allow the servicing of other requests.  A high number can make
+  receiving large requests unfairly slow down other clients, especially
+  if the server is not using multiple threads.  A low number will slow
+  down the reading of data over the specified size.  Default is
+  ``65536``.
+
+* ``maxWrite`` *(top-level)* - A :green:`Number`, the largest single
+  write to a client allowed in the event loop.  If writing data larger
+  than this, it will be done in multiple cycles of the event loop in
+  order to allow the servicing of other requests.  A high number can
+  make sending large replies unfairly slow down other clients, especially
+  if the server is not using multiple threads.  A low number will slow
+  down the writing of data over the specified size. Default is
+  ``65536``.
+
+* ``maxBodySize`` *(per-listener)* - A :green:`Number`, the maximum
+  size in bytes of an HTTP request body.  If a request body exceeds
+  this limit, the server will stop reading the body and return a
+  ``413 Entity Too Large`` response to the client.  For WebSocket
+  connections, this limits the maximum size of a single message.
+  Default is ``52428800`` (50 MB).  Set to ``0`` to disable the limit
+  (not recommended).
+
+* ``defaultRangeMBytes`` *(top-level)* - a :green:`Number` (range 0.01
+  to 1000).  Set the default range size when sending a ``206 Partial
+  Content`` response to an open ended request (e.g. ``range: 0-``),
+  specified in megabytes.  The default value is ``8`` for eight
+  megabytes.
+
+**Timeouts**
+
+* ``scriptTimeout`` *(per-listener)* - A :green:`Number`, amount of
+  time in seconds (or fraction thereof) to wait for a script to run
+  before canceling the request and returning a
+  ``500 Internal Server Error`` timeout message to the connecting
+  client.  Default is no timeout/unlimited.
+
+* ``connectTimeout`` *(per-listener)* - A :green:`Number`, amount of
+  time in seconds (or fraction thereof) to wait for a connected client
+  to send a request.  Default is no timeout/unlimited.
+
+**Process lifecycle**
+
+* ``daemon`` *(top-level)* - A :green:`Boolean`, whether to fork and
+  detach from the controlling terminal.  If ``true``, the ``start()``
+  function will return the pid of the server.  Otherwise the pid of
+  the current process is returned.  The default is ``false``.
+
+* ``user`` *(top-level)* - A :green:`String`, the user account which
+  the server will switch to after binding to the specified ip address
+  and port.  Only valid if server is started as ``root``.  This setting
+  is used for binding to privileged ports as ``root`` and then dropping
+  privileges.  If the server is started as root, ``user`` must be set.
+
+* ``appendProcTitle`` *(top-level)* - A :green:`Boolean`.  Whether to
+  append the process title (as seen in utilities like ``ps``) with the
+  ip address and port number of the server.  The default if not
+  specified is ``false``.
+
+* ``postForkFunc`` *(top-level)* - A :green:`Function`.  Function to be
+  executed after the server forks but before server threads are created,
+  if ``daemon`` is ``true``.
+
+**Routing and request hooks**
+
+* ``map`` *(per-listener)* - An :green:`Object` of url to function or
+  filesystem mapping.  The keys of the object are exact paths, regular
+  expressions, partial paths or globbed paths to be matched against
+  incoming requests.  For example, a key ``/myscript.html`` would match
+  an incoming request for ``http://example.com/myscript.html``.  The
+  value to which the key is set controls which function, module or
+  filesystem path will be used.
+
+  If the value is a :green:`Function`, that function is used as the
+  callback function.  If the value is an :green:`Object` with ``module``
+  or ``modulePath`` key set, it is assumed to be a script name (the same
+  as is used for
+  :ref:`require() <rampart-main:using the require function to import modules>`)
+  or a path with scripts.
+
+  If the value is a :green:`String`, or it is an :green:`Object` with
+  ``path`` set, it is assumed to be a mapping to the filesystem.  A
+  mapping to a filesystem path may also include headers.
+
+  Example:
+
+  .. code-block:: javascript
+
+    var server = require("rampart-server");
+
+    var pid = server.start({
+        bind: [ "[::]:8088", "0.0.0.0:8088" ], /* bind to all */
+        map :
+        {
+            "/":            "/usr/local/etc/httpd/htdocs"  /* map all file requests */
+            "/search.html": function (req) { ... },         /* search function */
+            "/images/":     {
+                                path: "/path/to/my/jpgs/",
+                                headers: {
+                                    "Content-Control": "max-age=31556952, public",
+                                    "X-Custom-Header": 1
+                                }
+                            }
         }
+    });
 
-        // example logging func - skip logging for connections from localhost
-        function myloggingfunc_alt (logdata, logline) {
-            if(logdata.addr=="127.0.0.1" || logdata.addr=="::1")
-                return;
+  In the above example, as the longer path, the ``"/search.html"`` key
+  will have priority over ``"/"`` key, so that a request
+  ``http://localhost:8088/search.html`` will cause the function to be
+  executed while anything else will match ``"/"`` (assuming ``mapSort``
+  is not set to ``false``).
+
+  Keys/paths used for mapping a :green:`Function` may be given in one of
+  three different formats, which are tested for a match in the following order:
+
+  * Exact Paths - Paths starting with a "/" and having no unescaped ``*`` characters
+    will be matched exactly with the incoming request.
+
+  * Regular Expression paths - A path/key that starts with ``~`` will match the
+    Perl Regular Expression following the ``~``.  Example:
+    ``map: {"~/.*/myfile.html": myfunction }`` will match any path ending
+    in ``myfile.html`` and run the named function ``myfunction``.
+
+  * Glob Paths - A glob path will have the last priority for matching the
+    requested url.  Example: ``map: {"/*/myfile.html": myfunction2 }`` will
+    match the same as the example above, but would have lower priority.  If
+    both these examples were present, ``myfunction2`` would never match.
+
+  Keys/paths used for mapping to the **filesystem** are always taken as
+  an Exact path.  Regular expressions and globs are not allowed.
+
+  See `Path Mapping`_ below for in-depth semantics.
+
+* ``mapSort`` *(top-level)* - A :green:`Boolean`, whether to automatically
+  sort the mapped paths given as keys to the :green:`Object` passed to
+  ``map``.  Default is ``true``.  If ``false``, paths from the ``map``
+  :green:`Object` will be matched in the order they are given.
+
+  Note that regardless of this setting, paths are matched by type of path
+  with Exact paths tested first, then regular expression paths and lastly
+  glob paths.  However, it is usually desirable for longer paths to have
+  priority over shorter ones.  For example, if ``/`` and ``/search.html``
+  are both specified (both are "Exact" paths), ``/search.html`` should be
+  checked first, otherwise ``/`` will match and ``/search.html`` will
+  never match.  When ``mapSort`` is ``true``, key/paths are automatically
+  sorted by length.
+
+* ``notFoundFunc`` *(top-level)* - A :green:`Function` to handle
+  ``404 Not Found`` responses.  See `Mapped Functions`_ below.
+
+* ``directoryFunc`` *(top-level)* - A :green:`Function` to handle
+  directory listings from the filesystem, if no ``index.html`` file
+  exists in the requested directory.  May also be set to ``true`` to
+  use the built-in function.  If set ``false`` (the default), a
+  "403 Forbidden" response is sent where a directory listing is
+  requested and no index.html file exists.  See
+  `Built-in Directory Function`_ below for more information.
+
+* ``beginFunc`` *(top-level)* - An :green:`Object` or :green:`Function`.
+  A function to run at the beginning of each JavaScript function or on
+  file load as specified in ``map`` below.  This can be a global function
+  (i.e. ``beginFunc: myglobalbeginfunc``), an inline function (i.e.
+  ``beginFunc: function(req){...}``), or an object (i.e.
+  ``{module: working_directory+'/apps/beginfunc.js'}``) specifying the
+  path of a module.
+  The function, like all server callback functions, is passed ``req``,
+  which if altered will be reflected in the call of the normal callback
+  for the requested page.  Returning false will skip the normal callback
+  and send a 404 Not Found page.  Returning an :green:`Object` (i.e.
+  ``{html:myhtml}``) will skip the normal callback and send the content
+  from that :green:`Object`.  When the provided function is called before
+  the loading of a file, the ``req`` :green:`Object` ``fsPath`` property
+  will be set to the file being retrieved.  If ``req.fsPath`` is set to
+  a new path and the function returns true, the updated file will be
+  sent instead.
+  For websocket connections, it is run only before the first connect
+  (i.e., when ``req.count == 0``, see `Websockets`_ below).
+  Default value is ``undefined``.
+
+* ``beginFuncOnFile`` *(top-level)* - A :green:`Boolean`.  Whether to
+  run the begin function before serving a file (i.e. files from a mapped
+  location such as the ``web_server/html/`` directory).  Default value
+  is ``false``.
+
+* ``endFunc`` *(top-level)* - An :green:`Object` or :green:`Function`.
+  A function to run after the completion of a JavaScript function
+  callback from ``map``.  Like ``beginFunc``, it will also receive the
+  ``req`` object.  In addition, ``req.reply`` will be set to the return
+  value of the normal server callback function mapped in ``map`` and
+  ``req.reply`` can be modified before it is sent.  For websocket
+  connections, it is run after websockets disconnects and after the
+  ``req.wsOnDisconnect`` callback, if any.  ``req.reply`` is an empty
+  object, modifying it has no effect and return value from ``endFunc``
+  has no effect.  End function is never run on file requests.  The
+  default value is ``undefined``.
+
+* ``authMod`` *(top-level)* - A :green:`Boolean`, :green:`String`, or
+  :green:`Function`.  Enable session-based authentication.
+
+  - ``true`` - loads the built-in ``rampart-auth.so`` module.  Requires
+    ``authModConf`` to be set.
+  - A :green:`String` - loads a custom auth module by name or path.
+  - A :green:`Function` - uses an inline auth function.
+  - ``false`` or omitted - authentication is disabled (default).
+
+  The auth module exports a function that is called on every request.
+  For static files under protected paths (defined in ``authModConf``),
+  the function returns ``true`` to serve or ``false`` to deny.  For
+  app module requests, the function may modify ``req`` (e.g., setting
+  ``req.userAuth``) and return any truthy value to pass through to the
+  endpoint, return ``false`` for 403, or return ``{redirect: "/path"}``
+  for a 302 redirect.  Since ``req`` is passed by reference,
+  modifications are visible to the endpoint regardless of return value.
+
+  With the built-in ``rampart-auth.so`` (``authMod: true``), the session
+  check runs entirely in C - cookie extraction, LMDB lookup, and access
+  control happen without invoking the JavaScript interpreter.  With a
+  custom :green:`Function` or third-party module, the auth function is
+  called via the Duktape C API before the endpoint handler runs.  This
+  is still faster than running the full endpoint (the auth function
+  runs instead of the endpoint on denied requests), but it does execute
+  the auth function's JavaScript.
+
+  See :doc:`rampart-auth` for full documentation, including the
+  ``auth.js`` administration module included in the sample web server.
+
+* ``authModConf`` *(top-level)* - A :green:`String`.  Path to a
+  JavaScript module that exports the authentication configuration object.
+  Required when ``authMod`` is ``true`` (the built-in module).  Optional
+  for custom auth modules and inline functions.
+
+  When provided, the server reads ``protectedPaths`` from the config to
+  determine which static file paths require authentication.  For those
+  paths, the server calls the auth function before serving the file.
+  File paths not listed are served without any auth check.  Without
+  ``authModConf``, the server has no protected path definitions and all
+  static files are served without gating - only app module requests will
+  have the auth function called.
+
+  See :doc:`rampart-auth` for configuration details.
+
+* ``rateLimit`` *(top-level)* - An :green:`Object`.  Configure per-path
+  rate limiting using a token bucket algorithm.  Rate limiting runs in C
+  before any authentication, JavaScript, or file serving - a rate-limited
+  request receives a ``429 Too Many Requests`` response with no further
+  processing.
+
+  Each key in the object is a URL path prefix, and the value is an object
+  with the following properties:
+
+  - ``rate`` - :green:`Number`.  Maximum number of requests allowed per
+    time window (default: ``60``).
+  - ``window`` - :green:`Number`.  Time window in seconds (default:
+    ``60``).
+  - ``key`` - :green:`String`.  How to identify clients for rate limiting
+    (default: ``"ip"``):
+
+    - ``"ip"`` - rate limit by client IP address.  Fastest option.
+    - ``"fingerprint"`` - rate limit by a hash of the client's IP address
+      combined with the ``User-Agent``, ``Accept-Language``, and
+      ``Accept-Encoding`` headers.  Distinguishes different browsers
+      behind the same IP (e.g., NAT or corporate networks).
+    - ``"cookie:name"`` - rate limit by the value of a specific cookie.
+      Useful for per-session rate limiting.  If the cookie is not
+      present, falls back to IP.
+
+  Example:
+
+  .. code-block:: javascript
+
+      rateLimit: {
+          "/apps/auth/": {
+              rate: 20,
+              window: 60,
+              key: "ip"
+          },
+          "/apps/api/": {
+              rate: 100,
+              window: 60,
+              key: "fingerprint"
+          },
+          "/apps/premium/": {
+              rate: 50,
+              window: 60,
+              key: "cookie:rp_session"
+          }
+      }
+
+  Path matching uses prefix comparison: a rule for ``"/apps/api/"``
+  applies to ``"/apps/api/search"``, ``"/apps/api/users/list.html"``,
+  etc.  When multiple prefixes match, **all** matching rules are
+  checked - a request must pass every one.  This allows a global
+  limit on ``"/"`` combined with tighter per-path limits:
+
+  .. code-block:: javascript
+
+      rateLimit: {
+          "/":           {rate: 100, window: 60, key: "ip"},   // global
+          "/apps/auth/": {rate: 10,  window: 60, key: "ip"}    // tighter
+      }
+
+  A request to ``/apps/auth/login`` consumes a token from both the
+  ``"/"`` and ``"/apps/auth/"`` buckets.  It is denied if either bucket
+  is empty.  Paths not listed are not rate limited.
+
+  The rate limiter uses an in-memory hash table with per-bucket locking
+  for thread safety.  The number of hash buckets defaults to 64 and can
+  be changed at compile time with ``-DRP_RATELIMIT_BUCKETS=128`` (must
+  be a power of 2).
+
+  Tokens refill at a constant rate (``rate / window`` tokens per second).
+  A client that stops sending requests will naturally recover its full
+  token allowance within one window period.
+
+* ``mimeMap`` *(top-level)* - An :green:`Object`, additions or changes
+  to the standard extension to mime mappings.  Normally, if, e.g.,
+  ``return { "m4v": mymovie };`` is set as `The Return Object`_ to a
+  mapped function, the header ``content-type: video/x-m4v`` is sent.
+  Though the ``content-type`` header can be changed using the ``headers``
+  object in `The Return Object`_\ , it does not affect files served from
+  the filesystem.  If it is necessary to change the default
+  "content-type" for both `Mapped Functions`_ and files served from
+  `Mapped Directories`_\ , extension:mime-types mappings may be set or
+  changed as follows:
+
+  .. code-block:: javascript
+
+      server.start({
+          ...,
+          mimeMap: {
+              /* make these movies play as mp4s */
+              "m4v": "video/mp4",
+              "mov": "video/mp4"
+          },
+          map: {
+              "/": "/var/www/html",
+              ...,
+          }
+      });
+
+  For a complete list of defaults, see `Key to Mime Mappings`_ below.
+
+**Static-file behaviour**
+
+* ``cacheControl`` *(top-level)* - A :green:`String` or a :green:`Boolean`.
+  If a :green:`String` - the text to set the "Cache-Control" header when
+  serving files off of the filesystem.  The default is
+  ``"max-age=84600, public"``, if not set or set ``true``.  If set
+  ``false``, no header is sent.
+
+* ``defaultCharset`` *(top-level)* - A :green:`String` or a
+  :green:`Boolean`.  Charset to append to the ``Content-Type`` header for
+  ``text/*`` mime types.  The default is ``"utf-8"``.  Applies to both
+  static files served from the filesystem and dynamic responses returned
+  from script handlers (e.g. ``return {html: ...}``, ``return {txt: ...}``,
+  etc.).  Set to a :green:`String` such as ``"iso-8859-1"`` to use a
+  different charset.  Set to ``false`` to disable, in which case no
+  charset is appended and the bare mime type is sent.
+
+  A response that explicitly sets its own ``Content-Type`` header (via
+  a ``headers`` property) is left untouched - whatever value is supplied
+  is sent verbatim, with no charset added.
+
+* ``compressFiles`` *(top-level)* - A :green:`Boolean` or :green:`Array`.
+  Whether to use gzip compression for files served from the filesystem.
+  Default is ``false``.  If an :green:`Array` is given, it is a list of
+  file extensions which will be compressed.  If ``true`` - the following
+  default :green:`Array` of extensions will be used:
+  ``["html", "css", "js", "json", "xml", "txt", "text", "htm"]``.
+
+  Note that compressed files will be cached in a directory named
+  ``.gzipcache/`` in the directory in which the files are located.
+  Compressed cached files are updated based on the date of the original.
+  The webserver's ``user`` must have write permissions in the directory
+  in which the files are located in order for compressed files to be
+  cached.
+
+* ``compressScripts`` *(top-level)* - A :green:`Boolean`.  Whether to
+  compress the output from scripts by default.  If not set, the default
+  is ``false``.  This can be overridden in the return value from a
+  script using the key ``compress`` set to a :green:`Boolean` or a
+  compression level (1-10).  See the last example in `The Return
+  Object`_ below.
+
+* ``compressLevel`` *(top-level)* - A :green:`Number`.  The default level
+  of compression used for files and scripts.  Must be an integer between
+  1 and 10.  The default, if not specified, is ``1``.
+
+* ``compressMinSize`` *(top-level)* - A :green:`Number`.  The minimum
+  size in bytes any file or script output must be in order for the
+  content to be compressed.  The default, if not specified, is ``1000``.
+
+**Logging and debug**
+
+* ``log`` *(top-level)* - A :green:`Boolean`, whether to log each
+  request.  Access requests are logged to ``stdout`` and errors are
+  logged to ``stderr`` unless ``accessLog`` and/or ``errorLog`` below
+  are set.
+
+* ``logIpFromHeader`` *(top-level)* - A :green:`String`, a header name
+  to use for logging the ip address of the request.  In cases where the
+  server is behind a proxy such as nginx, instead of logging
+  ``127.0.0.1``, setting, e.g.
+  ``proxy_set_header Remote_address $remote_addr;`` in the appropriate
+  section of ``/etc/nginx/nginx.conf``, and setting
+  ``logIpFromHeader: "Remote_address"`` here will log the ip address of
+  the client connecting to nginx, rather than the ip address of the
+  nginx proxy server.
+
+* ``accessLog`` *(top-level)* - A :green:`String`, the location of the
+  access log.  The default, if not specified, is to log to ``stdout``.
+  If given, the log file will be closed and re-opened upon sending the
+  rampart executable a ``USR1`` signal, which allows log rotation.
+
+* ``errorLog`` *(top-level)* - A :green:`String`, the location of the
+  error log.  The default, if not specified, is to log to ``stderr``.
+  If given, the log file will be closed and re-opened upon sending the
+  rampart executable a ``USR1`` signal, which allows log rotation.
+
+* ``logFunc`` *(top-level)* - An :green:`Object` or :green:`Function`.
+  A function to run after data has been written to the client and in
+  place of normal logging (``log`` above must be ``true``).  The callback
+  function will be passed two parameters (i.e.
+  ``myloggingfunc (logdata, logline)``) where the first is an
+  :green:`Object` with the following properties: ``addr``, ``dateStr``,
+  ``method``, ``path``, ``query``, ``protocol`` and ``code``.  All are
+  :green:`Strings`, except ``code``, which is a :green:`Number` (i.e.
+  ``200``); the second parameter is the log line that would normally
+  be written but for this function.  The filehandles
+  ``rampart.utils.accessLog`` and ``rampart.utils.errorLog`` can be
+  used to write to the ``accessLog`` and ``errorLog`` set above, or
+  if unset to ``stdout`` and ``stderr``.
+
+  Examples:
+
+  .. code-block:: javascript
+
+    function myloggingfunc (logdata, logline) {
+        if(logdata.code != 200)
+            rampart.utils.fprintf(rampart.utils.accessLog,
+                '%s %s "%s %s%s%s %d"\n',
+                logdata.addr, logdata.dateStr, logdata.method,
+                logdata.path, logdata.query?"?":"", logdata.query,
+                logdata.code );
+        else
             rampart.utils.fprintf(rampart.utils.accessLog,
                 "%s\n", logline);
-        }
+    }
 
+    // example logging func - skip logging for connections from localhost
+    function myloggingfunc_alt (logdata, logline) {
+        if(logdata.addr=="127.0.0.1" || logdata.addr=="::1")
+            return;
+        rampart.utils.fprintf(rampart.utils.accessLog,
+            "%s\n", logline);
+    }
 
-      Default value is ``false``.
+  Default value is ``false``.
 
-    * ``mimeMap``: An :green:`Object`, additions or changes to the standard extension
-      to mime mappings.  Normally, if, e.g., ``return { "m4v": mymovie };``
-      is set as `The Return Object`_ to a mapped function, the header
-      ``content-type: video/x-m4v`` is sent.  Though the ``content-type``
-      header can be changed using the ``headers`` object in `The Return
-      Object`_\ , it does not affect files served from the filesystem.  If
-      it is necessary to change the default "content-type" for both `Mapped
-      Functions`_ and files served from `Mapped Directories`_\ ,
-      extension:mime-types mappings may be set or changed as follows:
-
-      .. code-block:: javascript
-
-          server.start({
-              ...,
-              mimeMap: {
-                  /* make these movies play as mp4s */
-                  "m4v": "video/mp4",
-                  "mov": "video/mp4"
-              },
-              map: {
-                  "/": "/var/www/html",
-                  ...,
-              }
-          });
-
-      For a complete list of defaults, see `Key to Mime Mappings`_ below.
-
-    * ``map``: An :green:`Object` of url to function or filesystem mapping.
-      The keys of the object are exact paths, regular expressions, partial
-      paths or globbed paths to be matched against incoming requests.  For
-      example, a key ``/myscript.html`` would match an incoming request for
-      ``http://example.com/myscript.html``.  The value to which the key is
-      set controls which function, module or filesystem path will be used.
-
-      If the value is a :green:`Function`, that function is used as
-      the callback function.  If the value is an :green:`Object` with
-      ``module`` or ``modulePath`` key set, it is assumed to
-      be a script name (the same as is used for
-      :ref:`require() <rampart-main:using the require function to import modules>`)
-      or a path with scripts.
-
-      If the value is a :green:`String`, or it is an :green:`Object` with
-      ``path`` set, it is assumed to be a mapping to the filesystem.  A
-      mapping to a filesystem path may also include headers.
-
-      Example:
-
-      .. code-block:: javascript
-
-        var server = require("rampart-server");
-
-        var pid = server.start({
-            bind: [ "[::]:8088", "0.0.0.0:8088" ], /* bind to all */
-            map :
-            {
-                "/":            "/usr/local/etc/httpd/htdocs"  /* map all file requests */
-                "/search.html": function (req) { ... },         /* search function */
-                "/images/":     {
-                                    path: "/path/to/my/jpgs/",
-                                    headers: {
-                                        "Content-Control": "max-age=31556952, public",
-                                        "X-Custom-Header": 1
-                                    }
-                                }
-            }
-        });
-
-      In the above example, as the longer path, the ``"/search.html"`` key
-      will have priority over ``"/"`` key, so that a request
-      ``http://localhost:8088/search.html`` will cause the function to be
-      executed while anything else will match ``"/"`` (assuming ``mapSort``
-      is not set to ``false``).
-
-      Keys/paths used for mapping a :green:`Function` may be given in one of
-      three different formats, which are tested for a match in the following order:
-
-      * Exact Paths - Paths starting with a "/" and having no unescaped ``*`` characters
-        will be matched exactly with the incoming request.
-
-      * Regular Expression paths - A path/key that starts with ``~`` will match the
-        Perl Regular Expression following the ``~``.  Example:
-        ``map: {"~/.*/myfile.html": myfunction }`` will match any path ending
-        in ``myfile.html`` and run the named function ``myfunction``.
-
-      * Glob Paths - A glob path will have the last priority for matching the
-        requested url.  Example: ``map: {"/*/myfile.html": myfunction2 }`` will
-        match the same as the example above, but would have lower priority.  If
-        both these examples were present, ``myfunction2`` would never match.
-
-      Keys/paths used for mapping to the **filesystem** are always taken as an Exact path.
-      Regular expressions and globs are not allowed.
-
-    * ``mapSort``: A :green:`Boolean`, whether to automatically sort the
-      mapped paths given as keys to the :green:`Object` passed to ``map`` below.
-      Default is ``true``.  If ``false``, paths from the ``map`` :green:`Object`
-      will be matched in the order they are given.
-
-      Note that regardless of this setting, paths are matched by type of path (see
-      below) with Exact paths tested first, then regular expression paths and
-      lastly glob paths.  However, it is usually desirable for longer paths to
-      have priority over shorter ones.  For example, if ``/`` and
-      ``/search.html`` are both specified (both are "Exact" paths),
-      ``/search.html`` should be checked first, otherwise ``/`` will match and
-      ``/search.html`` will never match.  When ``mapSort`` is ``true``,
-      key/paths are automatically sorted by length.
+* ``developerMode`` *(top-level)* - A :green:`Boolean`, whether to run
+  the server in a developer mode.  If ``true``, JavaScript and other
+  errors will cause the server to return a ``500 Internal Error``
+  message, with the error and error line numbers printed.  If false,
+  JavaScript errors will result in the generic ``404 Not Found Page`` or
+  alternatively, if set, ``notFoundFunc`` will be called and the request
+  object (``req``) will contain the key ``errMsg`` (``req.errMsg``),
+  with the error message.
 
 Return Value
-  A :green:`Number`, the pid of the current process, or if ``daemon`` is
-  set to ``true``, the pid of the forked server.
+''''''''''''
+
+A :green:`Number`, the pid of the current process, or if ``daemon`` is
+set to ``true``, the pid of the forked server.
 
 Server Usage Details
 --------------------

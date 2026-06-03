@@ -123,6 +123,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -237,6 +238,10 @@ interpreter.</p>
 <div><p>Calling <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code> function creates the new thread.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">([</span><span class="nx">persist</span><span class="p">]);</span>
+
+    <span class="cm">/* or, with an options object */</span>
+
+<span class="kd">var</span> <span class="nx">thr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">([</span><span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">persist</span></code> is a <span class="green">Boolean</span>, whether to create a
@@ -246,6 +251,62 @@ event loop is empty and a parent thread is otherwise ready to exit.</p>
 any child threads to finish pending events and allow it to exit.  This
 option thus requires an explicit <a class="reference internal" href="#thr-close">thr.close()</a> for a parent thread to
 completely exit.</p>
+<p>Alternatively, an <code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> may be passed with the
+following keys:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">keepOpen</span></code> - a <span class="green">Boolean</span>, equivalent to the <code class="docutils literal notranslate"><span class="pre">persist</span></code>
+argument above.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">bare</span></code> - a <span class="green">Boolean</span>.  When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the new thread is
+created with a <strong>minimal</strong> JavaScript heap: only ECMAScript
+primordials (<code class="docutils literal notranslate"><span class="pre">Math</span></code>, <code class="docutils literal notranslate"><span class="pre">JSON</span></code>, <code class="docutils literal notranslate"><span class="pre">Array</span></code>, <code class="docutils literal notranslate"><span class="pre">Object</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Promise</span></code>, <code class="docutils literal notranslate"><span class="pre">Map</span></code>/<code class="docutils literal notranslate"><span class="pre">Set</span></code>, etc.) plus the
+<code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code>/<code class="docutils literal notranslate"><span class="pre">rampart.event</span></code>/<code class="docutils literal notranslate"><span class="pre">rampart.lock</span></code>
+message-passing surface are installed.</p>
+<p>The bare thread does <strong>not</strong> receive:</p>
+<blockquote>
+<div><ul class="simple">
+<li>The rest of the <code class="docutils literal notranslate"><span class="pre">rampart</span></code> namespace (<code class="docutils literal notranslate"><span class="pre">rampart.utils</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart.crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.sql</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.import</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart.vector</span></code>, etc.).</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">process</span></code> global.</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">require()</span></code> function.</li>
+<li>WHATWG / Web platform globals (<code class="docutils literal notranslate"><span class="pre">URL</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">Blob</span></code>,
+etc.) — these are not installed and their lazy getters are
+not present.</li>
+<li>Any properties from the parent thread’s <code class="docutils literal notranslate"><span class="pre">globalThis</span></code> —
+the normal “copy of globals at thread creation” step is
+skipped (compare to the bullet under <a class="reference internal" href="#thr-exec">thr.exec()</a>
+Caveats: “Only global variables are copied to threads at
+the time of creation”).</li>
+</ul>
+</div></blockquote>
+<p>This is useful for building sandboxed execution environments —
+for example, the rampart-nodeshim <code class="docutils literal notranslate"><span class="pre">vm</span></code> module uses a bare
+thread per <code class="docutils literal notranslate"><span class="pre">vm.createContext()</span></code> to give each sandbox its own
+ECMAScript realm with no access to the host’s <code class="docutils literal notranslate"><span class="pre">rampart</span></code>
+surface or globals.  Bare threads can still communicate with
+the parent via <code class="docutils literal notranslate"><span class="pre">rampart.thread.put</span></code> / <code class="docutils literal notranslate"><span class="pre">onGet</span></code> / <code class="docutils literal notranslate"><span class="pre">getwait</span></code>
+/ <code class="docutils literal notranslate"><span class="pre">waitfor</span></code> / <code class="docutils literal notranslate"><span class="pre">del</span></code> because the <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code> surface
+is installed.</p>
+</li>
+</ul>
+</div></blockquote>
+<p>Examples:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* Legacy boolean — persistent thread. */</span>
+<span class="kd">var</span> <span class="nx">thr1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+
+<span class="cm">/* Options-object form — equivalent. */</span>
+<span class="kd">var</span> <span class="nx">thr2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">({</span> <span class="nx">keepOpen</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+
+<span class="cm">/* Bare (sandbox) thread with no host-global leakage. */</span>
+<span class="kd">var</span> <span class="nx">thr3</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">({</span> <span class="nx">bare</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+
+<span class="cm">/* Both options together are supported. */</span>
+<span class="kd">var</span> <span class="nx">thr4</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">({</span> <span class="nx">bare</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">keepOpen</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+</pre></div>
+</div>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>An <span class="green">Object</span> with two functions: <cite>exec</cite> and <cite>close</cite>.</dd>

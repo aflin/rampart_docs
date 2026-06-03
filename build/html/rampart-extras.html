@@ -93,6 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -164,9 +165,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-cmodule">rampart-cmodule</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-macros-for-c-modules">Rampart Macros for C Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#intl-and-whatwg">Intl and WHATWG</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-nodeshim-module">rampart-nodeshim Module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#loading">Loading</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#submodules-and-notable-gaps">Submodules and notable gaps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tested-libraries">Tested libraries</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#not-implemented">Not implemented</a></li>
 </ul>
 </li>
@@ -299,8 +302,17 @@ as well as extras to simplify the process and add extra functionality.</p>
 <li><code class="docutils literal notranslate"><span class="pre">port</span></code>         - <span class="green">Number</span>, use this value to set <code class="docutils literal notranslate"><span class="pre">ipPort</span></code> and
 <code class="docutils literal notranslate"><span class="pre">ipv6Port</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">redirPort</span></code>    - <span class="green">Number</span>, when launching a secure <code class="docutils literal notranslate"><span class="pre">https</span></code>
-server, also launch a <code class="docutils literal notranslate"><span class="pre">http</span></code> server using this port to redirect
-requests to the https server (assuming default port <code class="docutils literal notranslate"><span class="pre">443</span></code>).</li>
+server, also listen on this port for plain <code class="docutils literal notranslate"><span class="pre">http</span></code> and 301-redirect
+every request to the <code class="docutils literal notranslate"><span class="pre">https</span></code> listener.  This runs in-process via
+the underlying
+<span class="xref std std-ref">httpRedirect</span> option; no
+separate daemon is spawned.  The redirect <code class="docutils literal notranslate"><span class="pre">Location:</span></code> header
+includes the actual <code class="docutils literal notranslate"><span class="pre">https</span></code> port automatically, so non-standard
+configurations (e.g. https on <code class="docutils literal notranslate"><span class="pre">:8443</span></code>) work without further setup.
+For full control (e.g. <code class="docutils literal notranslate"><span class="pre">passthrough:</span></code> paths for ACME
+<code class="docutils literal notranslate"><span class="pre">/.well-known/acme-challenge/</span></code> renewals), set <code class="docutils literal notranslate"><span class="pre">httpRedirect</span></code>
+directly in <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code>; rampart-webserver will respect
+it instead of building one from <code class="docutils literal notranslate"><span class="pre">redirPort</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">redir</span></code>        - <span class="green">Boolean</span>, if true, set <code class="docutils literal notranslate"><span class="pre">redirPort</span></code> to
 <code class="docutils literal notranslate"><span class="pre">80</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">rotateLogs</span></code>   - <span class="green">Boolean</span>, if true, launch a monitor process
@@ -327,8 +339,8 @@ passed to the <a class="reference internal" href="rampart-server.html#start"><sp
 to continuously check that the server is running (every 10 seconds)
 and that the root index.html file can be reached (every 60 seconds).
 Default is false.</li>
-<li><code class="docutils literal notranslate"><span class="pre">stop</span></code>         - <span class="green">Boolean</span>, if true, stop the server, along
-with the redirect server and monitor processes if either was launched.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stop</span></code>         - <span class="green">Boolean</span>, if true, stop the server (along
+with the monitor process, if launched).</li>
 </ul>
 </div></blockquote>
 </div>
@@ -371,8 +383,8 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --ipPort             Number. Set ipv4 port
 --ipv6Port           Number. Set ipv6 port
 --port               Number. Set both ipv4 and ipv6 port
---redirPort          Number. Launch http-&gt;https redirect server and set port
---redir              Bool.   Launch http-&gt;https redirect server and set to port 80
+--redirPort          Number. Listen on this port and 301-redirect to the https server (in-process)
+--redir              Bool.   Equivalent to --redirPort 80
 --htmlRoot           String. Root directory from which to serve files
 --appsRoot           String. Root directory from which to serve apps
 --wsappsRoot         String. Root directory from which to serve wsapps
@@ -393,7 +405,7 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --developerMode      Bool.   Whether script errors result in 500 and return a stack trace.  Otherwise 404
 --letsencrypt        String. If using letsencrypt, the &#39;domain.tld&#39; name for automatic setup of https
                      (assumes --secure true and looks for &#39;/etc/letsencrypt/live/domain.tld/&#39; directory)
-                     (if redir is set, also map ./letsencrypt-wd/.well-known/ --&gt; http://mydom.com/.well-known/)
+                     (if redir is set, also map ./letsencrypt_wd/.well-known/ --&gt; http://mydom.com/.well-known/)
                      (if set to &quot;setup&quot;, don\&#39;t start https server, but do map &quot;.well-known/&quot; for http)
                      (sets port:443 unless set otherwise)
 --rootScripts        Bool.   Whether to treat *.js files in htmlRoot as apps (not secure)
@@ -534,7 +546,7 @@ root@example.com:/path/to/my/web_server# vi ./web_server_conf.js
 <span class="c1"># start the http webserver in letsencrypt setup mode (don&#39;t start https)</span>
 root@example.com:/path/to/my/web_server# rampart ./web_server_conf.js letssetup
 
-<span class="c1"># verify redirect server has mapped .well-known/</span>
+<span class="c1"># verify the .well-known/ directory was created under letsencrypt_wd/</span>
 root@example.com:/path/to/my/web_server# ls -a letsencrypt_wd/
 .  ..  .well-known
 
@@ -713,16 +725,27 @@ stat-like object (<code class="docutils literal notranslate"><span class="pre">s
 <code class="docutils literal notranslate"><span class="pre">isDirectory</span></code>, <code class="docutils literal notranslate"><span class="pre">isSymlink</span></code>, <code class="docutils literal notranslate"><span class="pre">permissions</span></code> etc.).</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadGet(name)</span></code></dt>
 <dd>Returns the entry’s contents as a <span class="green">Buffer</span> (decompressed).</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadExtract(name|nameArray|null,</span> <span class="pre">destDir)</span></code></dt>
-<dd>Extracts one entry, an array of entries, or every entry
-(when first argument is <code class="docutils literal notranslate"><span class="pre">null</span></code>) to <code class="docutils literal notranslate"><span class="pre">destDir</span></code>.  File modes,
-mtimes and symlinks are preserved.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadExtract(destDir</span> <span class="pre">[,</span> <span class="pre">filterArray])</span></code></dt>
+<dd>Extracts payload entries under <code class="docutils literal notranslate"><span class="pre">destDir</span></code>.  Without <code class="docutils literal notranslate"><span class="pre">filterArray</span></code>
+(or with <code class="docutils literal notranslate"><span class="pre">undefined</span></code>/<code class="docutils literal notranslate"><span class="pre">null</span></code>) every entry is written.  When
+<code class="docutils literal notranslate"><span class="pre">filterArray</span></code> is given, only entries whose name equals an element
+OR begins with <code class="docutils literal notranslate"><span class="pre">&quot;&lt;element&gt;/&quot;</span></code> are extracted – so a single name
+selects a whole subtree.  Leading <code class="docutils literal notranslate"><span class="pre">&quot;./&quot;</span></code> and trailing <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> are
+stripped from each filter element, so <code class="docutils literal notranslate"><span class="pre">&quot;web_server&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;./web_server&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;web_server/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;./web_server/&quot;</span></code> all select the same entries.
+File modes, mtimes and symlinks are preserved; the in-zip path is
+preserved relative to <code class="docutils literal notranslate"><span class="pre">destDir</span></code> (entry <code class="docutils literal notranslate"><span class="pre">html/index.html</span></code> lands
+at <code class="docutils literal notranslate"><span class="pre">destDir/html/index.html</span></code>).  Returns the number of files written.
+Refuses to extract entries whose path contains a <code class="docutils literal notranslate"><span class="pre">..</span></code> segment or
+starts with <code class="docutils literal notranslate"><span class="pre">/</span></code> (zip-slip protection).</dd>
 </dl>
 <p>A second set works on <strong>any</strong> zip file on disk – not the appended
 payload – and is always available:</p>
 <p><code class="docutils literal notranslate"><span class="pre">rampart.utils.zipList(zipPath)</span></code>
 <code class="docutils literal notranslate"><span class="pre">rampart.utils.zipGet(zipPath,</span> <span class="pre">name)</span></code>
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.zipExtract(zipPath,</span> <span class="pre">name|nameArray|null,</span> <span class="pre">destDir)</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.zipExtract(zipPath,</span> <span class="pre">destDir</span> <span class="pre">[,</span> <span class="pre">filterArray])</span></code></p>
+<blockquote>
+<div>Same filter semantics as <code class="docutils literal notranslate"><span class="pre">payloadExtract</span></code>.</div></blockquote>
 <p>These are useful for installers, update packages and similar tooling
 that needs to inspect a zip without unpacking it first.</p>
 </div>
@@ -1992,6 +2015,38 @@ codable in C. It is also the basis of the <a class="reference internal" href="ra
 </dd>
 </dl>
 </div>
+<div class="section" id="intl-and-whatwg">
+<h2>Intl and WHATWG<a class="headerlink" href="#intl-and-whatwg" title="Permalink to this headline">¶</a></h2>
+<p>Rampart implements substantial subsets of two standards bodies’ web/JS
+platform globals:</p>
+<ul class="simple">
+<li><strong>Intl</strong> (ECMA-402, the ECMAScript Internationalization API) —
+<code class="docutils literal notranslate"><span class="pre">Intl.Collator</span></code>, <code class="docutils literal notranslate"><span class="pre">Intl.DateTimeFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">Intl.NumberFormat</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Intl.PluralRules</span></code>, <code class="docutils literal notranslate"><span class="pre">Intl.RelativeTimeFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">Intl.ListFormat</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Intl.DisplayNames</span></code>, <code class="docutils literal notranslate"><span class="pre">Intl.Segmenter</span></code>, <code class="docutils literal notranslate"><span class="pre">Intl.Locale</span></code>, and the
+<code class="docutils literal notranslate"><span class="pre">Intl.getCanonicalLocales</span></code> / <code class="docutils literal notranslate"><span class="pre">Intl.supportedValuesOf</span></code> statics.
+Backed by vendored ICU4C.</li>
+<li><strong>WHATWG / W3C Web Platform APIs</strong> — <code class="docutils literal notranslate"><span class="pre">fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">URL</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Headers</span></code> / <code class="docutils literal notranslate"><span class="pre">Request</span></code> / <code class="docutils literal notranslate"><span class="pre">Response</span></code> / <code class="docutils literal notranslate"><span class="pre">FormData</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Blob</span></code> / <code class="docutils literal notranslate"><span class="pre">File</span></code>, the <code class="docutils literal notranslate"><span class="pre">ReadableStream</span></code> / <code class="docutils literal notranslate"><span class="pre">WritableStream</span></code> /
+<code class="docutils literal notranslate"><span class="pre">TransformStream</span></code> family, <code class="docutils literal notranslate"><span class="pre">WebSocket</span></code>, <code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code>,
+<code class="docutils literal notranslate"><span class="pre">crypto</span></code> (Web Crypto), <code class="docutils literal notranslate"><span class="pre">structuredClone</span></code>, <code class="docutils literal notranslate"><span class="pre">queueMicrotask</span></code>,
+<code class="docutils literal notranslate"><span class="pre">EventTarget</span></code> / <code class="docutils literal notranslate"><span class="pre">Event</span></code> and subclasses, <code class="docutils literal notranslate"><span class="pre">EventSource</span></code>,
+<code class="docutils literal notranslate"><span class="pre">localStorage</span></code> / <code class="docutils literal notranslate"><span class="pre">sessionStorage</span></code>, <code class="docutils literal notranslate"><span class="pre">caches</span></code>, and more.</li>
+</ul>
+<p>Both surfaces are <strong>lazy-loaded</strong>: <code class="docutils literal notranslate"><span class="pre">rampart-intl.so</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rampart-whatwg.so</span></code> are only <code class="docutils literal notranslate"><span class="pre">dlopen()</span></code>-ed when JS first references
+one of the relevant names.  Scripts that never touch these globals pay
+zero startup cost.</p>
+<p>Conformance is <strong>partial and experimental</strong>.  Intl tracks ECMA-402
+through what ICU exposes natively; WHATWG / W3C conformance is
+strongest for APIs that don’t assume a browser/DOM context (Web Crypto,
+URL, mimesniff, <code class="docutils literal notranslate"><span class="pre">data:</span></code> URLs, value-stream APIs, HTTP/1.1 <code class="docutils literal notranslate"><span class="pre">fetch</span></code>)
+and weaker or absent for anything needing <code class="docutils literal notranslate"><span class="pre">document</span></code> / <code class="docutils literal notranslate"><span class="pre">window</span></code> /
+<code class="docutils literal notranslate"><span class="pre">iframe</span></code>, <code class="docutils literal notranslate"><span class="pre">WebAssembly</span></code>, HTTP/2 streaming upload, or <code class="docutils literal notranslate"><span class="pre">br</span></code> /
+<code class="docutils literal notranslate"><span class="pre">zstd</span></code> content-encoding (servers fall back to <code class="docutils literal notranslate"><span class="pre">gzip</span></code>).  Behaviors
+may change as the implementations track upstream test suites.</p>
+</div>
 <div class="section" id="rampart-nodeshim-module">
 <h2>rampart-nodeshim Module<a class="headerlink" href="#rampart-nodeshim-module" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
@@ -2002,18 +2057,29 @@ layer may be substantially altered or dropped entirely in a future
 release.  Don’t rely on it for production work.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">rampart-nodeshim</span></code> is a compatibility layer that lets a subset of
-node.js <strong>core-module</strong> code run under rampart.  It assumes the reader
-is familiar with node’s APIs; this section only enumerates the
-available submodules and notes the gaps.</p>
-<p>It is <strong>not</strong> a general node-compatibility layer for arbitrary npm
-packages.  There is no <code class="docutils literal notranslate"><span class="pre">node_modules/</span></code> resolver, no support for
-package.json <code class="docutils literal notranslate"><span class="pre">exports</span></code> / <code class="docutils literal notranslate"><span class="pre">imports</span></code> maps, no ESM, no native-addon
-loading, no transitive dependency installation.  The intent is to let
-<em>your own</em> code use node-style API names — <code class="docutils literal notranslate"><span class="pre">require('path')</span></code>,
-<code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Worker(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">fs.readFileSync(...)</span></code> — without rewriting it
-against rampart’s native modules.  Dropping a folder full of npm
-packages into a rampart project will not work; running a typical npm
-package against the shim usually will not work.</p>
+node.js <strong>core-module</strong> code, and some npm packages, run under rampart.
+It assumes the reader is familiar with node’s APIs; this section only
+enumerates the available submodules and notes the gaps.</p>
+<p><strong>Prefer rampart’s native modules.</strong>  Where rampart provides a module
+for the task (<code class="docutils literal notranslate"><span class="pre">rampart.utils</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.sql</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.crypto</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart.curl</span></code>, the HTTP server, and the others documented here), use
+it.  Those modules are mostly written in C and are considerably faster
+than the equivalent node packages running through this layer.  nodeshim
+is for portability — reusing existing node-style code — not for speed.</p>
+<p>Most code run through nodeshim requires the <strong>transpiler</strong> (<code class="docutils literal notranslate"><span class="pre">-t</span></code>); see
+the note below.  It loads <strong>JavaScript only</strong> — compiled native add-ons
+(<code class="docutils literal notranslate"><span class="pre">.node</span></code> binaries) are not supported.</p>
+<p>It does <strong>not</strong> provide full node compatibility.  There is no ESM, no
+native-addon loading, and no transitive dependency installation (you
+supply the <code class="docutils literal notranslate"><span class="pre">node_modules/</span></code> tree yourself).  Coverage of the core
+modules is partial (see the gaps noted below).  The intent is to let
+node-style code — both <em>your own</em> (<code class="docutils literal notranslate"><span class="pre">require('path')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fs.readFileSync(...)</span></code>) and many pure-JavaScript npm packages — run
+with little or no modification.  Under the transpiler, a installed
+<code class="docutils literal notranslate"><span class="pre">node_modules/</span></code> package resolves by bare name (<code class="docutils literal notranslate"><span class="pre">require('cheerio')</span></code>),
+honoring its package.json <code class="docutils literal notranslate"><span class="pre">main</span></code>/<code class="docutils literal notranslate"><span class="pre">exports</span></code> entry.  Whether any given
+package works is best-effort and varies by package; see <em>Tested
+libraries</em> below.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Most real-world node-style code uses ES2015+ syntax — <code class="docutils literal notranslate"><span class="pre">let</span></code> /
@@ -2033,7 +2099,9 @@ your <em>own</em> code is restricted to ES5 syntax.  The submodule
 implementations themselves are ES5 internally, so the shim’s
 surface (<code class="docutils literal notranslate"><span class="pre">fs.readFileSync(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">EventEmitter()</span></code>, etc.)
 works either way — it’s <em>your</em> call sites that need the
-transpiler if they use modern syntax.</p>
+transpiler if they use modern syntax.  npm packages are almost
+always written in modern JavaScript, so in practice running one
+through nodeshim requires <code class="docutils literal notranslate"><span class="pre">-t</span></code> in nearly all cases.</p>
 </div>
 <div class="section" id="loading">
 <h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
@@ -2081,8 +2149,8 @@ provided.</li>
 <li><code class="docutils literal notranslate"><span class="pre">fs</span></code> — sync API plus callback variants.  <code class="docutils literal notranslate"><span class="pre">fs.openAsBlob</span></code> and
 <code class="docutils literal notranslate"><span class="pre">fs.statSync({bigint:true})</span></code> blocked on Blob/BigInt.  <code class="docutils literal notranslate"><span class="pre">fs.watch</span></code>
 uses <code class="docutils literal notranslate"><span class="pre">inotify</span></code> on Linux, polling on macOS/BSD (no <code class="docutils literal notranslate"><span class="pre">kqueue</span></code>
-backend).  <code class="docutils literal notranslate"><span class="pre">fs.createReadStream</span></code>/<code class="docutils literal notranslate"><span class="pre">WriteStream</span></code> are minimal until
-the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module lands — no pipe/pause/resume.</li>
+backend).  <code class="docutils literal notranslate"><span class="pre">fs.createReadStream</span></code>/<code class="docutils literal notranslate"><span class="pre">WriteStream</span></code> are minimal; for
+full stream behavior use the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module directly.</li>
 <li><code class="docutils literal notranslate"><span class="pre">module</span></code> — <code class="docutils literal notranslate"><span class="pre">Module.builtinModules</span></code>, <code class="docutils literal notranslate"><span class="pre">isBuiltin</span></code>,
 <code class="docutils literal notranslate"><span class="pre">createRequire</span></code>, <code class="docutils literal notranslate"><span class="pre">wrap</span></code>.  No compile-cache / sourcemaps / ESM.</li>
 <li><code class="docutils literal notranslate"><span class="pre">os</span></code> — full surface on Linux.  On macOS/BSD: <code class="docutils literal notranslate"><span class="pre">os.cpus()</span></code> returns
@@ -2124,18 +2192,68 @@ copies happen anyway).  <code class="docutils literal notranslate"><span class="
 top-level program.</li>
 <li><code class="docutils literal notranslate"><span class="pre">zlib</span></code> — sync surface plus callback variants, backed by libdeflate.
 <code class="docutils literal notranslate"><span class="pre">unzipSync</span></code> auto-detects gzip vs zlib framing.  <code class="docutils literal notranslate"><span class="pre">crc32</span></code>/
-<code class="docutils literal notranslate"><span class="pre">adler32</span></code> included.  Stream classes (<code class="docutils literal notranslate"><span class="pre">createGzip</span></code>,
-<code class="docutils literal notranslate"><span class="pre">createGunzip</span></code>, <code class="docutils literal notranslate"><span class="pre">Brotli*</span></code>, <code class="docutils literal notranslate"><span class="pre">Zstd*</span></code>) throw <code class="docutils literal notranslate"><span class="pre">ENOSYS</span></code> pending
-the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module.</li>
+<code class="docutils literal notranslate"><span class="pre">adler32</span></code> included.  Stream classes (<code class="docutils literal notranslate"><span class="pre">createGzip</span></code>/<code class="docutils literal notranslate"><span class="pre">createGunzip</span></code>
+etc.) are backed by the WHATWG <code class="docutils literal notranslate"><span class="pre">CompressionStream</span></code> and integrate
+with the <code class="docutils literal notranslate"><span class="pre">stream</span></code> module; <code class="docutils literal notranslate"><span class="pre">Brotli*</span></code> / <code class="docutils literal notranslate"><span class="pre">Zstd*</span></code> are not supported.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stream</span></code> — <code class="docutils literal notranslate"><span class="pre">Readable</span></code>/<code class="docutils literal notranslate"><span class="pre">Writable</span></code>/<code class="docutils literal notranslate"><span class="pre">Duplex</span></code>/<code class="docutils literal notranslate"><span class="pre">Transform</span></code>/
+<code class="docutils literal notranslate"><span class="pre">PassThrough</span></code> plus <code class="docutils literal notranslate"><span class="pre">pipeline</span></code>/<code class="docutils literal notranslate"><span class="pre">finished</span></code> and WHATWG interop
+(<code class="docutils literal notranslate"><span class="pre">Readable.toWeb</span></code>/<code class="docutils literal notranslate"><span class="pre">fromWeb</span></code>).  Backed by WHATWG streams
+internally.  Flowing (<code class="docutils literal notranslate"><span class="pre">'data'</span></code>) and paused (<code class="docutils literal notranslate"><span class="pre">'readable'</span></code> +
+<code class="docutils literal notranslate"><span class="pre">read()</span></code>) modes, <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">await…of</span></code> async iteration, backpressure
+and <code class="docutils literal notranslate"><span class="pre">'drain'</span></code> are supported.</li>
+<li><code class="docutils literal notranslate"><span class="pre">http</span></code> / <code class="docutils literal notranslate"><span class="pre">https</span></code> — <code class="docutils literal notranslate"><span class="pre">createServer</span></code> (backed by <code class="docutils literal notranslate"><span class="pre">rampart.server</span></code>)
+and a <code class="docutils literal notranslate"><span class="pre">request</span></code>/<code class="docutils literal notranslate"><span class="pre">get</span></code> client (backed by <code class="docutils literal notranslate"><span class="pre">rampart.curl</span></code>), with
+<code class="docutils literal notranslate"><span class="pre">IncomingMessage</span></code>/<code class="docutils literal notranslate"><span class="pre">ServerResponse</span></code>, headers and streaming bodies.
+Not a byte-for-byte port of node’s HTTP internals; some advanced
+socket/agent options are absent.</li>
+<li><code class="docutils literal notranslate"><span class="pre">net</span></code> — <code class="docutils literal notranslate"><span class="pre">Socket</span></code>/<code class="docutils literal notranslate"><span class="pre">Server</span></code> TCP surface (<code class="docutils literal notranslate"><span class="pre">createServer</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connect</span></code>), backed by <code class="docutils literal notranslate"><span class="pre">rampart.net</span></code>.  <code class="docutils literal notranslate"><span class="pre">'data'</span></code>/<code class="docutils literal notranslate"><span class="pre">'end'</span></code>/
+<code class="docutils literal notranslate"><span class="pre">'error'</span></code>/<code class="docutils literal notranslate"><span class="pre">'close'</span></code> events, multi-connection.  No Unix-domain
+sockets, no <code class="docutils literal notranslate"><span class="pre">net.BlockList</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tls</span></code> — minimum-viable stub: it loads, but the actual TLS
+operations throw <code class="docutils literal notranslate"><span class="pre">ERR_NOT_IMPLEMENTED</span></code>.  Use <code class="docutils literal notranslate"><span class="pre">https</span></code> (curl-backed)
+for client TLS.</li>
+<li><code class="docutils literal notranslate"><span class="pre">child_process</span></code> — <code class="docutils literal notranslate"><span class="pre">spawn</span></code>/<code class="docutils literal notranslate"><span class="pre">exec</span></code>/<code class="docutils literal notranslate"><span class="pre">execFile</span></code> with stdio pipes,
+signals, <code class="docutils literal notranslate"><span class="pre">env</span></code> and <code class="docutils literal notranslate"><span class="pre">cwd</span></code>, via fresh <code class="docutils literal notranslate"><span class="pre">fork(2)</span></code>/<code class="docutils literal notranslate"><span class="pre">execvp(2)</span></code>
+natives (not a wrapper around <code class="docutils literal notranslate"><span class="pre">rampart.utils.exec</span></code>).  <code class="docutils literal notranslate"><span class="pre">fork()</span></code>
+(Node IPC channel) is not implemented.</li>
+<li><code class="docutils literal notranslate"><span class="pre">readline</span></code> — <code class="docutils literal notranslate"><span class="pre">createInterface</span></code>/<code class="docutils literal notranslate"><span class="pre">Interface</span></code>/
+<code class="docutils literal notranslate"><span class="pre">emitKeypressEvents</span></code>.  Tier 1 programmatic (stream input → <code class="docutils literal notranslate"><span class="pre">'line'</span></code>)
+and Tier 2 terminal (raw mode, VT100 key decoding, history, tab
+completion).  Pure JS over the <code class="docutils literal notranslate"><span class="pre">tty</span></code> primitives; no async-iterator
+interface.</li>
+<li><code class="docutils literal notranslate"><span class="pre">repl</span></code> — a <code class="docutils literal notranslate"><span class="pre">REPLServer</span></code> over paired input/output streams (eval,
+output formatting, basic dot-commands).  Pairs with <code class="docutils literal notranslate"><span class="pre">readline</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tty</span></code> — <code class="docutils literal notranslate"><span class="pre">isatty</span></code>, <code class="docutils literal notranslate"><span class="pre">ReadStream</span></code>/<code class="docutils literal notranslate"><span class="pre">WriteStream</span></code> with
+<code class="docutils literal notranslate"><span class="pre">setRawMode</span></code>/<code class="docutils literal notranslate"><span class="pre">isTTY</span></code>/<code class="docutils literal notranslate"><span class="pre">columns</span></code>/<code class="docutils literal notranslate"><span class="pre">rows</span></code>/<code class="docutils literal notranslate"><span class="pre">getWindowSize</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">vm</span></code> — <code class="docutils literal notranslate"><span class="pre">runInNewContext</span></code>/<code class="docutils literal notranslate"><span class="pre">runInThisContext</span></code>/<code class="docutils literal notranslate"><span class="pre">compileFunction</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Script</span></code>, backed by a bare <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code> sandbox.  Cross-realm
+<code class="docutils literal notranslate"><span class="pre">instanceof</span></code> differs from node (prototypes are preserved through the
+marshaller).  <code class="docutils literal notranslate"><span class="pre">vm.SourceTextModule</span></code>/<code class="docutils literal notranslate"><span class="pre">SyntheticModule</span></code> throw — no ESM.</li>
+<li><code class="docutils literal notranslate"><span class="pre">async_hooks</span></code> — primarily <code class="docutils literal notranslate"><span class="pre">AsyncLocalStorage</span></code> (store binding
+propagates across <code class="docutils literal notranslate"><span class="pre">await</span></code>, <code class="docutils literal notranslate"><span class="pre">.then</span></code> chains, <code class="docutils literal notranslate"><span class="pre">setTimeout</span></code> and
+microtasks).  The low-level <code class="docutils literal notranslate"><span class="pre">createHook</span></code> surface is minimal.</li>
+<li><code class="docutils literal notranslate"><span class="pre">diagnostics_channel</span></code> — <code class="docutils literal notranslate"><span class="pre">channel</span></code>/<code class="docutils literal notranslate"><span class="pre">subscribe</span></code>/<code class="docutils literal notranslate"><span class="pre">unsubscribe</span></code>/
+<code class="docutils literal notranslate"><span class="pre">hasSubscribers</span></code> (synchronous publish).</li>
+<li><code class="docutils literal notranslate"><span class="pre">http2</span></code> — thin shim; loads with a partial surface, not a full HTTP/2
+implementation.</li>
+<li><code class="docutils literal notranslate"><span class="pre">v8</span></code> — informational surface (<code class="docutils literal notranslate"><span class="pre">getHeapStatistics</span></code> etc.) and
+<code class="docutils literal notranslate"><span class="pre">serialize</span></code>/<code class="docutils literal notranslate"><span class="pre">deserialize</span></code>; not a real V8 binding.</li>
 </ul>
+</div>
+<div class="section" id="tested-libraries">
+<h3>Tested libraries<a class="headerlink" href="#tested-libraries" title="Permalink to this headline">¶</a></h3>
+<p>A number of popular npm libraries have been exercised against nodeshim
+(under <code class="docutils literal notranslate"><span class="pre">-t</span></code>), among them <code class="docutils literal notranslate"><span class="pre">axios</span></code>, <code class="docutils literal notranslate"><span class="pre">cheerio</span></code>, <code class="docutils literal notranslate"><span class="pre">commander</span></code>,
+<code class="docutils literal notranslate"><span class="pre">csv-parse</span></code>, <code class="docutils literal notranslate"><span class="pre">fastify</span></code>, <code class="docutils literal notranslate"><span class="pre">fs-extra</span></code>, <code class="docutils literal notranslate"><span class="pre">glob</span></code>, <code class="docutils literal notranslate"><span class="pre">koa</span></code>,
+<code class="docutils literal notranslate"><span class="pre">markdown-it</span></code>, <code class="docutils literal notranslate"><span class="pre">node-fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">pino</span></code>, <code class="docutils literal notranslate"><span class="pre">rimraf</span></code>, <code class="docutils literal notranslate"><span class="pre">yaml</span></code> and
+<code class="docutils literal notranslate"><span class="pre">zod</span></code>.  Coverage varies by library and is expanding; treat
+compatibility as best-effort rather than guaranteed.</p>
 </div>
 <div class="section" id="not-implemented">
 <h3>Not implemented<a class="headerlink" href="#not-implemented" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">async_hooks</span></code>, <code class="docutils literal notranslate"><span class="pre">cluster</span></code>, <code class="docutils literal notranslate"><span class="pre">dgram</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_channel</span></code>,
-<code class="docutils literal notranslate"><span class="pre">domain</span></code>, <code class="docutils literal notranslate"><span class="pre">http</span></code>/<code class="docutils literal notranslate"><span class="pre">https</span></code>/<code class="docutils literal notranslate"><span class="pre">http2</span></code>, <code class="docutils literal notranslate"><span class="pre">inspector</span></code>,
-<code class="docutils literal notranslate"><span class="pre">net</span></code>/<code class="docutils literal notranslate"><span class="pre">tls</span></code> (planned), <code class="docutils literal notranslate"><span class="pre">repl</span></code>, <code class="docutils literal notranslate"><span class="pre">stream</span></code>, <code class="docutils literal notranslate"><span class="pre">child_process</span></code>,
-<code class="docutils literal notranslate"><span class="pre">readline</span></code>, <code class="docutils literal notranslate"><span class="pre">tty</span></code>, <code class="docutils literal notranslate"><span class="pre">vm</span></code>, <code class="docutils literal notranslate"><span class="pre">node:test</span></code>, <code class="docutils literal notranslate"><span class="pre">trace_events</span></code>,
-<code class="docutils literal notranslate"><span class="pre">v8</span></code>, <code class="docutils literal notranslate"><span class="pre">wasi</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">cluster</span></code>, <code class="docutils literal notranslate"><span class="pre">dgram</span></code>, <code class="docutils literal notranslate"><span class="pre">domain</span></code>, <code class="docutils literal notranslate"><span class="pre">inspector</span></code>, <code class="docutils literal notranslate"><span class="pre">node:test</span></code>,
+<code class="docutils literal notranslate"><span class="pre">trace_events</span></code>, <code class="docutils literal notranslate"><span class="pre">wasi</span></code>.</p>
 </div>
 </div>
 </div>

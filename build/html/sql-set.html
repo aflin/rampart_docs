@@ -95,6 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-functions">Database Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-indexing">Database Indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#vector-search">Vector Search</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sql-server-funcs.html">Server Functions</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Server Properties</a><ul>
@@ -171,6 +172,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#likevrows">likevRows</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likevef">likevEf</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likevpqnprobe">likevPqNprobe</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#embedding-properties">Embedding Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#llamaembed">llamaEmbed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#llamaembedperthread">llamaEmbedPerThread</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#indexing-properties">Indexing properties</a><ul>
@@ -253,6 +259,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -1500,9 +1507,92 @@ integer when you specifically want trade more recall for less
 latency (e.g. <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">likevpqnprobe=64</span></code> for an interactive UI), or
 more recall for more latency (<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">likevpqnprobe=512</span></code>).  Setting
 to a value &gt; nlist is silently capped.</p>
-<p>Pair with <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> re-rank (see
-<span class="xref std std-ref">Querying with LIKEV</span>)
-to recover near-exact recall on top of the wider candidate pool.</p>
+<p><code class="docutils literal notranslate"><span class="pre">$rank</span></code> is exact at the column’s stored precision regardless of
+<code class="docutils literal notranslate"><span class="pre">likevPqNprobe</span></code> — LIKEV re-scores each candidate against the
+actual stored column bytes after the index step.  This setting
+controls how <em>many</em> and <em>which</em> candidates the index surfaces;
+once surfaced, they are scored exactly.  See
+<span class="xref std std-ref">Querying with LIKEV</span>.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="embedding-properties">
+<h2>Embedding Properties<a class="headerlink" href="#embedding-properties" title="Permalink to this headline">¶</a></h2>
+<p>These settings configure the in-process <code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code> embedding model
+used by the <a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a> SQL function and by
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s auto-coercion of string parameters to vectors.  See
+<a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> for the end-to-end
+pipeline these settings fit into.</p>
+<div class="section" id="llamaembed">
+<h3>llamaEmbed<a class="headerlink" href="#llamaembed" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Path to a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code> embedding model.  Setting this loads the model
+into the SQL process; once loaded, the model is shared by all
+subsequent calls to <a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a> and by
+any <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> predicate whose right-hand side is a string (which is
+auto-coerced via <code class="docutils literal notranslate"><span class="pre">embed()</span></code>).</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s1">&#39;/models/all-minilm-l6-v2_f16.gguf&#39;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Loading requires the <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> module to be installed.
+If no llamacpp module is already loaded, this <code class="docutils literal notranslate"><span class="pre">set</span></code> call
+auto-tries <code class="docutils literal notranslate"><span class="pre">require('rampart-llamacpp')</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">rampart-llamacpp_cuda</span></code>, then <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp_cpu</span></code> — whichever
+resolves first wins, so no explicit <code class="docutils literal notranslate"><span class="pre">require()</span></code> is typically
+needed.  To force a specific variant when more than one is
+installed, call <code class="docutils literal notranslate"><span class="pre">require('rampart-llamacpp_cpu')</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">_cuda</span></code>, <code class="docutils literal notranslate"><span class="pre">_metal</span></code>, etc.) <strong>before</strong> <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code>;
+<code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> resolves the embed functions via <code class="docutils literal notranslate"><span class="pre">dlsym</span></code> from
+whichever variant is already loaded, so a manually required
+module always takes precedence.  If no variant resolves,
+<code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code> throws with a clear “cannot load
+rampart-llamacpp” message.  <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> ships separately
+in <code class="docutils literal notranslate"><span class="pre">rampart-langtools</span></code>; see its module documentation for build
+variants and install instructions.</p>
+<p>The model is loaded once per process (llama.cpp deduplicates
+repeated loads of the same path, so re-setting the same model from
+multiple threads or workers is effectively free).  To swap models,
+re-set <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> to a different path; the previous model is
+released when no embed calls are in flight.</p>
+<p>The output dimensionality of every <code class="docutils literal notranslate"><span class="pre">embed()</span></code> call is determined
+by the loaded model — typical values are 384
+(<code class="docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code>), 768 (<code class="docutils literal notranslate"><span class="pre">BGE-base</span></code>), 1024 / 1536
+(<code class="docutils literal notranslate"><span class="pre">OpenAI</span> <span class="pre">Ada</span></code>-class models served via llama.cpp), etc.  Plan your
+<code class="docutils literal notranslate"><span class="pre">varvec*</span></code> column width to match.</p>
+<p>No default — <code class="docutils literal notranslate"><span class="pre">embed()</span></code> raises a runtime error if no model has
+been loaded.</p>
+</div></blockquote>
+</div>
+<div class="section" id="llamaembedperthread">
+<h3>llamaEmbedPerThread<a class="headerlink" href="#llamaembedperthread" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Whether each worker thread keeps its own <code class="docutils literal notranslate"><span class="pre">llama_context</span></code> over the
+shared model (default <code class="docutils literal notranslate"><span class="pre">true</span></code>).</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbedPerThread</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>   <span class="c1">// default</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbedPerThread</span><span class="o">:</span> <span class="kc">false</span><span class="p">});</span>  <span class="c1">// serialize through one context</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><strong>``true`` (default)</strong> — concurrent <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls from
+multiple SQL worker threads run in parallel on GPU (separate
+CUDA streams) or multi-core CPU (separate per-context scratch
+buffers).  This is the right choice for any bulk-embed workload
+and for high-QPS <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> traffic.  The shared model itself is
+loaded once into VRAM / RAM regardless of thread count
+(llama.cpp internally deduplicates), so the cost is one
+<code class="docutils literal notranslate"><span class="pre">llama_context</span></code> per thread — modest, typically a few hundred
+MB on GPU.</li>
+<li><strong>``false``</strong> — all <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls serialize through a single
+<code class="docutils literal notranslate"><span class="pre">llama_context</span></code> guarded by an internal mutex.  Useful in
+memory-constrained environments where the per-thread context
+cost is prohibitive, or in single-threaded workloads where the
+overhead serves no purpose.</li>
+</ul>
+<p>Setting this property in any one thread/connection applies
+process-wide for subsequent <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls.  Changing it while
+embed calls are in flight is safe — already-issued calls run to
+completion under their current mode; the new mode takes effect on
+the next call.</p>
 </div></blockquote>
 </div>
 </div>

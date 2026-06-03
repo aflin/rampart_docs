@@ -230,6 +230,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -390,418 +391,240 @@ statement:</p>
 <h3>Configuring and Starting the Server<a class="headerlink" href="#configuring-and-starting-the-server" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="start">
 <h4>start()<a class="headerlink" href="#start" title="Permalink to this headline">¶</a></h4>
-<p>The server is configured and started using the <code class="docutils literal notranslate"><span class="pre">start()</span></code> function.
-Options are passed to the function in a single <span class="green">Object</span>.</p>
-<p>Usage:</p>
+<p>The server is configured and started by calling <code class="docutils literal notranslate"><span class="pre">start()</span></code> with a single
+options <span class="green">Object</span>.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
 
 <span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">Options</span><span class="p">);</span>
 </pre></div>
 </div>
-<dl class="docutils">
-<dt>Where:</dt>
-<dd><p class="first"><code class="docutils literal notranslate"><span class="pre">Options</span></code> is an <span class="green">Object</span> with the following properties:</p>
-<blockquote class="last">
-<div><ul>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">bind</span></code> - An <span class="green">Array</span> of <span class="green">Strings</span>, with each <span class="green">String</span>
-representing an ip address and port.  If not specified, the server will
-bind to port 8088 on the loopback device (i.e. 127.0.0.1, which is only
-accessible from the same machine), using the following default value:</p>
-<p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">&quot;[::1]:8088&quot;,</span> <span class="pre">&quot;127.0.0.1:8088&quot;</span> <span class="pre">]</span></code>.</p>
-<p>When specifying an Ipv6 address, bracket notation is required (e.g.
-<code class="docutils literal notranslate"><span class="pre">[2001:db8::1111:2222]:80</span></code>) while a dot-decimal notation is used for
-ipv4 (e.g. <code class="docutils literal notranslate"><span class="pre">172.16.254.1:80</span></code>).  To bind to all ip addresses using port 80,
-the following may be used:</p>
-<p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">&quot;[::]:80&quot;,</span> <span class="pre">&quot;0.0.0.0:80&quot;</span> <span class="pre">]</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">scriptTimeout</span></code>: A <span class="green">Number</span>, amount of time in seconds (or fraction
-thereof) to wait for a script to run before canceling the request and
-returning a <code class="docutils literal notranslate"><span class="pre">500</span> <span class="pre">Internal</span> <span class="pre">Server</span> <span class="pre">Error</span></code> timeout message to the
-connecting client.  Default is no timeout/unlimited.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code>: A <span class="green">Number</span>, amount of time in seconds (or fraction
-thereof) to wait for a connected client to send a request. Default is no
-timeout/unlimited.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code>: A <span class="green">Number</span>, the maximum size in bytes of an HTTP
-request body.  If a request body exceeds this limit, the server will
-stop reading the body and return a <code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Entity</span> <span class="pre">Too</span> <span class="pre">Large</span></code> response
-to the client.  For WebSocket connections, this limits the maximum
-size of a single message.  Default is <code class="docutils literal notranslate"><span class="pre">52428800</span></code> (50 MB).  Set to
-<code class="docutils literal notranslate"><span class="pre">0</span></code> to disable the limit (not recommended).</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">log</span></code>: A <span class="green">Boolean</span>, whether to log each request.  Access requests
-are logged to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and errors are logged to <code class="docutils literal notranslate"><span class="pre">stderr</span></code> unless
-<code class="docutils literal notranslate"><span class="pre">accessLog</span></code> and/or <code class="docutils literal notranslate"><span class="pre">errorLog</span></code> below are set.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">accessLog</span></code>: A <span class="green">String</span>, the location of the access log.  The
-default, if not specified is to log to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>.  If given, the log
-file will be closed and re-opened upon sending the rampart executable
-a <code class="docutils literal notranslate"><span class="pre">USR1</span></code> signal, which allows log rotation.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">errorLog</span></code>: A <span class="green">String</span>, the location of the error log.  The
-default, if not specified is to log to <code class="docutils literal notranslate"><span class="pre">stderr</span></code>. If given, the log
-file will be closed and re-opened upon sending the rampart executable
-a <code class="docutils literal notranslate"><span class="pre">USR1</span></code> signal, which allows log rotation.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logIpFromHeader</span></code>: A <span class="green">String</span>, a header name to use for logging
-the ip address of the request.  In cases where the server is behind a proxy
-such as nginx, instead of logging <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, setting, e.g.
-<code class="docutils literal notranslate"><span class="pre">proxy_set_header</span> <span class="pre">Remote_address</span> <span class="pre">$remote_addr;</span></code> in the appropriate section
-of <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code>, and setting <code class="docutils literal notranslate"><span class="pre">logIpFromHeader:</span> <span class="pre">&quot;Remote_address&quot;</span></code>
-here will log the ip address of the client connecting to nginx, rather than the
-ip address of the nginx proxy server.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">daemon</span></code>: A <span class="green">Boolean</span>, whether to fork and detach from the
-controlling terminal.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the <code class="docutils literal notranslate"><span class="pre">start()</span></code> function will return
-the pid of the server. Otherwise the pid of the current process is
-returned. The default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">useThreads</span></code>: A <span class="green">Boolean</span>, whether the server is multi-threaded.
-If <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">threads</span></code> below is not set, the server will create a
-threadpool consisting of one thread per cpu core.  If set <code class="docutils literal notranslate"><span class="pre">false</span></code>, it is
-equivalent to setting <code class="docutils literal notranslate"><span class="pre">useThreads</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">threads</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>.
-The default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">threads</span></code>: A <span class="green">Number</span>, the number of threads to create for the
-server thread pool.  The default, if <code class="docutils literal notranslate"><span class="pre">useThreads</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> or is
-unset, is the number of cpu cores on the current system.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">maxRead</span></code>: A <span class="green">Number</span>, the largest single read from a client
-allowed in the event loop.  If reading data larger than this, it will
-be done in multiple cycles of the event loop in order to allow the
-servicing of other requests.  A high number can make receiving large
-requests unfairly slow down other clients, especially if the server is
-not using multiple threads.  A low number will slow down the reading
-of data over the specified size. Default is <code class="docutils literal notranslate"><span class="pre">65536</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">maxWrite</span></code>: A <span class="green">Number</span>, the largest single write to a client
-allowed in the event loop.  If writing data larger than this, it will
-be done in multiple cycles of the event loop in order to allow the
-servicing of other requests.  A high number can make sending large
-replies unfairly slow down other clients, especially if the server is
-not using multiple threads.  A low number will slow down the writing
-of data over the specified size. Default is <code class="docutils literal notranslate"><span class="pre">65536</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">secure</span></code>: A <span class="green">Boolean</span>, whether to use SSL/TLS layer for serving
-via the <code class="docutils literal notranslate"><span class="pre">https</span></code> protocol.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the
-<code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> and <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> parameters must also be set.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code>: A <span class="green">String</span>, the location of the ssl key file for
-serving via the <code class="docutils literal notranslate"><span class="pre">https</span></code> protocol.  An example, if using
-<a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> for “example.com” might be
-<code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/privkey.pem&quot;</span></code>.  This setting has
-no effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code>: A <span class="green">String</span>, the location of the ssl cert file for
-serving via the <code class="docutils literal notranslate"><span class="pre">https</span></code> protocol.  An example, if using
-<a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> for “example.com” might be
-<code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;</span></code>.  This setting has
-no effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslMinVersion</span></code>:  A <span class="green">String</span>, the minimum SSL/TLS version to use.
-Possible values are <code class="docutils literal notranslate"><span class="pre">ssl3</span></code>, <code class="docutils literal notranslate"><span class="pre">tls1</span></code>, <code class="docutils literal notranslate"><span class="pre">tls1.1</span></code> or <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>.  The
-default is <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>. This setting has no effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code>: A <span class="green">Function</span> to handle <code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span></code> responses.
-See <a class="reference internal" href="#mapped-functions">Mapped Functions</a> below.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">developerMode</span></code>: A <span class="green">Boolean</span>, whether to run the server in a
-developer mode.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, JavaScript and other errors will cause
-the server to return a <code class="docutils literal notranslate"><span class="pre">500</span> <span class="pre">Internal</span> <span class="pre">Error</span></code> message, with the error
-and error line numbers printed.  If false, JavaScript errors will
-result in the generic <code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span> <span class="pre">Page</span></code> or alternatively, if set
-<code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code> will be called and the request object (<code class="docutils literal notranslate"><span class="pre">req</span></code>) will
-contain the key <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> (<code class="docutils literal notranslate"><span class="pre">req.errMsg</span></code>), with the error message.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">directoryFunc</span></code>: A <span class="green">Function</span> to handle directory listings from
-the filesystem, if no <code class="docutils literal notranslate"><span class="pre">index.html</span></code> file exists in the requested
-directory.  May also be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> to use the built-in function.
-If set <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default), a “403 Forbidden” response is sent
-where a directory listing is requested and no index.html file exists.
-See <a class="reference internal" href="#built-in-directory-function">Built-in Directory Function</a> below for more information.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">user</span></code>: A <span class="green">String</span>, the user account which the server will switch
-to after binding to the specified ip address and port.  Only valid if
-server is started as <code class="docutils literal notranslate"><span class="pre">root</span></code>.  This setting is used for binding to
-privileged ports as <code class="docutils literal notranslate"><span class="pre">root</span></code> and then dropping privileges.  If the server
-is started as root, <code class="docutils literal notranslate"><span class="pre">user</span></code> must be set.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">cacheControl</span></code>: A <span class="green">String</span> or a <span class="green">Boolean</span>.  If a
-<span class="green">String</span> - the text to set the “Cache-Control” header when
-serving files off of the filesystem.  The default is “max-age=84600,
-public”, if not set or set <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If set <code class="docutils literal notranslate"><span class="pre">false</span></code>, no header is
-sent.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">defaultCharset</span></code>: A <span class="green">String</span> or a <span class="green">Boolean</span>.  Charset
-to append to the <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header for <code class="docutils literal notranslate"><span class="pre">text/*</span></code> mime types.
-The default is <code class="docutils literal notranslate"><span class="pre">&quot;utf-8&quot;</span></code>.  Applies to both static files served from
-the filesystem and dynamic responses returned from script handlers
-(e.g. <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{html:</span> <span class="pre">...}</span></code>, <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{txt:</span> <span class="pre">...}</span></code>, etc.).  Set to
-a <span class="green">String</span> such as <code class="docutils literal notranslate"><span class="pre">&quot;iso-8859-1&quot;</span></code> to use a different charset.
-Set to <code class="docutils literal notranslate"><span class="pre">false</span></code> to disable, in which case no charset is appended and
-the bare mime type is sent.</p>
-<p>A response that explicitly sets its own <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header (via
-a <code class="docutils literal notranslate"><span class="pre">headers</span></code> property) is left untouched - whatever value is supplied
-is sent verbatim, with no charset added.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code>: a <span class="green">Number</span> (range 0.01 to 1000).  Set the
-default range size when sending a <code class="docutils literal notranslate"><span class="pre">206</span> <span class="pre">Partial</span> <span class="pre">Content</span></code> response to an
-open ended request (e.g. <code class="docutils literal notranslate"><span class="pre">range:</span> <span class="pre">0-</span></code>), specified in megabytes.
-The default value is <code class="docutils literal notranslate"><span class="pre">8</span></code> for eight megabytes.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressFiles</span></code>: A <span class="green">Boolean</span> or <span class="green">Array</span>.  Whether to
-use gzip compression for files served from the filesystem.  Default is
-<code class="docutils literal notranslate"><span class="pre">false</span></code>.  If an <span class="green">Array</span>. is given, it is a list of file
-extension which will be compressed.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> - the following default
-<span class="green">Array</span> of extensions will be used:
-<code class="docutils literal notranslate"><span class="pre">[&quot;html&quot;,</span> <span class="pre">&quot;css&quot;,</span> <span class="pre">&quot;js&quot;,</span> <span class="pre">&quot;json,</span> <span class="pre">&quot;xml&quot;,</span> <span class="pre">&quot;txt&quot;,</span> <span class="pre">&quot;text&quot;,</span> <span class="pre">&quot;htm&quot;]</span></code>.</p>
-<p>Note that compressed files will be cached in a directory named
-“.gzipcache/” in the directory in which the files are located.
-Compressed cached files are updated based on the date of the original.
-The webserver’s <code class="docutils literal notranslate"><span class="pre">user</span></code> must have write permissions in the directory
-in which the files are located in order for compressed files to be
-cached.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressScripts</span></code>:  A <span class="green">Boolean</span>. Whether to compress the
-output from scripts by default.  If not set, the default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.
-This can be overridden in the return value from a script using the key
-<code class="docutils literal notranslate"><span class="pre">compress</span></code> set to a <span class="green">Boolean</span> or a compression level (1-10).
-See the last example in <a class="reference internal" href="#the-return-object">The Return Object</a> below.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressLevel</span></code>: A <span class="green">Number</span>. The default level of compression
-used for files and scripts.  Must be an integer between 1 and 10. The
-default, if not specified, is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressMinSize</span></code>: A <span class="green">Number</span>. The minimum size in bytes any file or
-script output must be in order for the content to be compressed.  The default,
-if not specified, is <code class="docutils literal notranslate"><span class="pre">1000</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">appendProcTitle</span></code>: A <span class="green">Boolean</span>. Whether to append the process
-title (as seen in utilities like <code class="docutils literal notranslate"><span class="pre">ps</span></code>) with the ip address and port
-number of the server.  The default if not specified is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code>: A <span class="green">Function</span>. Function to be executed after
-the server forks but before server threads are created, if
-<code class="docutils literal notranslate"><span class="pre">daemon</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
-A function to run at the beginning of each JavaScript function or on
-file load as specified in <code class="docutils literal notranslate"><span class="pre">map</span></code> below.  This can be a global
-function (i.e.  <code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">myglobalbeginfunc</span></code>), an inline function
-(i.e.  <code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">function(req){...}</span></code>), or an object (i.e.
-<code class="docutils literal notranslate"><span class="pre">{module:</span> <span class="pre">working_directory+'/apps/beginfunc.js'}</span></code>) specifying the
-path of a module.
-The function, like all server callback functions, is passed <code class="docutils literal notranslate"><span class="pre">req</span></code>, which if
-altered will be reflected in the call of the normal callback for the
-requested page.  Returning false will skip the normal callback and
-send a 404 Not Found page.  Returning an <span class="green">Object</span> (i.e. <code class="docutils literal notranslate"><span class="pre">{html:myhtml}</span></code>)
-will skip the normal callback and send the content from that <span class="green">Object</span>.
-When the provided function is called before the loading of a file, the
-<code class="docutils literal notranslate"><span class="pre">req</span></code> <span class="green">Object</span> <code class="docutils literal notranslate"><span class="pre">fsPath</span></code> property will be set to the file being
-retrieved.  If <code class="docutils literal notranslate"><span class="pre">req.fsPath</span></code> is set to a new path and the function returns
-true, the updated file will be sent instead.
-For websocket connections, it is run only before the first connect
-(i.e., when <code class="docutils literal notranslate"><span class="pre">req.count</span> <span class="pre">==</span> <span class="pre">0</span></code>, see <a class="reference internal" href="#websockets">Websockets</a> below).
-Default value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFuncOnFile</span></code>: A <span class="green">Boolean</span>.  Whether to run the begin
-function before serving a file (-i.e.  files from a mapped location such
-as the <code class="docutils literal notranslate"><span class="pre">web_server/html/</span></code> directory),  Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">authMod</span></code>: A <span class="green">Boolean</span>, <span class="green">String</span>, or
-<span class="green">Function</span>.  Enable session-based authentication.</p>
+<p>There are two configuration shapes; pick the one that matches your
+deployment, then consult <a class="reference internal" href="#option-reference">Option reference</a> below.</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">true</span></code> — loads the built-in <code class="docutils literal notranslate"><span class="pre">rampart-auth.so</span></code> module.
-Requires <code class="docutils literal notranslate"><span class="pre">authModConf</span></code> to be set.</li>
-<li>A <span class="green">String</span> — loads a custom auth module by name or path.</li>
-<li>A <span class="green">Function</span> — uses an inline auth function.</li>
-<li><code class="docutils literal notranslate"><span class="pre">false</span></code> or omitted — authentication is disabled (default).</li>
+<li><strong>Single-listener</strong> - <code class="docutils literal notranslate"><span class="pre">bind:</span></code> at the top level, every option also at the
+top level.  Right when one process serves one set of routes on one port
+(or several IPs sharing identical config).  This is the original
+<code class="docutils literal notranslate"><span class="pre">rampart-server</span></code> shape.</li>
+<li><strong>Multi-listener</strong> - <code class="docutils literal notranslate"><span class="pre">listen:</span></code> at the top level, an array of
+listener-block <span class="green">Objects</span>.  Use when you need different SSL certs
+on different ports, mixed http+https in one process, or different
+routing per port.  <code class="docutils literal notranslate"><span class="pre">bind:</span></code> and <code class="docutils literal notranslate"><span class="pre">listen:</span></code> are mutually exclusive.</li>
 </ul>
-<p>The auth module exports a function that is called on every request.
-For static files under protected paths (defined in <code class="docutils literal notranslate"><span class="pre">authModConf</span></code>),
-the function returns <code class="docutils literal notranslate"><span class="pre">true</span></code> to serve or <code class="docutils literal notranslate"><span class="pre">false</span></code> to deny.  For
-app module requests, the function may modify <code class="docutils literal notranslate"><span class="pre">req</span></code> (e.g., setting
-<code class="docutils literal notranslate"><span class="pre">req.userAuth</span></code>) and return any truthy value to pass through to the
-endpoint, return <code class="docutils literal notranslate"><span class="pre">false</span></code> for 403, or return <code class="docutils literal notranslate"><span class="pre">{redirect:</span> <span class="pre">&quot;/path&quot;}</span></code>
-for a 302 redirect.  Since <code class="docutils literal notranslate"><span class="pre">req</span></code> is passed by reference,
-modifications are visible to the endpoint regardless of return value.</p>
-<p>With the built-in <code class="docutils literal notranslate"><span class="pre">rampart-auth.so</span></code> (<code class="docutils literal notranslate"><span class="pre">authMod:</span> <span class="pre">true</span></code>), the
-session check runs entirely in C — cookie extraction, LMDB lookup,
-and access control happen without invoking the JavaScript interpreter.
-With a custom <span class="green">Function</span> or third-party module, the auth
-function is called via the Duktape C API before the endpoint handler
-runs.  This is still faster than running the full endpoint (the
-auth function runs instead of the endpoint on denied requests), but
-it does execute the auth function’s JavaScript.</p>
-<p>See <a class="reference internal" href="rampart-auth.html"><span class="doc">The rampart-auth module</span></a> for full documentation, including the
-<code class="docutils literal notranslate"><span class="pre">auth.js</span></code> administration module included in the sample web server.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">authModConf</span></code>: A <span class="green">String</span>.  Path to a JavaScript module
-that exports the authentication configuration object.  Required when
-<code class="docutils literal notranslate"><span class="pre">authMod</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> (the built-in module).  Optional for custom
-auth modules and inline functions.</p>
-<p>When provided, the server reads <code class="docutils literal notranslate"><span class="pre">protectedPaths</span></code> from the config
-to determine which static file paths require authentication.  For
-those paths, the server calls the auth function before serving the
-file.  File paths not listed are served without any auth check.
-Without <code class="docutils literal notranslate"><span class="pre">authModConf</span></code>, the server has no protected path definitions
-and all static files are served without gating — only app module
-requests will have the auth function called.</p>
-<p>See <a class="reference internal" href="rampart-auth.html"><span class="doc">The rampart-auth module</span></a> for configuration details.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">rateLimit</span></code>: An <span class="green">Object</span>.  Configure per-path rate limiting
-using a token bucket algorithm.  Rate limiting runs in C before any
-authentication, JavaScript, or file serving — a rate-limited request
-receives a <code class="docutils literal notranslate"><span class="pre">429</span> <span class="pre">Too</span> <span class="pre">Many</span> <span class="pre">Requests</span></code> response with no further
-processing.</p>
-<p>Each key in the object is a URL path prefix, and the value is an
-object with the following properties:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">rate</span></code> — <span class="green">Number</span>.  Maximum number of requests allowed
-per time window (default: <code class="docutils literal notranslate"><span class="pre">60</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">window</span></code> — <span class="green">Number</span>.  Time window in seconds
-(default: <code class="docutils literal notranslate"><span class="pre">60</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">key</span></code> — <span class="green">String</span>.  How to identify clients for rate
-limiting (default: <code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code>):<ul>
-<li><code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code> — rate limit by client IP address.  Fastest option.</li>
-<li><code class="docutils literal notranslate"><span class="pre">&quot;fingerprint&quot;</span></code> — rate limit by a hash of the client’s IP
-address combined with the <code class="docutils literal notranslate"><span class="pre">User-Agent</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Accept-Language</span></code>, and <code class="docutils literal notranslate"><span class="pre">Accept-Encoding</span></code> headers.
-Distinguishes different browsers behind the same IP (e.g.,
-NAT or corporate networks).</li>
-<li><code class="docutils literal notranslate"><span class="pre">&quot;cookie:name&quot;</span></code> — rate limit by the value of a specific
-cookie.  Useful for per-session rate limiting.  If the cookie
-is not present, falls back to IP.</li>
-</ul>
-</li>
-</ul>
-<p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rateLimit</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;/apps/auth/&quot;</span><span class="o">:</span> <span class="p">{</span>
-        <span class="nx">rate</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
-        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
-        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;/apps/api/&quot;</span><span class="o">:</span> <span class="p">{</span>
-        <span class="nx">rate</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span>
-        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
-        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;fingerprint&quot;</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;/apps/premium/&quot;</span><span class="o">:</span> <span class="p">{</span>
-        <span class="nx">rate</span><span class="o">:</span> <span class="mi">50</span><span class="p">,</span>
-        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
-        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;cookie:rp_session&quot;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Path matching uses prefix comparison: a rule for <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/&quot;</span></code>
-applies to <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/search&quot;</span></code>,
-<code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/users/list.html&quot;</span></code>, etc.  When multiple prefixes
-match, <strong>all</strong> matching rules are checked — a request must pass
-every one.  This allows a global limit on <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> combined with
-tighter per-path limits:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rateLimit</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;/&quot;</span><span class="o">:</span>           <span class="p">{</span><span class="nx">rate</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span> <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span><span class="p">},</span>   <span class="c1">// global</span>
-    <span class="s2">&quot;/apps/auth/&quot;</span><span class="o">:</span> <span class="p">{</span><span class="nx">rate</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>  <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span> <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span><span class="p">}</span>    <span class="c1">// tighter</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>A request to <code class="docutils literal notranslate"><span class="pre">/apps/auth/login</span></code> consumes a token from both the
-<code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;/apps/auth/&quot;</span></code> buckets.  It is denied if either
-bucket is empty.  Paths not listed are not rate limited.</p>
-<p>The rate limiter uses an in-memory hash table with per-bucket
-locking for thread safety.  The number of hash buckets defaults
-to 64 and can be changed at compile time with
-<code class="docutils literal notranslate"><span class="pre">-DRP_RATELIMIT_BUCKETS=128</span></code> (must be a power of 2).</p>
-<p>Tokens refill at a constant rate (<code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">/</span> <span class="pre">window</span></code> tokens per
-second).  A client that stops sending requests will naturally
-recover its full token allowance within one window period.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
-A function to run after the completion of a JavaScript function
-callback from <code class="docutils literal notranslate"><span class="pre">map</span></code> below.
-Like <code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>, it will also receive the <cite>req</cite> object.  In
-addition, <cite>req.reply</cite> will be set to the return value of the normal
-server callback function mapped in <code class="docutils literal notranslate"><span class="pre">map</span></code> below and req.reply can be
-modified before it is sent.
-For websocket connections, it is run after websockets disconnects and
-after the req.wsOnDisconnect callback, if any.  <cite>req.reply</cite> is an
-empty object, modifying it has no effect and return value from endFunc
-has no effect. End function is never run on file requests. The default
-value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logFunc</span></code>: An <span class="green">Object</span> or <span class="green">Function</span>.
-A function to run after data has been written to the client and in place of
-normal logging (<code class="docutils literal notranslate"><span class="pre">log</span></code> above must be <code class="docutils literal notranslate"><span class="pre">true</span></code>).  The callback function
-will be passed two parameters (i.e. <code class="docutils literal notranslate"><span class="pre">myloggingfunc</span> <span class="pre">(logdata,</span> <span class="pre">logline)</span></code>)
-where the first is an <span class="green">Object</span> with the following properties:
-<code class="docutils literal notranslate"><span class="pre">addr</span></code>, <code class="docutils literal notranslate"><span class="pre">dateStr</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">protocol</span></code> and
-<code class="docutils literal notranslate"><span class="pre">code</span></code>.  All are <span class="green">Strings</span>, except <code class="docutils literal notranslate"><span class="pre">code</span></code>, which is a <span class="green">Number</span> (i.e. <code class="docutils literal notranslate"><span class="pre">200</span></code>);
-The second parameter is the log line that would normally be written but for this
-function.  The filehandles <code class="docutils literal notranslate"><span class="pre">rampart.utils.accessLog</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart.utils.errorLog</span></code>
-can be used to write to the <code class="docutils literal notranslate"><span class="pre">accessLog</span></code> and <code class="docutils literal notranslate"><span class="pre">errorLog</span></code> set above, or if unset
-to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.</p>
-<p>Examples:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">myloggingfunc</span> <span class="p">(</span><span class="nx">logdata</span><span class="p">,</span> <span class="nx">logline</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">logdata</span><span class="p">.</span><span class="nx">code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">)</span>
-        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">accessLog</span><span class="p">,</span>
-            <span class="s1">&#39;%s %s &quot;%s %s%s%s %d&quot;\n&#39;</span><span class="p">,</span>
-            <span class="nx">logdata</span><span class="p">.</span><span class="nx">addr</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">dateStr</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">method</span><span class="p">,</span>
-            <span class="nx">logdata</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">query</span><span class="o">?</span><span class="s2">&quot;?&quot;</span><span class="o">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span>
-            <span class="nx">logdata</span><span class="p">.</span><span class="nx">code</span> <span class="p">);</span>
-    <span class="k">else</span>
-        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">accessLog</span><span class="p">,</span>
-            <span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">logline</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="c1">// example logging func - skip logging for connections from localhost</span>
-<span class="kd">function</span> <span class="nx">myloggingfunc_alt</span> <span class="p">(</span><span class="nx">logdata</span><span class="p">,</span> <span class="nx">logline</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">logdata</span><span class="p">.</span><span class="nx">addr</span><span class="o">==</span><span class="s2">&quot;127.0.0.1&quot;</span> <span class="o">||</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">addr</span><span class="o">==</span><span class="s2">&quot;::1&quot;</span><span class="p">)</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">accessLog</span><span class="p">,</span>
-        <span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">logline</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
-</li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">mimeMap</span></code>: An <span class="green">Object</span>, additions or changes to the standard extension
-to mime mappings.  Normally, if, e.g., <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{</span> <span class="pre">&quot;m4v&quot;:</span> <span class="pre">mymovie</span> <span class="pre">};</span></code>
-is set as <a class="reference internal" href="#the-return-object">The Return Object</a> to a mapped function, the header
-<code class="docutils literal notranslate"><span class="pre">content-type:</span> <span class="pre">video/x-m4v</span></code> is sent.  Though the <code class="docutils literal notranslate"><span class="pre">content-type</span></code>
-header can be changed using the <code class="docutils literal notranslate"><span class="pre">headers</span></code> object in <a class="reference internal" href="#the-return-object">The Return
-Object</a>, it does not affect files served from the filesystem.  If
-it is necessary to change the default “content-type” for both <a class="reference internal" href="#mapped-functions">Mapped
-Functions</a> and files served from <a class="reference internal" href="#mapped-directories">Mapped Directories</a>,
-extension:mime-types mappings may be set or changed as follows:</p>
+<div class="section" id="the-single-listener-shape">
+<h5>The single-listener shape<a class="headerlink" href="#the-single-listener-shape" title="Permalink to this headline">¶</a></h5>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
-    <span class="p">...,</span>
-    <span class="nx">mimeMap</span><span class="o">:</span> <span class="p">{</span>
-        <span class="cm">/* make these movies play as mp4s */</span>
-        <span class="s2">&quot;m4v&quot;</span><span class="o">:</span> <span class="s2">&quot;video/mp4&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mov&quot;</span><span class="o">:</span> <span class="s2">&quot;video/mp4&quot;</span>
-    <span class="p">},</span>
-    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
-        <span class="s2">&quot;/&quot;</span><span class="o">:</span> <span class="s2">&quot;/var/www/html&quot;</span><span class="p">,</span>
-        <span class="p">...,</span>
-    <span class="p">}</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s1">&#39;0.0.0.0:8088&#39;</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span>  <span class="p">{</span> <span class="s1">&#39;/&#39;</span><span class="o">:</span> <span class="s1">&#39;/var/www/html&#39;</span> <span class="p">},</span>
+    <span class="nx">threads</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="c1">// ...other top-level options as needed</span>
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>For a complete list of defaults, see <a class="reference internal" href="#key-to-mime-mappings">Key to Mime Mappings</a> below.</p>
+<p>Every option goes at the top level.  Multiple ip:port pairs are supported
+via an array (<code class="docutils literal notranslate"><span class="pre">bind:</span> <span class="pre">['0.0.0.0:8088',</span> <span class="pre">'[::]:8088']</span></code>); all share the same
+configuration.</p>
+</div>
+<div class="section" id="the-multi-listener-shape-listen">
+<h5>The multi-listener shape (<code class="docutils literal notranslate"><span class="pre">listen:[]</span></code>)<a class="headerlink" href="#the-multi-listener-shape-listen" title="Permalink to this headline">¶</a></h5>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">listen</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">{</span> <span class="nx">bind</span><span class="o">:</span> <span class="s1">&#39;0.0.0.0:80&#39;</span><span class="p">,</span>
+          <span class="nx">map</span><span class="o">:</span>  <span class="p">{</span> <span class="s1">&#39;/&#39;</span><span class="o">:</span> <span class="s1">&#39;/var/www/html&#39;</span> <span class="p">}</span> <span class="p">},</span>
+        <span class="p">{</span> <span class="nx">bind</span><span class="o">:</span> <span class="s1">&#39;0.0.0.0:443&#39;</span><span class="p">,</span> <span class="nx">secure</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">sslKeyFile</span><span class="o">:</span>  <span class="s1">&#39;/etc/letsencrypt/live/example.com/privkey.pem&#39;</span><span class="p">,</span>
+          <span class="nx">sslCertFile</span><span class="o">:</span> <span class="s1">&#39;/etc/letsencrypt/live/example.com/fullchain.pem&#39;</span><span class="p">,</span>
+          <span class="nx">map</span><span class="o">:</span>  <span class="p">{</span> <span class="s1">&#39;/&#39;</span><span class="o">:</span> <span class="s1">&#39;/var/www/html&#39;</span> <span class="p">}</span> <span class="p">},</span>
+        <span class="p">{</span> <span class="nx">bind</span><span class="o">:</span> <span class="s1">&#39;10.0.0.5:8443&#39;</span><span class="p">,</span> <span class="nx">secure</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+          <span class="nx">sslKeyFile</span><span class="o">:</span> <span class="s1">&#39;admin.key&#39;</span><span class="p">,</span> <span class="nx">sslCertFile</span><span class="o">:</span> <span class="s1">&#39;admin.crt&#39;</span><span class="p">,</span>
+          <span class="nx">map</span><span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;/&#39;</span><span class="o">:</span> <span class="s1">&#39;/var/www/admin&#39;</span> <span class="p">}</span> <span class="p">},</span>
+    <span class="p">],</span>
+    <span class="nx">threads</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span>                    <span class="c1">// top-level options apply across listeners</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Each block becomes its own listener with its own routing table, optional
+SSL configuration, and optional per-listener timeouts and body-size limit.
+All listeners share a single worker thread pool, so adding listeners does
+not multiply the number of worker threads or JavaScript contexts.</p>
+<p><strong>Required inside a block.</strong> <code class="docutils literal notranslate"><span class="pre">bind</span></code> and <code class="docutils literal notranslate"><span class="pre">map</span></code>.</p>
+<p><strong>Allowed inside a block</strong> (overrides top-level if also set there):
+<code class="docutils literal notranslate"><span class="pre">secure</span></code>, <code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code>, <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code>, <code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code>,
+<code class="docutils literal notranslate"><span class="pre">scriptTimeout</span></code>, <code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code>.</p>
+<p><strong>Process-global options</strong> (<code class="docutils literal notranslate"><span class="pre">threads</span></code>, <code class="docutils literal notranslate"><span class="pre">daemon</span></code>, <code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">mimeMap</span></code>,
+log options, etc.) and routing-related options that are currently
+process-wide (<code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">authMod</span></code>, <code class="docutils literal notranslate"><span class="pre">rateLimit</span></code>, <code class="docutils literal notranslate"><span class="pre">compress*</span></code>,
+<code class="docutils literal notranslate"><span class="pre">directoryFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">logFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">cacheControl</span></code>, <code class="docutils literal notranslate"><span class="pre">defaultCharset</span></code>,
+<code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>/<code class="docutils literal notranslate"><span class="pre">endFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code>, <code class="docutils literal notranslate"><span class="pre">sslMinVersion</span></code>)
+go at the top level.  Putting any of them inside a block is rejected by
+the validator.</p>
+<p><strong>Inheritance.</strong> When a per-listener option (say <code class="docutils literal notranslate"><span class="pre">connectTimeout:</span> <span class="pre">5</span></code>)
+is set at the top level and not inside a block, the top-level value
+applies to that block.  Block-level values override.</p>
+<p><strong>Mixed http and https.</strong> Combine plain and <code class="docutils literal notranslate"><span class="pre">secure:</span> <span class="pre">true</span></code> blocks in
+one array.  For the common “redirect plain http to https” pattern see
+the <code class="docutils literal notranslate"><span class="pre">httpRedirect</span></code> option in the TLS section below - it runs in the
+same process as the secure listener and does not need a separate
+daemon.</p>
+</div>
+<div class="section" id="option-reference">
+<h5>Option reference<a class="headerlink" href="#option-reference" title="Permalink to this headline">¶</a></h5>
+<p>Each option below is tagged with its <em>scope</em>:</p>
+<ul class="simple">
+<li><em>per-listener</em> - may appear inside a <code class="docutils literal notranslate"><span class="pre">listen:</span></code> block, and at the top
+level (where it acts as a default that blocks inherit when unset).
+Also valid at the top level in the single-listener shape.</li>
+<li><em>top-level</em> - process-global; only valid at the top level of the
+options object.</li>
+</ul>
+<p><strong>Bind and listener</strong></p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">bind</span></code> <em>(per-listener)</em> - An <span class="green">Array</span> of <span class="green">Strings</span>, with
+each <span class="green">String</span> representing an ip address and port.  If not
+specified, the server will bind to port 8088 on the loopback device
+(i.e. 127.0.0.1, which is only accessible from the same machine), using
+the following default value:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">&quot;[::1]:8088&quot;,</span> <span class="pre">&quot;127.0.0.1:8088&quot;</span> <span class="pre">]</span></code>.</p>
+<p>When specifying an Ipv6 address, bracket notation is required (e.g.
+<code class="docutils literal notranslate"><span class="pre">[2001:db8::1111:2222]:80</span></code>) while a dot-decimal notation is used for
+ipv4 (e.g. <code class="docutils literal notranslate"><span class="pre">172.16.254.1:80</span></code>).  To bind to all ip addresses using
+port 80, the following may be used:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">&quot;[::]:80&quot;,</span> <span class="pre">&quot;0.0.0.0:80&quot;</span> <span class="pre">]</span></code>.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">map</span></code>: An <span class="green">Object</span> of url to function or filesystem mapping.
-The keys of the object are exact paths, regular expressions, partial
-paths or globbed paths to be matched against incoming requests.  For
-example, a key <code class="docutils literal notranslate"><span class="pre">/myscript.html</span></code> would match an incoming request for
-<code class="docutils literal notranslate"><span class="pre">http://example.com/myscript.html</span></code>.  The value to which the key is
-set controls which function, module or filesystem path will be used.</p>
-<p>If the value is a <span class="green">Function</span>, that function is used as
-the callback function.  If the value is an <span class="green">Object</span> with
-<code class="docutils literal notranslate"><span class="pre">module</span></code> or <code class="docutils literal notranslate"><span class="pre">modulePath</span></code> key set, it is assumed to
-be a script name (the same as is used for
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">listen</span></code> <em>(top-level)</em> - An <span class="green">Array</span> of listener-block
+<span class="green">Objects</span>.  Each block becomes one listener; see
+<a class="reference internal" href="#the-multi-listener-shape-listen">The multi-listener shape (listen:[])</a> above for the full block
+schema, allowed/rejected keys, and inheritance rules.  Mutually
+exclusive with top-level <code class="docutils literal notranslate"><span class="pre">bind:</span></code>.</p>
+</li>
+</ul>
+<p id="tls-certificates"><strong>TLS / certificates</strong></p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">secure</span></code> <em>(per-listener)</em> - A <span class="green">Boolean</span>, whether to use SSL/TLS
+layer for serving via the <code class="docutils literal notranslate"><span class="pre">https</span></code> protocol.  Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the <code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> and <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> parameters must
+also be set (in the same block or inherited from the top level).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> <em>(per-listener)</em> - A <span class="green">String</span>, the location of
+the ssl key file for serving via the <code class="docutils literal notranslate"><span class="pre">https</span></code> protocol.  An example,
+if using <a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> for “example.com”
+might be <code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/privkey.pem&quot;</span></code>.  This
+setting has no effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> <em>(per-listener)</em> - A <span class="green">String</span>, the location of
+the ssl cert file for serving via the <code class="docutils literal notranslate"><span class="pre">https</span></code> protocol.  An example,
+if using <a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> for “example.com”
+might be <code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;</span></code>.  This
+setting has no effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslMinVersion</span></code> <em>(top-level)</em> - A <span class="green">String</span>, the minimum
+SSL/TLS version to use.  Possible values are <code class="docutils literal notranslate"><span class="pre">ssl3</span></code>, <code class="docutils literal notranslate"><span class="pre">tls1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tls1.1</span></code> or <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>.  The default is <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>.  Applies to
+every secure listener; no per-block override in v1.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">httpRedirect</span></code> <em>(top-level)</em> - A <span class="green">Number</span>, <span class="green">String</span>,
+or <span class="green">Object</span>.  Adds an in-process plain-HTTP listener that
+301-redirects every request to <code class="docutils literal notranslate"><span class="pre">https://</span></code> on the secure listener.
+Replaces the legacy two-daemon pattern - no extra fork, no separate
+pid to track.  Requires at least one secure listener.  Three accepted
+forms:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">httpRedirect:</span> <span class="pre">80</span></code> - listens on <code class="docutils literal notranslate"><span class="pre">0.0.0.0:80</span></code> and <code class="docutils literal notranslate"><span class="pre">[::]:80</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">httpRedirect:</span> <span class="pre">&quot;10.0.0.5:80&quot;</span></code> - listens on a specific socket.</li>
+<li><code class="docutils literal notranslate"><span class="pre">httpRedirect:</span> <span class="pre">{port:</span> <span class="pre">80,</span> <span class="pre">passthrough:</span> <span class="pre">{&quot;/.well-known/&quot;:</span> <span class="pre">&quot;/path/to/dir/&quot;}}</span></code>
+- same as the number form, plus a list of URL prefixes that are
+served from the named filesystem directory instead of being
+redirected.  Typical use: the ACME <code class="docutils literal notranslate"><span class="pre">/.well-known/acme-challenge/</span></code>
+path for letsencrypt cert renewals.  <code class="docutils literal notranslate"><span class="pre">bind:</span> <span class="pre">&quot;ip:port&quot;</span></code> may be
+used in place of <code class="docutils literal notranslate"><span class="pre">port</span></code> for a specific socket.</li>
+</ul>
+<p>When the HTTPS target port is non-standard (anything other than 443)
+it is appended to the redirect <code class="docutils literal notranslate"><span class="pre">Location:</span></code> header automatically.</p>
+</li>
+</ul>
+<p><strong>Threads and I/O limits</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">useThreads</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, whether the server
+is multi-threaded.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">threads</span></code> below is not set,
+the server will create a threadpool consisting of one thread per cpu
+core.  If set <code class="docutils literal notranslate"><span class="pre">false</span></code>, it is equivalent to setting <code class="docutils literal notranslate"><span class="pre">useThreads</span></code>
+to <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">threads</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>.  The default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">threads</span></code> <em>(top-level)</em> - A <span class="green">Number</span>, the number of threads
+to create for the server thread pool.  The default, if <code class="docutils literal notranslate"><span class="pre">useThreads</span></code>
+is <code class="docutils literal notranslate"><span class="pre">true</span></code> or is unset, is the number of cpu cores on the current
+system.  In multi-listener mode the pool is shared across every
+listener - one pool, one set of JavaScript contexts.</li>
+<li><code class="docutils literal notranslate"><span class="pre">maxRead</span></code> <em>(top-level)</em> - A <span class="green">Number</span>, the largest single read
+from a client allowed in the event loop.  If reading data larger than
+this, it will be done in multiple cycles of the event loop in order
+to allow the servicing of other requests.  A high number can make
+receiving large requests unfairly slow down other clients, especially
+if the server is not using multiple threads.  A low number will slow
+down the reading of data over the specified size.  Default is
+<code class="docutils literal notranslate"><span class="pre">65536</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">maxWrite</span></code> <em>(top-level)</em> - A <span class="green">Number</span>, the largest single
+write to a client allowed in the event loop.  If writing data larger
+than this, it will be done in multiple cycles of the event loop in
+order to allow the servicing of other requests.  A high number can
+make sending large replies unfairly slow down other clients, especially
+if the server is not using multiple threads.  A low number will slow
+down the writing of data over the specified size. Default is
+<code class="docutils literal notranslate"><span class="pre">65536</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code> <em>(per-listener)</em> - A <span class="green">Number</span>, the maximum
+size in bytes of an HTTP request body.  If a request body exceeds
+this limit, the server will stop reading the body and return a
+<code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Entity</span> <span class="pre">Too</span> <span class="pre">Large</span></code> response to the client.  For WebSocket
+connections, this limits the maximum size of a single message.
+Default is <code class="docutils literal notranslate"><span class="pre">52428800</span></code> (50 MB).  Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to disable the limit
+(not recommended).</li>
+<li><code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code> <em>(top-level)</em> - a <span class="green">Number</span> (range 0.01
+to 1000).  Set the default range size when sending a <code class="docutils literal notranslate"><span class="pre">206</span> <span class="pre">Partial</span>
+<span class="pre">Content</span></code> response to an open ended request (e.g. <code class="docutils literal notranslate"><span class="pre">range:</span> <span class="pre">0-</span></code>),
+specified in megabytes.  The default value is <code class="docutils literal notranslate"><span class="pre">8</span></code> for eight
+megabytes.</li>
+</ul>
+<p><strong>Timeouts</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">scriptTimeout</span></code> <em>(per-listener)</em> - A <span class="green">Number</span>, amount of
+time in seconds (or fraction thereof) to wait for a script to run
+before canceling the request and returning a
+<code class="docutils literal notranslate"><span class="pre">500</span> <span class="pre">Internal</span> <span class="pre">Server</span> <span class="pre">Error</span></code> timeout message to the connecting
+client.  Default is no timeout/unlimited.</li>
+<li><code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code> <em>(per-listener)</em> - A <span class="green">Number</span>, amount of
+time in seconds (or fraction thereof) to wait for a connected client
+to send a request.  Default is no timeout/unlimited.</li>
+</ul>
+<p><strong>Process lifecycle</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">daemon</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, whether to fork and
+detach from the controlling terminal.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, the <code class="docutils literal notranslate"><span class="pre">start()</span></code>
+function will return the pid of the server.  Otherwise the pid of
+the current process is returned.  The default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">user</span></code> <em>(top-level)</em> - A <span class="green">String</span>, the user account which
+the server will switch to after binding to the specified ip address
+and port.  Only valid if server is started as <code class="docutils literal notranslate"><span class="pre">root</span></code>.  This setting
+is used for binding to privileged ports as <code class="docutils literal notranslate"><span class="pre">root</span></code> and then dropping
+privileges.  If the server is started as root, <code class="docutils literal notranslate"><span class="pre">user</span></code> must be set.</li>
+<li><code class="docutils literal notranslate"><span class="pre">appendProcTitle</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>.  Whether to
+append the process title (as seen in utilities like <code class="docutils literal notranslate"><span class="pre">ps</span></code>) with the
+ip address and port number of the server.  The default if not
+specified is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span>.  Function to be
+executed after the server forks but before server threads are created,
+if <code class="docutils literal notranslate"><span class="pre">daemon</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+</ul>
+<p><strong>Routing and request hooks</strong></p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">map</span></code> <em>(per-listener)</em> - An <span class="green">Object</span> of url to function or
+filesystem mapping.  The keys of the object are exact paths, regular
+expressions, partial paths or globbed paths to be matched against
+incoming requests.  For example, a key <code class="docutils literal notranslate"><span class="pre">/myscript.html</span></code> would match
+an incoming request for <code class="docutils literal notranslate"><span class="pre">http://example.com/myscript.html</span></code>.  The
+value to which the key is set controls which function, module or
+filesystem path will be used.</p>
+<p>If the value is a <span class="green">Function</span>, that function is used as the
+callback function.  If the value is an <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">module</span></code>
+or <code class="docutils literal notranslate"><span class="pre">modulePath</span></code> key set, it is assumed to be a script name (the same
+as is used for
 <a class="reference internal" href="rampart-main.html#using-the-require-function-to-import-modules"><span class="std std-ref">require()</span></a>)
 or a path with scripts.</p>
 <p>If the value is a <span class="green">String</span>, or it is an <span class="green">Object</span> with
@@ -846,29 +669,336 @@ requested url.  Example: <code class="docutils literal notranslate"><span class=
 match the same as the example above, but would have lower priority.  If
 both these examples were present, <code class="docutils literal notranslate"><span class="pre">myfunction2</span></code> would never match.</li>
 </ul>
-<p>Keys/paths used for mapping to the <strong>filesystem</strong> are always taken as an Exact path.
-Regular expressions and globs are not allowed.</p>
+<p>Keys/paths used for mapping to the <strong>filesystem</strong> are always taken as
+an Exact path.  Regular expressions and globs are not allowed.</p>
+<p>See <a class="reference internal" href="#path-mapping">Path Mapping</a> below for in-depth semantics.</p>
 </li>
-<li><p class="first"><code class="docutils literal notranslate"><span class="pre">mapSort</span></code>: A <span class="green">Boolean</span>, whether to automatically sort the
-mapped paths given as keys to the <span class="green">Object</span> passed to <code class="docutils literal notranslate"><span class="pre">map</span></code> below.
-Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code>, paths from the <code class="docutils literal notranslate"><span class="pre">map</span></code> <span class="green">Object</span>
-will be matched in the order they are given.</p>
-<p>Note that regardless of this setting, paths are matched by type of path (see
-below) with Exact paths tested first, then regular expression paths and
-lastly glob paths.  However, it is usually desirable for longer paths to
-have priority over shorter ones.  For example, if <code class="docutils literal notranslate"><span class="pre">/</span></code> and
-<code class="docutils literal notranslate"><span class="pre">/search.html</span></code> are both specified (both are “Exact” paths),
-<code class="docutils literal notranslate"><span class="pre">/search.html</span></code> should be checked first, otherwise <code class="docutils literal notranslate"><span class="pre">/</span></code> will match and
-<code class="docutils literal notranslate"><span class="pre">/search.html</span></code> will never match.  When <code class="docutils literal notranslate"><span class="pre">mapSort</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>,
-key/paths are automatically sorted by length.</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">mapSort</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, whether to automatically
+sort the mapped paths given as keys to the <span class="green">Object</span> passed to
+<code class="docutils literal notranslate"><span class="pre">map</span></code>.  Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If <code class="docutils literal notranslate"><span class="pre">false</span></code>, paths from the <code class="docutils literal notranslate"><span class="pre">map</span></code>
+<span class="green">Object</span> will be matched in the order they are given.</p>
+<p>Note that regardless of this setting, paths are matched by type of path
+with Exact paths tested first, then regular expression paths and lastly
+glob paths.  However, it is usually desirable for longer paths to have
+priority over shorter ones.  For example, if <code class="docutils literal notranslate"><span class="pre">/</span></code> and <code class="docutils literal notranslate"><span class="pre">/search.html</span></code>
+are both specified (both are “Exact” paths), <code class="docutils literal notranslate"><span class="pre">/search.html</span></code> should be
+checked first, otherwise <code class="docutils literal notranslate"><span class="pre">/</span></code> will match and <code class="docutils literal notranslate"><span class="pre">/search.html</span></code> will
+never match.  When <code class="docutils literal notranslate"><span class="pre">mapSort</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>, key/paths are automatically
+sorted by length.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span> to handle
+<code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span></code> responses.  See <a class="reference internal" href="#mapped-functions">Mapped Functions</a> below.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">directoryFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span> to handle
+directory listings from the filesystem, if no <code class="docutils literal notranslate"><span class="pre">index.html</span></code> file
+exists in the requested directory.  May also be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> to
+use the built-in function.  If set <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default), a
+“403 Forbidden” response is sent where a directory listing is
+requested and no index.html file exists.  See
+<a class="reference internal" href="#built-in-directory-function">Built-in Directory Function</a> below for more information.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFunc</span></code> <em>(top-level)</em> - An <span class="green">Object</span> or <span class="green">Function</span>.
+A function to run at the beginning of each JavaScript function or on
+file load as specified in <code class="docutils literal notranslate"><span class="pre">map</span></code> below.  This can be a global function
+(i.e. <code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">myglobalbeginfunc</span></code>), an inline function (i.e.
+<code class="docutils literal notranslate"><span class="pre">beginFunc:</span> <span class="pre">function(req){...}</span></code>), or an object (i.e.
+<code class="docutils literal notranslate"><span class="pre">{module:</span> <span class="pre">working_directory+'/apps/beginfunc.js'}</span></code>) specifying the
+path of a module.
+The function, like all server callback functions, is passed <code class="docutils literal notranslate"><span class="pre">req</span></code>,
+which if altered will be reflected in the call of the normal callback
+for the requested page.  Returning false will skip the normal callback
+and send a 404 Not Found page.  Returning an <span class="green">Object</span> (i.e.
+<code class="docutils literal notranslate"><span class="pre">{html:myhtml}</span></code>) will skip the normal callback and send the content
+from that <span class="green">Object</span>.  When the provided function is called before
+the loading of a file, the <code class="docutils literal notranslate"><span class="pre">req</span></code> <span class="green">Object</span> <code class="docutils literal notranslate"><span class="pre">fsPath</span></code> property
+will be set to the file being retrieved.  If <code class="docutils literal notranslate"><span class="pre">req.fsPath</span></code> is set to
+a new path and the function returns true, the updated file will be
+sent instead.
+For websocket connections, it is run only before the first connect
+(i.e., when <code class="docutils literal notranslate"><span class="pre">req.count</span> <span class="pre">==</span> <span class="pre">0</span></code>, see <a class="reference internal" href="#websockets">Websockets</a> below).
+Default value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">beginFuncOnFile</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>.  Whether to
+run the begin function before serving a file (i.e. files from a mapped
+location such as the <code class="docutils literal notranslate"><span class="pre">web_server/html/</span></code> directory).  Default value
+is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">endFunc</span></code> <em>(top-level)</em> - An <span class="green">Object</span> or <span class="green">Function</span>.
+A function to run after the completion of a JavaScript function
+callback from <code class="docutils literal notranslate"><span class="pre">map</span></code>.  Like <code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>, it will also receive the
+<code class="docutils literal notranslate"><span class="pre">req</span></code> object.  In addition, <code class="docutils literal notranslate"><span class="pre">req.reply</span></code> will be set to the return
+value of the normal server callback function mapped in <code class="docutils literal notranslate"><span class="pre">map</span></code> and
+<code class="docutils literal notranslate"><span class="pre">req.reply</span></code> can be modified before it is sent.  For websocket
+connections, it is run after websockets disconnects and after the
+<code class="docutils literal notranslate"><span class="pre">req.wsOnDisconnect</span></code> callback, if any.  <code class="docutils literal notranslate"><span class="pre">req.reply</span></code> is an empty
+object, modifying it has no effect and return value from <code class="docutils literal notranslate"><span class="pre">endFunc</span></code>
+has no effect.  End function is never run on file requests.  The
+default value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">authMod</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, <span class="green">String</span>, or
+<span class="green">Function</span>.  Enable session-based authentication.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">true</span></code> - loads the built-in <code class="docutils literal notranslate"><span class="pre">rampart-auth.so</span></code> module.  Requires
+<code class="docutils literal notranslate"><span class="pre">authModConf</span></code> to be set.</li>
+<li>A <span class="green">String</span> - loads a custom auth module by name or path.</li>
+<li>A <span class="green">Function</span> - uses an inline auth function.</li>
+<li><code class="docutils literal notranslate"><span class="pre">false</span></code> or omitted - authentication is disabled (default).</li>
+</ul>
+<p>The auth module exports a function that is called on every request.
+For static files under protected paths (defined in <code class="docutils literal notranslate"><span class="pre">authModConf</span></code>),
+the function returns <code class="docutils literal notranslate"><span class="pre">true</span></code> to serve or <code class="docutils literal notranslate"><span class="pre">false</span></code> to deny.  For
+app module requests, the function may modify <code class="docutils literal notranslate"><span class="pre">req</span></code> (e.g., setting
+<code class="docutils literal notranslate"><span class="pre">req.userAuth</span></code>) and return any truthy value to pass through to the
+endpoint, return <code class="docutils literal notranslate"><span class="pre">false</span></code> for 403, or return <code class="docutils literal notranslate"><span class="pre">{redirect:</span> <span class="pre">&quot;/path&quot;}</span></code>
+for a 302 redirect.  Since <code class="docutils literal notranslate"><span class="pre">req</span></code> is passed by reference,
+modifications are visible to the endpoint regardless of return value.</p>
+<p>With the built-in <code class="docutils literal notranslate"><span class="pre">rampart-auth.so</span></code> (<code class="docutils literal notranslate"><span class="pre">authMod:</span> <span class="pre">true</span></code>), the session
+check runs entirely in C - cookie extraction, LMDB lookup, and access
+control happen without invoking the JavaScript interpreter.  With a
+custom <span class="green">Function</span> or third-party module, the auth function is
+called via the Duktape C API before the endpoint handler runs.  This
+is still faster than running the full endpoint (the auth function
+runs instead of the endpoint on denied requests), but it does execute
+the auth function’s JavaScript.</p>
+<p>See <a class="reference internal" href="rampart-auth.html"><span class="doc">The rampart-auth module</span></a> for full documentation, including the
+<code class="docutils literal notranslate"><span class="pre">auth.js</span></code> administration module included in the sample web server.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">authModConf</span></code> <em>(top-level)</em> - A <span class="green">String</span>.  Path to a
+JavaScript module that exports the authentication configuration object.
+Required when <code class="docutils literal notranslate"><span class="pre">authMod</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> (the built-in module).  Optional
+for custom auth modules and inline functions.</p>
+<p>When provided, the server reads <code class="docutils literal notranslate"><span class="pre">protectedPaths</span></code> from the config to
+determine which static file paths require authentication.  For those
+paths, the server calls the auth function before serving the file.
+File paths not listed are served without any auth check.  Without
+<code class="docutils literal notranslate"><span class="pre">authModConf</span></code>, the server has no protected path definitions and all
+static files are served without gating - only app module requests will
+have the auth function called.</p>
+<p>See <a class="reference internal" href="rampart-auth.html"><span class="doc">The rampart-auth module</span></a> for configuration details.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">rateLimit</span></code> <em>(top-level)</em> - An <span class="green">Object</span>.  Configure per-path
+rate limiting using a token bucket algorithm.  Rate limiting runs in C
+before any authentication, JavaScript, or file serving - a rate-limited
+request receives a <code class="docutils literal notranslate"><span class="pre">429</span> <span class="pre">Too</span> <span class="pre">Many</span> <span class="pre">Requests</span></code> response with no further
+processing.</p>
+<p>Each key in the object is a URL path prefix, and the value is an object
+with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rate</span></code> - <span class="green">Number</span>.  Maximum number of requests allowed per
+time window (default: <code class="docutils literal notranslate"><span class="pre">60</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">window</span></code> - <span class="green">Number</span>.  Time window in seconds (default:
+<code class="docutils literal notranslate"><span class="pre">60</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">key</span></code> - <span class="green">String</span>.  How to identify clients for rate limiting
+(default: <code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code>):<ul>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code> - rate limit by client IP address.  Fastest option.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;fingerprint&quot;</span></code> - rate limit by a hash of the client’s IP address
+combined with the <code class="docutils literal notranslate"><span class="pre">User-Agent</span></code>, <code class="docutils literal notranslate"><span class="pre">Accept-Language</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">Accept-Encoding</span></code> headers.  Distinguishes different browsers
+behind the same IP (e.g., NAT or corporate networks).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;cookie:name&quot;</span></code> - rate limit by the value of a specific cookie.
+Useful for per-session rate limiting.  If the cookie is not
+present, falls back to IP.</li>
+</ul>
 </li>
 </ul>
-</div></blockquote>
-</dd>
-<dt>Return Value</dt>
-<dd>A <span class="green">Number</span>, the pid of the current process, or if <code class="docutils literal notranslate"><span class="pre">daemon</span></code> is
-set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, the pid of the forked server.</dd>
-</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rateLimit</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;/apps/auth/&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">rate</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;/apps/api/&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">rate</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;fingerprint&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;/apps/premium/&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">rate</span><span class="o">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;cookie:rp_session&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Path matching uses prefix comparison: a rule for <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/&quot;</span></code>
+applies to <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/search&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;/apps/api/users/list.html&quot;</span></code>,
+etc.  When multiple prefixes match, <strong>all</strong> matching rules are
+checked - a request must pass every one.  This allows a global
+limit on <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> combined with tighter per-path limits:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rateLimit</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;/&quot;</span><span class="o">:</span>           <span class="p">{</span><span class="nx">rate</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span> <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span> <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span><span class="p">},</span>   <span class="c1">// global</span>
+    <span class="s2">&quot;/apps/auth/&quot;</span><span class="o">:</span> <span class="p">{</span><span class="nx">rate</span><span class="o">:</span> <span class="mi">10</span><span class="p">,</span>  <span class="nb">window</span><span class="o">:</span> <span class="mi">60</span><span class="p">,</span> <span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;ip&quot;</span><span class="p">}</span>    <span class="c1">// tighter</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A request to <code class="docutils literal notranslate"><span class="pre">/apps/auth/login</span></code> consumes a token from both the
+<code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;/apps/auth/&quot;</span></code> buckets.  It is denied if either bucket
+is empty.  Paths not listed are not rate limited.</p>
+<p>The rate limiter uses an in-memory hash table with per-bucket locking
+for thread safety.  The number of hash buckets defaults to 64 and can
+be changed at compile time with <code class="docutils literal notranslate"><span class="pre">-DRP_RATELIMIT_BUCKETS=128</span></code> (must
+be a power of 2).</p>
+<p>Tokens refill at a constant rate (<code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">/</span> <span class="pre">window</span></code> tokens per second).
+A client that stops sending requests will naturally recover its full
+token allowance within one window period.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">mimeMap</span></code> <em>(top-level)</em> - An <span class="green">Object</span>, additions or changes
+to the standard extension to mime mappings.  Normally, if, e.g.,
+<code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{</span> <span class="pre">&quot;m4v&quot;:</span> <span class="pre">mymovie</span> <span class="pre">};</span></code> is set as <a class="reference internal" href="#the-return-object">The Return Object</a> to a
+mapped function, the header <code class="docutils literal notranslate"><span class="pre">content-type:</span> <span class="pre">video/x-m4v</span></code> is sent.
+Though the <code class="docutils literal notranslate"><span class="pre">content-type</span></code> header can be changed using the <code class="docutils literal notranslate"><span class="pre">headers</span></code>
+object in <a class="reference internal" href="#the-return-object">The Return Object</a>, it does not affect files served from
+the filesystem.  If it is necessary to change the default
+“content-type” for both <a class="reference internal" href="#mapped-functions">Mapped Functions</a> and files served from
+<a class="reference internal" href="#mapped-directories">Mapped Directories</a>, extension:mime-types mappings may be set or
+changed as follows:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="p">...,</span>
+    <span class="nx">mimeMap</span><span class="o">:</span> <span class="p">{</span>
+        <span class="cm">/* make these movies play as mp4s */</span>
+        <span class="s2">&quot;m4v&quot;</span><span class="o">:</span> <span class="s2">&quot;video/mp4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;mov&quot;</span><span class="o">:</span> <span class="s2">&quot;video/mp4&quot;</span>
+    <span class="p">},</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span> <span class="s2">&quot;/var/www/html&quot;</span><span class="p">,</span>
+        <span class="p">...,</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>For a complete list of defaults, see <a class="reference internal" href="#key-to-mime-mappings">Key to Mime Mappings</a> below.</p>
+</li>
+</ul>
+<p><strong>Static-file behaviour</strong></p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">cacheControl</span></code> <em>(top-level)</em> - A <span class="green">String</span> or a <span class="green">Boolean</span>.
+If a <span class="green">String</span> - the text to set the “Cache-Control” header when
+serving files off of the filesystem.  The default is
+<code class="docutils literal notranslate"><span class="pre">&quot;max-age=84600,</span> <span class="pre">public&quot;</span></code>, if not set or set <code class="docutils literal notranslate"><span class="pre">true</span></code>.  If set
+<code class="docutils literal notranslate"><span class="pre">false</span></code>, no header is sent.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">defaultCharset</span></code> <em>(top-level)</em> - A <span class="green">String</span> or a
+<span class="green">Boolean</span>.  Charset to append to the <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header for
+<code class="docutils literal notranslate"><span class="pre">text/*</span></code> mime types.  The default is <code class="docutils literal notranslate"><span class="pre">&quot;utf-8&quot;</span></code>.  Applies to both
+static files served from the filesystem and dynamic responses returned
+from script handlers (e.g. <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{html:</span> <span class="pre">...}</span></code>, <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">{txt:</span> <span class="pre">...}</span></code>,
+etc.).  Set to a <span class="green">String</span> such as <code class="docutils literal notranslate"><span class="pre">&quot;iso-8859-1&quot;</span></code> to use a
+different charset.  Set to <code class="docutils literal notranslate"><span class="pre">false</span></code> to disable, in which case no
+charset is appended and the bare mime type is sent.</p>
+<p>A response that explicitly sets its own <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header (via
+a <code class="docutils literal notranslate"><span class="pre">headers</span></code> property) is left untouched - whatever value is supplied
+is sent verbatim, with no charset added.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressFiles</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span> or <span class="green">Array</span>.
+Whether to use gzip compression for files served from the filesystem.
+Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  If an <span class="green">Array</span> is given, it is a list of
+file extensions which will be compressed.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> - the following
+default <span class="green">Array</span> of extensions will be used:
+<code class="docutils literal notranslate"><span class="pre">[&quot;html&quot;,</span> <span class="pre">&quot;css&quot;,</span> <span class="pre">&quot;js&quot;,</span> <span class="pre">&quot;json&quot;,</span> <span class="pre">&quot;xml&quot;,</span> <span class="pre">&quot;txt&quot;,</span> <span class="pre">&quot;text&quot;,</span> <span class="pre">&quot;htm&quot;]</span></code>.</p>
+<p>Note that compressed files will be cached in a directory named
+<code class="docutils literal notranslate"><span class="pre">.gzipcache/</span></code> in the directory in which the files are located.
+Compressed cached files are updated based on the date of the original.
+The webserver’s <code class="docutils literal notranslate"><span class="pre">user</span></code> must have write permissions in the directory
+in which the files are located in order for compressed files to be
+cached.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressScripts</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>.  Whether to
+compress the output from scripts by default.  If not set, the default
+is <code class="docutils literal notranslate"><span class="pre">false</span></code>.  This can be overridden in the return value from a
+script using the key <code class="docutils literal notranslate"><span class="pre">compress</span></code> set to a <span class="green">Boolean</span> or a
+compression level (1-10).  See the last example in <a class="reference internal" href="#the-return-object">The Return
+Object</a> below.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressLevel</span></code> <em>(top-level)</em> - A <span class="green">Number</span>.  The default level
+of compression used for files and scripts.  Must be an integer between
+1 and 10.  The default, if not specified, is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">compressMinSize</span></code> <em>(top-level)</em> - A <span class="green">Number</span>.  The minimum
+size in bytes any file or script output must be in order for the
+content to be compressed.  The default, if not specified, is <code class="docutils literal notranslate"><span class="pre">1000</span></code>.</p>
+</li>
+</ul>
+<p><strong>Logging and debug</strong></p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">log</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, whether to log each
+request.  Access requests are logged to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and errors are
+logged to <code class="docutils literal notranslate"><span class="pre">stderr</span></code> unless <code class="docutils literal notranslate"><span class="pre">accessLog</span></code> and/or <code class="docutils literal notranslate"><span class="pre">errorLog</span></code> below
+are set.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logIpFromHeader</span></code> <em>(top-level)</em> - A <span class="green">String</span>, a header name
+to use for logging the ip address of the request.  In cases where the
+server is behind a proxy such as nginx, instead of logging
+<code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, setting, e.g.
+<code class="docutils literal notranslate"><span class="pre">proxy_set_header</span> <span class="pre">Remote_address</span> <span class="pre">$remote_addr;</span></code> in the appropriate
+section of <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code>, and setting
+<code class="docutils literal notranslate"><span class="pre">logIpFromHeader:</span> <span class="pre">&quot;Remote_address&quot;</span></code> here will log the ip address of
+the client connecting to nginx, rather than the ip address of the
+nginx proxy server.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">accessLog</span></code> <em>(top-level)</em> - A <span class="green">String</span>, the location of the
+access log.  The default, if not specified, is to log to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>.
+If given, the log file will be closed and re-opened upon sending the
+rampart executable a <code class="docutils literal notranslate"><span class="pre">USR1</span></code> signal, which allows log rotation.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">errorLog</span></code> <em>(top-level)</em> - A <span class="green">String</span>, the location of the
+error log.  The default, if not specified, is to log to <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.
+If given, the log file will be closed and re-opened upon sending the
+rampart executable a <code class="docutils literal notranslate"><span class="pre">USR1</span></code> signal, which allows log rotation.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">logFunc</span></code> <em>(top-level)</em> - An <span class="green">Object</span> or <span class="green">Function</span>.
+A function to run after data has been written to the client and in
+place of normal logging (<code class="docutils literal notranslate"><span class="pre">log</span></code> above must be <code class="docutils literal notranslate"><span class="pre">true</span></code>).  The callback
+function will be passed two parameters (i.e.
+<code class="docutils literal notranslate"><span class="pre">myloggingfunc</span> <span class="pre">(logdata,</span> <span class="pre">logline)</span></code>) where the first is an
+<span class="green">Object</span> with the following properties: <code class="docutils literal notranslate"><span class="pre">addr</span></code>, <code class="docutils literal notranslate"><span class="pre">dateStr</span></code>,
+<code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">protocol</span></code> and <code class="docutils literal notranslate"><span class="pre">code</span></code>.  All are
+<span class="green">Strings</span>, except <code class="docutils literal notranslate"><span class="pre">code</span></code>, which is a <span class="green">Number</span> (i.e.
+<code class="docutils literal notranslate"><span class="pre">200</span></code>); the second parameter is the log line that would normally
+be written but for this function.  The filehandles
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.accessLog</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart.utils.errorLog</span></code> can be
+used to write to the <code class="docutils literal notranslate"><span class="pre">accessLog</span></code> and <code class="docutils literal notranslate"><span class="pre">errorLog</span></code> set above, or
+if unset to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.</p>
+<p>Examples:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">myloggingfunc</span> <span class="p">(</span><span class="nx">logdata</span><span class="p">,</span> <span class="nx">logline</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">logdata</span><span class="p">.</span><span class="nx">code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">accessLog</span><span class="p">,</span>
+            <span class="s1">&#39;%s %s &quot;%s %s%s%s %d&quot;\n&#39;</span><span class="p">,</span>
+            <span class="nx">logdata</span><span class="p">.</span><span class="nx">addr</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">dateStr</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">method</span><span class="p">,</span>
+            <span class="nx">logdata</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">query</span><span class="o">?</span><span class="s2">&quot;?&quot;</span><span class="o">:</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">query</span><span class="p">,</span>
+            <span class="nx">logdata</span><span class="p">.</span><span class="nx">code</span> <span class="p">);</span>
+    <span class="k">else</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">accessLog</span><span class="p">,</span>
+            <span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">logline</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// example logging func - skip logging for connections from localhost</span>
+<span class="kd">function</span> <span class="nx">myloggingfunc_alt</span> <span class="p">(</span><span class="nx">logdata</span><span class="p">,</span> <span class="nx">logline</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">logdata</span><span class="p">.</span><span class="nx">addr</span><span class="o">==</span><span class="s2">&quot;127.0.0.1&quot;</span> <span class="o">||</span> <span class="nx">logdata</span><span class="p">.</span><span class="nx">addr</span><span class="o">==</span><span class="s2">&quot;::1&quot;</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">accessLog</span><span class="p">,</span>
+        <span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">logline</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">developerMode</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, whether to run
+the server in a developer mode.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, JavaScript and other
+errors will cause the server to return a <code class="docutils literal notranslate"><span class="pre">500</span> <span class="pre">Internal</span> <span class="pre">Error</span></code>
+message, with the error and error line numbers printed.  If false,
+JavaScript errors will result in the generic <code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span> <span class="pre">Page</span></code> or
+alternatively, if set, <code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code> will be called and the request
+object (<code class="docutils literal notranslate"><span class="pre">req</span></code>) will contain the key <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> (<code class="docutils literal notranslate"><span class="pre">req.errMsg</span></code>),
+with the error message.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="return-value">
+<h5>Return Value<a class="headerlink" href="#return-value" title="Permalink to this headline">¶</a></h5>
+<p>A <span class="green">Number</span>, the pid of the current process, or if <code class="docutils literal notranslate"><span class="pre">daemon</span></code> is
+set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, the pid of the forked server.</p>
+</div>
 </div>
 </div>
 </div>

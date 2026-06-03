@@ -245,6 +245,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -3136,6 +3137,67 @@ cancel. Default <code class="docutils literal notranslate"><span class="pre">fal
 <dt>Return Value:</dt>
 <dd><span class="green">Object</span>.  A handle with the following methods:</dd>
 </dl>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>next()</td>
+<td><p class="first">Block, draw the prompt, and return the next line typed by the user.</p>
+<p><strong>Legacy mode</strong> (default — <code class="docutils literal notranslate"><span class="pre">objectMode:</span> <span class="pre">false</span></code>): the return value
+distinguishes the three end-of-input cases:</p>
+<ul class="simple">
+<li><span class="green">String</span> — a line of input (may be empty if the user just
+pressed Enter).</li>
+<li><span class="green">false</span> — Ctrl-C was pressed at an empty prompt, <strong>or</strong> the
+read was woken via <code class="docutils literal notranslate"><span class="pre">rampart.utils.repl.interrupt()</span></code>. The two cases
+are indistinguishable in legacy mode; use <code class="docutils literal notranslate"><span class="pre">objectMode</span></code> if you need
+to tell them apart.</li>
+<li><span class="green">null</span> — Ctrl-D / EOF / read failure. Typically treated as
+“exit the REPL”.</li>
+</ul>
+<p><strong>objectMode</strong> (when <code class="docutils literal notranslate"><span class="pre">objectMode:</span> <span class="pre">true</span></code> was passed to <code class="docutils literal notranslate"><span class="pre">repl()</span></code>):
+the return value is always an <span class="green">Object</span>:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">{text:</span> <span class="pre">&lt;string&gt;,</span> <span class="pre">status:</span> <span class="pre">'ok'}</span></code> — a line of input.</li>
+<li><code class="docutils literal notranslate"><span class="pre">{text:</span> <span class="pre">'',</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">status:</span> <span class="pre">'cancel'}</span></code> — Ctrl-C at an empty prompt.</li>
+<li><code class="docutils literal notranslate"><span class="pre">{text:</span> <span class="pre">'',</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">status:</span> <span class="pre">'eof'}</span></code> — Ctrl-D / EOF / read failure.</li>
+<li><code class="docutils literal notranslate"><span class="pre">{text:</span> <span class="pre">'',</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">status:</span> <span class="pre">'wake',</span> <span class="pre">signal:</span> <span class="pre">&lt;string&gt;}</span></code> — the read was
+woken by <code class="docutils literal notranslate"><span class="pre">rampart.utils.repl.interrupt(payload)</span></code>; <code class="docutils literal notranslate"><span class="pre">signal</span></code> carries
+the bytes that were on the pipe at wake time (empty string if
+<code class="docutils literal notranslate"><span class="pre">interrupt()</span></code> was called with no argument).</li>
+</ul>
+<p class="last">In both modes, Ctrl-C pressed while a line <em>has content</em> is handled
+internally: linenoise prints <code class="docutils literal notranslate"><span class="pre">^C</span></code>, the line buffer is dropped, a
+fresh prompt is drawn on the next row, and <code class="docutils literal notranslate"><span class="pre">.next()</span></code> keeps blocking
+— it does <strong>not</strong> return.</p>
+</td>
+</tr>
+<tr class="row-odd"><td>refresh()</td>
+<td><p class="first">Redraw the current prompt and edit buffer at the cursor’s current
+position. Use this after any output has been written to the terminal
+while <code class="docutils literal notranslate"><span class="pre">.next()</span></code> is blocked — for example, a timer callback or a
+worker thread streaming output. Calling <code class="docutils literal notranslate"><span class="pre">refresh()</span></code> after the
+external output completes restores the prompt visibly on a fresh line.</p>
+<p class="last">Safe to call from a different thread than the one in <code class="docutils literal notranslate"><span class="pre">.next()</span></code>,
+provided no other writer is concurrently writing to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> at the
+same moment. linenoise’s state (prompt text, edit buffer, cursor row
+within the buffer) is not modified while <code class="docutils literal notranslate"><span class="pre">.next()</span></code> is parked in
+<code class="docutils literal notranslate"><span class="pre">read()</span></code>, so the cross-thread refresh sees consistent data.</p>
+</td>
+</tr>
+<tr class="row-even"><td>close()</td>
+<td>Restore terminal modes and drop the handle’s methods. Call when you no
+longer plan to use this repl.</td>
+</tr>
+</tbody>
+</table>
 <p>Module-level methods (called on the <code class="docutils literal notranslate"><span class="pre">rampart.utils.repl</span></code> <span class="green">Function</span>
 itself, not on an instance):</p>
 <table border="1" class="docutils">

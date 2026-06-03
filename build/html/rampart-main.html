@@ -131,6 +131,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#getpid">getpid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getppid">getppid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setproctitle">setProcTitle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ncpu">nCpu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gettotalmem">getTotalMem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getfreemem">getFreeMem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#uptime">uptime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#systemuptime">systemUptime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getcpuinfo">getCpuInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setmaxmem">setMaxMem</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#using-the-require-function-to-import-modules">Using the require Function to Import Modules</a><ul>
@@ -140,7 +147,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#extra-javascript-functionality">Extra JavaScript Functionality</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#object-values">Object.values()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#object-methods">Object Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#array-methods">Array Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#string-methods">String Methods</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#template-literals">Template Literals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tagged-functions">Tagged Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rest-parameters">Rest Parameters</a></li>
@@ -153,6 +162,14 @@
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#typedarray-methods">TypedArray Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#textencoder-textdecoder">TextEncoder / TextDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#map-and-set">Map and Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#console-extras">console Extras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#proxy-revocable">Proxy.revocable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#whatwg-w3c-web-platform-apis-experimental">WHATWG / W3C Web Platform APIs (experimental)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#intl">Intl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-globals">Other Globals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#settimeout">setTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cleartimeout">clearTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setinterval">setInterval()</a></li>
@@ -178,6 +195,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#why-use-the-transpiler-instead-of-babel">Why use the transpiler instead of Babel?</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#skipping-a-second-pass-the-notranspile-directive">Skipping a second pass: the <code class="docutils literal notranslate"><span class="pre">&quot;noTranspile&quot;</span></code> directive</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
@@ -188,6 +206,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -331,8 +350,9 @@ following:</p>
 <code class="docutils literal notranslate"><span class="pre">rampart-crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-lmdb</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-redis</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code>).</li>
 <li>Event loop using <code class="docutils literal notranslate"><span class="pre">libevent2</span></code>.</li>
-<li>ECMA 2015, 2016, 2017 and 2018 support using the <a class="reference external" href="https://babeljs.io/">Babel</a>
-JavaScript transpiler.</li>
+<li>ECMA 2015 through ES2022 support (including class fields, private
+methods, nullish coalescing, and optional chaining) using the
+<a class="reference external" href="https://babeljs.io/">Babel</a> JavaScript transpiler.</li>
 <li>Full Text Search and SQL databasing via <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>.</li>
 <li>Generic threading, locking and variable sharing via <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code>.</li>
 <li>Multi-threaded http(s) server from libevhtp_ws via <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>.</li>
@@ -346,6 +366,23 @@ JavaScript transpiler.</li>
 <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code></li>
 <li>Simple Event functions via <a class="reference internal" href="#rampart-event">rampart.event</a>.</li>
 <li><a class="reference internal" href="#extra-javascript-functionality">Extra JavaScript Functionality</a>.</li>
+<li>Lazy-loaded <strong>Intl</strong> (ECMA-402) support — full surface
+(<code class="docutils literal notranslate"><span class="pre">DateTimeFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">NumberFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">Collator</span></code>, <code class="docutils literal notranslate"><span class="pre">Segmenter</span></code>,
+etc.) backed by vendored ICU4C; <code class="docutils literal notranslate"><span class="pre">rampart-intl.so</span></code> is only loaded on
+first access.  See <a class="reference internal" href="#intl"><span class="std std-ref">Intl</span></a>.</li>
+<li>Lazy-loaded <strong>WHATWG / W3C Web Platform APIs</strong> (experimental) —
+<code class="docutils literal notranslate"><span class="pre">fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">URL</span></code>, <code class="docutils literal notranslate"><span class="pre">Headers</span></code>/<code class="docutils literal notranslate"><span class="pre">Request</span></code>/<code class="docutils literal notranslate"><span class="pre">Response</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Blob</span></code>/<code class="docutils literal notranslate"><span class="pre">File</span></code>, the <code class="docutils literal notranslate"><span class="pre">ReadableStream</span></code> family, <code class="docutils literal notranslate"><span class="pre">WebSocket</span></code>,
+<code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto</span></code> (Web Crypto), <code class="docutils literal notranslate"><span class="pre">structuredClone</span></code>,
+<code class="docutils literal notranslate"><span class="pre">EventTarget</span></code>, and more, via <code class="docutils literal notranslate"><span class="pre">rampart-whatwg.so</span></code>.  Partial
+conformance — strongest where no browser DOM is required.  See
+<a class="reference internal" href="#whatwg-w3c-web-platform-apis-experimental"><span class="std std-ref">WHATWG / W3C Web Platform APIs (experimental)</span></a>.</li>
+<li>Optional <strong>Node.js compatibility shim</strong> (experimental) — a subset of
+node’s core modules (<code class="docutils literal notranslate"><span class="pre">fs</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">util</span></code>, <code class="docutils literal notranslate"><span class="pre">events</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>,
+<code class="docutils literal notranslate"><span class="pre">crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">stream</span></code>, <code class="docutils literal notranslate"><span class="pre">buffer</span></code>, <code class="docutils literal notranslate"><span class="pre">process</span></code> extras, etc.) via
+<code class="docutils literal notranslate"><span class="pre">require('rampart-nodeshim')</span></code>, for porting node-style code.  Prefer
+rampart’s native modules for new code.  See
+<a class="reference internal" href="rampart-extras.html#rampart-nodeshim-module"><span class="std std-ref">rampart-nodeshim Module</span></a>.</li>
 </ul>
 </div>
 </div>
@@ -984,6 +1021,137 @@ utilities such as <code class="docutils literal notranslate"><span class="pre">p
 <dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
 </dl>
 </div>
+<div class="section" id="ncpu">
+<h3>nCpu<a class="headerlink" href="#ncpu" title="Permalink to this headline">¶</a></h3>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">process.nCpu</span></code> is a <span class="green">Number</span>, the count of online
+logical CPUs as reported by <code class="docutils literal notranslate"><span class="pre">sysconf(_SC_NPROCESSORS_ONLN)</span></code>.  Set once
+at startup; not affected by subsequent CPU hot-plug events.</p>
+</div>
+<div class="section" id="gettotalmem">
+<h3>getTotalMem<a class="headerlink" href="#gettotalmem" title="Permalink to this headline">¶</a></h3>
+<p>Get the total physical RAM installed in the system, in megabytes.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mb</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">getTotalMem</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Number</span>. Total physical memory in MB.</dd>
+</dl>
+<p>Implementation: <code class="docutils literal notranslate"><span class="pre">sysinfo(2)</span></code> on Linux, <code class="docutils literal notranslate"><span class="pre">sysctl</span> <span class="pre">HW_MEMSIZE</span></code> on
+macOS, <code class="docutils literal notranslate"><span class="pre">sysctl</span> <span class="pre">HW_PHYSMEM</span></code> on FreeBSD.</p>
+</div>
+<div class="section" id="getfreemem">
+<h3>getFreeMem<a class="headerlink" href="#getfreemem" title="Permalink to this headline">¶</a></h3>
+<p>Get the amount of memory currently available to the system, in
+megabytes.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mb</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">getFreeMem</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Number</span>. Available memory in MB.</dd>
+</dl>
+<p>Implementation: <code class="docutils literal notranslate"><span class="pre">sysinfo(2)</span></code> on Linux.  On macOS, sums <code class="docutils literal notranslate"><span class="pre">free</span></code> +
+<code class="docutils literal notranslate"><span class="pre">inactive</span></code> + <code class="docutils literal notranslate"><span class="pre">speculative</span></code> pages from <code class="docutils literal notranslate"><span class="pre">host_statistics64(</span>
+<span class="pre">HOST_VM_INFO64)</span></code> — matching node’s convention, since macOS aggressively
+keeps reusable pages in the inactive list.  On FreeBSD, uses
+<code class="docutils literal notranslate"><span class="pre">sysctlbyname(&quot;vm.stats.vm.v_free_count&quot;)</span></code>.</p>
+</div>
+<div class="section" id="uptime">
+<h3>uptime<a class="headerlink" href="#uptime" title="Permalink to this headline">¶</a></h3>
+<p>Get process uptime in seconds (matches <code class="docutils literal notranslate"><span class="pre">process.uptime()</span></code> in
+Node.js, Deno, Bun, and other JavaScript runtimes).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sec</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">uptime</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Number</span>. Seconds since <em>this rampart process</em> started.</dd>
+</dl>
+<p>Implementation: <code class="docutils literal notranslate"><span class="pre">clock_gettime(CLOCK_MONOTONIC)</span></code>.  The origin is
+captured on the first call across any context, so workers see the
+parent-process lifetime (matching node’s worker_threads behavior).</p>
+<p>For seconds since the operating system booted (was the historical
+meaning of <code class="docutils literal notranslate"><span class="pre">process.uptime()</span></code> in rampart, now under a separate
+name), see <a class="reference internal" href="#systemuptime">systemUptime</a>.</p>
+</div>
+<div class="section" id="systemuptime">
+<h3>systemUptime<a class="headerlink" href="#systemuptime" title="Permalink to this headline">¶</a></h3>
+<p>Get system uptime in seconds.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sec</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">systemUptime</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Number</span>. Seconds since system boot.</dd>
+</dl>
+<p>Implementation: <code class="docutils literal notranslate"><span class="pre">sysinfo(2)</span></code> on Linux, <code class="docutils literal notranslate"><span class="pre">sysctl</span> <span class="pre">KERN_BOOTTIME</span></code>
+(boot <code class="docutils literal notranslate"><span class="pre">timeval</span></code> subtracted from wall-clock now) on macOS / <a href="#id2"><span class="problematic" id="id3">*</span></a>BSD.
+Falls back to <code class="docutils literal notranslate"><span class="pre">CLOCK_MONOTONIC</span></code> if the platform-native call fails.</p>
+<p>Equivalent to node’s <code class="docutils literal notranslate"><span class="pre">os.uptime()</span></code> (rampart’s nodeshim <code class="docutils literal notranslate"><span class="pre">os</span></code>
+module delegates here).</p>
+</div>
+<div class="section" id="getcpuinfo">
+<h3>getCpuInfo<a class="headerlink" href="#getcpuinfo" title="Permalink to this headline">¶</a></h3>
+<p>Get per-core CPU information, in the same shape node’s <code class="docutils literal notranslate"><span class="pre">os.cpus()</span></code>
+returns.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cpus</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">getCpuInfo</span><span class="p">();</span>
+<span class="c1">// cpus[i] = {</span>
+<span class="c1">//    model: &lt;String&gt;,        // CPU model string (&quot;unknown&quot; if unavailable)</span>
+<span class="c1">//    speed: &lt;Number&gt;,        // MHz (0 if not reported by the platform)</span>
+<span class="c1">//    times: {</span>
+<span class="c1">//       user: &lt;ms&gt;, nice: &lt;ms&gt;, sys: &lt;ms&gt;, idle: &lt;ms&gt;, irq: &lt;ms&gt;</span>
+<span class="c1">//    }</span>
+<span class="c1">// }</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Array</span> of per-core objects.</dd>
+</dl>
+<p>Implementation: <code class="docutils literal notranslate"><span class="pre">/proc/stat</span></code> + <code class="docutils literal notranslate"><span class="pre">/proc/cpuinfo</span></code> on Linux;
+<code class="docutils literal notranslate"><span class="pre">host_processor_info(PROCESSOR_CPU_LOAD_INFO)</span></code> plus <code class="docutils literal notranslate"><span class="pre">sysctlbyname(</span>
+<span class="pre">&quot;machdep.cpu.brand_string&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">hw.cpufrequency_max</span></code>/
+<code class="docutils literal notranslate"><span class="pre">hw.cpufrequency</span></code> on macOS; <code class="docutils literal notranslate"><span class="pre">kern.cp_times</span></code> plus <code class="docutils literal notranslate"><span class="pre">hw.model</span></code> and
+<code class="docutils literal notranslate"><span class="pre">dev.cpu.0.freq</span></code> on FreeBSD.</p>
+<p>On Apple Silicon, <code class="docutils literal notranslate"><span class="pre">hw.cpufrequency_max</span></code> is not available and
+<code class="docutils literal notranslate"><span class="pre">speed</span></code> will be <code class="docutils literal notranslate"><span class="pre">0</span></code> — matching node/libuv’s behavior.  On macOS,
+<code class="docutils literal notranslate"><span class="pre">nice</span></code> and <code class="docutils literal notranslate"><span class="pre">irq</span></code> are always <code class="docutils literal notranslate"><span class="pre">0</span></code> (the platform does not separate
+them from <code class="docutils literal notranslate"><span class="pre">sys</span></code>/<code class="docutils literal notranslate"><span class="pre">user</span></code>).</p>
+</div>
+<div class="section" id="setmaxmem">
+<h3>setMaxMem<a class="headerlink" href="#setmaxmem" title="Permalink to this headline">¶</a></h3>
+<p>Set a hard upper bound on the virtual address space the current
+process may use.  Once set, <code class="docutils literal notranslate"><span class="pre">malloc</span></code>/buffer allocations that would
+push the process over this limit fail.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">mb</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">setMaxMem</span><span class="p">(</span><span class="nx">amount</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">amount</span></code> is either:</p>
+<blockquote>
+<div><ul class="simple">
+<li>a <span class="green">Number</span> — the limit in MB</li>
+<li>a <span class="green">String</span> ending in <code class="docutils literal notranslate"><span class="pre">%</span></code> — a percentage of
+<code class="docutils literal notranslate"><span class="pre">getTotalMem()</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;75%&quot;</span></code>)</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Number</span>. The limit actually set, in MB.</dd>
+</dl>
+<p>Implementation: <code class="docutils literal notranslate"><span class="pre">setrlimit(RLIMIT_AS,</span> <span class="pre">...)</span></code>.  Note that on macOS,
+<code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> is accepted by <code class="docutils literal notranslate"><span class="pre">setrlimit</span></code> but <strong>not enforced</strong> by the
+kernel — the call returns success and <code class="docutils literal notranslate"><span class="pre">getTotalMem</span></code>/<code class="docutils literal notranslate"><span class="pre">getFreeMem</span></code>
+report unchanged values, but allocations above the limit will still
+succeed.  Effective on Linux and FreeBSD.  Cannot be raised above
+any system-imposed hard limit.</p>
+</div>
 </div>
 <div class="section" id="using-the-require-function-to-import-modules">
 <h2>Using the require Function to Import Modules<a class="headerlink" href="#using-the-require-function-to-import-modules" title="Permalink to this headline">¶</a></h2>
@@ -1112,22 +1280,65 @@ set, <code class="docutils literal notranslate"><span class="pre">/tmp</span></c
 </div>
 <div class="section" id="extra-javascript-functionality">
 <h2>Extra JavaScript Functionality<a class="headerlink" href="#extra-javascript-functionality" title="Permalink to this headline">¶</a></h2>
-<p>A subset of post ES5 JavaScript syntax is supported when not using
-<a class="reference external" href="ECMAScript2015+andBabel.js">babel</a> below.  It is provided
-experimentally (unsupported) and is limited in scope.</p>
-<div class="section" id="object-values">
-<h3>Object.values()<a class="headerlink" href="#object-values" title="Permalink to this headline">¶</a></h3>
-<p>Return an <span class="green">Array</span> containing the values of an object.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span>
-   <span class="nx">key1</span><span class="o">:</span> <span class="s2">&quot;val1&quot;</span><span class="p">,</span>
-   <span class="nx">key2</span><span class="o">:</span> <span class="s2">&quot;val2&quot;</span>
-<span class="p">}</span>
-
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">values</span><span class="p">(</span><span class="nx">obj</span><span class="p">));</span>
-<span class="cm">/* expected output:</span>
-<span class="cm">   [&quot;val1&quot;,&quot;val2&quot;]              */</span>
+<p>Rampart provides a broad set of ES2015+ standard-library methods and
+globals, so most modern JavaScript runs without
+<a class="reference external" href="ECMAScript2015+andBabel.js">babel</a> or the
+<a class="reference external" href="ECMAScript2015+withtranspiler">transpiler</a>.  These aim to match
+the ECMAScript specification; only the rampart-specific extensions
+are flagged.  For language <em>syntax</em> beyond ES5 (<code class="docutils literal notranslate"><span class="pre">class</span></code>, arrow
+functions, <code class="docutils literal notranslate"><span class="pre">async</span></code>/<code class="docutils literal notranslate"><span class="pre">await</span></code>, destructuring, <code class="docutils literal notranslate"><span class="pre">for…of</span></code>,
+<code class="docutils literal notranslate"><span class="pre">...spread</span></code>, etc.), see the
+<a class="reference external" href="ECMAScript2015+withtranspiler">transpiler</a>.</p>
+<div class="section" id="object-methods">
+<h3>Object Methods<a class="headerlink" href="#object-methods" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">Object.values(obj)</span></code> — Returns an <span class="green">Array</span> of the object’s
+own enumerable values.  Also accepts a <span class="green">String</span> (returns char
+array) or <span class="green">Buffer</span> (passthrough).</li>
+<li><code class="docutils literal notranslate"><span class="pre">Object.hasOwn(obj,</span> <span class="pre">prop)</span></code> — <span class="green">Boolean</span>; safer than
+<code class="docutils literal notranslate"><span class="pre">obj.hasOwnProperty(prop)</span></code> when <code class="docutils literal notranslate"><span class="pre">obj</span></code> lacks a prototype chain.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Object.fromEntries(iter)</span></code> — Builds an object from an array of
+<code class="docutils literal notranslate"><span class="pre">[key,</span> <span class="pre">value]</span></code> pairs (inverse of <code class="docutils literal notranslate"><span class="pre">Object.entries</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">Object.groupBy(items,</span> <span class="pre">keyFn)</span></code> — Groups items by the result of
+<code class="docutils literal notranslate"><span class="pre">keyFn</span></code>.  Returns a null-prototype object whose values are arrays
+of items sharing a key.  Accepts any iterable.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nb">Object</span><span class="p">.</span><span class="nx">values</span><span class="p">({</span><span class="nx">a</span><span class="o">:</span><span class="mi">1</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span><span class="mi">2</span><span class="p">});</span>                    <span class="cm">/* [1, 2] */</span>
+<span class="nb">Object</span><span class="p">.</span><span class="nx">fromEntries</span><span class="p">([[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">]]);</span>        <span class="cm">/* {a:1, b:2} */</span>
+<span class="nb">Object</span><span class="p">.</span><span class="nx">groupBy</span><span class="p">([</span><span class="mf">1.1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">],</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">);</span>  <span class="cm">/* {1:[1.1,1.7], 2:[2.5]} */</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="array-methods">
+<h3>Array Methods<a class="headerlink" href="#array-methods" title="Permalink to this headline">¶</a></h3>
+<p>Standard prototype methods on <span class="green">Array.prototype</span>:
+<code class="docutils literal notranslate"><span class="pre">find</span></code>, <code class="docutils literal notranslate"><span class="pre">findIndex</span></code>, <code class="docutils literal notranslate"><span class="pre">includes</span></code>, <code class="docutils literal notranslate"><span class="pre">flat</span></code> (default depth 1;
+<code class="docutils literal notranslate"><span class="pre">Infinity</span></code> supported), <code class="docutils literal notranslate"><span class="pre">flatMap</span></code>, <code class="docutils literal notranslate"><span class="pre">at</span></code> (negative indices),
+<code class="docutils literal notranslate"><span class="pre">findLast</span></code>, <code class="docutils literal notranslate"><span class="pre">findLastIndex</span></code>.</p>
+<p>Static methods on <span class="green">Array</span>: <code class="docutils literal notranslate"><span class="pre">Array.from(iterable[,</span> <span class="pre">mapFn])</span></code>
+(strings, array-likes, iterables) and <code class="docutils literal notranslate"><span class="pre">Array.of(...args)</span></code>.</p>
+<p>Iteration surface: <code class="docutils literal notranslate"><span class="pre">arr.keys()</span></code>, <code class="docutils literal notranslate"><span class="pre">arr.values()</span></code>, <code class="docutils literal notranslate"><span class="pre">arr.entries()</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">arr[Symbol.iterator]()</span></code> all return spec iterators.  Note that
+<code class="docutils literal notranslate"><span class="pre">for…of</span></code> and spread <em>syntax</em> still require the
+<a class="reference external" href="ECMAScript2015+withtranspiler">transpiler</a>, but the underlying
+iterators work in vanilla Rampart via <code class="docutils literal notranslate"><span class="pre">.next()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Array.from(...)</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">].</span><span class="nx">findLast</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">){</span><span class="k">return</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;});</span>   <span class="cm">/* 3 */</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,[</span><span class="mi">2</span><span class="p">,[</span><span class="mi">3</span><span class="p">]]].</span><span class="nx">flat</span><span class="p">(</span><span class="kc">Infinity</span><span class="p">);</span>                       <span class="cm">/* [1,2,3] */</span>
+<span class="nb">Array</span><span class="p">.</span><span class="nx">from</span><span class="p">(</span><span class="s1">&#39;abc&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">c</span><span class="p">){</span><span class="k">return</span> <span class="nx">c</span><span class="p">.</span><span class="nx">toUpperCase</span><span class="p">();});</span>  <span class="cm">/* [&#39;A&#39;,&#39;B&#39;,&#39;C&#39;] */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="string-methods">
+<h3>String Methods<a class="headerlink" href="#string-methods" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">str.trimStart()</span></code> / <code class="docutils literal notranslate"><span class="pre">str.trimEnd()</span></code> — trim whitespace at one end.</li>
+<li><code class="docutils literal notranslate"><span class="pre">str.replaceAll(search,</span> <span class="pre">repl)</span></code> — string-only <code class="docutils literal notranslate"><span class="pre">search</span></code>; replaces
+every occurrence.</li>
+<li><code class="docutils literal notranslate"><span class="pre">str.matchAll(regex)</span></code> — returns an iterator over global-regex
+matches (each match includes capture groups).  Throws
+<code class="docutils literal notranslate"><span class="pre">TypeError</span></code> if <code class="docutils literal notranslate"><span class="pre">regex</span></code> is a non-global <span class="green">RegExp</span> (per spec).</li>
+</ul>
 </div>
 <div class="section" id="template-literals">
 <h3>Template Literals<a class="headerlink" href="#template-literals" title="Permalink to this headline">¶</a></h3>
@@ -1324,8 +1535,11 @@ over the requested slice. (Unlike a bare <code class="docutils literal notransla
 this is a real <code class="docutils literal notranslate"><span class="pre">Buffer</span></code> so node’s prototype methods are
 available on it.)</li>
 <li><code class="docutils literal notranslate"><span class="pre">buf.keys()</span></code> / <code class="docutils literal notranslate"><span class="pre">buf.values()</span></code> / <code class="docutils literal notranslate"><span class="pre">buf.entries()</span></code> — Return
-arrays of byte indexes, bytes, or <code class="docutils literal notranslate"><span class="pre">[index,</span> <span class="pre">byte]</span></code> pairs. (Node
-returns iterators; arrays serve the common <code class="docutils literal notranslate"><span class="pre">for...of</span></code> use case.)</li>
+iterators (following the ES2015 iterator protocol — <code class="docutils literal notranslate"><span class="pre">next()</span></code> +
+<code class="docutils literal notranslate"><span class="pre">[Symbol.iterator]</span></code> returning <code class="docutils literal notranslate"><span class="pre">{value,</span> <span class="pre">done}</span></code>) over byte
+indexes, bytes, or <code class="docutils literal notranslate"><span class="pre">[index,</span> <span class="pre">byte]</span></code> pairs (inherited from
+<span class="green">%TypedArray%.prototype</span>).  <code class="docutils literal notranslate"><span class="pre">buf[Symbol.iterator]()</span></code> is
+also available so <code class="docutils literal notranslate"><span class="pre">Buffer</span></code> is iterable.</li>
 <li>All of node’s <code class="docutils literal notranslate"><span class="pre">read*</span></code> / <code class="docutils literal notranslate"><span class="pre">write*</span></code> accessors for fixed-width
 integers and floats (e.g. <code class="docutils literal notranslate"><span class="pre">readUInt32BE</span></code>, <code class="docutils literal notranslate"><span class="pre">writeFloatLE</span></code>) are
 provided by duktape’s underlying Buffer and behave as in node.
@@ -1354,6 +1568,124 @@ available because duktape does not implement <code class="docutils literal notra
 </pre></div>
 </div>
 </div>
+</div>
+<div class="section" id="typedarray-methods">
+<h3>TypedArray Methods<a class="headerlink" href="#typedarray-methods" title="Permalink to this headline">¶</a></h3>
+<p>Rampart attaches the ES2015+ iteration helpers to the shared
+<span class="green">%TypedArray%.prototype</span>, so every typed array
+(<code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>, <code class="docutils literal notranslate"><span class="pre">Int8Array</span></code>, <code class="docutils literal notranslate"><span class="pre">Float32Array</span></code>, …) and <code class="docutils literal notranslate"><span class="pre">Buffer</span></code>
+inherits them in one shot:</p>
+<p><code class="docutils literal notranslate"><span class="pre">forEach</span></code>, <code class="docutils literal notranslate"><span class="pre">map</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">reduce</span></code>, <code class="docutils literal notranslate"><span class="pre">reduceRight</span></code>, <code class="docutils literal notranslate"><span class="pre">some</span></code>,
+<code class="docutils literal notranslate"><span class="pre">every</span></code>, <code class="docutils literal notranslate"><span class="pre">find</span></code>, <code class="docutils literal notranslate"><span class="pre">findIndex</span></code>, <code class="docutils literal notranslate"><span class="pre">findLast</span></code>, <code class="docutils literal notranslate"><span class="pre">findLastIndex</span></code>,
+<code class="docutils literal notranslate"><span class="pre">at</span></code>, <code class="docutils literal notranslate"><span class="pre">slice</span></code>, <code class="docutils literal notranslate"><span class="pre">fill</span></code>, <code class="docutils literal notranslate"><span class="pre">copyWithin</span></code>, <code class="docutils literal notranslate"><span class="pre">reverse</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code>
+(numeric, not lexicographic), <code class="docutils literal notranslate"><span class="pre">indexOf</span></code>, <code class="docutils literal notranslate"><span class="pre">lastIndexOf</span></code>,
+<code class="docutils literal notranslate"><span class="pre">includes</span></code>, <code class="docutils literal notranslate"><span class="pre">join</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">values</span></code>, <code class="docutils literal notranslate"><span class="pre">entries</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">[Symbol.iterator]</span></code> (aliased to <code class="docutils literal notranslate"><span class="pre">values</span></code>).  <code class="docutils literal notranslate"><span class="pre">Buffer</span></code>’s richer
+string-aware <code class="docutils literal notranslate"><span class="pre">indexOf</span></code> / <code class="docutils literal notranslate"><span class="pre">lastIndexOf</span></code> / <code class="docutils literal notranslate"><span class="pre">includes</span></code> shadow these
+for <code class="docutils literal notranslate"><span class="pre">Buffer</span></code> instances via the prototype chain.</p>
+</div>
+<div class="section" id="textencoder-textdecoder">
+<h3>TextEncoder / TextDecoder<a class="headerlink" href="#textencoder-textdecoder" title="Permalink to this headline">¶</a></h3>
+<p>Rampart provides <code class="docutils literal notranslate"><span class="pre">TextEncoder</span></code> and <code class="docutils literal notranslate"><span class="pre">TextDecoder</span></code> modeled on the
+WHATWG encoding spec.  Supported encodings:
+<code class="docutils literal notranslate"><span class="pre">utf-8</span></code>, <code class="docutils literal notranslate"><span class="pre">utf-16le</span></code>, <code class="docutils literal notranslate"><span class="pre">utf-16be</span></code>, <code class="docutils literal notranslate"><span class="pre">iso-8859-1</span></code> (also
+<code class="docutils literal notranslate"><span class="pre">latin1</span></code>, <code class="docutils literal notranslate"><span class="pre">binary</span></code>), <code class="docutils literal notranslate"><span class="pre">us-ascii</span></code>, plus the standard aliases
+(<code class="docutils literal notranslate"><span class="pre">ucs-2</span></code>, <code class="docutils literal notranslate"><span class="pre">csisolatin1</span></code>, <code class="docutils literal notranslate"><span class="pre">iso646-us</span></code>, …).  Unknown labels throw
+<code class="docutils literal notranslate"><span class="pre">RangeError</span></code>.  Input may be a <code class="docutils literal notranslate"><span class="pre">Buffer</span></code>, <code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ArrayBuffer</span></code>, or any <code class="docutils literal notranslate"><span class="pre">TypedArray</span></code> view.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">new</span> <span class="nx">TextEncoder</span><span class="p">().</span><span class="nx">encode</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">);</span>                <span class="cm">/* Uint8Array of 5 bytes */</span>
+<span class="k">new</span> <span class="nx">TextDecoder</span><span class="p">(</span><span class="s1">&#39;utf-16le&#39;</span><span class="p">).</span><span class="nx">decode</span><span class="p">(</span><span class="nx">buf</span><span class="p">);</span>          <span class="cm">/* decode wide chars   */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="map-and-set">
+<h3>Map and Set<a class="headerlink" href="#map-and-set" title="Permalink to this headline">¶</a></h3>
+<p>Rampart provides full ES2015 <code class="docutils literal notranslate"><span class="pre">Map</span></code> and <code class="docutils literal notranslate"><span class="pre">Set</span></code>:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">Map</span></code>: <code class="docutils literal notranslate"><span class="pre">set</span></code>, <code class="docutils literal notranslate"><span class="pre">get</span></code>, <code class="docutils literal notranslate"><span class="pre">has</span></code>, <code class="docutils literal notranslate"><span class="pre">delete</span></code>, <code class="docutils literal notranslate"><span class="pre">clear</span></code>,
+<code class="docutils literal notranslate"><span class="pre">forEach</span></code>, <code class="docutils literal notranslate"><span class="pre">entries</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">values</span></code>, <code class="docutils literal notranslate"><span class="pre">size</span></code> (getter),
+and <code class="docutils literal notranslate"><span class="pre">[Symbol.iterator]</span></code> → <code class="docutils literal notranslate"><span class="pre">entries</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Set</span></code>: <code class="docutils literal notranslate"><span class="pre">add</span></code>, <code class="docutils literal notranslate"><span class="pre">has</span></code>, <code class="docutils literal notranslate"><span class="pre">delete</span></code>, <code class="docutils literal notranslate"><span class="pre">clear</span></code>, <code class="docutils literal notranslate"><span class="pre">forEach</span></code>,
+<code class="docutils literal notranslate"><span class="pre">values</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>, <code class="docutils literal notranslate"><span class="pre">entries</span></code>, <code class="docutils literal notranslate"><span class="pre">size</span></code> (getter), and
+<code class="docutils literal notranslate"><span class="pre">[Symbol.iterator]</span></code> → <code class="docutils literal notranslate"><span class="pre">values</span></code>.</li>
+</ul>
+<p>Both constructors accept any iterable for initial population.
+Iterators produce <code class="docutils literal notranslate"><span class="pre">{value,</span> <span class="pre">done}</span></code> result objects and are themselves
+iterable.</p>
+</div>
+<div class="section" id="console-extras">
+<h3>console Extras<a class="headerlink" href="#console-extras" title="Permalink to this headline">¶</a></h3>
+<p>Alongside the standard <code class="docutils literal notranslate"><span class="pre">log</span></code> / <code class="docutils literal notranslate"><span class="pre">error</span></code> / <code class="docutils literal notranslate"><span class="pre">warn</span></code> / <code class="docutils literal notranslate"><span class="pre">info</span></code> /
+<code class="docutils literal notranslate"><span class="pre">debug</span></code> / <code class="docutils literal notranslate"><span class="pre">trace</span></code> / <code class="docutils literal notranslate"><span class="pre">dir</span></code> / <code class="docutils literal notranslate"><span class="pre">assert</span></code>, Rampart adds the
+following node-style methods:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">console.time(label?)</span></code> / <code class="docutils literal notranslate"><span class="pre">timeLog(label?,</span> <span class="pre">...extras)</span></code> /
+<code class="docutils literal notranslate"><span class="pre">timeEnd(label?)</span></code> — millisecond timers; label defaults to
+<code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">console.count(label?)</span></code> / <code class="docutils literal notranslate"><span class="pre">countReset(label?)</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">console.group(label?)</span></code> / <code class="docutils literal notranslate"><span class="pre">groupCollapsed(label?)</span></code> /
+<code class="docutils literal notranslate"><span class="pre">groupEnd()</span></code> — indent-based grouping.</li>
+<li><code class="docutils literal notranslate"><span class="pre">console.clear()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">console.table(data,</span> <span class="pre">columns?)</span></code> — tabular formatter.</li>
+</ul>
+</div>
+<div class="section" id="proxy-revocable">
+<h3>Proxy.revocable<a class="headerlink" href="#proxy-revocable" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Proxy.revocable(target,</span> <span class="pre">handler)</span></code> returns <code class="docutils literal notranslate"><span class="pre">{proxy,</span> <span class="pre">revoke}</span></code>.
+Calling <code class="docutils literal notranslate"><span class="pre">revoke()</span></code> makes every subsequent trap on <code class="docutils literal notranslate"><span class="pre">proxy</span></code> throw
+<code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.</p>
+</div>
+<div class="section" id="whatwg-w3c-web-platform-apis-experimental">
+<h3>WHATWG / W3C Web Platform APIs (experimental)<a class="headerlink" href="#whatwg-w3c-web-platform-apis-experimental" title="Permalink to this headline">¶</a></h3>
+<p>Rampart includes a substantial subset of browser Web Platform globals
+— <code class="docutils literal notranslate"><span class="pre">fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">URL</span></code>, <code class="docutils literal notranslate"><span class="pre">Headers</span></code>/<code class="docutils literal notranslate"><span class="pre">Request</span></code>/<code class="docutils literal notranslate"><span class="pre">Response</span></code>/<code class="docutils literal notranslate"><span class="pre">FormData</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Blob</span></code>/<code class="docutils literal notranslate"><span class="pre">File</span></code>, the <code class="docutils literal notranslate"><span class="pre">ReadableStream</span></code> / <code class="docutils literal notranslate"><span class="pre">WritableStream</span></code> /
+<code class="docutils literal notranslate"><span class="pre">TransformStream</span></code> family, <code class="docutils literal notranslate"><span class="pre">WebSocket</span></code>, <code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code>,
+<code class="docutils literal notranslate"><span class="pre">crypto</span></code> (Web Crypto), <code class="docutils literal notranslate"><span class="pre">structuredClone</span></code>, <code class="docutils literal notranslate"><span class="pre">queueMicrotask</span></code>,
+<code class="docutils literal notranslate"><span class="pre">EventSource</span></code>, <code class="docutils literal notranslate"><span class="pre">localStorage</span></code> / <code class="docutils literal notranslate"><span class="pre">sessionStorage</span></code>, and more.</p>
+<p>Like <code class="docutils literal notranslate"><span class="pre">Intl</span></code>, the surface is <strong>lazy-loaded</strong>: <code class="docutils literal notranslate"><span class="pre">rampart-whatwg.so</span></code> is
+only <code class="docutils literal notranslate"><span class="pre">dlopen()</span></code>-ed when JS first references one of these names.
+Scripts that never touch a Web Platform API pay zero startup cost.</p>
+<p>Conformance is <strong>partial and experimental</strong> — strongest for APIs that
+don’t assume a browser/DOM context (Web Crypto, URL, mimesniff, data:
+URLs, value-stream APIs, HTTP/1.1 <code class="docutils literal notranslate"><span class="pre">fetch</span></code>); weaker or absent for
+anything needing <code class="docutils literal notranslate"><span class="pre">document</span></code> / <code class="docutils literal notranslate"><span class="pre">window</span></code> / <code class="docutils literal notranslate"><span class="pre">iframe</span></code>, <code class="docutils literal notranslate"><span class="pre">WebAssembly</span></code>,
+HTTP/2 streaming upload, or <code class="docutils literal notranslate"><span class="pre">br</span></code> / <code class="docutils literal notranslate"><span class="pre">zstd</span></code> content-encoding (servers
+fall back to <code class="docutils literal notranslate"><span class="pre">gzip</span></code>).  Behaviors may change as the implementation
+tracks the WPT suite.</p>
+</div>
+<div class="section" id="intl">
+<h3>Intl<a class="headerlink" href="#intl" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">globalThis.Intl</span></code> is installed as a lazy getter — on first access
+it loads the ICU4C-backed <code class="docutils literal notranslate"><span class="pre">rampart-intl</span></code> module (~37 MB of bundled
+locale data), which assigns <code class="docutils literal notranslate"><span class="pre">globalThis.Intl</span></code>.  Scripts that never
+touch <code class="docutils literal notranslate"><span class="pre">Intl</span></code> pay nothing.</p>
+<p>All eight ECMA-402 constructors are available once loaded:
+<code class="docutils literal notranslate"><span class="pre">DateTimeFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">NumberFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">Collator</span></code>, <code class="docutils literal notranslate"><span class="pre">PluralRules</span></code>,
+<code class="docutils literal notranslate"><span class="pre">RelativeTimeFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">ListFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">DisplayNames</span></code>, <code class="docutils literal notranslate"><span class="pre">Locale</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Segmenter</span></code>, <code class="docutils literal notranslate"><span class="pre">DurationFormat</span></code>, plus <code class="docutils literal notranslate"><span class="pre">Intl.getCanonicalLocales</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Intl.supportedValuesOf</span></code>.  Behaves per
+<a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl">MDN’s Intl reference</a>.</p>
+</div>
+<div class="section" id="other-globals">
+<h3>Other Globals<a class="headerlink" href="#other-globals" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">globalThis</span></code> and <code class="docutils literal notranslate"><span class="pre">global</span></code> — both reference the global object
+(Rampart adds the node-style <code class="docutils literal notranslate"><span class="pre">global</span></code> alias alongside
+<code class="docutils literal notranslate"><span class="pre">globalThis</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">JSON.parse(text[,</span> <span class="pre">reviver])</span></code> — extended to accept a
+<span class="green">Buffer</span> as <code class="docutils literal notranslate"><span class="pre">text</span></code>.  When <code class="docutils literal notranslate"><span class="pre">reviver</span> <span class="pre">===</span> <span class="pre">true</span></code>, walks the
+parsed tree and resolves <code class="docutils literal notranslate"><span class="pre">{&quot;_cyclic_ref&quot;:&quot;$.path&quot;}</span></code> placeholders
+produced by <code class="docutils literal notranslate"><span class="pre">rampart.utils.sprintf(&quot;%!J&quot;,</span> <span class="pre">obj)</span></code> back into shared
+references, restoring cyclic graphs.  This is a <strong>rampart-specific</strong>
+reviver convention; passing a function reviver behaves per spec.</li>
+<li><code class="docutils literal notranslate"><span class="pre">eval</span></code> — when the transpiler is in effect (<code class="docutils literal notranslate"><span class="pre">-t</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>), the source is lowered before evaluation.
+Otherwise behaves as standard ES5 <code class="docutils literal notranslate"><span class="pre">eval</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Function(...)</span></code> — bodies are run through the transpiler so
+ES2015+ syntax (classes, <code class="docutils literal notranslate"><span class="pre">async</span></code>, generators) compiles inside
+dynamically-built functions.</li>
+</ul>
 </div>
 <div class="section" id="settimeout">
 <h3>setTimeout()<a class="headerlink" href="#settimeout" title="Permalink to this headline">¶</a></h3>
@@ -1545,10 +1877,10 @@ include:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://duktape.org/guide.html#builtin-duktape">Duktape</a></li>
 <li><a class="reference external" href="https://duktape.org/guide.html#builtin-cbor">CBOR</a></li>
-<li><a class="reference external" href="https://duktape.org/guide.html#builtin-textencoder">TextEncoder</a></li>
-<li><a class="reference external" href="https://duktape.org/guide.html#builtin-textdecoder">TextDecoder</a></li>
 <li><a class="reference external" href="https://duktape.org/guide.html#builtin-performance">performance</a></li>
 </ul>
+<p>(<code class="docutils literal notranslate"><span class="pre">TextEncoder</span></code> and <code class="docutils literal notranslate"><span class="pre">TextDecoder</span></code> are documented above under
+<a class="reference internal" href="#textencoder-textdecoder">TextEncoder / TextDecoder</a>.)</p>
 <p>For more information, see the <a class="reference external" href="https://duktape.org/guide.html">Duktape Guide</a></p>
 </div>
 <div class="section" id="ecmascript-2015-and-babel-js">
@@ -1570,7 +1902,7 @@ Rampart are extremely grateful to the
 <div class="section" id="activating-babel">
 <h3>Activating Babel<a class="headerlink" href="#activating-babel" title="Permalink to this headline">¶</a></h3>
 <p>A slightly modified version of babel.js (currently babel-standalone v
-7.11.1) and the associated collection of polyfills (babel-polyfill.js) are
+7.12.17) and the associated collection of polyfills (babel-polyfill.js) are
 included in the Rampart distribution.  To use ECMA 2015+ features of
 JavaScript, simply include the following at the beginning of the script:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel&quot;</span>
@@ -1603,8 +1935,23 @@ than an optional comment.</p>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> directive optionally takes a <code class="docutils literal notranslate"><span class="pre">:</span></code> followed by babel
-options.  Without options <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> is equivalent to
-<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel:{</span> <span class="pre">presets:</span> <span class="pre">['env'],</span> <span class="pre">retainLines:</span> <span class="pre">true</span> <span class="pre">}&quot;</span></code>.  See
+options on the same line.  Without options <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> is equivalent
+to (shown wrapped for readability; the directive itself must be on one
+physical line):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use babel:{ presets: [&#39;env&#39;],</span>
+             <span class="n">plugins</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;proposal-class-properties&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;proposal-private-methods&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;proposal-private-property-in-object&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;proposal-nullish-coalescing-operator&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;proposal-optional-chaining&#39;</span><span class="p">],</span>
+             <span class="n">retainLines</span><span class="p">:</span> <span class="n">true</span> <span class="p">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>The default plugin list enables ES2020/2022 class fields, private
+fields/methods, nullish coalescing (<code class="docutils literal notranslate"><span class="pre">??</span></code>), and optional chaining
+(<code class="docutils literal notranslate"><span class="pre">?.</span></code>) on top of <code class="docutils literal notranslate"><span class="pre">preset-env</span></code>.  Specifying any explicit <code class="docutils literal notranslate"><span class="pre">plugins:</span></code>
+or <code class="docutils literal notranslate"><span class="pre">presets:</span></code> in the directive replaces this default — include the
+plugins you need in the override.  See
 <a class="reference external" href="https://babeljs.io/docs/en/babel-preset-env">babel documentation</a>
 for more information on possible options.</p>
 <p>A simple example in
@@ -1796,6 +2143,28 @@ output to disk (e.g., <code class="docutils literal notranslate"><span class="pr
 and reuse it on subsequent runs if the source has not changed.
 In addition, the transpiler keeps the <a class="reference internal" href="#extra-javascript-functionality">Extra JavaScript Functionality</a> listed above.</p>
 </div>
+</div>
+<div class="section" id="skipping-a-second-pass-the-notranspile-directive">
+<h2>Skipping a second pass: the <code class="docutils literal notranslate"><span class="pre">&quot;noTranspile&quot;</span></code> directive<a class="headerlink" href="#skipping-a-second-pass-the-notranspile-directive" title="Permalink to this headline">¶</a></h2>
+<p>Both the transpiler and babel save their processed output to disk
+(<code class="docutils literal notranslate"><span class="pre">myscript.transpiled.js</span></code> / <code class="docutils literal notranslate"><span class="pre">myscript.babel.js</span></code>) and prefix that
+output with a <code class="docutils literal notranslate"><span class="pre">&quot;noTranspile&quot;;</span></code> directive.  A file that carries this
+directive is treated as already-processed: it is loaded as-is and is
+<strong>not</strong> run through the transpiler or babel a second time, even under
+<code class="docutils literal notranslate"><span class="pre">-t</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">-b</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babelGlobally&quot;</span></code>).</p>
+<p>This matters when an already-transpiled/babelized file is renamed to a
+plain <code class="docutils literal notranslate"><span class="pre">.js</span></code> and <code class="docutils literal notranslate"><span class="pre">require()</span></code>d from a script that has global
+transpilation or babel enabled — without the marker it would be
+re-processed unnecessarily.</p>
+<p>You can also place the directive in your own source to exempt a file from
+processing entirely:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;noTranspile&quot;</span>
+</pre></div>
+</div>
+<p>Like the other directives, it must be the first JavaScript text in the
+file — it may follow a hash-bang line and any comments, and it coexists
+with other leading directives such as <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">strict&quot;</span></code>.  At runtime it is
+an inert string-literal statement.</p>
 </div>
 </div>
 

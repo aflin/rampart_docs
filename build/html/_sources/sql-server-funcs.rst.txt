@@ -31,7 +31,7 @@ With semantic embedding vectors, it can be used to rerank likep results.
 
 .. code-block:: javascript
 
-    /* 
+    /*
       do a likep search on query for 100 rows, rerank on the embedding vector of query (compvec).
       1 is first selected column (score).
       ORDER BY 1 DESC because higher dot product scores = more similar.
@@ -43,6 +43,69 @@ With semantic embedding vectors, it can be used to rerank likep results.
         [compvec, query]
     );
     /* display top 10 rows in res here */
+
+embed
+"""""
+
+Compute a semantic embedding vector for a piece of text using the
+currently-loaded llama.cpp model.
+
+.. code-block:: sql
+
+    embed(text [, dtype])
+
+* ``text`` is a :green:`String` column, bound parameter, literal, or any
+  expression that evaluates to text.  ``NULL`` and the empty string
+  produce ``NULL``.
+* ``dtype`` is an optional :green:`String` naming the result vec dtype.
+  One of ``'f16'`` (default), ``'f32'``, ``'f64'``, or ``'bf16'``.  The
+  named dtype propagates to the result column type: ``embed(?, 'f32')``
+  returns a ``varvecF32``, ``embed(?)`` returns a ``varvecF16``.
+
+The model is configured process-wide via
+:ref:`llamaEmbed <sql-set:llamaEmbed>`; concurrency behavior is
+controlled by :ref:`llamaEmbedPerThread <sql-set:llamaEmbedPerThread>`.
+The output dimensionality is determined by the model — for example,
+``all-MiniLM-L6-v2`` produces 384-dim vectors; ``BGE-base`` produces
+768-dim.  Vectors are L2-normalized; norm ≈ 1.0 within dtype
+quantization noise.
+
+``embed()`` requires the ``rampart-llamacpp`` module to be installed.
+``rampart-sql`` auto-loads it on the first ``sql.set({llamaEmbed: ...})``
+call (trying ``rampart-llamacpp``, then ``rampart-llamacpp_cuda``,
+then ``rampart-llamacpp_cpu``).  To force a specific variant, call
+``require('rampart-llamacpp_cpu')`` (or ``_cuda``, etc.) first.  See
+:ref:`Generating embeddings <rampart-sql:Generating embeddings>` for
+the full dependency and install notes.
+
+If no model has been loaded, ``embed()`` raises a runtime error.  If
+``dtype`` names something unknown (e.g. ``'q4_0'``), the SQL prepare
+fails with a clear "Unknown dtype" message.
+
+Use in SELECT projections, INSERT values, or as the right-hand side of
+``LIKEV`` / ``vecdist()``:
+
+.. code-block:: sql
+
+    -- Inline embedding at INSERT time
+    INSERT INTO docs (id, text, v) VALUES (?, ?, embed(?));
+
+    -- Top-K similarity search (a string on the right-hand side of LIKEV
+    -- is also auto-coerced to embed())
+    SELECT id, $rank FROM docs WHERE v LIKEV embed(?) ORDER BY 2 DESC;
+
+    -- Distance/score projection, used to re-rank an index result
+    SELECT id, vecdist(v, embed(?)) AS d
+      FROM docs WHERE v LIKEV embed(?)
+     ORDER BY 2 DESC;
+
+    -- Standalone, useful for debugging / probing model output
+    SELECT embed('chocolate cake recipe', 'f32');
+
+See :ref:`Vector Search <rampart-sql:Vector Search>` for the end-to-end
+pipeline (model setup → table schema → INSERT → vector index →
+``LIKEV``).
+
 
 General Functions
 ~~~~~~~~~~~~~~~~~

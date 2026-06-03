@@ -95,10 +95,12 @@
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-functions">Database Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#database-indexing">Database Indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#vector-search">Vector Search</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Server Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#vector-function">Vector Function</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#vecdist">vecdist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#embed">embed</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#general-functions">General Functions</a><ul>
@@ -186,6 +188,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -299,6 +302,61 @@ with the exception that <code class="docutils literal notranslate"><span class="
 <span class="cm">/* display top 10 rows in res here */</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="embed">
+<h3>embed<a class="headerlink" href="#embed" title="Permalink to this headline">¶</a></h3>
+<p>Compute a semantic embedding vector for a piece of text using the
+currently-loaded llama.cpp model.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">embed</span><span class="p">(</span><span class="nb">text</span> <span class="p">[,</span> <span class="n">dtype</span><span class="p">])</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> is a <span class="green">String</span> column, bound parameter, literal, or any
+expression that evaluates to text.  <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and the empty string
+produce <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">dtype</span></code> is an optional <span class="green">String</span> naming the result vec dtype.
+One of <code class="docutils literal notranslate"><span class="pre">'f16'</span></code> (default), <code class="docutils literal notranslate"><span class="pre">'f32'</span></code>, <code class="docutils literal notranslate"><span class="pre">'f64'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'bf16'</span></code>.  The
+named dtype propagates to the result column type: <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'f32')</span></code>
+returns a <code class="docutils literal notranslate"><span class="pre">varvecF32</span></code>, <code class="docutils literal notranslate"><span class="pre">embed(?)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">varvecF16</span></code>.</li>
+</ul>
+<p>The model is configured process-wide via
+<a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a>; concurrency behavior is
+controlled by <a class="reference internal" href="sql-set.html#llamaembedperthread"><span class="std std-ref">llamaEmbedPerThread</span></a>.
+The output dimensionality is determined by the model — for example,
+<code class="docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code> produces 384-dim vectors; <code class="docutils literal notranslate"><span class="pre">BGE-base</span></code> produces
+768-dim.  Vectors are L2-normalized; norm ≈ 1.0 within dtype
+quantization noise.</p>
+<p><code class="docutils literal notranslate"><span class="pre">embed()</span></code> requires the <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> module to be installed.
+<code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> auto-loads it on the first <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code>
+call (trying <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code>, then <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp_cuda</span></code>,
+then <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp_cpu</span></code>).  To force a specific variant, call
+<code class="docutils literal notranslate"><span class="pre">require('rampart-llamacpp_cpu')</span></code> (or <code class="docutils literal notranslate"><span class="pre">_cuda</span></code>, etc.) first.  See
+<a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class="std std-ref">Generating embeddings</span></a> for
+the full dependency and install notes.</p>
+<p>If no model has been loaded, <code class="docutils literal notranslate"><span class="pre">embed()</span></code> raises a runtime error.  If
+<code class="docutils literal notranslate"><span class="pre">dtype</span></code> names something unknown (e.g. <code class="docutils literal notranslate"><span class="pre">'q4_0'</span></code>), the SQL prepare
+fails with a clear “Unknown dtype” message.</p>
+<p>Use in SELECT projections, INSERT values, or as the right-hand side of
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> / <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>-- Inline embedding at INSERT time
+INSERT INTO docs (id, text, v) VALUES (?, ?, embed(?));
+
+-- Top-K similarity search (a string on the right-hand side of LIKEV
+-- is also auto-coerced to embed())
+SELECT id, $rank FROM docs WHERE v LIKEV embed(?) ORDER BY 2 DESC;
+
+-- Distance/score projection, used to re-rank an index result
+SELECT id, vecdist(v, embed(?)) AS d
+  FROM docs WHERE v LIKEV embed(?)
+ ORDER BY 2 DESC;
+
+-- Standalone, useful for debugging / probing model output
+SELECT embed(&#39;chocolate cake recipe&#39;, &#39;f32&#39;);
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> for the end-to-end
+pipeline (model setup → table schema → INSERT → vector index →
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>).</p>
 </div>
 </div>
 <div class="section" id="general-functions">

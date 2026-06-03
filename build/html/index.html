@@ -92,6 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -222,6 +223,13 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#getpid">getpid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#getppid">getppid</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#setproctitle">setProcTitle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#ncpu">nCpu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#gettotalmem">getTotalMem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#getfreemem">getFreeMem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#uptime">uptime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#systemuptime">systemUptime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#getcpuinfo">getCpuInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#setmaxmem">setMaxMem</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-main.html#using-the-require-function-to-import-modules">Using the require Function to Import Modules</a><ul>
@@ -231,7 +239,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-main.html#extra-javascript-functionality">Extra JavaScript Functionality</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#object-values">Object.values()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#object-methods">Object Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#array-methods">Array Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#string-methods">String Methods</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#template-literals">Template Literals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#tagged-functions">Tagged Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#rest-parameters">Rest Parameters</a></li>
@@ -244,6 +254,14 @@
 <li class="toctree-l4"><a class="reference internal" href="rampart-main.html#examples">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#typedarray-methods">TypedArray Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#textencoder-textdecoder">TextEncoder / TextDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#map-and-set">Map and Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#console-extras">console Extras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#proxy-revocable">Proxy.revocable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#whatwg-w3c-web-platform-apis-experimental">WHATWG / W3C Web Platform APIs (experimental)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#intl">Intl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#other-globals">Other Globals</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#settimeout">setTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#cleartimeout">clearTimeout()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#setinterval">setInterval()</a></li>
@@ -269,6 +287,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#why-use-the-transpiler-instead-of-babel">Why use the transpiler instead of Babel?</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-main.html#skipping-a-second-pass-the-notranspile-directive">Skipping a second pass: the <code class="docutils literal notranslate"><span class="pre">&quot;noTranspile&quot;</span></code> directive</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a><ul>
@@ -578,6 +597,15 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#id10">Further Reading</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#vector-search">Vector Search</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#storage">Storage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#generating-embeddings">Generating embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#querying">Querying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#indexing">Indexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#migrating-between-dtypes">Migrating between dtypes</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#stringformat">stringFormat()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#abstract">abstract()</a></li>
@@ -594,6 +622,7 @@
 <li class="toctree-l2"><a class="reference internal" href="sql-server-funcs.html">Server Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="sql-server-funcs.html#vector-function">Vector Function</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#vecdist">vecdist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#embed">embed</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sql-server-funcs.html#general-functions">General Functions</a><ul>
@@ -747,6 +776,11 @@
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevrows">likevRows</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevef">likevEf</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevpqnprobe">likevPqNprobe</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sql-set.html#embedding-properties">Embedding Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#llamaembed">llamaEmbed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#llamaembedperthread">llamaEmbedPerThread</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sql-set.html#indexing-properties">Indexing properties</a><ul>
@@ -1169,6 +1203,96 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#what-does-it-do">What does it do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#how-does-it-work">How does it work?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#loading">Loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#quick-start">Quick Start</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#calling-conventions">Calling Conventions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#synchronous">Synchronous</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#callback">Callback</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#promise-async-await">Promise / async-await</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-side-callbacks-strings-always-work-functions-require-use-transpiler">Page-side callbacks: strings always work; functions require “use transpiler”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#event-driven-features-need-the-main-event-loop">Event-driven features need the main event loop</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#known-limitations">Known Limitations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#sync-mode-and-event-triggered-waits-do-not-mix">Sync mode and event-triggered waits do not mix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#function-prototype-tostring-returns-a-stub-in-plain-duktape">Function.prototype.toString returns a stub in plain Duktape</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#worker-runtime-only-no-dom">Worker — Runtime only, no DOM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-queryobjects-requires-a-real-jshandle-prototype">page.queryObjects requires a real JSHandle prototype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#consolemessage-shape">ConsoleMessage shape</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#cleanup-of-launched-chrome-on-script-exit">Cleanup of launched Chrome on script exit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#html5-drag-and-drop-requires-explicit-interception">HTML5 drag-and-drop requires explicit interception</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#module-level-functions">Module-Level Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-launch">chrome.launch()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-connect">chrome.connect()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-executablepath">chrome.executablePath()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-defaultargs">chrome.defaultArgs()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-devices">chrome.devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-networkconditions">chrome.networkConditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-timeouterror">chrome.TimeoutError</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#browser">Browser</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#browser-events">Browser events</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#browsercontext">BrowserContext</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#page">Page</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#navigation">Navigation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#content-and-evaluation">Content and Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#selectors">Selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#interaction">Interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#waiting">Waiting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#screenshots-and-pdf">Screenshots and PDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#cookies">Cookies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#emulation">Emulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#misc-page-accessors">Misc page accessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-events">Page events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#binding-functions">Binding functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#request-interception">Request interception</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#frame">Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#jshandle">JSHandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#elementhandle">ElementHandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#mouse">Mouse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#keyboard">Keyboard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#request">Request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#response">Response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#target">Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#cdpsession">CDPSession</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#worker">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#coverage">Coverage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#tracing">Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#filechooser">FileChooser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#accessibility">Accessibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#consolemessage">ConsoleMessage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#dialog">Dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#example-scrape-a-rendered-spa-and-save-a-pdf">Example: scrape a rendered SPA and save a PDF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#using-puppeteer-extras">Using puppeteer-extras</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#what-it-provides">What it provides</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#id1">Loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#use-with-rampart-chromeview">Use with rampart-chromeview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#why-use-transpiler-is-required">Why “use transpiler” is required</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#bundled-packages">Bundled packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#why-a-bundle">Why a bundle</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#preface">Preface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#acknowledgment">Acknowledgment</a></li>
@@ -1196,6 +1320,48 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#rsa-priv-decrypt">rsa_priv_decrypt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#rsa-sign">rsa_sign</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#rsa-verify">rsa_verify</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#ec-encryption">EC Encryption</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ec-gen-key">ec_gen_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ec-import-pub-key">ec_import_pub_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ec-import-priv-key">ec_import_priv_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ec-components">ec_components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ecdsa-sign">ecdsa_sign</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ecdsa-verify">ecdsa_verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ecdh">ecdh</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#x25519-and-ed25519">X25519 and Ed25519</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#x25519-gen-key">x25519_gen_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#x25519-import-pub-key">x25519_import_pub_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#x25519-import-priv-key">x25519_import_priv_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#x25519-components">x25519_components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#x25519-derive">x25519_derive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ed25519-gen-key">ed25519_gen_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ed25519-import-pub-key">ed25519_import_pub_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ed25519-import-priv-key">ed25519_import_priv_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ed25519-components">ed25519_components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ed25519-sign">ed25519_sign</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ed25519-verify">ed25519_verify</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#x448-and-ed448">X448 and Ed448</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#post-quantum-ml-kem-ml-dsa">Post-Quantum (ML-KEM, ML-DSA)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ml-kem-key-encapsulation-mechanism">ML-KEM (Key Encapsulation Mechanism)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mlkem-gen-key">mlkem_gen_key</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mlkem-encapsulate">mlkem_encapsulate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mlkem-decapsulate">mlkem_decapsulate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mlkem-import-pub-key-mlkem-import-priv-key-mlkem-components">mlkem_import_pub_key / mlkem_import_priv_key / mlkem_components</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#ml-dsa-module-lattice-digital-signature-algorithm">ML-DSA (Module-Lattice Digital Signature Algorithm)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mldsa-gen-key">mldsa_gen_key</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mldsa-sign">mldsa_sign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mldsa-verify">mldsa_verify</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-crypto.html#mldsa-import-pub-key-mldsa-import-priv-key-mldsa-components">mldsa_import_pub_key / mldsa_import_priv_key / mldsa_components</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#gen-csr">gen_csr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#gen-cert">gen_cert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#cert-info">cert_info</a></li>
@@ -1211,6 +1377,14 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#hash">hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#alias-functions">alias functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#hmac">hmac</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#kmac">kmac</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#cshake128-cshake256">cshake128 / cshake256</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#key-derivation">Key Derivation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#pbkdf2">pbkdf2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#hkdf">hkdf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#scrypt">scrypt</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#random">Random</a><ul>
@@ -1219,6 +1393,15 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#gaussrand">gaussrand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#normrand">normrand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#seed">seed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#comparison">Comparison</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#timingsafeequal">timingSafeEqual</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#pem-der-conversion">PEM / DER conversion</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#pemtoder">pemToDer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#dertopem">derToPem</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#bigint">BigInt</a><ul>
@@ -1667,9 +1850,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-cmodule">rampart-cmodule</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-macros-for-c-modules">Rampart Macros for C Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#intl-and-whatwg">Intl and WHATWG</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-extras.html#rampart-nodeshim-module">rampart-nodeshim Module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#loading">Loading</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#submodules-and-notable-gaps">Submodules and notable gaps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#tested-libraries">Tested libraries</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-extras.html#not-implemented">Not implemented</a></li>
 </ul>
 </li>
