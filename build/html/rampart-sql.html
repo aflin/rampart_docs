@@ -2552,17 +2552,17 @@ sections.</p>
 Data Types” for the full dtype table and a discussion of when to prefer
 each.  In short:</p>
 <ul class="simple">
-<li><strong>``varvecF16``</strong> — most embedding pipelines.  2 bytes per element,
+<li><code class="docutils literal notranslate"><span class="pre">varvecF16</span></code> — most embedding pipelines.  2 bytes per element,
 near-lossless on L2-normalized vectors, indexable.</li>
-<li><strong>``varvecF32``</strong> — natural precision; no quantization loss; useful when
+<li><code class="docutils literal notranslate"><span class="pre">varvecF32</span></code> — natural precision; no quantization loss; useful when
 you need to migrate or re-quantize later.</li>
-<li><strong>``varvecBf16``</strong> — TPU/Google-style pipelines.</li>
-<li><strong>``varvecF64``</strong> — high-precision research/scientific use.</li>
-<li><strong>``varvecI8`` / ``varvecU8``</strong> — 1 byte per element; reserved (typed
+<li><code class="docutils literal notranslate"><span class="pre">varvecBf16</span></code> — TPU/Google-style pipelines.</li>
+<li><code class="docutils literal notranslate"><span class="pre">varvecF64</span></code> — high-precision research/scientific use.</li>
+<li><code class="docutils literal notranslate"><span class="pre">varvecI8</span></code> / <code class="docutils literal notranslate"><span class="pre">varvecU8</span></code> — 1 byte per element; reserved (typed
 storage only — direct indexing is not yet enabled, but HNSW i8/u8
 <em>quantized indexes over varvecF* columns</em> are supported via
 <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'i8'</span></code>).</li>
-<li><strong>``byte(N)`` / ``varbyte(N)``</strong> — opaque bytes, used when the same
+<li><code class="docutils literal notranslate"><span class="pre">byte(N)</span></code> / <code class="docutils literal notranslate"><span class="pre">varbyte(N)</span></code> — opaque bytes, used when the same
 column needs to hold vectors of more than one dtype or when integrating
 with code that produces raw byte buffers.  An index over a <code class="docutils literal notranslate"><span class="pre">varbyte</span></code>
 column requires <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'&lt;dtype&gt;'</span></code> so the index knows how to

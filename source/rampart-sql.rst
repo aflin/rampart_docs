@@ -2429,17 +2429,17 @@ Vectors are stored in typed ``varvec*`` columns or in raw ``byte`` /
 Data Types" for the full dtype table and a discussion of when to prefer
 each.  In short:
 
-* **``varvecF16``** — most embedding pipelines.  2 bytes per element,
+* ``varvecF16`` — most embedding pipelines.  2 bytes per element,
   near-lossless on L2-normalized vectors, indexable.
-* **``varvecF32``** — natural precision; no quantization loss; useful when
+* ``varvecF32`` — natural precision; no quantization loss; useful when
   you need to migrate or re-quantize later.
-* **``varvecBf16``** — TPU/Google-style pipelines.
-* **``varvecF64``** — high-precision research/scientific use.
-* **``varvecI8`` / ``varvecU8``** — 1 byte per element; reserved (typed
+* ``varvecBf16`` — TPU/Google-style pipelines.
+* ``varvecF64`` — high-precision research/scientific use.
+* ``varvecI8`` / ``varvecU8`` — 1 byte per element; reserved (typed
   storage only — direct indexing is not yet enabled, but HNSW i8/u8
   *quantized indexes over varvecF\* columns* are supported via
   ``WITH vec_dtype 'i8'``).
-* **``byte(N)`` / ``varbyte(N)``** — opaque bytes, used when the same
+* ``byte(N)`` / ``varbyte(N)`` — opaque bytes, used when the same
   column needs to hold vectors of more than one dtype or when integrating
   with code that produces raw byte buffers.  An index over a ``varbyte``
   column requires ``WITH vec_dtype '<dtype>'`` so the index knows how to
