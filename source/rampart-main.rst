@@ -2091,3 +2091,30 @@ several orders of magnitude faster than babel.  Both save their transpiled
 output to disk (e.g., ``myscript.transpiled.js`` or ``myscript.babel.js``)
 and reuse it on subsequent runs if the source has not changed.
 In addition, the transpiler keeps the `Extra JavaScript Functionality`_ listed above.
+
+Skipping a second pass: the ``"noTranspile"`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Both the transpiler and babel save their processed output to disk
+(``myscript.transpiled.js`` / ``myscript.babel.js``) and prefix that
+output with a ``"noTranspile";`` directive.  A file that carries this
+directive is treated as already-processed: it is loaded as-is and is
+**not** run through the transpiler or babel a second time, even under
+``-t`` / ``"use transpilerGlobally"`` (or ``-b`` / ``"use babelGlobally"``).
+
+This matters when an already-transpiled/babelized file is renamed to a
+plain ``.js`` and ``require()``\ d from a script that has global
+transpilation or babel enabled — without the marker it would be
+re-processed unnecessarily.
+
+You can also place the directive in your own source to exempt a file from
+processing entirely:
+
+.. code-block:: javascript
+
+   "noTranspile"
+
+Like the other directives, it must be the first JavaScript text in the
+file — it may follow a hash-bang line and any comments, and it coexists
+with other leading directives such as ``"use strict"``.  At runtime it is
+an inert string-literal statement.
