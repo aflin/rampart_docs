@@ -1381,9 +1381,98 @@ likevPqNprobe
     more recall for more latency (``set likevpqnprobe=512``).  Setting
     to a value > nlist is silently capped.
 
-    Pair with ``vecdist()`` re-rank (see
-    :ref:`Querying with LIKEV <rampart-sql:Querying with LIKEV>`)
-    to recover near-exact recall on top of the wider candidate pool.
+    ``$rank`` is exact at the column's stored precision regardless of
+    ``likevPqNprobe`` — LIKEV re-scores each candidate against the
+    actual stored column bytes after the index step.  This setting
+    controls how *many* and *which* candidates the index surfaces;
+    once surfaced, they are scored exactly.  See
+    :ref:`Querying with LIKEV <rampart-sql:Querying with LIKEV>`.
+
+
+Embedding Properties
+~~~~~~~~~~~~~~~~~~~~
+
+These settings configure the in-process ``llama.cpp`` embedding model
+used by the :ref:`embed() <sql-server-funcs:embed>` SQL function and by
+``LIKEV``'s auto-coercion of string parameters to vectors.  See
+:ref:`Vector Search <rampart-sql:Vector Search>` for the end-to-end
+pipeline these settings fit into.
+
+
+llamaEmbed
+""""""""""
+    Path to a ``.gguf`` embedding model.  Setting this loads the model
+    into the SQL process; once loaded, the model is shared by all
+    subsequent calls to :ref:`embed() <sql-server-funcs:embed>` and by
+    any ``LIKEV`` predicate whose right-hand side is a string (which is
+    auto-coerced via ``embed()``).
+
+    .. code-block:: javascript
+
+        sql.set({llamaEmbed: '/models/all-minilm-l6-v2_f16.gguf'});
+
+    Loading requires the ``rampart-llamacpp`` module to be installed.
+    If no llamacpp module is already loaded, this ``set`` call
+    auto-tries ``require('rampart-llamacpp')``, then
+    ``rampart-llamacpp_cuda``, then ``rampart-llamacpp_cpu`` — whichever
+    resolves first wins, so no explicit ``require()`` is typically
+    needed.  To force a specific variant when more than one is
+    installed, call ``require('rampart-llamacpp_cpu')`` (or
+    ``_cuda``, ``_metal``, etc.) **before** ``sql.set({llamaEmbed: ...})``;
+    ``rampart-sql`` resolves the embed functions via ``dlsym`` from
+    whichever variant is already loaded, so a manually required
+    module always takes precedence.  If no variant resolves,
+    ``sql.set({llamaEmbed: ...})`` throws with a clear "cannot load
+    rampart-llamacpp" message.  ``rampart-llamacpp`` ships separately
+    in ``rampart-langtools``; see its module documentation for build
+    variants and install instructions.
+
+    The model is loaded once per process (llama.cpp deduplicates
+    repeated loads of the same path, so re-setting the same model from
+    multiple threads or workers is effectively free).  To swap models,
+    re-set ``llamaEmbed`` to a different path; the previous model is
+    released when no embed calls are in flight.
+
+    The output dimensionality of every ``embed()`` call is determined
+    by the loaded model — typical values are 384
+    (``all-MiniLM-L6-v2``), 768 (``BGE-base``), 1024 / 1536
+    (``OpenAI Ada``-class models served via llama.cpp), etc.  Plan your
+    ``varvec*`` column width to match.
+
+    No default — ``embed()`` raises a runtime error if no model has
+    been loaded.
+
+
+llamaEmbedPerThread
+"""""""""""""""""""
+    Whether each worker thread keeps its own ``llama_context`` over the
+    shared model (default ``true``).
+
+    .. code-block:: javascript
+
+        sql.set({llamaEmbedPerThread: true});   // default
+        sql.set({llamaEmbedPerThread: false});  // serialize through one context
+
+    * **``true`` (default)** — concurrent ``embed()`` calls from
+      multiple SQL worker threads run in parallel on GPU (separate
+      CUDA streams) or multi-core CPU (separate per-context scratch
+      buffers).  This is the right choice for any bulk-embed workload
+      and for high-QPS ``LIKEV`` traffic.  The shared model itself is
+      loaded once into VRAM / RAM regardless of thread count
+      (llama.cpp internally deduplicates), so the cost is one
+      ``llama_context`` per thread — modest, typically a few hundred
+      MB on GPU.
+    * **``false``** — all ``embed()`` calls serialize through a single
+      ``llama_context`` guarded by an internal mutex.  Useful in
+      memory-constrained environments where the per-thread context
+      cost is prohibitive, or in single-threaded workloads where the
+      overhead serves no purpose.
+
+    Setting this property in any one thread/connection applies
+    process-wide for subsequent ``embed()`` calls.  Changing it while
+    embed calls are in flight is safe — already-issued calls run to
+    completion under their current mode; the new mode takes effect on
+    the next call.
 
 
 Indexing properties

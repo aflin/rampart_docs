@@ -2209,24 +2209,45 @@ Basic top-K:
 * If the planner can't use the index — wrong column type, dimension
   mismatch, or no index present — it falls back to brute force.
   Results are identical, just slower.
+* **``$rank`` is exact at the column's stored precision** for both
+  HNSW and IVFPQ.  The index returns a candidate pool (up to
+  :ref:`likevRows <sql-set:likevRows>` rows, default 1000) ordered by
+  the backend's native score; each candidate is then re-scored
+  per-row by ``rp_vector_distance`` against the actual stored column
+  bytes before ``$rank`` is set.  The IVFPQ PQ approximation only
+  affects which rows are picked as candidates and in what initial
+  order — never the final score you sort on.
 
-For IVFPQ (and any case where you want exact ranking on top of an
-approximate candidate set), pair ``LIKEV`` with ``vecdist()`` for a
-re-rank pass:
+  This means an extra ``ORDER BY vecdist(v, ?) DESC`` pass is **not**
+  needed for top-K ordering — it would produce the same ordering as
+  ``ORDER BY $rank DESC`` (just as a float instead of a scaled int).
+  See `When to use vecdist()`_ below for the cases where
+  ``vecdist()`` is genuinely useful.
 
-.. code-block:: sql
+  To grow the candidate pool when recall feels too low, raise
+  :ref:`likevRows <sql-set:likevRows>` (both backends), or, for
+  IVFPQ, raise :ref:`likevPqNprobe <sql-set:likevPqNprobe>` — these
+  surface more candidates that ``$rank`` will then exact-score.
 
-    SELECT id, vecdist(v, ?) d
-      FROM emb
-     WHERE v LIKEV ?
-     ORDER BY 2 DESC;
+When to use vecdist()
+"""""""""""""""""""""
 
-``LIKEV`` returns up to :ref:`likevRows <sql-set:likevRows>`
-candidates (default 1000); ``ORDER BY vecdist(...) DESC`` re-ranks
-them at full precision.  This recovers near-exact recall on IVFPQ
-while still avoiding a full-table scan.  On HNSW the re-rank is
-usually unnecessary (native recall is already near-exact) but
-harmless.
+``vecdist()`` is a standalone distance function, not a re-rank
+companion to LIKEV.  It is useful when you want:
+
+* **A non-default metric.**  ``LIKEV`` always uses dot product;
+  ``vecdist(v, ?, 'l2')`` gives L2 distance.
+* **A numeric distance value as a projection column** — for
+  thresholding, application-side post-processing, or display
+  alongside the row, when the scaled integer ``$rank`` isn't the
+  form you want.
+* **Distance to a *different* reference than the LIKEV query.**
+  ``WHERE v LIKEV ?A`` retrieves nearest neighbors of A;
+  ``SELECT vecdist(v, ?B)`` in the same SELECT annotates each hit
+  with its distance to a second reference B.
+* **Brute force without an index** — on small tables or for ad-hoc
+  exploration; ``SELECT id, vecdist(v, ?) FROM emb ORDER BY 2 DESC``
+  does a full scan with no ``CREATE VECTOR INDEX`` required.
 
 Vector predicates may be combined with regular ``WHERE`` clauses:
 
@@ -2346,6 +2367,274 @@ Further Reading
 
 Detailed information about indexing and options can be found on the
 `Texis Documentation Website <https://docs.thunderstone.com/site/texisman/indexing_for_increased.html>`_\ .
+
+
+Vector Search
+-------------
+
+This section is the end-to-end guide to semantic vectors in ``rampart-sql``.
+It ties together the column types, the embedding function, the SQL ``set``
+knobs, the ``LIKEV`` operator, and the vector index — each of which has a
+detailed reference elsewhere in the docs.
+
+Overview
+~~~~~~~~
+
+A *semantic vector* (also called an *embedding*) is a fixed-length array of
+floats that represents a piece of text in a continuous space, such that two
+texts with similar meaning have vectors that are close together.  Embeddings
+are produced by a model (typically loaded once into the SQL engine via
+``set llamaEmbed = '/path/to/model.gguf'``); similarity is measured by dot
+product or L2 distance and reported by ``LIKEV`` and ``vecdist()``.
+
+The typical end-to-end pipeline:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+    var sql = new Sql.connection('/path/to/db', true);
+
+    // 1. Load an embedding model (one-shot for the process)
+    sql.set({llamaEmbed: '/models/all-minilm-l6-v2_f16.gguf'});
+
+    // 2. Create a table whose vector column matches the model's output dim
+    //    (all-MiniLM-L6-v2 → 384).  varvecF16 is the right default for most
+    //    embedding pipelines (small, indexable, near-lossless).
+    sql.exec("create table docs (id int, text varchar(2048), v varvecF16);");
+
+    // 3. Insert with embed() computing the vector inline
+    for (var i = 0; i < rows.length; i++)
+        sql.exec("insert into docs values (?, ?, embed(?))",
+                 [rows[i].id, rows[i].text, rows[i].text]);
+
+    // 4. (optional) Build an ANN index for top-K search on large tables
+    sql.exec("create vector index docs_vec on docs (v) with backend 'hnsw';");
+
+    // 5. Query.  A string on the right-hand side of LIKEV is auto-coerced
+    //    to embed(?).
+    var hits = sql.exec(
+        "select id, text, $rank from docs where v likev ? order by 3 desc",
+        ["chocolate cake recipe"],
+        {maxRows: 10}
+    );
+
+Each step has knobs and caveats covered below and in the linked reference
+sections.
+
+Storage
+~~~~~~~
+
+Vectors are stored in typed ``varvec*`` columns or in raw ``byte`` /
+``varbyte`` columns; see :ref:`Vector <rampart-sql:Vector>` under "Column
+Data Types" for the full dtype table and a discussion of when to prefer
+each.  In short:
+
+* **``varvecF16``** — most embedding pipelines.  2 bytes per element,
+  near-lossless on L2-normalized vectors, indexable.
+* **``varvecF32``** — natural precision; no quantization loss; useful when
+  you need to migrate or re-quantize later.
+* **``varvecBf16``** — TPU/Google-style pipelines.
+* **``varvecF64``** — high-precision research/scientific use.
+* **``varvecI8`` / ``varvecU8``** — 1 byte per element; reserved (typed
+  storage only — direct indexing is not yet enabled, but HNSW i8/u8
+  *quantized indexes over varvecF\* columns* are supported via
+  ``WITH vec_dtype 'i8'``).
+* **``byte(N)`` / ``varbyte(N)``** — opaque bytes, used when the same
+  column needs to hold vectors of more than one dtype or when integrating
+  with code that produces raw byte buffers.  An index over a ``varbyte``
+  column requires ``WITH vec_dtype '<dtype>'`` so the index knows how to
+  interpret the bytes.
+
+The column dimensionality of a typed ``varvec*`` is auto-detected from the
+first inserted vector.  Subsequent inserts must match.
+
+Generating embeddings
+~~~~~~~~~~~~~~~~~~~~~
+
+Embedding generation runs inside the SQL engine via a loaded ``llama.cpp``
+model.
+
+.. note::
+
+    Embedding requires the ``rampart-llamacpp`` module to be installed
+    and loadable.
+
+    On the first ``sql.set({llamaEmbed: ...})`` call, if no llamacpp
+    module is already loaded, ``rampart-sql`` automatically tries
+    ``require()`` in order:
+
+    1. ``rampart-llamacpp`` (the canonical name; on systems with a
+       single installed variant this is what that variant ships under)
+    2. ``rampart-llamacpp_cuda``
+    3. ``rampart-llamacpp_cpu``
+
+    Whichever resolves first wins.  For most installs this is
+    transparent — no explicit ``require()`` is needed.
+
+    To force a specific build (e.g. you have both CPU and CUDA
+    installed and want the CPU one), load it explicitly **before**
+    ``sql.set({llamaEmbed: ...})``:
+
+    .. code-block:: javascript
+
+        require('rampart-llamacpp_cpu');     // or _cuda, _metal, etc.
+        sql.set({llamaEmbed: '/models/...'});
+
+    ``rampart-sql`` discovers the embed functions via ``dlsym`` from
+    whichever variant is already loaded, so a manually required
+    module always takes precedence over the auto-load fallback.
+
+    If no module is available, ``sql.set({llamaEmbed: ...})`` throws
+    with a "cannot load rampart-llamacpp" error and ``embed()`` is
+    inoperable.  ``rampart-llamacpp`` ships separately in
+    ``rampart-langtools``; see its module documentation for build
+    variants and install instructions.
+
+Two settings configure it, both documented in detail under
+:ref:`sql-set:Embedding Properties`:
+
+* :ref:`llamaEmbed <sql-set:llamaEmbed>` — the path to a ``.gguf`` embedding
+  model.  Setting this loads the model into the SQL process; once loaded,
+  the model is shared across all subsequent ``embed()`` calls (and across
+  all threads, when ``llamaEmbedPerThread`` is on).
+* :ref:`llamaEmbedPerThread <sql-set:llamaEmbedPerThread>` — when ``true``
+  (the default), each worker thread keeps its own ``llama_context`` over
+  the shared model, so concurrent ``embed()`` calls run in parallel on GPU
+  or multi-core CPU.  Set to ``false`` to serialize through a single
+  context (lower memory, lower throughput).
+
+Once a model is loaded, :ref:`embed() <sql-server-funcs:embed>` produces a
+typed vec for use in SELECT projections, INSERT values, or on the
+right-hand side of ``LIKEV`` / ``vecdist()``:
+
+.. code-block:: sql
+
+    -- default dtype is f16
+    SELECT embed('the cat sat on the mat');
+
+    -- explicit dtype: f16, f32, f64, bf16
+    SELECT embed('the cat sat on the mat', 'f32');
+
+    -- in INSERT: embed each row's text into a vec column
+    INSERT INTO docs (id, text, v) VALUES (?, ?, embed(?));
+
+The dtype named in the second argument propagates to the result column
+type, so ``select embed(?, 'f32')`` returns a ``varvecF32``, not a
+``varvecF16``.  The text argument is typically a column or a bound
+parameter; a literal string is also accepted.
+
+Querying
+~~~~~~~~
+
+Similarity queries use the ``LIKEV`` predicate.  See
+:ref:`Querying with LIKEV <rampart-sql:Querying with LIKEV>` for the
+authoritative reference; a brief overview:
+
+.. code-block:: sql
+
+    SELECT id, $rank
+      FROM docs
+     WHERE v LIKEV ?
+     ORDER BY 2 DESC;
+
+* The right-hand side of ``LIKEV`` is a vector.  A :green:`String` literal
+  or bound :green:`String` parameter is auto-coerced via ``embed()`` using
+  the currently-loaded model — so ``v LIKEV 'chocolate cake recipe'`` is
+  equivalent to ``v LIKEV embed('chocolate cake recipe')``.
+* ``$rank`` is the per-row score, scaled to ``[-100000, 100000]``.  With
+  unit-norm vectors the practical range is ``[0, 100000]``; sort
+  ``ORDER BY ... DESC``.
+* Use the ``maxRows`` parameter of ``exec()`` to retrieve top-K.
+* **``$rank`` is exact at the column's stored precision** — the value is
+  computed per-row by ``rp_vector_distance`` on the actual stored column
+  bytes, not on the index's quantized representation.  The IVFPQ
+  approximation only affects which rows are returned as candidates (and
+  in what initial order); once a row is in the candidate pool it is
+  re-scored against the full column vector before ``$rank`` is set.
+  No extra ``ORDER BY vecdist(...)`` re-rank pass is needed for top-K
+  ordering.
+
+``vecdist()`` is a separate function with its own uses, not a re-rank
+companion to LIKEV.  Reach for it when you want:
+
+* **A non-default metric.**  ``LIKEV`` uses dot product;
+  ``vecdist(v, ?, 'l2')`` gives L2 distance.
+* **A numeric distance value as a column** — for thresholding,
+  application-side post-processing, or display alongside the row, when
+  the scaled integer ``$rank`` isn't the form you want.
+* **Distance to a *different* reference vector than the LIKEV query** —
+  e.g. ``WHERE v LIKEV ?`` retrieves nearest neighbors of vector A while
+  ``SELECT vecdist(v, ?B)`` annotates each hit with its distance to a
+  second reference B.
+* **Brute force without an index** — on small tables or for ad-hoc
+  exploration; ``SELECT id, vecdist(v, ?) FROM docs ORDER BY 2 DESC``
+  does a full scan without needing ``CREATE VECTOR INDEX``.
+
+See :ref:`sql-server-funcs:vecdist` for the full signature.
+
+Indexing
+~~~~~~~~
+
+For small tables (rule of thumb: below ~2,000 rows of 384-dim vectors), a
+brute-force scan is fine — ``LIKEV`` works without an index, just slower.
+Above that, build an ANN index:
+
+.. code-block:: sql
+
+    -- HNSW: near-exact, in-RAM, no minimum size
+    CREATE VECTOR INDEX docs_vec ON docs (v) WITH backend 'hnsw';
+
+    -- IVFPQ: scales beyond RAM, default backend, needs ~10k+ rows to train
+    CREATE VECTOR INDEX docs_vec ON docs (v);
+
+See :ref:`Vector Indexes <rampart-sql:Vector Indexes>` for the full
+discussion of HNSW vs IVFPQ, the ``WITH`` option matrix, ``ALTER
+INDEX … OPTIMIZE``, i8/u8 quantization, and maintenance.
+
+Migrating between dtypes
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use nested ``convert()`` calls to move data between vec dtypes — for
+example, an existing column stored as ``varbyte`` holding f32 bytes that
+you want to quantize down to a ``varvecF16`` column:
+
+.. code-block:: sql
+
+    -- Source: varbyte(384) with f32 bytes (1536 bytes per row)
+    CREATE TABLE wikivecs2 (
+        Idsec uint64, Vec varvecF16, Title varchar(64), Text varchar(2048)
+    );
+
+    INSERT INTO wikivecs2
+      SELECT Idsec,
+             convert(convert(Vec, 'varvecF32'), 'varvecF16'),
+             Title, Text
+        FROM wikivecs;
+
+The inner ``convert(Vec, 'varvecF32')`` reinterprets the raw bytes as
+varvecF32 (no data motion, just a type relabel).  The outer
+``convert(..., 'varvecF16')`` then does real per-element f32→f16 rounding
+through an f32 intermediate.  The same pattern works for any vec→vec
+dtype pair (f64 ↔ f32 ↔ f16 ↔ bf16 ↔ i8 ↔ u8).
+
+A single-step ``convert(varbyte, 'varvec*')`` is also supported but is a
+**pure byte reinterpret**: it gives you a vec value whose bytes are the
+varbyte's bytes, with ``dim = byte_count / target_elsz``.  This is the
+right choice when the varbyte already holds bytes in the destination
+dtype's layout (e.g. you stored f16 bytes in a varbyte column).  It is
+*not* the right choice when the varbyte holds bytes in a different dtype's
+layout — for that, use the nested form above so texis knows the source
+dtype.
+
+Two errors guard the byte path:
+
+* The size check: if ``byte_count`` is not a multiple of the target
+  element size (e.g. 15-byte varbyte → ``varvecF32`` would need a multiple
+  of 4), ``convert()`` fails with a clear "byte length is not a multiple
+  of element size" message rather than silently truncating.
+* Intent-wrong size-aligned cases (the wikivecs example — 1536 f32 bytes
+  reinterpreted as 768 f16 elements) cannot be detected automatically;
+  always use the nested form when source and target dtypes differ.
 
 
 String Functions
