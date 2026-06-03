@@ -1331,11 +1331,12 @@ likevEf
     **HNSW only.**  Per-query graph expansion factor — the
     search-time recall/latency knob for HNSW indexes.  The per-query
     analog of the build-time ``vec_efc`` option
-    (see :ref:`Creating a Vector Index <rampart-sql:Creating a Vector Index>`).
+    (see :ref:`Vector Indexes <rampart-sql:Vector Indexes>` for the
+    full set of HNSW build options).
 
     Accepted values:
 
-    * **``0`` (default)** — sentinel meaning "use the index's
+    * ``0`` **(default)** — sentinel meaning "use the index's
       build-time ``vec_efc``" (which defaults to ``128``).  No change
       from index build time.
     * **Positive integer** — overrides ``vec_efc`` for the duration of
@@ -1471,7 +1472,7 @@ llamaEmbedPerThread
         sql.set({llamaEmbedPerThread: true});   // default
         sql.set({llamaEmbedPerThread: false});  // serialize through one context
 
-    * **``true`` (default)** — concurrent ``embed()`` calls from
+    * ``true`` **(default)** — concurrent ``embed()`` calls from
       multiple SQL worker threads run in parallel on GPU (separate
       CUDA streams) or multi-core CPU (separate per-context scratch
       buffers).  This is the right choice for any bulk-embed workload
@@ -1480,7 +1481,7 @@ llamaEmbedPerThread
       (llama.cpp internally deduplicates), so the cost is one
       ``llama_context`` per thread — modest, typically a few hundred
       MB on GPU.
-    * **``false``** — all ``embed()`` calls serialize through a single
+    * ``false`` — all ``embed()`` calls serialize through a single
       ``llama_context`` guarded by an internal mutex.  Useful in
       memory-constrained environments where the per-thread context
       cost is prohibitive, or in single-threaded workloads where the
