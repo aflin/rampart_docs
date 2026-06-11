@@ -25,6 +25,7 @@ Welcome to Rampart's documentation.
    The rampart-robots module <rampart-robots>
    The rampart-cmark module <rampart-cmark>
    The rampart-treesitter module <rampart-treesitter>
+   The rampart-langtools modules <rampart-langtools>
    The rampart-almanac module <rampart-almanac>
    The rampart-url module <rampart-url>
    The rampart-gm module <rampart-gm>

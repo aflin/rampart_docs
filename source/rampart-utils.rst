@@ -1118,6 +1118,148 @@ Return Value:
 
    * ``pid`` - :green:`Number`. Process id of the executed command.
 
+getenv
+''''''
+
+Return the value of an environment variable as currently set in the
+process's environment.
+
+Usage:
+
+.. code-block:: javascript
+
+   var value = rampart.utils.getenv(name);
+
+Where ``name`` is a :green:`String` containing the environment variable name.
+
+Return Value:
+   :green:`String` containing the current value of the variable, or
+   ``undefined`` if the variable is not set.
+
+How this differs from :ref:`process.env <rampart-main:env>`:
+
+   :ref:`process.env <rampart-main:env>` is a :green:`Object` populated
+   with a *snapshot* of the environment at the time rampart started.
+   Reads from ``process.env`` return values from that snapshot; writes
+   modify only the snapshot and are not visible to native code that
+   calls ``getenv(3)`` (such as a library loaded via ``require()``),
+   nor are they inherited by child processes spawned with
+   `exec`_\ ().
+
+   ``rampart.utils.getenv`` consults the live OS-level process
+   environment.  It sees values set later via
+   `setenv`_\ () (whether by this function family or by C code in a
+   loaded module), and it does not see writes made only to the
+   ``process.env`` :green:`Object`.
+
+Example:
+
+.. code-block:: javascript
+
+   process.env.HELLO = "from-js-dict";
+   rampart.utils.setenv("HELLO", "from-os-env");
+
+   rampart.utils.printf("process.env.HELLO       = %s\n",
+                        process.env.HELLO);                /* from-js-dict  */
+   rampart.utils.printf("rampart.utils.getenv()  = %s\n",
+                        rampart.utils.getenv("HELLO"));    /* from-os-env   */
+   rampart.utils.printf("child shell sees        = %s\n",
+                        rampart.utils.exec("/bin/sh","-c","echo $HELLO").stdout);
+                                                           /* from-os-env\n */
+
+setenv
+''''''
+
+Set an environment variable in the process's live OS-level environment.
+Wraps POSIX `setenv(3) <https://man7.org/linux/man-pages/man3/setenv.3.html>`_.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.setenv(name, value [, overwrite]);
+
+Where:
+
+*  ``name`` - :green:`String`. The variable name.  Must be non-empty and
+   may not contain ``=``.
+
+*  ``value`` - :green:`String`. The value to assign.
+
+*  ``overwrite`` - :green:`Boolean`. Optional. If ``true`` (the default)
+   and the variable is already set, the existing value is replaced.
+   If ``false``, an existing value is left untouched.
+
+Return Value:
+   :green:`Undefined`.  Throws on error (e.g. invalid name, allocation
+   failure).
+
+Notes:
+   The value is visible to subsequent ``rampart.utils.getenv()`` calls,
+   to native code that calls ``getenv(3)``, and to child processes
+   spawned with `exec`_\ ().  Writes to :ref:`process.env
+   <rampart-main:env>` do *not* have these properties; use ``setenv``
+   when something outside the JS runtime needs to read the value.
+
+   A common use case is preparing an environment variable that a
+   native module reads from its library constructor.  For example,
+   ``MAGICK_CONFIGURE_PATH`` must be set before ``require("rampart-graphicsmagick")``
+   triggers the load of ``libGraphicsMagick``; ``rampart-gm.js`` does
+   exactly that via ``rampart.utils.setenv`` before the ``require()``.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.setenv("MY_VAR", "hello");
+   rampart.utils.printf("%s\n", rampart.utils.getenv("MY_VAR"));
+   /* expected output:
+   hello
+   */
+
+   /* overwrite=false: leave a caller-supplied value in place */
+   rampart.utils.setenv("MY_VAR", "ignored", false);
+   rampart.utils.printf("%s\n", rampart.utils.getenv("MY_VAR"));
+   /* expected output:
+   hello
+   */
+
+unsetenv
+''''''''
+
+Remove an environment variable from the process's live OS-level
+environment.  Wraps POSIX `unsetenv(3) <https://man7.org/linux/man-pages/man3/unsetenv.3.html>`_.
+
+Usage:
+
+.. code-block:: javascript
+
+   rampart.utils.unsetenv(name);
+
+Where ``name`` is a :green:`String`.  Must be non-empty and may not
+contain ``=``.
+
+Return Value:
+   :green:`Undefined`.  Throws on error.
+
+Notes:
+   Removing a variable affects ``rampart.utils.getenv()``, native code
+   that calls ``getenv(3)``, and child processes spawned by `exec`_\ ().
+   It does not modify :ref:`process.env <rampart-main:env>`; if you
+   want both views cleared, delete the property from ``process.env``
+   as well.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.setenv("TEMP_VAR", "x");
+   rampart.utils.unsetenv("TEMP_VAR");
+   rampart.utils.printf("%s\n", rampart.utils.getenv("TEMP_VAR") || "(unset)");
+   /* expected output:
+   (unset)
+   */
+
 shell
 '''''
 
@@ -1772,7 +1914,7 @@ Notes:
 
     The bundle feature exposes three additional functions --
     ``rampart.utils.payloadList()``, ``rampart.utils.payloadGet(name)`` and
-    ``rampart.utils.payloadExtract(name|nameArray|null, destDir)`` -- which
+    ``rampart.utils.payloadExtract(destDir [, name|nameArray])`` -- which
     operate on the zip archive appended to ``rampart`` itself rather than
     on a zip file on disk.  See
     :ref:`Single-File Bundles <rampart-extras:Single-File Bundles>`.
