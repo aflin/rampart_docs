@@ -160,6 +160,65 @@ Extended (non-standard) flags:
 
     * ``@`` - same as ``a`` except truecolor mode is forced.
 
+    * ``,`` - For base-10 numeric formats (``%d``, ``%i``, ``%u``, ``%lld``,
+      ``%f``, etc.), group the integer portion of the number with commas as
+      thousands separators.  For floating point formats, only the digits before
+      the decimal point are grouped.  Always a comma, independent of locale.
+
+    * ``'`` - The standard C grouping flag: same as ``,`` but uses the current
+      locale's separator (nothing under the ``C`` locale).
+
+    Both flags also work with :green:`BigInt` values.
+
+    Example:
+
+    .. code-block:: javascript
+
+        rampart.utils.printf("%,d\n",   123456789098765);
+        rampart.utils.printf("%,lld\n", 123456789098765);
+        rampart.utils.printf("%,f\n",   123456789098765.0987);
+
+    Output:
+
+    .. code-block:: text
+
+        123,456,789,098,765
+        123,456,789,098,765
+        123,456,789,098,765.093750
+
+    Although ``%d`` denotes a 32-bit integer, a :green:`Number` whose value
+    exceeds the 32-bit range is automatically promoted to a 64-bit integer
+    (as if ``%lld`` had been given) so the correct value is printed rather than
+    a truncated one.  The same promotion applies to ``%u``, ``%x``, ``%o`` and
+    ``%b``.
+
+:green:`BigInt` arguments:
+
+    All numeric formats accept a :green:`BigInt`:
+
+    * For the integer formats (``%d``, ``%i``, ``%u``, ``%x``, ``%X``, ``%o``,
+      ``%b``, with or without an ``l``/``ll`` length modifier) the full,
+      arbitrary-precision value is printed.  Width, zero/space padding, the
+      sign flags (``+``/space), the ``#`` prefix and the ``,`` grouping flag
+      (base 10) are all honored.
+
+    * For the floating point and exponential formats (``%f``, ``%e``, ``%g``
+      and their uppercase variants) the value is formatted directly from the
+      :green:`BigInt`\ 's exact digits — there is no conversion to a
+      :green:`Number` and therefore no precision loss, even at high precision
+      (e.g. ``%.40e``) or for magnitudes above 2\ :sup:`53`.
+
+    * ``%s`` prints the :green:`BigInt`\ 's decimal string.
+
+    * ``%J`` prints ``{}``, matching ``JSON.stringify`` which cannot serialize
+      a :green:`BigInt`.
+
+    .. code-block:: javascript
+
+        var big = BigInt("123456789012345678901234567890");
+        rampart.utils.printf("%,d\n", big);
+        // 123,456,789,012,345,678,901,234,567,890
+
 Color with ``%H`` format:
 
     * Using ``%aH`` or any of the forced versions (``^``, ``A`` or ``@``) will perform the same operation as
