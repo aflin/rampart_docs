@@ -1136,11 +1136,18 @@ HTML email with attachment
 rampart-llm
 -----------
 
-The ``rampart-llm.js`` module provides a streaming interface to LLM servers
-that expose an OpenAI-compatible API.  It supports both
-`llama.cpp's llama-server <https://github.com/ggml-org/llama.cpp>`_ and
-`Ollama <https://ollama.com/>`_, and handles SSE parsing, thinking/reasoning
-model output, and cancellation.
+The ``rampart-llm.js`` module provides a unified streaming interface to LLM
+backends.  The same callback-based API works against:
+
+- `llama.cpp's llama-server <https://github.com/ggml-org/llama.cpp>`_
+- `Ollama <https://ollama.com/>`_
+- Any OpenAI-compatible endpoint (DeepSeek, Together, OpenRouter, vLLM, etc.)
+- `Anthropic's Claude API <https://docs.anthropic.com>`_
+- The Claude Code CLI as a local provider
+
+It handles SSE parsing, thinking/reasoning output, tool calls, cancellation,
+and context-window discovery, and exposes the same response shape to your
+code regardless of which backend served the request.
 
 The module lives in the ``process.modulesPath`` directory.
 
@@ -1154,29 +1161,55 @@ Loading the module
 Creating a connection
 ~~~~~~~~~~~~~~~~~~~~~
 
-The module exports two constructors, one for each supported backend.  Both
-accept an :green:`Object` of options and verify that the server is reachable
-on construction.
+The module exports one constructor per supported backend.  All take an
+:green:`Object` of options and verify (where applicable) that the server is
+reachable on construction.
 
 .. code-block:: javascript
 
     // llama-server (llama.cpp)
     var client = new llm.llamaCpp({
-        server: "127.0.0.1",   // default
-        port:   8080            // default
+        server: "127.0.0.1",     // default
+        port:   8080              // default
     });
 
     // Ollama
     var client = new llm.ollama({
-        server: "127.0.0.1",   // default
-        port:   11434           // default
+        server: "127.0.0.1",     // default
+        port:   11434             // default
     });
 
-An error is thrown if the server is not running at the given address.
+    // Any OpenAI-compatible endpoint (DeepSeek, Together, OpenRouter, vLLM, …)
+    var client = new llm.openaiCompat({
+        baseURL: "https://api.deepseek.com/v1",
+        apiKey:  "sk-...",        // sent as Authorization: Bearer
+        model:   "deepseek-chat"
+    });
 
-Note: ``llama-server`` loads a single model at startup, so the ``model``
-property described below is required by the API format but its value is
-ignored.  With Ollama, the ``model`` name selects which model to use.
+    // Anthropic API
+    var client = new llm.anthropic({
+        apiKey: "sk-ant-...",
+        model:  "claude-haiku-4-5"
+    });
+
+    // Claude Code CLI (uses the `claude` binary on PATH)
+    var client = new llm.claudeCode({
+        model: "claude-sonnet-4-6"   // optional; CLI picks default if omitted
+    });
+
+For local servers (``llamaCpp``, ``ollama``), an error is thrown if the
+server is not running at the given address.
+
+Notes:
+
+- ``llamaCpp``: ``llama-server`` loads a single model at startup, so the
+  ``model`` property is required by the API format but its value is ignored.
+- ``ollama``: the ``model`` name selects which model to use
+  (e.g. ``"qwen2.5-coder:7b"``).
+- ``openaiCompat``, ``anthropic``: ``apiKey`` may include a
+  ``${ENV_VAR_NAME}`` placeholder that is resolved from the environment at
+  construction time, so secrets can live in the environment rather than
+  inline in scripts.
 
 Instance properties
 ~~~~~~~~~~~~~~~~~~~
@@ -1202,6 +1235,22 @@ After construction, set properties on the instance before calling ``query()``.
     * ``cancel`` - :green:`Boolean`.  Set to ``true`` to abort an in-flight
       query.  The stream will stop on the next chunk and the final callback
       will fire.
+
+The following properties are POPULATED BY the module — read them but do not
+write them:
+
+    * ``capacity`` - :green:`Number` or ``null``.  The model's context size
+      in tokens, discovered automatically.  ``null`` if the backend doesn't
+      expose this (e.g. ``claudeCode``).  See :ref:`Capacity and token usage
+      <rampart-extras:Capacity and token usage>`.
+
+    * ``serverInfo`` - :green:`Object` or ``null``.  Raw backend metadata
+      (e.g. ``{n_ctx, n_ctx_train, model}`` for llama-server).  ``null`` for
+      backends that don't expose it.
+
+    * ``usage`` - :green:`Object` or ``null``.  After a query, contains
+      ``{prompt, completion, total}`` token counts from the server.  Reset
+      at the start of every query.
 
 Example:
 
@@ -1251,6 +1300,11 @@ Where:
         text (only present if the model produced thinking output).
       - ``answer`` - :green:`String`.  The answer portion after thinking
         (only present if ``thinkingText`` is present).
+      - ``toolCalls`` - :green:`Array`.  Tool-call objects the model emitted,
+        if any.  See :ref:`Tool use <rampart-extras:Tool use>`.
+      - ``usage`` - :green:`Object`.  ``{prompt, completion, total}`` token
+        counts when the server reports them.  Also stored on
+        ``client.usage`` for later access.
       - ``serverResponse`` - The raw HTTP response object.
       - ``error`` - Set if the query failed.
 
@@ -1368,6 +1422,167 @@ conversation settings.
         printf("Classification: %s\n", res.fullText);
     });
 
+Tool use
+~~~~~~~~
+
+A model can be given tools to call.  Tool schemas are passed in ``params``
+in OpenAI format and apply to every backend (``anthropic`` is translated
+internally; you don't write a separate schema):
+
+.. code-block:: javascript
+
+    client.params = {
+        temperature: 0.2,
+        tools: [
+            {
+                type: "function",
+                function: {
+                    name: "get_weather",
+                    description: "Get the current weather for a city.",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            city: {type: "string"},
+                            units: {type: "string", enum: ["c", "f"]}
+                        },
+                        required: ["city"]
+                    }
+                }
+            }
+        ],
+        tool_choice: "auto"
+    };
+
+When the model decides to call a tool, the final callback's
+``res.toolCalls`` is populated:
+
+.. code-block:: javascript
+
+    client.query(prompt, null, function(res) {
+        if (res.toolCalls && res.toolCalls.length) {
+            res.toolCalls.forEach(function(tc) {
+                var name = tc.function.name;
+                var args = JSON.parse(tc.function.arguments);
+                /* … invoke your local function for `name` with `args`,
+                 *   capture its result, then continue the loop. */
+                var result = dispatch(name, args);
+
+                /* Append the assistant's tool-call turn and your
+                 * tool-result turn to the messages array and re-query
+                 * so the model can incorporate the result. */
+                prompt.push({role: "assistant", content: "", tool_calls: res.toolCalls});
+                prompt.push({role: "tool",      tool_call_id: tc.id,
+                             content: JSON.stringify(result)});
+            });
+            client.query(prompt, null, arguments.callee);   // continue loop
+            return;
+        }
+        printf("Final answer: %s\n", res.fullText);
+    });
+
+The per-token callback receives no tool-call deltas — assembled tool calls
+arrive complete on the final callback.
+
+Loading providers from a JSON config file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When an application supports multiple backends (a local model for
+development, a cloud API in production, etc.), define them once in a JSON
+file and pick the active one by name.
+
+.. code-block:: javascript
+
+    // providers.json
+    {
+        "default": "local",
+        "providers": {
+            "local":   {"type": "llamaCpp", "server": "127.0.0.1", "port": 8080},
+            "ollama":  {"type": "ollama",   "model":  "qwen2.5-coder:7b"},
+            "deepseek":{"type": "openaiCompat",
+                        "baseURL": "https://api.deepseek.com/v1",
+                        "apiKey":  "${DEEPSEEK_API_KEY}",
+                        "model":   "deepseek-chat"},
+            "haiku":   {"type": "anthropic",
+                        "apiKey": "${ANTHROPIC_API_KEY}",
+                        "model":  "claude-haiku-4-5"},
+            "code":    {"type": "claudeCode", "model": "claude-sonnet-4-6"}
+        }
+    }
+
+``${VAR_NAME}`` placeholders in string values are resolved from the
+environment, so secrets stay out of the file.
+
+Instantiate a client from a config entry with ``providerFromConfig``:
+
+.. code-block:: javascript
+
+    var cfg   = JSON.parse(readFile("providers.json"));
+    var name  = process.env.LLM_PROVIDER || cfg.default;
+    var entry = cfg.providers[name];
+
+    /* Resolve any ${ENV_VAR} placeholders, then construct. */
+    var resolved = {};
+    Object.keys(entry).forEach(function(k){
+        resolved[k] = (typeof entry[k] === "string")
+            ? llm.resolveEnv(entry[k]) : entry[k];
+    });
+    var client = llm.providerFromConfig(resolved);
+
+The returned ``client`` has the same ``query()``, ``params``, ``capacity``,
+``usage``, ``cancel`` surface as a directly-constructed one.
+
+Capacity and token usage
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+For backends that expose it, ``rampart-llm`` auto-discovers the context
+window on construction:
+
+- ``llamaCpp`` queries ``/props`` and ``/slots`` to find the per-slot
+  ``n_ctx``.
+- ``ollama`` reads the model's ``num_ctx``.
+- ``openaiCompat`` reads ``/v1/models`` when the endpoint provides
+  ``context_length``; otherwise ``capacity`` is left ``null``.
+- ``anthropic`` uses a built-in model→capacity table.
+- ``claudeCode`` does not expose this — ``capacity`` is ``null``.
+
+After construction:
+
+.. code-block:: javascript
+
+    if (client.capacity)
+        printf("Model context: %d tokens\n", client.capacity);
+
+After each query, ``client.usage`` carries the server-reported token counts
+(when ``stream_options.include_usage`` is honored, which all supported
+backends do by default):
+
+.. code-block:: javascript
+
+    client.query(prompt, null, function(res) {
+        printf("Used %d / %d tokens this turn\n",
+            client.usage.prompt, client.capacity);
+    });
+
+Together, ``capacity`` and ``usage`` let you display a "tokens used" gauge,
+trigger compaction of older history before the context fills, or pick
+between providers based on how much budget the current conversation has
+left.
+
+Cycle detection and debug logging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Small or heavily-quantized models occasionally fall into a repeating-token
+loop (e.g. emitting the same fragment forever).  ``rampart-llm`` watches
+the stream for short-period cycles and aborts the query when one is
+detected — the final callback fires with a ``cycle`` annotation in
+``res.error`` so the caller can react (retry with different sampling, mark
+the response failed, etc.).
+
+For low-level debugging, set the environment variable
+``RAMPART_LLM_DEBUG=1`` before starting the script to dump raw SSE chunks
+and parsed events to ``/tmp/rampart-llm-debug.log``.  Override the
+destination with ``RAMPART_LLM_DEBUG_FILE=/path/to/log``.
+
 Thinking/reasoning models
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1388,37 +1603,30 @@ high enough to accommodate both reasoning and answer (4096 or more is
 recommended, as reasoning can easily consume several thousand tokens
 before the visible answer begins).
 
-Context window management
+Context overflow behavior
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a conversation grows long enough to exceed the server's context
-window, the server will return an error.  There are two approaches to
-handling this:
+Reading ``client.capacity`` and ``client.usage`` (see :ref:`Capacity and
+token usage <rampart-extras:Capacity and token usage>`) lets your script
+notice the conversation approaching the context window before the server
+refuses the request — typically the right place to trim or summarize old
+messages.  When the window is exceeded anyway, behavior differs by backend:
 
 **llama-server (llama.cpp):**  Start the server with the ``--context-shift``
 flag to allow automatic context shifting — older tokens are discarded
 from the KV cache to make room for new ones.  This is a server-start
 flag and cannot be set per-request.  The context size is set with ``-c``
-(e.g. ``-c 32768``).  When using
-``--parallel`` for multiple slots, the context is divided evenly among
-slots.
-
-llama-server also exposes several useful REST endpoints beyond the
-OpenAI-compatible ``/v1/`` API:
-
-- ``/props`` — returns server properties including
-  ``default_generation_settings.n_ctx`` (the configured context size).
-- ``/slots`` — returns per-slot information including ``n_ctx`` (the
-  actual per-slot context size, which accounts for ``--parallel``).
-- ``/health`` — returns server health status.
-
-These can be queried with ``rampart-curl`` to discover the context size
-at runtime, for example to display a token usage indicator to the user.
+(e.g. ``-c 32768``).  When using ``--parallel`` for multiple slots, the
+context is divided evenly among slots.
 
 **Ollama:**  Context shifting is handled automatically.  The context
 window size defaults to 2048 tokens but can be increased by passing
 ``num_ctx`` in the params (e.g. ``client.params = {num_ctx: 32768}``).
 Ollama will silently shift context when the window fills up.
+
+**OpenAI-compatible / Anthropic:**  Returns an error.  Your script needs
+to summarize or drop old messages before exceeding the model's published
+context length.
 
 Using with the Rampart web server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

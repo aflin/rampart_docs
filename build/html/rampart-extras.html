@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rampart Extras &mdash; Rampart 0.6.2 documentation</title>
+  <title>Rampart Extras &mdash; Rampart 0.7.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.6.2 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
         <link rel="next" title="Tutorials" href="tutorialtoc.html"/>
         <link rel="prev" title="The rampart-gm module" href="rampart-gm.html"/> 
 
@@ -103,6 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -153,8 +154,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#multi-turn-conversation">Multi-turn conversation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cancelling-a-query">Cancelling a query</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#overriding-params-per-query">Overriding params per query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tool-use">Tool use</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-providers-from-a-json-config-file">Loading providers from a JSON config file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#capacity-and-token-usage">Capacity and token usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cycle-detection-and-debug-logging">Cycle detection and debug logging</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#thinking-reasoning-models">Thinking/reasoning models</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#context-window-management">Context window management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#context-overflow-behavior">Context overflow behavior</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-with-the-rampart-web-server">Using with the Rampart web server</a></li>
 </ul>
 </li>
@@ -1261,11 +1266,18 @@ enabled, or if a Google Workspace admin has disabled the feature.</p>
 </div>
 <div class="section" id="rampart-llm">
 <h2>rampart-llm<a class="headerlink" href="#rampart-llm" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">rampart-llm.js</span></code> module provides a streaming interface to LLM servers
-that expose an OpenAI-compatible API.  It supports both
-<a class="reference external" href="https://github.com/ggml-org/llama.cpp">llama.cpp’s llama-server</a> and
-<a class="reference external" href="https://ollama.com/">Ollama</a>, and handles SSE parsing, thinking/reasoning
-model output, and cancellation.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">rampart-llm.js</span></code> module provides a unified streaming interface to LLM
+backends.  The same callback-based API works against:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/ggml-org/llama.cpp">llama.cpp’s llama-server</a></li>
+<li><a class="reference external" href="https://ollama.com/">Ollama</a></li>
+<li>Any OpenAI-compatible endpoint (DeepSeek, Together, OpenRouter, vLLM, etc.)</li>
+<li><a class="reference external" href="https://docs.anthropic.com">Anthropic’s Claude API</a></li>
+<li>The Claude Code CLI as a local provider</li>
+</ul>
+<p>It handles SSE parsing, thinking/reasoning output, tool calls, cancellation,
+and context-window discovery, and exposes the same response shape to your
+code regardless of which backend served the request.</p>
 <p>The module lives in the <code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> directory.</p>
 <div class="section" id="id4">
 <h3>Loading the module<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
@@ -1275,26 +1287,53 @@ model output, and cancellation.</p>
 </div>
 <div class="section" id="creating-a-connection">
 <h3>Creating a connection<a class="headerlink" href="#creating-a-connection" title="Permalink to this headline">¶</a></h3>
-<p>The module exports two constructors, one for each supported backend.  Both
-accept an <span class="green">Object</span> of options and verify that the server is reachable
-on construction.</p>
+<p>The module exports one constructor per supported backend.  All take an
+<span class="green">Object</span> of options and verify (where applicable) that the server is
+reachable on construction.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// llama-server (llama.cpp)</span>
 <span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">llamaCpp</span><span class="p">({</span>
-    <span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>   <span class="c1">// default</span>
-    <span class="nx">port</span><span class="o">:</span>   <span class="mi">8080</span>            <span class="c1">// default</span>
+    <span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>     <span class="c1">// default</span>
+    <span class="nx">port</span><span class="o">:</span>   <span class="mi">8080</span>              <span class="c1">// default</span>
 <span class="p">});</span>
 
 <span class="c1">// Ollama</span>
 <span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">ollama</span><span class="p">({</span>
-    <span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>   <span class="c1">// default</span>
-    <span class="nx">port</span><span class="o">:</span>   <span class="mi">11434</span>           <span class="c1">// default</span>
+    <span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>     <span class="c1">// default</span>
+    <span class="nx">port</span><span class="o">:</span>   <span class="mi">11434</span>             <span class="c1">// default</span>
+<span class="p">});</span>
+
+<span class="c1">// Any OpenAI-compatible endpoint (DeepSeek, Together, OpenRouter, vLLM, …)</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">openaiCompat</span><span class="p">({</span>
+    <span class="nx">baseURL</span><span class="o">:</span> <span class="s2">&quot;https://api.deepseek.com/v1&quot;</span><span class="p">,</span>
+    <span class="nx">apiKey</span><span class="o">:</span>  <span class="s2">&quot;sk-...&quot;</span><span class="p">,</span>        <span class="c1">// sent as Authorization: Bearer</span>
+    <span class="nx">model</span><span class="o">:</span>   <span class="s2">&quot;deepseek-chat&quot;</span>
+<span class="p">});</span>
+
+<span class="c1">// Anthropic API</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">anthropic</span><span class="p">({</span>
+    <span class="nx">apiKey</span><span class="o">:</span> <span class="s2">&quot;sk-ant-...&quot;</span><span class="p">,</span>
+    <span class="nx">model</span><span class="o">:</span>  <span class="s2">&quot;claude-haiku-4-5&quot;</span>
+<span class="p">});</span>
+
+<span class="c1">// Claude Code CLI (uses the `claude` binary on PATH)</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">claudeCode</span><span class="p">({</span>
+    <span class="nx">model</span><span class="o">:</span> <span class="s2">&quot;claude-sonnet-4-6&quot;</span>   <span class="c1">// optional; CLI picks default if omitted</span>
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>An error is thrown if the server is not running at the given address.</p>
-<p>Note: <code class="docutils literal notranslate"><span class="pre">llama-server</span></code> loads a single model at startup, so the <code class="docutils literal notranslate"><span class="pre">model</span></code>
-property described below is required by the API format but its value is
-ignored.  With Ollama, the <code class="docutils literal notranslate"><span class="pre">model</span></code> name selects which model to use.</p>
+<p>For local servers (<code class="docutils literal notranslate"><span class="pre">llamaCpp</span></code>, <code class="docutils literal notranslate"><span class="pre">ollama</span></code>), an error is thrown if the
+server is not running at the given address.</p>
+<p>Notes:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">llamaCpp</span></code>: <code class="docutils literal notranslate"><span class="pre">llama-server</span></code> loads a single model at startup, so the
+<code class="docutils literal notranslate"><span class="pre">model</span></code> property is required by the API format but its value is ignored.</li>
+<li><code class="docutils literal notranslate"><span class="pre">ollama</span></code>: the <code class="docutils literal notranslate"><span class="pre">model</span></code> name selects which model to use
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;qwen2.5-coder:7b&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">openaiCompat</span></code>, <code class="docutils literal notranslate"><span class="pre">anthropic</span></code>: <code class="docutils literal notranslate"><span class="pre">apiKey</span></code> may include a
+<code class="docutils literal notranslate"><span class="pre">${ENV_VAR_NAME}</span></code> placeholder that is resolved from the environment at
+construction time, so secrets can live in the environment rather than
+inline in scripts.</li>
+</ul>
 </div>
 <div class="section" id="instance-properties">
 <h3>Instance properties<a class="headerlink" href="#instance-properties" title="Permalink to this headline">¶</a></h3>
@@ -1319,6 +1358,21 @@ Common parameters include:<ul>
 <li><code class="docutils literal notranslate"><span class="pre">cancel</span></code> - <span class="green">Boolean</span>.  Set to <code class="docutils literal notranslate"><span class="pre">true</span></code> to abort an in-flight
 query.  The stream will stop on the next chunk and the final callback
 will fire.</li>
+</ul>
+</div></blockquote>
+<p>The following properties are POPULATED BY the module — read them but do not
+write them:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">capacity</span></code> - <span class="green">Number</span> or <code class="docutils literal notranslate"><span class="pre">null</span></code>.  The model’s context size
+in tokens, discovered automatically.  <code class="docutils literal notranslate"><span class="pre">null</span></code> if the backend doesn’t
+expose this (e.g. <code class="docutils literal notranslate"><span class="pre">claudeCode</span></code>).  See <a class="reference internal" href="#capacity-and-token-usage"><span class="std std-ref">Capacity and token usage</span></a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">serverInfo</span></code> - <span class="green">Object</span> or <code class="docutils literal notranslate"><span class="pre">null</span></code>.  Raw backend metadata
+(e.g. <code class="docutils literal notranslate"><span class="pre">{n_ctx,</span> <span class="pre">n_ctx_train,</span> <span class="pre">model}</span></code> for llama-server).  <code class="docutils literal notranslate"><span class="pre">null</span></code> for
+backends that don’t expose it.</li>
+<li><code class="docutils literal notranslate"><span class="pre">usage</span></code> - <span class="green">Object</span> or <code class="docutils literal notranslate"><span class="pre">null</span></code>.  After a query, contains
+<code class="docutils literal notranslate"><span class="pre">{prompt,</span> <span class="pre">completion,</span> <span class="pre">total}</span></code> token counts from the server.  Reset
+at the start of every query.</li>
 </ul>
 </div></blockquote>
 <p>Example:</p>
@@ -1364,6 +1418,11 @@ ends.  Receives a single <span class="green">Object</span> with:<ul>
 text (only present if the model produced thinking output).</li>
 <li><code class="docutils literal notranslate"><span class="pre">answer</span></code> - <span class="green">String</span>.  The answer portion after thinking
 (only present if <code class="docutils literal notranslate"><span class="pre">thinkingText</span></code> is present).</li>
+<li><code class="docutils literal notranslate"><span class="pre">toolCalls</span></code> - <span class="green">Array</span>.  Tool-call objects the model emitted,
+if any.  See <a class="reference internal" href="#tool-use"><span class="std std-ref">Tool use</span></a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">usage</span></code> - <span class="green">Object</span>.  <code class="docutils literal notranslate"><span class="pre">{prompt,</span> <span class="pre">completion,</span> <span class="pre">total}</span></code> token
+counts when the server reports them.  Also stored on
+<code class="docutils literal notranslate"><span class="pre">client.usage</span></code> for later access.</li>
 <li><code class="docutils literal notranslate"><span class="pre">serverResponse</span></code> - The raw HTTP response object.</li>
 <li><code class="docutils literal notranslate"><span class="pre">error</span></code> - Set if the query failed.</li>
 </ul>
@@ -1476,6 +1535,149 @@ conversation settings.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="tool-use">
+<h3>Tool use<a class="headerlink" href="#tool-use" title="Permalink to this headline">¶</a></h3>
+<p>A model can be given tools to call.  Tool schemas are passed in <code class="docutils literal notranslate"><span class="pre">params</span></code>
+in OpenAI format and apply to every backend (<code class="docutils literal notranslate"><span class="pre">anthropic</span></code> is translated
+internally; you don’t write a separate schema):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">temperature</span><span class="o">:</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="nx">tools</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;function&quot;</span><span class="p">,</span>
+            <span class="kd">function</span><span class="o">:</span> <span class="p">{</span>
+                <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
+                <span class="nx">description</span><span class="o">:</span> <span class="s2">&quot;Get the current weather for a city.&quot;</span><span class="p">,</span>
+                <span class="nx">parameters</span><span class="o">:</span> <span class="p">{</span>
+                    <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+                    <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
+                        <span class="nx">city</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+                        <span class="nx">units</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="kr">enum</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;f&quot;</span><span class="p">]}</span>
+                    <span class="p">},</span>
+                    <span class="nx">required</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;city&quot;</span><span class="p">]</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nx">tool_choice</span><span class="o">:</span> <span class="s2">&quot;auto&quot;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>When the model decides to call a tool, the final callback’s
+<code class="docutils literal notranslate"><span class="pre">res.toolCalls</span></code> is populated:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">toolCalls</span> <span class="o">&amp;&amp;</span> <span class="nx">res</span><span class="p">.</span><span class="nx">toolCalls</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">toolCalls</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">tc</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="nx">tc</span><span class="p">.</span><span class="kd">function</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">tc</span><span class="p">.</span><span class="kd">function</span><span class="p">.</span><span class="nx">arguments</span><span class="p">);</span>
+            <span class="cm">/* … invoke your local function for `name` with `args`,</span>
+<span class="cm">             *   capture its result, then continue the loop. */</span>
+            <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">dispatch</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span>
+
+            <span class="cm">/* Append the assistant&#39;s tool-call turn and your</span>
+<span class="cm">             * tool-result turn to the messages array and re-query</span>
+<span class="cm">             * so the model can incorporate the result. */</span>
+            <span class="nx">prompt</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">tool_calls</span><span class="o">:</span> <span class="nx">res</span><span class="p">.</span><span class="nx">toolCalls</span><span class="p">});</span>
+            <span class="nx">prompt</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;tool&quot;</span><span class="p">,</span>      <span class="nx">tool_call_id</span><span class="o">:</span> <span class="nx">tc</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+                         <span class="nx">content</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">)});</span>
+        <span class="p">});</span>
+        <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">.</span><span class="nx">callee</span><span class="p">);</span>   <span class="c1">// continue loop</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Final answer: %s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">fullText</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>The per-token callback receives no tool-call deltas — assembled tool calls
+arrive complete on the final callback.</p>
+</div>
+<div class="section" id="loading-providers-from-a-json-config-file">
+<h3>Loading providers from a JSON config file<a class="headerlink" href="#loading-providers-from-a-json-config-file" title="Permalink to this headline">¶</a></h3>
+<p>When an application supports multiple backends (a local model for
+development, a cloud API in production, etc.), define them once in a JSON
+file and pick the active one by name.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// providers.json</span>
+<span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="o">:</span> <span class="s2">&quot;local&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;providers&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;local&quot;</span><span class="o">:</span>   <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;llamaCpp&quot;</span><span class="p">,</span> <span class="s2">&quot;server&quot;</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="o">:</span> <span class="mi">8080</span><span class="p">},</span>
+        <span class="s2">&quot;ollama&quot;</span><span class="o">:</span>  <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;ollama&quot;</span><span class="p">,</span>   <span class="s2">&quot;model&quot;</span><span class="o">:</span>  <span class="s2">&quot;qwen2.5-coder:7b&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;deepseek&quot;</span><span class="o">:</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;openaiCompat&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;baseURL&quot;</span><span class="o">:</span> <span class="s2">&quot;https://api.deepseek.com/v1&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;apiKey&quot;</span><span class="o">:</span>  <span class="s2">&quot;${DEEPSEEK_API_KEY}&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;model&quot;</span><span class="o">:</span>   <span class="s2">&quot;deepseek-chat&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;haiku&quot;</span><span class="o">:</span>   <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;apiKey&quot;</span><span class="o">:</span> <span class="s2">&quot;${ANTHROPIC_API_KEY}&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;model&quot;</span><span class="o">:</span>  <span class="s2">&quot;claude-haiku-4-5&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;code&quot;</span><span class="o">:</span>    <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;claudeCode&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="o">:</span> <span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">${VAR_NAME}</span></code> placeholders in string values are resolved from the
+environment, so secrets stay out of the file.</p>
+<p>Instantiate a client from a config entry with <code class="docutils literal notranslate"><span class="pre">providerFromConfig</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cfg</span>   <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;providers.json&quot;</span><span class="p">));</span>
+<span class="kd">var</span> <span class="nx">name</span>  <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">LLM_PROVIDER</span> <span class="o">||</span> <span class="nx">cfg</span><span class="p">.</span><span class="k">default</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">cfg</span><span class="p">.</span><span class="nx">providers</span><span class="p">[</span><span class="nx">name</span><span class="p">];</span>
+
+<span class="cm">/* Resolve any ${ENV_VAR} placeholders, then construct. */</span>
+<span class="kd">var</span> <span class="nx">resolved</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">entry</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">k</span><span class="p">){</span>
+    <span class="nx">resolved</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">entry</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span> <span class="o">===</span> <span class="s2">&quot;string&quot;</span><span class="p">)</span>
+        <span class="o">?</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">resolveEnv</span><span class="p">(</span><span class="nx">entry</span><span class="p">[</span><span class="nx">k</span><span class="p">])</span> <span class="o">:</span> <span class="nx">entry</span><span class="p">[</span><span class="nx">k</span><span class="p">];</span>
+<span class="p">});</span>
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">providerFromConfig</span><span class="p">(</span><span class="nx">resolved</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The returned <code class="docutils literal notranslate"><span class="pre">client</span></code> has the same <code class="docutils literal notranslate"><span class="pre">query()</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, <code class="docutils literal notranslate"><span class="pre">capacity</span></code>,
+<code class="docutils literal notranslate"><span class="pre">usage</span></code>, <code class="docutils literal notranslate"><span class="pre">cancel</span></code> surface as a directly-constructed one.</p>
+</div>
+<div class="section" id="capacity-and-token-usage">
+<h3>Capacity and token usage<a class="headerlink" href="#capacity-and-token-usage" title="Permalink to this headline">¶</a></h3>
+<p>For backends that expose it, <code class="docutils literal notranslate"><span class="pre">rampart-llm</span></code> auto-discovers the context
+window on construction:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">llamaCpp</span></code> queries <code class="docutils literal notranslate"><span class="pre">/props</span></code> and <code class="docutils literal notranslate"><span class="pre">/slots</span></code> to find the per-slot
+<code class="docutils literal notranslate"><span class="pre">n_ctx</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">ollama</span></code> reads the model’s <code class="docutils literal notranslate"><span class="pre">num_ctx</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">openaiCompat</span></code> reads <code class="docutils literal notranslate"><span class="pre">/v1/models</span></code> when the endpoint provides
+<code class="docutils literal notranslate"><span class="pre">context_length</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">capacity</span></code> is left <code class="docutils literal notranslate"><span class="pre">null</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">anthropic</span></code> uses a built-in model→capacity table.</li>
+<li><code class="docutils literal notranslate"><span class="pre">claudeCode</span></code> does not expose this — <code class="docutils literal notranslate"><span class="pre">capacity</span></code> is <code class="docutils literal notranslate"><span class="pre">null</span></code>.</li>
+</ul>
+<p>After construction:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nx">capacity</span><span class="p">)</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Model context: %d tokens\n&quot;</span><span class="p">,</span> <span class="nx">client</span><span class="p">.</span><span class="nx">capacity</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>After each query, <code class="docutils literal notranslate"><span class="pre">client.usage</span></code> carries the server-reported token counts
+(when <code class="docutils literal notranslate"><span class="pre">stream_options.include_usage</span></code> is honored, which all supported
+backends do by default):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">prompt</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;Used %d / %d tokens this turn\n&quot;</span><span class="p">,</span>
+        <span class="nx">client</span><span class="p">.</span><span class="nx">usage</span><span class="p">.</span><span class="nx">prompt</span><span class="p">,</span> <span class="nx">client</span><span class="p">.</span><span class="nx">capacity</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Together, <code class="docutils literal notranslate"><span class="pre">capacity</span></code> and <code class="docutils literal notranslate"><span class="pre">usage</span></code> let you display a “tokens used” gauge,
+trigger compaction of older history before the context fills, or pick
+between providers based on how much budget the current conversation has
+left.</p>
+</div>
+<div class="section" id="cycle-detection-and-debug-logging">
+<h3>Cycle detection and debug logging<a class="headerlink" href="#cycle-detection-and-debug-logging" title="Permalink to this headline">¶</a></h3>
+<p>Small or heavily-quantized models occasionally fall into a repeating-token
+loop (e.g. emitting the same fragment forever).  <code class="docutils literal notranslate"><span class="pre">rampart-llm</span></code> watches
+the stream for short-period cycles and aborts the query when one is
+detected — the final callback fires with a <code class="docutils literal notranslate"><span class="pre">cycle</span></code> annotation in
+<code class="docutils literal notranslate"><span class="pre">res.error</span></code> so the caller can react (retry with different sampling, mark
+the response failed, etc.).</p>
+<p>For low-level debugging, set the environment variable
+<code class="docutils literal notranslate"><span class="pre">RAMPART_LLM_DEBUG=1</span></code> before starting the script to dump raw SSE chunks
+and parsed events to <code class="docutils literal notranslate"><span class="pre">/tmp/rampart-llm-debug.log</span></code>.  Override the
+destination with <code class="docutils literal notranslate"><span class="pre">RAMPART_LLM_DEBUG_FILE=/path/to/log</span></code>.</p>
+</div>
 <div class="section" id="thinking-reasoning-models">
 <h3>Thinking/reasoning models<a class="headerlink" href="#thinking-reasoning-models" title="Permalink to this headline">¶</a></h3>
 <p>Some models produce internal reasoning wrapped in <code class="docutils literal notranslate"><span class="pre">&lt;think&gt;...&lt;/think&gt;</span></code> tags
@@ -1495,33 +1697,26 @@ high enough to accommodate both reasoning and answer (4096 or more is
 recommended, as reasoning can easily consume several thousand tokens
 before the visible answer begins).</p>
 </div>
-<div class="section" id="context-window-management">
-<h3>Context window management<a class="headerlink" href="#context-window-management" title="Permalink to this headline">¶</a></h3>
-<p>When a conversation grows long enough to exceed the server’s context
-window, the server will return an error.  There are two approaches to
-handling this:</p>
+<div class="section" id="context-overflow-behavior">
+<h3>Context overflow behavior<a class="headerlink" href="#context-overflow-behavior" title="Permalink to this headline">¶</a></h3>
+<p>Reading <code class="docutils literal notranslate"><span class="pre">client.capacity</span></code> and <code class="docutils literal notranslate"><span class="pre">client.usage</span></code> (see <a class="reference internal" href="#capacity-and-token-usage"><span class="std std-ref">Capacity and
+token usage</span></a>) lets your script
+notice the conversation approaching the context window before the server
+refuses the request — typically the right place to trim or summarize old
+messages.  When the window is exceeded anyway, behavior differs by backend:</p>
 <p><strong>llama-server (llama.cpp):</strong>  Start the server with the <code class="docutils literal notranslate"><span class="pre">--context-shift</span></code>
 flag to allow automatic context shifting — older tokens are discarded
 from the KV cache to make room for new ones.  This is a server-start
 flag and cannot be set per-request.  The context size is set with <code class="docutils literal notranslate"><span class="pre">-c</span></code>
-(e.g. <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">32768</span></code>).  When using
-<code class="docutils literal notranslate"><span class="pre">--parallel</span></code> for multiple slots, the context is divided evenly among
-slots.</p>
-<p>llama-server also exposes several useful REST endpoints beyond the
-OpenAI-compatible <code class="docutils literal notranslate"><span class="pre">/v1/</span></code> API:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">/props</span></code> — returns server properties including
-<code class="docutils literal notranslate"><span class="pre">default_generation_settings.n_ctx</span></code> (the configured context size).</li>
-<li><code class="docutils literal notranslate"><span class="pre">/slots</span></code> — returns per-slot information including <code class="docutils literal notranslate"><span class="pre">n_ctx</span></code> (the
-actual per-slot context size, which accounts for <code class="docutils literal notranslate"><span class="pre">--parallel</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">/health</span></code> — returns server health status.</li>
-</ul>
-<p>These can be queried with <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code> to discover the context size
-at runtime, for example to display a token usage indicator to the user.</p>
+(e.g. <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">32768</span></code>).  When using <code class="docutils literal notranslate"><span class="pre">--parallel</span></code> for multiple slots, the
+context is divided evenly among slots.</p>
 <p><strong>Ollama:</strong>  Context shifting is handled automatically.  The context
 window size defaults to 2048 tokens but can be increased by passing
 <code class="docutils literal notranslate"><span class="pre">num_ctx</span></code> in the params (e.g. <code class="docutils literal notranslate"><span class="pre">client.params</span> <span class="pre">=</span> <span class="pre">{num_ctx:</span> <span class="pre">32768}</span></code>).
 Ollama will silently shift context when the window fills up.</p>
+<p><strong>OpenAI-compatible / Anthropic:</strong>  Returns an error.  Your script needs
+to summarize or drop old messages before exceeding the model’s published
+context length.</p>
 </div>
 <div class="section" id="using-with-the-rampart-web-server">
 <h3>Using with the Rampart web server<a class="headerlink" href="#using-with-the-rampart-web-server" title="Permalink to this headline">¶</a></h3>
@@ -2299,7 +2494,7 @@ compatibility as best-effort rather than guaranteed.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.6.2',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

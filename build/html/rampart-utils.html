@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rampart.utils &mdash; Rampart 0.6.2 documentation</title>
+  <title>rampart.utils &mdash; Rampart 0.7.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.6.2 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
         <link rel="next" title="Rampart Thread Functions" href="rampart-thread.html"/>
         <link rel="prev" title="Introduction to Rampart" href="rampart-main.html"/> 
 
@@ -110,6 +110,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#exists">exists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#statvfs">statVfs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#exec">exec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getenv">getenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setenv">setenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unsetenv">unsetenv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shell">shell</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fork">fork</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#newpipe">newPipe</a></li>
@@ -255,6 +258,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
@@ -474,7 +478,57 @@ or by providing a <a class="reference external" href="https://plumbum.readthedoc
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">&#64;</span></code> - same as <code class="docutils literal notranslate"><span class="pre">a</span></code> except truecolor mode is forced.</p>
 </li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">,</span></code> - For base-10 numeric formats (<code class="docutils literal notranslate"><span class="pre">%d</span></code>, <code class="docutils literal notranslate"><span class="pre">%i</span></code>, <code class="docutils literal notranslate"><span class="pre">%u</span></code>, <code class="docutils literal notranslate"><span class="pre">%lld</span></code>,
+<code class="docutils literal notranslate"><span class="pre">%f</span></code>, etc.), group the integer portion of the number with commas as
+thousands separators.  For floating point formats, only the digits before
+the decimal point are grouped.  Always a comma, independent of locale.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">'</span></code> - The standard C grouping flag: same as <code class="docutils literal notranslate"><span class="pre">,</span></code> but uses the current
+locale’s separator (nothing under the <code class="docutils literal notranslate"><span class="pre">C</span></code> locale).</p>
+</li>
 </ul>
+<p>Both flags also work with <span class="green">BigInt</span> values.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%,d\n&quot;</span><span class="p">,</span>   <span class="mi">123456789098765</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%,lld\n&quot;</span><span class="p">,</span> <span class="mi">123456789098765</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%,f\n&quot;</span><span class="p">,</span>   <span class="mf">123456789098765.0987</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>123,456,789,098,765
+123,456,789,098,765
+123,456,789,098,765.093750
+</pre></div>
+</div>
+<p>Although <code class="docutils literal notranslate"><span class="pre">%d</span></code> denotes a 32-bit integer, a <span class="green">Number</span> whose value
+exceeds the 32-bit range is automatically promoted to a 64-bit integer
+(as if <code class="docutils literal notranslate"><span class="pre">%lld</span></code> had been given) so the correct value is printed rather than
+a truncated one.  The same promotion applies to <code class="docutils literal notranslate"><span class="pre">%u</span></code>, <code class="docutils literal notranslate"><span class="pre">%x</span></code>, <code class="docutils literal notranslate"><span class="pre">%o</span></code> and
+<code class="docutils literal notranslate"><span class="pre">%b</span></code>.</p>
+</div></blockquote>
+<p><span class="green">BigInt</span> arguments:</p>
+<blockquote>
+<div><p>All numeric formats accept a <span class="green">BigInt</span>:</p>
+<ul class="simple">
+<li>For the integer formats (<code class="docutils literal notranslate"><span class="pre">%d</span></code>, <code class="docutils literal notranslate"><span class="pre">%i</span></code>, <code class="docutils literal notranslate"><span class="pre">%u</span></code>, <code class="docutils literal notranslate"><span class="pre">%x</span></code>, <code class="docutils literal notranslate"><span class="pre">%X</span></code>, <code class="docutils literal notranslate"><span class="pre">%o</span></code>,
+<code class="docutils literal notranslate"><span class="pre">%b</span></code>, with or without an <code class="docutils literal notranslate"><span class="pre">l</span></code>/<code class="docutils literal notranslate"><span class="pre">ll</span></code> length modifier) the full,
+arbitrary-precision value is printed.  Width, zero/space padding, the
+sign flags (<code class="docutils literal notranslate"><span class="pre">+</span></code>/space), the <code class="docutils literal notranslate"><span class="pre">#</span></code> prefix and the <code class="docutils literal notranslate"><span class="pre">,</span></code> grouping flag
+(base 10) are all honored.</li>
+<li>For the floating point and exponential formats (<code class="docutils literal notranslate"><span class="pre">%f</span></code>, <code class="docutils literal notranslate"><span class="pre">%e</span></code>, <code class="docutils literal notranslate"><span class="pre">%g</span></code>
+and their uppercase variants) the value is formatted directly from the
+<span class="green">BigInt</span>’s exact digits — there is no conversion to a
+<span class="green">Number</span> and therefore no precision loss, even at high precision
+(e.g. <code class="docutils literal notranslate"><span class="pre">%.40e</span></code>) or for magnitudes above 2<sup>53</sup>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">%s</span></code> prints the <span class="green">BigInt</span>’s decimal string.</li>
+<li><code class="docutils literal notranslate"><span class="pre">%J</span></code> prints <code class="docutils literal notranslate"><span class="pre">{}</span></code>, matching <code class="docutils literal notranslate"><span class="pre">JSON.stringify</span></code> which cannot serialize
+a <span class="green">BigInt</span>.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">big</span> <span class="o">=</span> <span class="nx">BigInt</span><span class="p">(</span><span class="s2">&quot;123456789012345678901234567890&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%,d\n&quot;</span><span class="p">,</span> <span class="nx">big</span><span class="p">);</span>
+<span class="c1">// 123,456,789,012,345,678,901,234,567,890</span>
+</pre></div>
+</div>
 </div></blockquote>
 <p>Color with <code class="docutils literal notranslate"><span class="pre">%H</span></code> format:</p>
 <blockquote>
@@ -1340,6 +1394,128 @@ Otherwise <code class="docutils literal notranslate"><span class="pre">null</spa
 </dd>
 </dl>
 </div>
+<div class="section" id="getenv">
+<h3>getenv<a class="headerlink" href="#getenv" title="Permalink to this headline">¶</a></h3>
+<p>Return the value of an environment variable as currently set in the
+process’s environment.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getenv</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">name</span></code> is a <span class="green">String</span> containing the environment variable name.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">String</span> containing the current value of the variable, or
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the variable is not set.</dd>
+</dl>
+<p>How this differs from <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a>:</p>
+<blockquote>
+<div><p><a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a> is a <span class="green">Object</span> populated
+with a <em>snapshot</em> of the environment at the time rampart started.
+Reads from <code class="docutils literal notranslate"><span class="pre">process.env</span></code> return values from that snapshot; writes
+modify only the snapshot and are not visible to native code that
+calls <code class="docutils literal notranslate"><span class="pre">getenv(3)</span></code> (such as a library loaded via <code class="docutils literal notranslate"><span class="pre">require()</span></code>),
+nor are they inherited by child processes spawned with
+<a class="reference internal" href="#exec">exec</a>().</p>
+<p><code class="docutils literal notranslate"><span class="pre">rampart.utils.getenv</span></code> consults the live OS-level process
+environment.  It sees values set later via
+<a class="reference internal" href="#setenv">setenv</a>() (whether by this function family or by C code in a
+loaded module), and it does not see writes made only to the
+<code class="docutils literal notranslate"><span class="pre">process.env</span></code> <span class="green">Object</span>.</p>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">HELLO</span> <span class="o">=</span> <span class="s2">&quot;from-js-dict&quot;</span><span class="p">;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setenv</span><span class="p">(</span><span class="s2">&quot;HELLO&quot;</span><span class="p">,</span> <span class="s2">&quot;from-os-env&quot;</span><span class="p">);</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;process.env.HELLO       = %s\n&quot;</span><span class="p">,</span>
+                     <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">HELLO</span><span class="p">);</span>                <span class="cm">/* from-js-dict  */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;rampart.utils.getenv()  = %s\n&quot;</span><span class="p">,</span>
+                     <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getenv</span><span class="p">(</span><span class="s2">&quot;HELLO&quot;</span><span class="p">));</span>    <span class="cm">/* from-os-env   */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;child shell sees        = %s\n&quot;</span><span class="p">,</span>
+                     <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;/bin/sh&quot;</span><span class="p">,</span><span class="s2">&quot;-c&quot;</span><span class="p">,</span><span class="s2">&quot;echo $HELLO&quot;</span><span class="p">).</span><span class="nx">stdout</span><span class="p">);</span>
+                                                        <span class="cm">/* from-os-env\n */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setenv">
+<h3>setenv<a class="headerlink" href="#setenv" title="Permalink to this headline">¶</a></h3>
+<p>Set an environment variable in the process’s live OS-level environment.
+Wraps POSIX <a class="reference external" href="https://man7.org/linux/man-pages/man3/setenv.3.html">setenv(3)</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setenv</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">value</span> <span class="p">[,</span> <span class="nx">overwrite</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">name</span></code> - <span class="green">String</span>. The variable name.  Must be non-empty and
+may not contain <code class="docutils literal notranslate"><span class="pre">=</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">value</span></code> - <span class="green">String</span>. The value to assign.</li>
+<li><code class="docutils literal notranslate"><span class="pre">overwrite</span></code> - <span class="green">Boolean</span>. Optional. If <code class="docutils literal notranslate"><span class="pre">true</span></code> (the default)
+and the variable is already set, the existing value is replaced.
+If <code class="docutils literal notranslate"><span class="pre">false</span></code>, an existing value is left untouched.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Undefined</span>.  Throws on error (e.g. invalid name, allocation
+failure).</dd>
+<dt>Notes:</dt>
+<dd><p class="first">The value is visible to subsequent <code class="docutils literal notranslate"><span class="pre">rampart.utils.getenv()</span></code> calls,
+to native code that calls <code class="docutils literal notranslate"><span class="pre">getenv(3)</span></code>, and to child processes
+spawned with <a class="reference internal" href="#exec">exec</a>().  Writes to <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a> do <em>not</em> have these properties; use <code class="docutils literal notranslate"><span class="pre">setenv</span></code>
+when something outside the JS runtime needs to read the value.</p>
+<p class="last">A common use case is preparing an environment variable that a
+native module reads from its library constructor.  For example,
+<code class="docutils literal notranslate"><span class="pre">MAGICK_CONFIGURE_PATH</span></code> must be set before <code class="docutils literal notranslate"><span class="pre">require(&quot;rampart-graphicsmagick&quot;)</span></code>
+triggers the load of <code class="docutils literal notranslate"><span class="pre">libGraphicsMagick</span></code>; <code class="docutils literal notranslate"><span class="pre">rampart-gm.js</span></code> does
+exactly that via <code class="docutils literal notranslate"><span class="pre">rampart.utils.setenv</span></code> before the <code class="docutils literal notranslate"><span class="pre">require()</span></code>.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setenv</span><span class="p">(</span><span class="s2">&quot;MY_VAR&quot;</span><span class="p">,</span> <span class="s2">&quot;hello&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getenv</span><span class="p">(</span><span class="s2">&quot;MY_VAR&quot;</span><span class="p">));</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">hello</span>
+<span class="cm">*/</span>
+
+<span class="cm">/* overwrite=false: leave a caller-supplied value in place */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setenv</span><span class="p">(</span><span class="s2">&quot;MY_VAR&quot;</span><span class="p">,</span> <span class="s2">&quot;ignored&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getenv</span><span class="p">(</span><span class="s2">&quot;MY_VAR&quot;</span><span class="p">));</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">hello</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="unsetenv">
+<h3>unsetenv<a class="headerlink" href="#unsetenv" title="Permalink to this headline">¶</a></h3>
+<p>Remove an environment variable from the process’s live OS-level
+environment.  Wraps POSIX <a class="reference external" href="https://man7.org/linux/man-pages/man3/unsetenv.3.html">unsetenv(3)</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">unsetenv</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">name</span></code> is a <span class="green">String</span>.  Must be non-empty and may not
+contain <code class="docutils literal notranslate"><span class="pre">=</span></code>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><span class="green">Undefined</span>.  Throws on error.</dd>
+<dt>Notes:</dt>
+<dd>Removing a variable affects <code class="docutils literal notranslate"><span class="pre">rampart.utils.getenv()</span></code>, native code
+that calls <code class="docutils literal notranslate"><span class="pre">getenv(3)</span></code>, and child processes spawned by <a class="reference internal" href="#exec">exec</a>().
+It does not modify <a class="reference internal" href="rampart-main.html#env"><span class="std std-ref">process.env</span></a>; if you
+want both views cleared, delete the property from <code class="docutils literal notranslate"><span class="pre">process.env</span></code>
+as well.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">setenv</span><span class="p">(</span><span class="s2">&quot;TEMP_VAR&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">unsetenv</span><span class="p">(</span><span class="s2">&quot;TEMP_VAR&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">getenv</span><span class="p">(</span><span class="s2">&quot;TEMP_VAR&quot;</span><span class="p">)</span> <span class="o">||</span> <span class="s2">&quot;(unset)&quot;</span><span class="p">);</span>
+<span class="cm">/* expected output:</span>
+<span class="cm">(unset)</span>
+<span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="shell">
 <h3>shell<a class="headerlink" href="#shell" title="Permalink to this headline">¶</a></h3>
 <p>Execute <span class="green">String</span> in a bash shell. Equivalent to
@@ -1948,7 +2124,7 @@ unprivileged operation.</li>
 <p class="first admonition-title">Note</p>
 <p class="last">The bundle feature exposes three additional functions –
 <code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadList()</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadGet(name)</span></code> and
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadExtract(name|nameArray|null,</span> <span class="pre">destDir)</span></code> – which
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadExtract(destDir</span> <span class="pre">[,</span> <span class="pre">name|nameArray])</span></code> – which
 operate on the zip archive appended to <code class="docutils literal notranslate"><span class="pre">rampart</span></code> itself rather than
 on a zip file on disk.  See
 <a class="reference internal" href="rampart-extras.html#single-file-bundles"><span class="std std-ref">Single-File Bundles</span></a>.</p>
@@ -4947,7 +5123,7 @@ the <cite>hll</cite> to disk using a command such as <a class="reference interna
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.6.2',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

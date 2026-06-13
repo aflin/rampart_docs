@@ -1,0 +1,1612 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The rampart-langtools modules &mdash; Rampart 0.7.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+        <link rel="next" title="The rampart-almanac module" href="rampart-almanac.html"/>
+        <link rel="prev" title="The rampart-treesitter module" href="rampart-treesitter.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Rampart
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rampart-main.html">Rampart JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-server.html">The rampart-server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-redis.html">The rampart-redis module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-totext.html">The rampart-totext module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-python.html">The rampart-python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-robots.html">The rampart-robots module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The rampart-langtools modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-do-they-do">What do they do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#platform-availability">Platform Availability</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-rampart-llamacpp-module">The rampart-llamacpp module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modelinfo">modelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initembed">initEmbed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#emb-embedtexttonumbers">emb.embedTextToNumbers()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#emb-destroy">emb.destroy()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#initrerank">initRerank</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rr-rerank">rr.rerank()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#initgen">initGen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gen-predict">gen.predict()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gen-predictasync">gen.predictAsync()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gen-getlast">gen.getLast()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gen-destroy">gen.destroy()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getlog">getLog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resetlog">resetLog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-rampart-faiss-module">The rampart-faiss module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openfactory">openFactory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openindexfromfile">openIndexFromFile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-settings">idx.settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-addfp32">idx.addFp32()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-addfp16">idx.addFp16()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-searchfp32">idx.searchFp32()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-searchfp16">idx.searchFp16()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-save">idx.save()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#idx-trainer">idx.trainer()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trainer-addtrainingfp32">trainer.addTrainingfp32()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trainer-addtrainingfp16">trainer.addTrainingfp16()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trainer-train">trainer.train()</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#the-rampart-sentencepiece-module">The rampart-sentencepiece module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#init">init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#encoder-encode">encoder.encode()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#decode">decode</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#putting-it-together">Putting It Together</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Rampart</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>The rampart-langtools modules</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rampart-langtools.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-rampart-langtools-modules">
+<h1>The rampart-langtools modules<a class="headerlink" href="#the-rampart-langtools-modules" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="preface">
+<h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="acknowledgment">
+<h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-langtools package provides three modules built on
+best-in-class machine-learning libraries:</p>
+<ul class="simple">
+<li>The rampart-llamacpp module is built on
+<a class="reference external" href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>, the C/C++
+LLM inference engine created by Georgi Gerganov and contributors.</li>
+<li>The rampart-faiss module is built on
+<a class="reference external" href="https://github.com/facebookresearch/faiss">FAISS</a>, the library
+for efficient similarity search and clustering of dense vectors
+from Meta AI Research.</li>
+<li>The rampart-sentencepiece module is built on
+<a class="reference external" href="https://github.com/google/sentencepiece">SentencePiece</a>, the
+unsupervised text tokenizer from Google.</li>
+</ul>
+<p>The authors of Rampart extend their thanks to the authors and
+contributors of each of these libraries.</p>
+</div>
+<div class="section" id="license">
+<h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
+<p>The llama.cpp library is licensed under the
+<a class="reference external" href="https://github.com/ggml-org/llama.cpp/blob/master/LICENSE">MIT License</a>.
+The FAISS library is licensed under the
+<a class="reference external" href="https://github.com/facebookresearch/faiss/blob/main/LICENSE">MIT License</a>.
+The SentencePiece library is licensed under the
+<a class="reference external" href="https://github.com/google/sentencepiece/blob/master/LICENSE">Apache 2.0 License</a>.</p>
+<p>The rampart-langtools modules are released under the MIT license.</p>
+</div>
+<div class="section" id="what-do-they-do">
+<h3>What do they do?<a class="headerlink" href="#what-do-they-do" title="Permalink to this headline">¶</a></h3>
+<p>Together the three modules provide the building blocks for semantic
+search and local LLM inference inside Rampart:</p>
+<ul class="simple">
+<li><strong>rampart-llamacpp</strong> runs GGUF models directly inside the rampart
+process: text embedding (<a class="reference internal" href="#initembed">initEmbed</a>), reranking
+(<a class="reference internal" href="#initrerank">initRerank</a>) and text generation (<a class="reference internal" href="#initgen">initGen</a>).</li>
+<li><strong>rampart-faiss</strong> builds, trains, saves and searches vector
+indexes, from small exact-search indexes to compressed indexes
+holding hundreds of millions of vectors.</li>
+<li><strong>rampart-sentencepiece</strong> tokenizes text into subword pieces
+(and back) using a SentencePiece model.</li>
+</ul>
+<p>A typical pipeline embeds documents with rampart-llamacpp, stores
+the vectors in a rampart-faiss index (and/or a rampart-sql table),
+searches that index with an embedded query vector, and optionally
+reranks the results with a reranking model.</p>
+<p>Note that the rampart-sql module has this pipeline built in:  its
+<code class="docutils literal notranslate"><span class="pre">embed()</span></code> SQL function generates vectors in the SQL engine using
+this package’s rampart-llamacpp module, and its
+<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span> <span class="pre">INDEX</span></code> / <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> similarity search uses a
+FAISS-backed (IVFPQ) index internally.  When vectors live in a SQL
+table, that integrated path is usually the simplest choice — see
+<a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> in the rampart-sql
+documentation.  The modules documented here are for using the same
+engines directly: custom or standalone faiss indexes, embedding
+outside the SQL engine, reranking and text generation.</p>
+</div>
+<div class="section" id="platform-availability">
+<h3>Platform Availability<a class="headerlink" href="#platform-availability" title="Permalink to this headline">¶</a></h3>
+<p>The rampart-langtools modules are <strong>not available</strong> on the following
+platforms:</p>
+<ul class="simple">
+<li>macOS x86_64 (Intel Macs).</li>
+<li>32-bit ARM Linux (the <code class="docutils literal notranslate"><span class="pre">raspberry_pi_os-buster-armv7l</span></code> build).</li>
+</ul>
+<p>On macOS (Apple Silicon):</p>
+<ul class="simple">
+<li><a class="reference internal" href="#initembed">initEmbed</a> requires macOS 12 (Monterey) or later.</li>
+<li><a class="reference internal" href="#initgen">initGen</a> requires macOS 15 (Sequoia) or later, due to a Metal
+regression in older versions of macOS.  The requirement is
+checked at runtime and <code class="docutils literal notranslate"><span class="pre">initGen</span></code> will throw a descriptive error
+on macOS 14 and below.</li>
+</ul>
+<p>On Linux, the modules are available in CPU and CUDA (GPU) builds.
+GPU-only features (such as the faiss <a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a> function)
+are noted where applicable.</p>
+</div>
+</div>
+<div class="section" id="the-rampart-llamacpp-module">
+<h2>The rampart-llamacpp module<a class="headerlink" href="#the-rampart-llamacpp-module" title="Permalink to this headline">¶</a></h2>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
+function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Models are standard GGUF files, as downloaded from, e.g.,
+<a class="reference external" href="https://huggingface.co/models?library=gguf">Hugging Face</a>.</p>
+<div class="section" id="modelinfo">
+<h3>modelInfo<a class="headerlink" href="#modelinfo" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">modelInfo</span></code> function returns a model’s key parameters by
+reading only its GGUF metadata and vocabulary.  It does <strong>not</strong>
+load the weight tensors, so there is no GPU upload and the call
+is fast even for multi-gigabyte models.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">modelInfo</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path to a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code>
+model file.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with the following properties:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">embedDim</span></code> - A <span class="green">Number</span>, the size of the vector
+that <a class="reference internal" href="#initembed">initEmbed</a>’s embedding functions produce.  It
+prefers the GGUF <code class="docutils literal notranslate"><span class="pre">embedding_length_out</span></code> of a projection
+head, falling back to <code class="docutils literal notranslate"><span class="pre">embedding_length</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">hiddenDim</span></code> - A <span class="green">Number</span>, the model hidden size.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nCtxTrain</span></code> - A <span class="green">Number</span>, the trained context
+length.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nLayer</span></code> - A <span class="green">Number</span>, the number of layers.</li>
+<li><code class="docutils literal notranslate"><span class="pre">arch</span></code> - A <span class="green">String</span>, the GGUF
+<code class="docutils literal notranslate"><span class="pre">general.architecture</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;bert&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;llama&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">pooling</span></code> - A <span class="green">String</span>, the model’s declared
+pooling type: <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cls&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rank&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;unspecified&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nParams</span></code> - A <span class="green">Number</span>, the parameter count.</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">modelInfo</span><span class="p">(</span><span class="s2">&quot;bge-m3-FP16.gguf&quot;</span><span class="p">);</span>
+<span class="cm">/* {</span>
+<span class="cm">      embedDim:   1024,</span>
+<span class="cm">      hiddenDim:  1024,</span>
+<span class="cm">      nCtxTrain:  8192,</span>
+<span class="cm">      nLayer:     24,</span>
+<span class="cm">      arch:       &quot;bert&quot;,</span>
+<span class="cm">      pooling:    &quot;cls&quot;,</span>
+<span class="cm">      nParams:    566703104</span>
+<span class="cm">   } */</span>
+
+<span class="cm">/* size vector storage from the model itself: */</span>
+<span class="kd">var</span> <span class="nx">vecDim</span> <span class="o">=</span> <span class="nx">info</span><span class="p">.</span><span class="nx">embedDim</span><span class="p">;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="initembed">
+<h3>initEmbed<a class="headerlink" href="#initembed" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">initEmbed</span></code> function loads an embedding model and returns
+a handle used to convert text into semantic vectors.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="nx">path</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path to a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code>
+embedding model.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting all of
+the settings in <a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a> below,
+plus the following embedding-specific options:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">pooling</span></code> - A <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cls&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;rank&quot;</span></code>
+(<code class="docutils literal notranslate"><span class="pre">--pooling</span></code> in llama-server).  Default: <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">attention</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;causal&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;non-causal&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">--attention</span></code>).</li>
+</ul>
+<p>The legacy option names <code class="docutils literal notranslate"><span class="pre">nctx</span></code>, <code class="docutils literal notranslate"><span class="pre">ubatch</span></code>, <code class="docutils literal notranslate"><span class="pre">nthreads</span></code>
+and <code class="docutils literal notranslate"><span class="pre">nthreads_batch</span></code> are accepted as aliases for <code class="docutils literal notranslate"><span class="pre">nCtx</span></code>,
+<code class="docutils literal notranslate"><span class="pre">nUBatch</span></code>, <code class="docutils literal notranslate"><span class="pre">threads</span></code> and <code class="docutils literal notranslate"><span class="pre">threadsBatch</span></code>.</p>
+</li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">nCtx</span></code> is not given, the context size defaults to the
+model’s trained maximum, capped at 8192 tokens.</p>
+<p>Model weights are shared:  loading the same model file from
+several handles or rampart threads keeps a single copy of the
+weights in memory.  A handle that is copied to another
+<a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">rampart thread</span></a>
+transparently builds its own per-thread context on first use.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>The rampart-sql <code class="docutils literal notranslate"><span class="pre">embed()</span></code> SQL function runs this same
+engine inside the SQL module: <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span>
+<span class="pre">'/path/to/model.gguf'})</span></code> loads the model through
+rampart-llamacpp and <code class="docutils literal notranslate"><span class="pre">embed(?)</span></code> then produces the same
+vectors as <a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a>’s <code class="docutils literal notranslate"><span class="pre">avgVec</span></code>.  When
+embedding rows of a SQL table, that path avoids round-trips
+through JavaScript — see
+<a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class="std std-ref">Generating embeddings</span></a>
+and the <a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> property.</dd>
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the embedding handle) with the functions
+<a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a>, <a class="reference internal" href="#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a>,
+<a class="reference internal" href="#emb-embedtexttonumbers">emb.embedTextToNumbers()</a> and <a class="reference internal" href="#emb-destroy">emb.destroy()</a> documented
+below.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="s2">&quot;about a paragraph of text ...&quot;</span><span class="p">);</span>
+
+<span class="cm">/* v = { vecs: [vec1, vec2, ...], avgVec: avgOfVecs }</span>
+<span class="cm">   If the text fits the model&#39;s context window,</span>
+<span class="cm">   v.vecs.length == 1 and v.vecs[0] == v.avgVec.       */</span>
+
+<span class="cm">/* store the vector, e.g., in a sql table */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into vecs values(?,?,?)&quot;</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">v</span><span class="p">.</span><span class="nx">avgVec</span><span class="p">,</span> <span class="nx">docId</span><span class="p">,</span> <span class="nx">text</span><span class="p">]);</span>
+
+<span class="cm">/* unload when no longer needed */</span>
+<span class="nx">emb</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="emb-embedtexttofp16buf">
+<h4>emb.embedTextToFp16Buf()<a class="headerlink" href="#emb-embedtexttofp16buf" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Embed text and return the vector(s) packed as 16-bit floats
+(little-endian) in a <span class="green">Buffer</span>.  This is the most compact
+format and is directly usable by
+<a class="reference internal" href="rampart-vector.html#rampart-vector-functions"><span class="std std-ref">rampart.vector</span></a>
+functions, the <span class="xref std std-ref">rampart-sql</span>
+<code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> function and the faiss <a class="reference internal" href="#idx-addfp16">idx.addFp16()</a> /
+<a class="reference internal" href="#idx-searchfp16">idx.searchFp16()</a> functions.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">text</span></code> is a <span class="green">String</span> (or a <span class="green">Buffer</span>
+containing text) to be embedded.</p>
+<p>If the tokenized text does not fit the model’s context window,
+it is split into overlapping chunks (one eighth of a window of
+overlap) and one vector is produced per chunk.  Each vector is
+L2-normalized.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">vecs</span></code> - An <span class="green">Array</span> of <span class="green">Buffers</span>, one
+vector per chunk (<code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">embedDim</span></code> bytes each).</li>
+<li><code class="docutils literal notranslate"><span class="pre">avgVec</span></code> - A <span class="green">Buffer</span>.  If only one chunk was
+produced, the same vector as <code class="docutils literal notranslate"><span class="pre">vecs[0]</span></code>.  Otherwise the
+re-normalized average of all the chunk vectors, suitable
+as a single whole-document vector.</li>
+</ul>
+<p class="last">For empty or whitespace-only input, <code class="docutils literal notranslate"><span class="pre">vecs</span></code> is an empty
+<span class="green">Array</span> and <code class="docutils literal notranslate"><span class="pre">avgVec</span></code> is not set.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="emb-embedtexttofp32buf">
+<h4>emb.embedTextToFp32Buf()<a class="headerlink" href="#emb-embedtexttofp32buf" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>The same as <a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a> except that vectors are
+packed as 32-bit floats (<code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">embedDim</span></code> bytes per vector).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp32Buf</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="emb-embedtexttonumbers">
+<h4>emb.embedTextToNumbers()<a class="headerlink" href="#emb-embedtexttonumbers" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>The same as <a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a> except that each vector
+is returned as an <span class="green">Array</span> of <span class="green">Numbers</span> rather than
+a packed <span class="green">Buffer</span>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToNumbers</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="emb-destroy">
+<h4>emb.destroy()<a class="headerlink" href="#emb-destroy" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Free the model context (and release the model weights if this
+was the last handle using them).  Using the handle after calling
+<code class="docutils literal notranslate"><span class="pre">destroy()</span></code> throws an error.  Handles are also freed
+automatically when garbage collected, but for large models it is
+good practice to free them deterministically.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">emb</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="initrerank">
+<h3>initRerank<a class="headerlink" href="#initrerank" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">initRerank</span></code> function loads a reranking model (such as
+<a class="reference external" href="https://huggingface.co/BAAI/bge-reranker-v2-m3">bge-reranker-v2-m3</a>)
+and returns a handle used to score how well documents answer a
+query.  Reranking is commonly applied to the top results of a
+vector search to improve final ordering.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">rr</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initRerank</span><span class="p">(</span><span class="nx">path</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path to a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code>
+reranking model.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting the same
+settings as <a class="reference internal" href="#initembed">initEmbed</a> above.  For reranking, <code class="docutils literal notranslate"><span class="pre">pooling</span></code>
+defaults to <code class="docutils literal notranslate"><span class="pre">&quot;rank&quot;</span></code>, the context size defaults to the
+model’s trained maximum capped at 1024 tokens, and
+<code class="docutils literal notranslate"><span class="pre">nUBatch</span></code> defaults to 512.  Input longer than <code class="docutils literal notranslate"><span class="pre">nUBatch</span></code>
+tokens is truncated.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the reranker handle) with the functions
+<a class="reference internal" href="#rr-rerank">rr.rerank()</a> and <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> (as in <a class="reference internal" href="#emb-destroy">emb.destroy()</a>).</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">rr</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initRerank</span><span class="p">(</span><span class="s2">&quot;bge-reranker-v2-m3-Q8_0.gguf&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">question</span> <span class="o">=</span> <span class="s2">&quot;How tall is the Eiffel Tower?&quot;</span><span class="p">;</span>
+
+<span class="cm">/* score a single document */</span>
+<span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">rr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="nx">question</span><span class="p">,</span>
+    <span class="s2">&quot;The Eiffel Tower is 330 metres tall.&quot;</span><span class="p">);</span>
+
+<span class="cm">/* score several documents at once */</span>
+<span class="kd">var</span> <span class="nx">scored</span> <span class="o">=</span> <span class="nx">rr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="nx">question</span><span class="p">,</span> <span class="p">[</span>
+    <span class="s2">&quot;The Eiffel Tower is 330 metres tall.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Gustave Eiffel also designed bridges.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Paris is the capital of France.&quot;</span>
+<span class="p">]);</span>
+<span class="cm">/* [ { document: &quot;The Eiffel Tower is ...&quot;, score: 4.21 },</span>
+<span class="cm">     { document: &quot;Gustave Eiffel also ...&quot;, score: -1.7 },</span>
+<span class="cm">     ...                                                 ] */</span>
+
+<span class="nx">rr</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="rr-rerank">
+<h4>rr.rerank()<a class="headerlink" href="#rr-rerank" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Score one or more documents against a query.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">score</span>  <span class="o">=</span> <span class="nx">rr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nb">document</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">scored</span> <span class="o">=</span> <span class="nx">rr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">documents</span><span class="p">[,</span> <span class="nx">scoresOnly</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">query</span></code> is a <span class="green">String</span>, the question or search text.</li>
+<li><code class="docutils literal notranslate"><span class="pre">document</span></code>/<code class="docutils literal notranslate"><span class="pre">documents</span></code> is a <span class="green">String</span> (a single
+document) or an <span class="green">Array</span> of <span class="green">Strings</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">scoresOnly</span></code> is an optional <span class="green">Boolean</span> (only
+meaningful with an <span class="green">Array</span>).  Default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><ul class="first last simple">
+<li>Given a single <span class="green">String</span> document: a
+<span class="green">Number</span>, the relevance score.  Higher is more
+relevant; the range depends on the model (scores are
+typically logits, not probabilities).</li>
+<li>Given an <span class="green">Array</span> of documents: an <span class="green">Array</span>
+of <span class="green">Objects</span>, each <code class="docutils literal notranslate"><span class="pre">{document:</span> <span class="pre">String,</span>
+<span class="pre">score:</span> <span class="pre">Number}</span></code>, in the same order as the input.</li>
+<li>Given an <span class="green">Array</span> and <code class="docutils literal notranslate"><span class="pre">scoresOnly</span></code> = <code class="docutils literal notranslate"><span class="pre">true</span></code>:
+an <span class="green">Array</span> of <span class="green">Numbers</span>.</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="initgen">
+<h3>initGen<a class="headerlink" href="#initgen" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">initGen</span></code> function loads a text-generation model and
+returns a handle for synchronous and streaming generation.</p>
+<p><strong>Experimental.</strong>  <code class="docutils literal notranslate"><span class="pre">initGen</span></code>, <code class="docutils literal notranslate"><span class="pre">predict</span></code> and <code class="docutils literal notranslate"><span class="pre">predictAsync</span></code>
+are under active development and the API may change.  Vision /
+multimodal input (<code class="docutils literal notranslate"><span class="pre">mmproj</span></code>) is not supported.</p>
+<p><code class="docutils literal notranslate"><span class="pre">initGen</span></code> runs a single shared, continuously-batched engine on
+a dedicated rampart thread.  When the returned handle is shared
+across rampart threads (e.g. server threads), their requests are
+transparently pooled into that one engine: one copy of the model
+in memory, batched decoding.  <code class="docutils literal notranslate"><span class="pre">nSeqMax</span></code> sets how many requests
+may decode together.</p>
+<p>On macOS, <code class="docutils literal notranslate"><span class="pre">initGen</span></code> requires macOS 15 (Sequoia) or later — see
+<a class="reference internal" href="#platform-availability">Platform Availability</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">gen</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initGen</span><span class="p">(</span><span class="nx">path</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path to a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code>
+text-generation model.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting all of
+the settings in <a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a> below,
+plus the following generation-specific options:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">jinja</span></code> - A <span class="green">Boolean</span>, whether to apply the
+model’s chat template via Jinja when <code class="docutils literal notranslate"><span class="pre">messages</span></code> are
+given to <a class="reference internal" href="#gen-predict">gen.predict()</a>.  Default: <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chatTemplate</span></code> - A <span class="green">String</span>, a custom Jinja chat
+template overriding the model’s built-in template.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chatTemplateFile</span></code> - A <span class="green">String</span>, a file from
+which to read the custom chat template.</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the gen handle) with the properties
+<code class="docutils literal notranslate"><span class="pre">nCtx</span></code> and <code class="docutils literal notranslate"><span class="pre">nVocab</span></code> (<span class="green">Numbers</span>, the resolved
+context size and vocabulary size) and the functions
+<a class="reference internal" href="#gen-predict">gen.predict()</a>, <a class="reference internal" href="#gen-predictasync">gen.predictAsync()</a>,
+<a class="reference internal" href="#gen-getlast">gen.getLast()</a> and <a class="reference internal" href="#gen-destroy">gen.destroy()</a>.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">gen</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initGen</span><span class="p">(</span><span class="s2">&quot;gemma-3-4b-it-Q4_K_M.gguf&quot;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">nCtx</span><span class="o">:</span>    <span class="mi">4096</span><span class="p">,</span>
+    <span class="nx">nSeqMax</span><span class="o">:</span> <span class="mi">4</span>      <span class="cm">/* up to 4 requests batched together */</span>
+<span class="p">});</span>
+
+<span class="cm">/* synchronous: blocks and returns the full text */</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">gen</span><span class="p">.</span><span class="nx">predict</span><span class="p">({</span>
+    <span class="nx">messages</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">{</span> <span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;You are a helpful assistant.&quot;</span> <span class="p">},</span>
+        <span class="p">{</span> <span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>   <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;What is the capital of France?&quot;</span> <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nx">maxTokens</span><span class="o">:</span> <span class="mi">128</span>
+<span class="p">});</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="p">);</span>
+
+<span class="cm">/* streaming: tokens are delivered as they are produced */</span>
+<span class="kd">var</span> <span class="nx">h</span> <span class="o">=</span> <span class="nx">gen</span><span class="p">.</span><span class="nx">predictAsync</span><span class="p">(</span>
+    <span class="p">{</span> <span class="nx">prompt</span><span class="o">:</span> <span class="s2">&quot;Explain how a combustion engine works.&quot;</span><span class="p">,</span>
+      <span class="nx">maxTokens</span><span class="o">:</span> <span class="mi">256</span><span class="p">,</span> <span class="nx">temp</span><span class="o">:</span> <span class="mf">0.7</span> <span class="p">},</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>   <span class="cm">/* per token */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">.</span><span class="nx">done</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">res</span><span class="p">.</span><span class="nx">error</span><span class="p">)</span>
+            <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">token</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>   <span class="cm">/* done: res.fullText, res.error */</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\n[done]\n&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+<span class="cm">/* h.cancel();  -- stop this generation early */</span>
+
+<span class="nx">gen</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="gen-predict">
+<h4>gen.predict()<a class="headerlink" href="#gen-predict" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Generate text synchronously.  The call blocks the current thread
+until generation completes and returns the full generated text.
+On a server, this blocks the worker thread’s event loop — use
+<a class="reference internal" href="#gen-predictasync">gen.predictAsync()</a> in hot handlers.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">gen</span><span class="p">.</span><span class="nx">predict</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">options</span></code> is an <span class="green">Object</span> with the following
+properties (one of <code class="docutils literal notranslate"><span class="pre">prompt</span></code> or <code class="docutils literal notranslate"><span class="pre">messages</span></code> is required):</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">prompt</span></code> - A <span class="green">String</span>, a plain text prompt.</li>
+<li><code class="docutils literal notranslate"><span class="pre">messages</span></code> - An <span class="green">Array</span> of
+<code class="docutils literal notranslate"><span class="pre">{role:</span> <span class="pre">String,</span> <span class="pre">content:</span> <span class="pre">String}</span></code> <span class="green">Objects</span>,
+chat-style messages.  The model’s chat template is applied
+(see the <code class="docutils literal notranslate"><span class="pre">jinja</span></code> option of <a class="reference internal" href="#initgen">initGen</a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">maxTokens</span></code> - A <span class="green">Number</span>, the maximum number of
+tokens to generate.  Default: <code class="docutils literal notranslate"><span class="pre">512</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">temp</span></code> - A <span class="green">Number</span>, the sampling temperature.</li>
+<li><code class="docutils literal notranslate"><span class="pre">topP</span></code> - A <span class="green">Number</span>, top-p (nucleus) sampling.</li>
+<li><code class="docutils literal notranslate"><span class="pre">topK</span></code> - A <span class="green">Number</span>, top-k sampling.</li>
+<li><code class="docutils literal notranslate"><span class="pre">minP</span></code> - A <span class="green">Number</span>, min-p sampling.</li>
+<li><code class="docutils literal notranslate"><span class="pre">repeatPenalty</span></code> - A <span class="green">Number</span>, the repetition
+penalty.</li>
+<li><code class="docutils literal notranslate"><span class="pre">repeatLastN</span></code> - A <span class="green">Number</span>, how many recent tokens
+the repetition penalty considers.</li>
+<li><code class="docutils literal notranslate"><span class="pre">seed</span></code> - A <span class="green">Number</span>, the RNG seed.  If not given, a
+random seed is used per request.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stop</span></code> - An <span class="green">Array</span> of <span class="green">Strings</span>; generation
+stops when any of them is produced.</li>
+<li><code class="docutils literal notranslate"><span class="pre">addAssistant</span></code> - A <span class="green">Boolean</span>, whether to append the
+assistant generation prompt when applying a chat template.
+Default: <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+</ul>
+<p>Unset sampling options use the model/engine defaults.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">String</span>, the full generated text.  If the engine
+reports an error, the returned string is
+<code class="docutils literal notranslate"><span class="pre">&quot;[gen</span> <span class="pre">err:&lt;message&gt;]&quot;</span></code>.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="gen-predictasync">
+<h4>gen.predictAsync()<a class="headerlink" href="#gen-predictasync" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Generate text asynchronously, streaming tokens as they are
+produced.  The call returns immediately; callbacks fire from the
+event loop.  Multiple in-flight calls (across threads, or from
+one event loop) batch together through the shared engine.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">h</span> <span class="o">=</span> <span class="nx">gen</span><span class="p">.</span><span class="nx">predictAsync</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">perToken</span><span class="p">[,</span> <span class="kr">final</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is the same <span class="green">Object</span> accepted by
+<a class="reference internal" href="#gen-predict">gen.predict()</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">perToken</span></code> is a <span class="green">Function</span>, called once per
+generated token with an <span class="green">Object</span>:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">token</span></code> - A <span class="green">String</span>, the token text.</li>
+<li><code class="docutils literal notranslate"><span class="pre">done</span></code> - A <span class="green">Boolean</span>, <code class="docutils literal notranslate"><span class="pre">false</span></code> for token
+callbacks.</li>
+</ul>
+</li>
+<li><code class="docutils literal notranslate"><span class="pre">final</span></code> is an optional <span class="green">Function</span>, called once when
+the generation ends, with an <span class="green">Object</span>:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">fullText</span></code> - A <span class="green">String</span>, the complete generated
+text.</li>
+<li><code class="docutils literal notranslate"><span class="pre">error</span></code> - A <span class="green">String</span>, set if the generation
+failed.</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with a single function <code class="docutils literal notranslate"><span class="pre">cancel()</span></code>,
+which stops this generation early and frees its slot in the
+engine.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="gen-getlast">
+<h4>gen.getLast()<a class="headerlink" href="#gen-getlast" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Return the full text of the last completed <a class="reference internal" href="#gen-predict">gen.predict()</a> call
+made through this handle on the current thread.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">gen</span><span class="p">.</span><span class="nx">getLast</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="gen-destroy">
+<h4>gen.destroy()<a class="headerlink" href="#gen-destroy" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Shut down the shared generation engine and free the model
+context.  The handle (and any copies of it on other threads)
+must not be used afterwards.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">gen</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="common-model-and-context-options">
+<h3>Common Model and Context Options<a class="headerlink" href="#common-model-and-context-options" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><a class="reference internal" href="#initembed">initEmbed</a>, <a class="reference internal" href="#initrerank">initRerank</a> and <a class="reference internal" href="#initgen">initGen</a> accept a common set
+of model-loading and context options.  Most map 1:1 onto the
+matching <code class="docutils literal notranslate"><span class="pre">llama-server</span></code> command-line flag (the camelCase of
+the flag); see the
+<a class="reference external" href="https://github.com/ggml-org/llama.cpp/tree/master/tools/server">llama.cpp server documentation</a>
+for full descriptions of each.</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="22%" />
+<col width="24%" />
+<col width="54%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option</th>
+<th class="head">llama-server flag</th>
+<th class="head">Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">gpuLayers</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--gpu-layers</span></code></td>
+<td><span class="green">Number</span>. Layers to offload to the GPU (<code class="docutils literal notranslate"><span class="pre">-1</span></code> =
+all).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">mainGpu</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--main-gpu</span></code></td>
+<td><span class="green">Number</span>. GPU device to use.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">splitMode</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--split-mode</span></code></td>
+<td><span class="green">String</span>: <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;layer&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;row&quot;</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">useMmap</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--no-mmap</span></code></td>
+<td><span class="green">Boolean</span>. Memory-map the model file.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">useMlock</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--mlock</span></code></td>
+<td><span class="green">Boolean</span>. Lock the model in RAM.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">checkTensors</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--check-tensors</span></code></td>
+<td><span class="green">Boolean</span>. Validate tensor data while loading.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">nCtx</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--ctx-size</span></code></td>
+<td><span class="green">Number</span>. Context size in tokens (<code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code>
+= the model’s trained maximum).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">nBatch</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--batch-size</span></code></td>
+<td><span class="green">Number</span>. Logical batch size.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">nUBatch</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--ubatch-size</span></code></td>
+<td><span class="green">Number</span>. Physical (micro-)batch size.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">nSeqMax</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--parallel</span></code></td>
+<td><span class="green">Number</span>. Maximum parallel sequences (<a class="reference internal" href="#initgen">initGen</a>:
+how many requests decode together).</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">threads</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--threads</span></code></td>
+<td><span class="green">Number</span>. Threads for generation.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">threadsBatch</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--threads-batch</span></code></td>
+<td><span class="green">Number</span>. Threads for batch/prompt processing.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flashAttn</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--flash-attn</span></code></td>
+<td><span class="green">Boolean</span> or <span class="green">String</span>: <code class="docutils literal notranslate"><span class="pre">&quot;on&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;off&quot;</span></code>
+or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">cacheTypeK</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--cache-type-k</span></code></td>
+<td><span class="green">String</span>. KV cache type for K: <code class="docutils literal notranslate"><span class="pre">&quot;f32&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;f16&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;q8_0&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;q4_0&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;q4_1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;q5_0&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;q5_1&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;iq4_nl&quot;</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">cacheTypeV</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--cache-type-v</span></code></td>
+<td><span class="green">String</span>. KV cache type for V (same values).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">offloadKqv</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--no-kv-offload</span></code></td>
+<td><span class="green">Boolean</span>. Offload the KV cache to the GPU.
+<code class="docutils literal notranslate"><span class="pre">offloadKQV</span></code> is accepted as an alias.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">opOffload</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--op-offload</span></code></td>
+<td><span class="green">Boolean</span>. Offload host-tensor operations.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">kvUnified</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--kv-unified</span></code></td>
+<td><span class="green">Boolean</span>. Use a unified KV cache.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ropeScaling</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--rope-scaling</span></code></td>
+<td><span class="green">String</span>: <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;yarn&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;longrope&quot;</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ropeFreqBase</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--rope-freq-base</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ropeFreqScale</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--rope-freq-scale</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yarnExtFactor</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--yarn-ext-factor</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yarnAttnFactor</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--yarn-attn-factor</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yarnBetaFast</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--yarn-beta-fast</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">yarnBetaSlow</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--yarn-beta-slow</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yarnOrigCtx</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">--yarn-orig-ctx</span></code></td>
+<td><span class="green">Number</span>.</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="getlog">
+<h3>getLog<a class="headerlink" href="#getlog" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>llama.cpp produces log output during model loading and
+initialization.  This output is captured in an internal buffer
+rather than printed to stdout/stderr.  <code class="docutils literal notranslate"><span class="pre">getLog</span></code> retrieves the
+captured log.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">log</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">getLog</span><span class="p">();</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">log</span><span class="p">);</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">String</span>, the captured log output.</dd>
+<dt>Note:</dt>
+<dd>The log buffer has a maximum size of 40KB.  If it overflows,
+the oldest half of the log is discarded and the first line
+will read <code class="docutils literal notranslate"><span class="pre">WARN:</span> <span class="pre">log</span> <span class="pre">overflow</span></code>.  The log buffer is
+process-global (all threads write to the same,
+mutex-protected buffer), but <code class="docutils literal notranslate"><span class="pre">getLog</span></code>/<code class="docutils literal notranslate"><span class="pre">resetLog</span></code> are
+only serviceable from the module object of the thread that
+first loaded the module; on other threads they throw.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="resetlog">
+<h3>resetLog<a class="headerlink" href="#resetlog" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Clear the captured log buffer.  See <a class="reference internal" href="#getlog">getLog</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">llamacpp</span><span class="p">.</span><span class="nx">resetLog</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="environment-variables">
+<h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">RAMPART_LLAMA_CUDA_GRAPHS</span></code> - On CUDA builds, ggml caches a
+captured CUDA graph per compute-graph shape and only evicts
+entries after they have been idle for 10 seconds.  Batched
+embedding and reranking decode a stream of varying shapes,
+which fills that cache faster than it drains and makes GPU
+memory climb until it runs out.  CUDA graphs only speed up
+single-stream text generation, so <a class="reference internal" href="#initembed">initEmbed</a>,
+<a class="reference internal" href="#initrerank">initRerank</a> and the rampart-sql embedding path disable them
+automatically.  A process that only calls <a class="reference internal" href="#initgen">initGen</a> never
+disables them, so generation performance is unaffected.  Set
+<code class="docutils literal notranslate"><span class="pre">RAMPART_LLAMA_CUDA_GRAPHS</span></code> (to any value) to opt out and
+keep CUDA graphs on even for embedding/reranking, accepting
+the memory growth above.  The setting is process-global and
+read once at startup.  It has no effect on CPU or Metal
+(Apple) builds.</li>
+<li><code class="docutils literal notranslate"><span class="pre">RAMPART_METAL_RESIDENCY</span></code> - On macOS, Metal “residency
+sets” are disabled by default to avoid an assertion at
+process exit.  Set <code class="docutils literal notranslate"><span class="pre">RAMPART_METAL_RESIDENCY=1</span></code> to keep the
+feature (a marginal performance optimization) enabled.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="the-rampart-faiss-module">
+<h2>The rampart-faiss module<a class="headerlink" href="#the-rampart-faiss-module" title="Permalink to this headline">¶</a></h2>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
+function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">faiss</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note that the rampart-sql module’s built-in
+<a class="reference internal" href="rampart-sql.html#vector-indexes"><span class="std std-ref">Vector Indexes</span></a> (the IVFPQ
+backend of <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span> <span class="pre">INDEX</span></code>) are also FAISS indexes,
+maintained automatically as table rows change.  Use rampart-faiss
+directly when the vectors do not live in a SQL table, or when a
+custom index type, metric or training regime is needed.</p>
+<div class="section" id="openfactory">
+<h3>openFactory<a class="headerlink" href="#openfactory" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">openFactory</span></code> function creates a new (empty) vector index
+from a FAISS
+<a class="reference external" href="https://github.com/facebookresearch/faiss/wiki/The-index-factory">index factory</a>
+description string.  See also the FAISS
+<a class="reference external" href="https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index">guidelines for choosing an index</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">faiss</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">idx</span> <span class="o">=</span> <span class="nx">faiss</span><span class="p">.</span><span class="nx">openFactory</span><span class="p">(</span><span class="nx">description</span><span class="p">,</span> <span class="nx">dimensions</span><span class="p">[,</span> <span class="nx">metricType</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">description</span></code> is a <span class="green">String</span>, the factory description
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Flat&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;IDMap2,Flat&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;IDMap2,OPQ96,IVF262144,PQ48&quot;</span></code>).  It is highly recommended
+to include <code class="docutils literal notranslate"><span class="pre">IDMap</span></code> or <code class="docutils literal notranslate"><span class="pre">IDMap2</span></code> so that arbitrary ids can
+be stored with each vector; otherwise ids are assigned
+sequentially starting at <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">dimensions</span></code> is a positive <span class="green">Number</span>, the vector
+dimension (e.g. <code class="docutils literal notranslate"><span class="pre">384</span></code> for all-minilm-l6-v2 embeddings —
+see <a class="reference internal" href="#modelinfo">modelInfo</a> to read it from the embedding model).</li>
+<li><code class="docutils literal notranslate"><span class="pre">metricType</span></code> is an optional <span class="green">String</span>, the distance
+metric (case-insensitive):<ul>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;innerProduct&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;ip&quot;</span></code> - inner (dot) product (the
+default).  Equivalent to cosine similarity when vectors
+are L2-normalized, as the <a class="reference internal" href="#initembed">initEmbed</a> vectors are.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;l2&quot;</span></code> - squared euclidean distance.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;l1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;manhattan&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;cityBlock&quot;</span></code> - L1
+distance.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;linf&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;infinity&quot;</span></code> - L-infinity distance.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;lp&quot;</span></code> - Lp distance.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;canberra&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;brayCurtis&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;jensenShannon&quot;</span></code> -
+additional metrics supported by FAISS.</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the index handle) with the property
+<a class="reference internal" href="#idx-settings">idx.settings</a> and the functions <a class="reference internal" href="#idx-addfp32">idx.addFp32()</a>,
+<a class="reference internal" href="#idx-addfp16">idx.addFp16()</a>, <a class="reference internal" href="#idx-searchfp32">idx.searchFp32()</a>,
+<a class="reference internal" href="#idx-searchfp16">idx.searchFp16()</a>, <a class="reference internal" href="#idx-save">idx.save()</a> and (on CUDA builds)
+<a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a>.  If the index type requires training,
+the handle additionally has the <a class="reference internal" href="#idx-trainer">idx.trainer()</a> function;
+<code class="docutils literal notranslate"><span class="pre">idx.trainer</span></code> is <code class="docutils literal notranslate"><span class="pre">undefined</span></code> for index types that need
+no training (such as <code class="docutils literal notranslate"><span class="pre">Flat</span></code>).</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">faiss</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+
+<span class="cm">/* a small exact-search index storing our own doc ids */</span>
+<span class="kd">var</span> <span class="nx">idx</span> <span class="o">=</span> <span class="nx">faiss</span><span class="p">.</span><span class="nx">openFactory</span><span class="p">(</span><span class="s2">&quot;IDMap2,Flat&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+<span class="cm">/* add fp32 vectors (Buffer of 4 floats = 16 bytes each) */</span>
+<span class="nx">idx</span><span class="p">.</span><span class="nx">addFp32</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Float32Array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]).</span><span class="nx">buffer</span><span class="p">);</span>
+<span class="nx">idx</span><span class="p">.</span><span class="nx">addFp32</span><span class="p">(</span><span class="mi">102</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Float32Array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]).</span><span class="nx">buffer</span><span class="p">);</span>
+
+<span class="cm">/* search: top 2 results for a query vector */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">searchFp32</span><span class="p">(</span><span class="k">new</span> <span class="nx">Float32Array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]).</span><span class="nx">buffer</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+<span class="cm">/* res = [ { id: 101, distance: 0.9 },</span>
+<span class="cm">           { id: 102, distance: 0.1 } ]  */</span>
+
+<span class="nx">idx</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="s2">&quot;myindex.faiss&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="openindexfromfile">
+<h3>openIndexFromFile<a class="headerlink" href="#openindexfromfile" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">openIndexFromFile</span></code> function loads an index previously
+written with <a class="reference internal" href="#idx-save">idx.save()</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">faiss</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">idx</span> <span class="o">=</span> <span class="nx">faiss</span><span class="p">.</span><span class="nx">openIndexFromFile</span><span class="p">(</span><span class="nx">filename</span><span class="p">[,</span> <span class="nx">readOnly</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span>, the path of the saved
+index.</li>
+<li><code class="docutils literal notranslate"><span class="pre">readOnly</span></code> is an optional <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+the index is opened read-only and memory-mapped, serving
+searches directly from disk rather than loading the entire
+index into RAM.  Default: <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An index handle, as returned by <a class="reference internal" href="#openfactory">openFactory</a>.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">faiss</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">idx</span> <span class="o">=</span> <span class="nx">faiss</span><span class="p">.</span><span class="nx">openIndexFromFile</span><span class="p">(</span><span class="s2">&quot;myindex.faiss&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="s2">&quot;my search query&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">searchFp16</span><span class="p">(</span><span class="nx">v</span><span class="p">.</span><span class="nx">avgVec</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+
+<span class="nx">res</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;id=%s distance=%f\n&quot;</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">distance</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="idx-settings">
+<h3>idx.settings<a class="headerlink" href="#idx-settings" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>A read-only <span class="green">Object</span> describing the open index:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dimension</span></code> - A <span class="green">Number</span>, the vector dimension.</li>
+<li><code class="docutils literal notranslate"><span class="pre">count</span></code> - A <span class="green">Number</span>, the number of vectors
+currently in the index (updated by <a class="reference internal" href="#idx-addfp32">idx.addFp32()</a> /
+<a class="reference internal" href="#idx-addfp16">idx.addFp16()</a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">metricType</span></code> - A <span class="green">String</span>, the distance metric (see
+<a class="reference internal" href="#openfactory">openFactory</a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> - A <span class="green">String</span>, the detected index type (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Flat&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;IVFFlat&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;IVFPQ&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;HNSWFlat&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;LSH&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">map</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;IDMap&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;IDMap2&quot;</span></code> if
+the index stores arbitrary ids.  Not set otherwise.</li>
+<li><code class="docutils literal notranslate"><span class="pre">PQm</span></code>, <code class="docutils literal notranslate"><span class="pre">PQbits</span></code> - <span class="green">Numbers</span>, product-quantization
+parameters.  Only set for PQ-based index types.</li>
+<li><code class="docutils literal notranslate"><span class="pre">onGpu</span></code>, <code class="docutils literal notranslate"><span class="pre">gpuDevice</span></code> - set after a successful
+<a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a> call.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="idx-addfp32">
+<h3>idx.addFp32()<a class="headerlink" href="#idx-addfp32" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Add one vector of 32-bit floats to the index.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">addFp32</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">buffer</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">id</span></code> is a <span class="green">Number</span> or <span class="green">String</span> (for ids
+larger than the float precision of a <span class="green">Number</span>), the
+64-bit id to associate with the vector.  Pass <code class="docutils literal notranslate"><span class="pre">-1</span></code> to have
+an id assigned sequentially (<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, …).
+Arbitrary (non-sequential) ids require an <code class="docutils literal notranslate"><span class="pre">IDMap</span></code>/
+<code class="docutils literal notranslate"><span class="pre">IDMap2</span></code> index — see <a class="reference internal" href="#openfactory">openFactory</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a <span class="green">Buffer</span> of <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">dimension</span></code> bytes:
+the vector packed as little-endian 32-bit floats (e.g. from
+<a class="reference internal" href="#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a> or a <code class="docutils literal notranslate"><span class="pre">Float32Array</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">buffer</span></code>).</li>
+</ul>
+<p>If the index requires training (see <a class="reference internal" href="#idx-trainer">idx.trainer()</a>) it must
+be trained before vectors can be added.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Number</span>, the id under which the vector was stored
+(the passed <code class="docutils literal notranslate"><span class="pre">id</span></code>, or the assigned sequential id when
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> was passed).</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="idx-addfp16">
+<h3>idx.addFp16()<a class="headerlink" href="#idx-addfp16" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The same as <a class="reference internal" href="#idx-addfp32">idx.addFp32()</a> except that <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is
+<code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">dimension</span></code> bytes: the vector packed as little-endian
+16-bit (half-precision) floats, e.g. from
+<a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a> or
+<a class="reference internal" href="rampart-vector.html#rampart-vector-functions"><span class="std std-ref">rampart.vector</span></a>
+conversion functions.  The vector is converted to 32-bit floats
+before insertion (FAISS indexes store fp32).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">addFp16</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">buffer</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="idx-searchfp32">
+<h3>idx.searchFp32()<a class="headerlink" href="#idx-searchfp32" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Search the index for the nearest vectors to a query vector of
+32-bit floats.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">searchFp32</span><span class="p">(</span><span class="nx">buffer</span><span class="p">[,</span> <span class="nx">nResults</span><span class="p">[,</span> <span class="nx">nProbe</span><span class="p">]]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a <span class="green">Buffer</span> of <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">dimension</span></code> bytes,
+the query vector (see <a class="reference internal" href="#idx-addfp32">idx.addFp32()</a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">nResults</span></code> is an optional positive <span class="green">Number</span>, the
+maximum number of results to return.  Default: <code class="docutils literal notranslate"><span class="pre">10</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nProbe</span></code> is an optional positive <span class="green">Number</span>.  For IVF
+index types, how many inverted-list cells to probe (more =
+better recall, slower search).  Ignored for non-IVF indexes.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Array</span> of <span class="green">Objects</span>, best match first:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">id</span></code> - A <span class="green">Number</span>, the id stored with the
+vector.</li>
+<li><code class="docutils literal notranslate"><span class="pre">distance</span></code> - A <span class="green">Number</span>, the metric value (for
+the default <code class="docutils literal notranslate"><span class="pre">innerProduct</span></code> metric, larger is more
+similar; for <code class="docutils literal notranslate"><span class="pre">l2</span></code>, smaller is more similar).</li>
+</ul>
+<p class="last">Fewer than <code class="docutils literal notranslate"><span class="pre">nResults</span></code> entries are returned if the index
+holds fewer vectors.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="idx-searchfp16">
+<h3>idx.searchFp16()<a class="headerlink" href="#idx-searchfp16" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The same as <a class="reference internal" href="#idx-searchfp32">idx.searchFp32()</a> except that <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is the
+query vector packed as 16-bit floats (<code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">dimension</span></code> bytes).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">searchFp16</span><span class="p">(</span><span class="nx">buffer</span><span class="p">[,</span> <span class="nx">nResults</span><span class="p">[,</span> <span class="nx">nProbe</span><span class="p">]]);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="idx-save">
+<h3>idx.save()<a class="headerlink" href="#idx-save" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Write the index to a file, which may later be loaded with
+<a class="reference internal" href="#openindexfromfile">openIndexFromFile</a>.  If the index has been moved to the GPU
+with <a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a>, it is converted back to a CPU index
+for saving (the in-memory index stays on the GPU).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">idx</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="nx">filename</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span>, the path of the file
+to write.</p>
+</div></blockquote>
+</div>
+<div class="section" id="idx-enablegpu">
+<h3>idx.enableGpu()<a class="headerlink" href="#idx-enablegpu" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Move the index to a GPU.  Only available on CUDA builds of the
+module; on CPU builds the function does not exist (check with
+<code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(idx.enableGpu)</span></code>).  Note that not every FAISS index type
+is supported on the GPU.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="nx">idx</span><span class="p">.</span><span class="nx">enableGpu</span><span class="p">)</span>
+    <span class="nx">idx</span><span class="p">.</span><span class="nx">enableGpu</span><span class="p">(</span><span class="nx">device</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">device</span></code> is an optional <span class="green">Number</span>, the GPU device
+id.  Default: <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">true</span></code> upon success.  After the call,
+<code class="docutils literal notranslate"><span class="pre">idx.settings.onGpu</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> and
+<code class="docutils literal notranslate"><span class="pre">idx.settings.gpuDevice</span></code> is set.  An error is thrown on
+failure.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="idx-trainer">
+<h3>idx.trainer()<a class="headerlink" href="#idx-trainer" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Index types that partition or compress the vector space (IVF,
+PQ, OPQ, LSH and similar) must be trained on a representative
+sample of vectors before any can be added.  For such indexes the
+handle returned by <a class="reference internal" href="#openfactory">openFactory</a> includes a <code class="docutils literal notranslate"><span class="pre">trainer</span></code>
+function; for index types that need no training (e.g. <code class="docutils literal notranslate"><span class="pre">Flat</span></code>)
+<code class="docutils literal notranslate"><span class="pre">idx.trainer</span></code> is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
+<p>The trainer accumulates training vectors in a file, so that
+millions of training vectors need not be held in memory, and so
+that an interrupted run can be resumed from the same file.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="nx">idx</span><span class="p">.</span><span class="nx">trainer</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">trainer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">trainer</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+    <span class="p">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is an optional <span class="green">String</span>:</p>
+<ul class="simple">
+<li>A directory: a new training file named
+<code class="docutils literal notranslate"><span class="pre">faisstrainingdata.&lt;n&gt;.&lt;pid&gt;</span></code> is created there.  Default:
+<code class="docutils literal notranslate"><span class="pre">&quot;/tmp&quot;</span></code>.</li>
+<li>An existing training file (from a previous run): its vectors
+are reloaded and <code class="docutils literal notranslate"><span class="pre">trainer.settings.loadedRows</span></code> is set to
+the number of vectors found.  Newly added vectors are
+appended.</li>
+<li>A non-existent path: it is created as a new (empty) training
+file.</li>
+</ul>
+<p>The training file is <strong>not</strong> deleted automatically; it may be
+reused by a later run, or removed with
+<a class="reference internal" href="rampart-utils.html#rmfile"><span class="std std-ref">rampart.utils.rmFile</span></a> when no
+longer wanted.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the trainer handle) with the read-only
+property <code class="docutils literal notranslate"><span class="pre">trainFile</span></code> (a <span class="green">String</span>, the path of the
+training data file) and the functions
+<a class="reference internal" href="#trainer-addtrainingfp32">trainer.addTrainingfp32()</a>,
+<a class="reference internal" href="#trainer-addtrainingfp16">trainer.addTrainingfp16()</a> and <a class="reference internal" href="#trainer-train">trainer.train()</a>.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">faiss</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+
+<span class="cm">/* an IVF index over 384-dim vectors: requires training */</span>
+<span class="kd">var</span> <span class="nx">idx</span> <span class="o">=</span> <span class="nx">faiss</span><span class="p">.</span><span class="nx">openFactory</span><span class="p">(</span><span class="s2">&quot;IDMap2,IVF4096,Flat&quot;</span><span class="p">,</span> <span class="mi">384</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="nx">idx</span><span class="p">.</span><span class="nx">trainer</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">trainer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">trainer</span><span class="p">(</span><span class="s2">&quot;./tdata&quot;</span><span class="p">);</span>
+
+    <span class="cm">/* feed a representative sample of vectors */</span>
+    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;select Vec from vecs&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">1000000</span><span class="p">},</span>
+        <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">trainer</span><span class="p">.</span><span class="nx">addTrainingfp16</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">Vec</span><span class="p">);</span>
+        <span class="p">});</span>
+
+    <span class="nx">trainer</span><span class="p">.</span><span class="nx">train</span><span class="p">();</span>   <span class="cm">/* may take a while */</span>
+<span class="p">}</span>
+
+<span class="cm">/* now vectors may be added */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;select Id, Vec from vecs&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span>
+    <span class="kd">function</span><span class="p">(</span><span class="nx">row</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">idx</span><span class="p">.</span><span class="nx">addFp16</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">Id</span><span class="p">,</span> <span class="nx">row</span><span class="p">.</span><span class="nx">Vec</span><span class="p">);</span>
+    <span class="p">});</span>
+
+<span class="nx">idx</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="s2">&quot;vecs-ivf4096.faiss&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="trainer-addtrainingfp32">
+<h3>trainer.addTrainingfp32()<a class="headerlink" href="#trainer-addtrainingfp32" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Append one 32-bit float vector to the training file.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">trainer</span><span class="p">.</span><span class="nx">addTrainingfp32</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a <span class="green">Buffer</span> of <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">dimension</span></code>
+bytes (see <a class="reference internal" href="#idx-addfp32">idx.addFp32()</a>).</p>
+</div></blockquote>
+</div>
+<div class="section" id="trainer-addtrainingfp16">
+<h3>trainer.addTrainingfp16()<a class="headerlink" href="#trainer-addtrainingfp16" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Append one 16-bit float vector to the training file.  The
+vector is converted to 32-bit floats before being written.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">trainer</span><span class="p">.</span><span class="nx">addTrainingfp16</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a <span class="green">Buffer</span> of <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">dimension</span></code>
+bytes (see <a class="reference internal" href="#idx-addfp16">idx.addFp16()</a>).</p>
+</div></blockquote>
+</div>
+<div class="section" id="trainer-train">
+<h3>trainer.train()<a class="headerlink" href="#trainer-train" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Train the index from all the vectors accumulated in the
+training file (including vectors reloaded from a previous run).
+Depending on the index type and the number of training vectors,
+training can take from seconds to many hours.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">trainer</span><span class="p">.</span><span class="nx">train</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>An error is thrown if no vectors have been added, or if the
+training file’s size is not a multiple of the vector size.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="the-rampart-sentencepiece-module">
+<h2>The rampart-sentencepiece module<a class="headerlink" href="#the-rampart-sentencepiece-module" title="Permalink to this headline">¶</a></h2>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
+function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sentencepiece&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="section" id="init">
+<h3>init<a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> function loads a SentencePiece model file and
+returns a handle for encoding text into subword pieces.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sentencepiece&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">encoder</span> <span class="o">=</span> <span class="nx">sp</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path to a SentencePiece
+model (e.g.
+<a class="reference external" href="https://huggingface.co/BAAI/bge-m3/blob/main/sentencepiece.bpe.model">sentencepiece.bpe.model</a>
+from the bge-m3 repository).</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the encoder handle) with the function
+<a class="reference internal" href="#encoder-encode">encoder.encode()</a>.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sentencepiece&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">encoder</span> <span class="o">=</span> <span class="nx">sp</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="s2">&quot;./sentencepiece.bpe.model&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">pieces</span> <span class="o">=</span> <span class="nx">encoder</span><span class="p">.</span><span class="nx">encode</span><span class="p">(</span><span class="s2">&quot;hello there you goat&quot;</span><span class="p">);</span>
+<span class="cm">/* [ &quot;▁hell&quot;, &quot;o&quot;, &quot;▁there&quot;, &quot;▁you&quot;, &quot;▁go&quot;, &quot;at&quot; ] */</span>
+
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">sp</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">pieces</span><span class="p">);</span>
+<span class="cm">/* &quot;hello there you goat&quot; */</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="encoder-encode">
+<h3>encoder.encode()<a class="headerlink" href="#encoder-encode" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Encode text into subword pieces using the loaded model.  In the
+pieces, the character <code class="docutils literal notranslate"><span class="pre">▁</span></code> (U+2581, “lower one eighth block”)
+marks the start of a word.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pieces</span> <span class="o">=</span> <span class="nx">encoder</span><span class="p">.</span><span class="nx">encode</span><span class="p">(</span><span class="nx">text</span><span class="p">[,</span> <span class="nx">asString</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> is a <span class="green">String</span>, the text to encode.</li>
+<li><code class="docutils literal notranslate"><span class="pre">asString</span></code> is an optional <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+the pieces are returned as a single space-separated
+<span class="green">String</span> instead of an <span class="green">Array</span>.  Default:
+<code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> of <span class="green">Strings</span> (one per piece), or a
+single space-separated <span class="green">String</span> if <code class="docutils literal notranslate"><span class="pre">asString</span></code> is
+<code class="docutils literal notranslate"><span class="pre">true</span></code>.  Either form is accepted by <a class="reference internal" href="#decode">decode</a>.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="decode">
+<h3>decode<a class="headerlink" href="#decode" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Reassemble encoded pieces into text.  Decoding is purely
+textual (pieces are concatenated and the <code class="docutils literal notranslate"><span class="pre">▁</span></code> word-start
+markers become spaces), so no model handle is needed and the
+function lives on the module object itself.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sentencepiece&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">sp</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">pieces</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">pieces</span></code> is an <span class="green">Array</span> of <span class="green">Strings</span>, or a
+space-separated <span class="green">String</span> of pieces, as produced by
+<a class="reference internal" href="#encoder-encode">encoder.encode()</a>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">String</span>, the decoded text.</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="putting-it-together">
+<h2>Putting It Together<a class="headerlink" href="#putting-it-together" title="Permalink to this headline">¶</a></h2>
+<p>A compact end-to-end example: embed documents, index them, and
+serve semantic search queries.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">faiss</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">dim</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">modelInfo</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">).</span><span class="nx">embedDim</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">docs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;The Eiffel Tower is 330 metres tall.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Gustave Eiffel also designed bridges.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Semantic search finds meaning, not just words.&quot;</span>
+<span class="p">];</span>
+
+<span class="cm">/* build the index */</span>
+<span class="kd">var</span> <span class="nx">idx</span> <span class="o">=</span> <span class="nx">faiss</span><span class="p">.</span><span class="nx">openFactory</span><span class="p">(</span><span class="s2">&quot;IDMap2,Flat&quot;</span><span class="p">,</span> <span class="nx">dim</span><span class="p">);</span>
+<span class="nx">docs</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">text</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+    <span class="nx">idx</span><span class="p">.</span><span class="nx">addFp16</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">v</span><span class="p">.</span><span class="nx">avgVec</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="cm">/* search it */</span>
+<span class="kd">var</span> <span class="nx">q</span>   <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="s2">&quot;How high is the Eiffel Tower?&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">idx</span><span class="p">.</span><span class="nx">searchFp16</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">avgVec</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+
+<span class="nx">res</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%f  %s\n&quot;</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">distance</span><span class="p">,</span> <span class="nx">docs</span><span class="p">[</span><span class="nx">r</span><span class="p">.</span><span class="nx">id</span><span class="p">]);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>For a larger, trained index (tens of millions of vectors) see the
+<a class="reference internal" href="#idx-trainer">idx.trainer()</a> example above; for improving the final ordering of
+the top results, see <a class="reference internal" href="#initrerank">initRerank</a>.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rampart-almanac.html" class="btn btn-neutral float-right" title="The rampart-almanac module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rampart-treesitter.html" class="btn btn-neutral" title="The rampart-treesitter module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2026, Moat Crossing Systems.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️  using a custom <a href="https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
