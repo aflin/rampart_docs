@@ -4,6 +4,8 @@ The rampart-url module
 Preface
 -------
 
+NOTE: superseded by :ref:`these util functions <rampart-utils:urlComponents>`.
+
 License
 ~~~~~~~
 

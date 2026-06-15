@@ -92,7 +92,6 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -106,6 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -305,6 +305,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#buffertostring">bufferToString</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#objecttoquery">objectToQuery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#querytoobject">queryToObject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#urlcomponents">urlComponents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#absurl">absUrl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#toascii">toASCII</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#tounicode">toUnicode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#getchar">getchar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#readfile">readFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-utils.html#writefile">writeFile</a></li>
@@ -1207,96 +1211,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#preface">Preface</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#acknowledgment">Acknowledgment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#license">License</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#what-does-it-do">What does it do?</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#how-does-it-work">How does it work?</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#loading-and-using-the-module">Loading and Using the Module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#prerequisites">Prerequisites</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#loading">Loading</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#quick-start">Quick Start</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#calling-conventions">Calling Conventions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#synchronous">Synchronous</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#callback">Callback</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#promise-async-await">Promise / async-await</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-side-callbacks-strings-always-work-functions-require-use-transpiler">Page-side callbacks: strings always work; functions require “use transpiler”</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#event-driven-features-need-the-main-event-loop">Event-driven features need the main event loop</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#known-limitations">Known Limitations</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#sync-mode-and-event-triggered-waits-do-not-mix">Sync mode and event-triggered waits do not mix</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#function-prototype-tostring-returns-a-stub-in-plain-duktape">Function.prototype.toString returns a stub in plain Duktape</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#worker-runtime-only-no-dom">Worker — Runtime only, no DOM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-queryobjects-requires-a-real-jshandle-prototype">page.queryObjects requires a real JSHandle prototype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#consolemessage-shape">ConsoleMessage shape</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#cleanup-of-launched-chrome-on-script-exit">Cleanup of launched Chrome on script exit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#html5-drag-and-drop-requires-explicit-interception">HTML5 drag-and-drop requires explicit interception</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#module-level-functions">Module-Level Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-launch">chrome.launch()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-connect">chrome.connect()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-executablepath">chrome.executablePath()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-defaultargs">chrome.defaultArgs()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-devices">chrome.devices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-networkconditions">chrome.networkConditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-timeouterror">chrome.TimeoutError</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#browser">Browser</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#browser-events">Browser events</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#browsercontext">BrowserContext</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#page">Page</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#navigation">Navigation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#content-and-evaluation">Content and Evaluation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#selectors">Selectors</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#interaction">Interaction</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#waiting">Waiting</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#screenshots-and-pdf">Screenshots and PDF</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#cookies">Cookies</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#emulation">Emulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#misc-page-accessors">Misc page accessors</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-events">Page events</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#binding-functions">Binding functions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#request-interception">Request interception</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#frame">Frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#jshandle">JSHandle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#elementhandle">ElementHandle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#mouse">Mouse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#keyboard">Keyboard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#request">Request</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#response">Response</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#target">Target</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#cdpsession">CDPSession</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#worker">Worker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#coverage">Coverage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#tracing">Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#filechooser">FileChooser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#accessibility">Accessibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#consolemessage">ConsoleMessage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#dialog">Dialog</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#example-scrape-a-rendered-spa-and-save-a-pdf">Example: scrape a rendered SPA and save a PDF</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#using-puppeteer-extras">Using puppeteer-extras</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#what-it-provides">What it provides</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#id1">Loading</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#use-with-rampart-chromeview">Use with rampart-chromeview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#why-use-transpiler-is-required">Why “use transpiler” is required</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#bundled-packages">Bundled packages</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#why-a-bundle">Why a bundle</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rampart-crypto.html#preface">Preface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-crypto.html#acknowledgment">Acknowledgment</a></li>
@@ -1852,6 +1766,96 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-gm.html#example-creating-an-animated-gif">Example: Creating an Animated GIF</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-gm.html#example-thumbnail-server">Example: Thumbnail Server</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#what-does-it-do">What does it do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#how-does-it-work">How does it work?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#loading">Loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#quick-start">Quick Start</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#calling-conventions">Calling Conventions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#synchronous">Synchronous</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#callback">Callback</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#promise-async-await">Promise / async-await</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-side-callbacks-strings-always-work-functions-require-use-transpiler">Page-side callbacks: strings always work; functions require “use transpiler”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#event-driven-features-need-the-main-event-loop">Event-driven features need the main event loop</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#known-limitations">Known Limitations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#sync-mode-and-event-triggered-waits-do-not-mix">Sync mode and event-triggered waits do not mix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#function-prototype-tostring-returns-a-stub-in-plain-duktape">Function.prototype.toString returns a stub in plain Duktape</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#worker-runtime-only-no-dom">Worker — Runtime only, no DOM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-queryobjects-requires-a-real-jshandle-prototype">page.queryObjects requires a real JSHandle prototype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#consolemessage-shape">ConsoleMessage shape</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#cleanup-of-launched-chrome-on-script-exit">Cleanup of launched Chrome on script exit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#html5-drag-and-drop-requires-explicit-interception">HTML5 drag-and-drop requires explicit interception</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#module-level-functions">Module-Level Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-launch">chrome.launch()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-connect">chrome.connect()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-executablepath">chrome.executablePath()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-defaultargs">chrome.defaultArgs()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-devices">chrome.devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-networkconditions">chrome.networkConditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#chrome-timeouterror">chrome.TimeoutError</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#browser">Browser</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#browser-events">Browser events</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#browsercontext">BrowserContext</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#page">Page</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#navigation">Navigation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#content-and-evaluation">Content and Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#selectors">Selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#interaction">Interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#waiting">Waiting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#screenshots-and-pdf">Screenshots and PDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#cookies">Cookies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#emulation">Emulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#misc-page-accessors">Misc page accessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#page-events">Page events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#binding-functions">Binding functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#request-interception">Request interception</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#frame">Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#jshandle">JSHandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#elementhandle">ElementHandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#mouse">Mouse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#keyboard">Keyboard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#request">Request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#response">Response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#target">Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#cdpsession">CDPSession</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#worker">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#coverage">Coverage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#tracing">Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#filechooser">FileChooser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#accessibility">Accessibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#consolemessage">ConsoleMessage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#dialog">Dialog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#example-scrape-a-rendered-spa-and-save-a-pdf">Example: scrape a rendered SPA and save a PDF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-chromeview.html#using-puppeteer-extras">Using puppeteer-extras</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#what-it-provides">What it provides</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#id1">Loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#use-with-rampart-chromeview">Use with rampart-chromeview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#why-use-transpiler-is-required">Why “use transpiler” is required</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#bundled-packages">Bundled packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-chromeview.html#why-a-bundle">Why a bundle</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a><ul>

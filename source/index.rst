@@ -15,7 +15,6 @@ Welcome to Rampart's documentation.
    The rampart-auth module <rampart-auth>
    The rampart-net module <rampart-net>
    The rampart-html module <rampart-html>
-   The rampart-chromeview module <rampart-chromeview>
    The rampart-crypto module <rampart-crypto>
    The rampart-curl module <rampart-curl>
    The rampart-lmdb module <rampart-lmdb>
@@ -29,6 +28,7 @@ Welcome to Rampart's documentation.
    The rampart-almanac module <rampart-almanac>
    The rampart-url module <rampart-url>
    The rampart-gm module <rampart-gm>
+   The rampart-chromeview module <rampart-chromeview>
    Extras <rampart-extras>
    Tutorials <tutorialtoc>
    FAQ <faq>

@@ -99,6 +99,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#buffertostring">bufferToString</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#objecttoquery">objectToQuery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#querytoobject">queryToObject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#urlcomponents">urlComponents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#absurl">absUrl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#toascii">toASCII</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tounicode">toUnicode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getchar">getchar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#readfile">readFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#writefile">writeFile</a></li>
@@ -248,7 +252,6 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-auth.html">The rampart-auth module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-net.html">The rampart-net module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-html.html">The rampart-html module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-curl.html">The rampart-curl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a></li>
@@ -262,6 +265,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -1009,6 +1013,134 @@ an <span class="green">Object</span> (<code class="docutils literal notranslate"
 <span class="cm">   ]</span>
 <span class="cm">}</span>
 <span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="urlcomponents">
+<h3>urlComponents<a class="headerlink" href="#urlcomponents" title="Permalink to this headline">¶</a></h3>
+<p>Parse a URL into its component parts, following the
+<a class="reference external" href="https://url.spec.whatwg.org/">WHATWG URL specification</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">urlComponents</span><span class="p">(</span><span class="nx">url</span> <span class="p">[,</span> <span class="nx">base</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">url</span></code> is a <span class="green">String</span>, the URL to parse.  It may be absolute, or
+relative if <code class="docutils literal notranslate"><span class="pre">base</span></code> is supplied.</li>
+<li><code class="docutils literal notranslate"><span class="pre">base</span></code> is an optional <span class="green">String</span>, an absolute URL against which a
+relative <code class="docutils literal notranslate"><span class="pre">url</span></code> is resolved.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> of <span class="green">String</span> properties (plus two rampart
+extensions), or <span class="green">undefined</span> if the URL cannot be parsed:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">protocol</span></code> - the scheme including the trailing colon (<code class="docutils literal notranslate"><span class="pre">&quot;https:&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">username</span></code> / <code class="docutils literal notranslate"><span class="pre">password</span></code> - credentials, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">host</span></code> - hostname with <code class="docutils literal notranslate"><span class="pre">:port</span></code> if present (<code class="docutils literal notranslate"><span class="pre">&quot;example.com:8443&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">hostname</span></code> - host without the port.</li>
+<li><code class="docutils literal notranslate"><span class="pre">port</span></code> - the explicit port as a <span class="green">String</span>, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> if none.</li>
+<li><code class="docutils literal notranslate"><span class="pre">numericPort</span></code> - <em>(rampart extension)</em> the port as a <span class="green">Number</span>:
+the explicit port if set, otherwise the default port for the scheme,
+otherwise <span class="green">null</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">pathname</span></code> - the path (<code class="docutils literal notranslate"><span class="pre">&quot;/a/b&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">search</span></code> - the query string including the leading <code class="docutils literal notranslate"><span class="pre">?</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">hash</span></code> - the fragment including the leading <code class="docutils literal notranslate"><span class="pre">#</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">href</span></code> - the full, normalized URL.</li>
+<li><code class="docutils literal notranslate"><span class="pre">origin</span></code> - scheme + host, or the <span class="green">String</span> <code class="docutils literal notranslate"><span class="pre">&quot;null&quot;</span></code> for
+schemes with an opaque origin.</li>
+<li><code class="docutils literal notranslate"><span class="pre">hostUnicode</span></code> - <em>(rampart extension)</em> the Unicode (display) form of an
+internationalized hostname; equals <code class="docutils literal notranslate"><span class="pre">hostname</span></code> for ASCII hosts.</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">urlComponents</span><span class="p">(</span><span class="s2">&quot;https://user:pw@Example.COM:8443/a/b?x=1#frag&quot;</span><span class="p">);</span>
+<span class="cm">/* returns:</span>
+<span class="cm">{</span>
+<span class="cm">   protocol:    &quot;https:&quot;,</span>
+<span class="cm">   username:    &quot;user&quot;,</span>
+<span class="cm">   password:    &quot;pw&quot;,</span>
+<span class="cm">   host:        &quot;example.com:8443&quot;,</span>
+<span class="cm">   hostname:    &quot;example.com&quot;,</span>
+<span class="cm">   port:        &quot;8443&quot;,</span>
+<span class="cm">   numericPort: 8443,</span>
+<span class="cm">   pathname:    &quot;/a/b&quot;,</span>
+<span class="cm">   search:      &quot;?x=1&quot;,</span>
+<span class="cm">   hash:        &quot;#frag&quot;,</span>
+<span class="cm">   href:        &quot;https://user:pw@example.com:8443/a/b?x=1#frag&quot;,</span>
+<span class="cm">   origin:      &quot;https://example.com:8443&quot;,</span>
+<span class="cm">   hostUnicode: &quot;example.com&quot;</span>
+<span class="cm">} */</span>
+
+<span class="cm">/* a relative URL resolved against a base */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">urlComponents</span><span class="p">(</span><span class="s2">&quot;../c?z=9&quot;</span><span class="p">,</span> <span class="s2">&quot;https://example.com/a/b/&quot;</span><span class="p">).</span><span class="nx">href</span><span class="p">;</span>
+<span class="cm">/* &quot;https://example.com/a/c?z=9&quot; */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="absurl">
+<h3>absUrl<a class="headerlink" href="#absurl" title="Permalink to this headline">¶</a></h3>
+<p>Resolve one or more relative URLs against an absolute base URL.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">abs</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">absUrl</span><span class="p">(</span><span class="nx">base</span><span class="p">,</span> <span class="nx">rel</span> <span class="p">[,</span> <span class="nx">asComponents</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">base</span></code> is a <span class="green">String</span>, the absolute URL to resolve against.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rel</span></code> is a <span class="green">String</span>, or an <span class="green">Array</span> of <span class="green">Strings</span>,
+the relative URL(s) to resolve.</li>
+<li><code class="docutils literal notranslate"><span class="pre">asComponents</span></code> is an optional <span class="green">Boolean</span>.  If truthy, each result
+is returned as a components <span class="green">Object</span> (as from <a class="reference internal" href="#urlcomponents">urlComponents</a>())
+instead of an <code class="docutils literal notranslate"><span class="pre">href</span></code> <span class="green">String</span>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><ul class="first last simple">
+<li><span class="green">undefined</span> if <code class="docutils literal notranslate"><span class="pre">base</span></code> cannot be parsed.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">rel</span></code> is a <span class="green">String</span>: the resolved <code class="docutils literal notranslate"><span class="pre">href</span></code> (or components
+<span class="green">Object</span>), or <span class="green">undefined</span> if <code class="docutils literal notranslate"><span class="pre">rel</span></code> cannot be parsed.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">rel</span></code> is an <span class="green">Array</span>: an <span class="green">Array</span> of results, with any
+unparseable entry returned as <span class="green">undefined</span>.</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">absUrl</span><span class="p">(</span><span class="s2">&quot;https://example.com/docs/guide/&quot;</span><span class="p">,</span> <span class="s2">&quot;../api/x.html&quot;</span><span class="p">);</span>
+<span class="cm">/* &quot;https://example.com/docs/api/x.html&quot; */</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">absUrl</span><span class="p">(</span><span class="s2">&quot;https://example.com/a/b/&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;c.html&quot;</span><span class="p">,</span> <span class="s2">&quot;../d.html&quot;</span><span class="p">]);</span>
+<span class="cm">/* [ &quot;https://example.com/a/b/c.html&quot;, &quot;https://example.com/a/d.html&quot; ] */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="toascii">
+<h3>toASCII<a class="headerlink" href="#toascii" title="Permalink to this headline">¶</a></h3>
+<p>Convert an internationalized domain name (IDN) to its ASCII (Punycode) form,
+per IDNA.  Already-ASCII domains are returned unchanged.  Throws if the input
+is not a valid domain.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ascii</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toASCII</span><span class="p">(</span><span class="nx">domain</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toASCII</span><span class="p">(</span><span class="s2">&quot;bücher.de&quot;</span><span class="p">);</span>   <span class="cm">/* &quot;xn--bcher-kva.de&quot; */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toASCII</span><span class="p">(</span><span class="s2">&quot;plain.com&quot;</span><span class="p">);</span>   <span class="cm">/* &quot;plain.com&quot; */</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tounicode">
+<h3>toUnicode<a class="headerlink" href="#tounicode" title="Permalink to this headline">¶</a></h3>
+<p>Convert a domain name to its Unicode (display) form, reversing IDNA Punycode
+encoding.  Throws if the input is not a valid domain.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">unicode</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUnicode</span><span class="p">(</span><span class="nx">domain</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUnicode</span><span class="p">(</span><span class="s2">&quot;xn--bcher-kva.de&quot;</span><span class="p">);</span>   <span class="cm">/* &quot;bücher.de&quot; */</span>
 </pre></div>
 </div>
 </div>
