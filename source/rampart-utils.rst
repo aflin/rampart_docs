@@ -754,6 +754,154 @@ Example:
    */
 
 
+urlComponents
+'''''''''''''
+
+Parse a URL into its component parts, following the
+`WHATWG URL specification <https://url.spec.whatwg.org/>`_\ .
+
+Usage:
+
+.. code-block:: javascript
+
+   var parts = rampart.utils.urlComponents(url [, base]);
+
+Where:
+
+* ``url`` is a :green:`String`, the URL to parse.  It may be absolute, or
+  relative if ``base`` is supplied.
+
+* ``base`` is an optional :green:`String`, an absolute URL against which a
+  relative ``url`` is resolved.
+
+Return Value:
+   An :green:`Object` of :green:`String` properties (plus two rampart
+   extensions), or :green:`undefined` if the URL cannot be parsed:
+
+   * ``protocol`` - the scheme including the trailing colon (``"https:"``).
+   * ``username`` / ``password`` - credentials, or ``""``.
+   * ``host`` - hostname with ``:port`` if present (``"example.com:8443"``).
+   * ``hostname`` - host without the port.
+   * ``port`` - the explicit port as a :green:`String`, or ``""`` if none.
+   * ``numericPort`` - *(rampart extension)* the port as a :green:`Number`:
+     the explicit port if set, otherwise the default port for the scheme,
+     otherwise :green:`null`.
+   * ``pathname`` - the path (``"/a/b"``).
+   * ``search`` - the query string including the leading ``?``, or ``""``.
+   * ``hash`` - the fragment including the leading ``#``, or ``""``.
+   * ``href`` - the full, normalized URL.
+   * ``origin`` - scheme + host, or the :green:`String` ``"null"`` for
+     schemes with an opaque origin.
+   * ``hostUnicode`` - *(rampart extension)* the Unicode (display) form of an
+     internationalized hostname; equals ``hostname`` for ASCII hosts.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.urlComponents("https://user:pw@Example.COM:8443/a/b?x=1#frag");
+   /* returns:
+   {
+      protocol:    "https:",
+      username:    "user",
+      password:    "pw",
+      host:        "example.com:8443",
+      hostname:    "example.com",
+      port:        "8443",
+      numericPort: 8443,
+      pathname:    "/a/b",
+      search:      "?x=1",
+      hash:        "#frag",
+      href:        "https://user:pw@example.com:8443/a/b?x=1#frag",
+      origin:      "https://example.com:8443",
+      hostUnicode: "example.com"
+   } */
+
+   /* a relative URL resolved against a base */
+   rampart.utils.urlComponents("../c?z=9", "https://example.com/a/b/").href;
+   /* "https://example.com/a/c?z=9" */
+
+
+absUrl
+''''''
+
+Resolve one or more relative URLs against an absolute base URL.
+
+Usage:
+
+.. code-block:: javascript
+
+   var abs = rampart.utils.absUrl(base, rel [, asComponents]);
+
+Where:
+
+* ``base`` is a :green:`String`, the absolute URL to resolve against.
+
+* ``rel`` is a :green:`String`, or an :green:`Array` of :green:`Strings`,
+  the relative URL(s) to resolve.
+
+* ``asComponents`` is an optional :green:`Boolean`.  If truthy, each result
+  is returned as a components :green:`Object` (as from `urlComponents`_\ ())
+  instead of an ``href`` :green:`String`.
+
+Return Value:
+   * :green:`undefined` if ``base`` cannot be parsed.
+   * If ``rel`` is a :green:`String`: the resolved ``href`` (or components
+     :green:`Object`), or :green:`undefined` if ``rel`` cannot be parsed.
+   * If ``rel`` is an :green:`Array`: an :green:`Array` of results, with any
+     unparseable entry returned as :green:`undefined`.
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.absUrl("https://example.com/docs/guide/", "../api/x.html");
+   /* "https://example.com/docs/api/x.html" */
+
+   rampart.utils.absUrl("https://example.com/a/b/", ["c.html", "../d.html"]);
+   /* [ "https://example.com/a/b/c.html", "https://example.com/a/d.html" ] */
+
+
+toASCII
+'''''''
+
+Convert an internationalized domain name (IDN) to its ASCII (Punycode) form,
+per IDNA.  Already-ASCII domains are returned unchanged.  Throws if the input
+is not a valid domain.
+
+Usage:
+
+.. code-block:: javascript
+
+   var ascii = rampart.utils.toASCII(domain);
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.toASCII("bücher.de");   /* "xn--bcher-kva.de" */
+   rampart.utils.toASCII("plain.com");   /* "plain.com" */
+
+
+toUnicode
+'''''''''
+
+Convert a domain name to its Unicode (display) form, reversing IDNA Punycode
+encoding.  Throws if the input is not a valid domain.
+
+Usage:
+
+.. code-block:: javascript
+
+   var unicode = rampart.utils.toUnicode(domain);
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.utils.toUnicode("xn--bcher-kva.de");   /* "bücher.de" */
+
+
 getchar
 '''''''
 
