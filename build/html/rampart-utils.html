@@ -730,9 +730,13 @@ or outside of that range will default to <code class="docutils literal notransla
 <blockquote>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> is a <span class="green">Buffer</span> - the <span class="green">Buffer</span> to be appended.</li>
-<li><code class="docutils literal notranslate"><span class="pre">start</span></code> is an optional <span class="green">Number</span>, where in <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> to start
-writing data.  Default is the end of <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code>.  May be a negative
-number, signifying how many bytes from the end of the string to start.</li>
+<li><code class="docutils literal notranslate"><span class="pre">start</span></code> is an optional <span class="green">Number</span>.  <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> is first truncated
+to this length and the formatted output is then appended (so any bytes of
+<code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> at and after <code class="docutils literal notranslate"><span class="pre">start</span></code> are discarded).  For example,
+<code class="docutils literal notranslate"><span class="pre">abprintf(&quot;hello&quot;,</span> <span class="pre">2,</span> <span class="pre">&quot;XX&quot;)</span></code> yields <code class="docutils literal notranslate"><span class="pre">&quot;heXX&quot;</span></code>.  Default is the end of
+<code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> (nothing truncated – a plain append).  May be a negative
+number, signifying how many bytes from the end of <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> to truncate
+before appending.</li>
 <li><code class="docutils literal notranslate"><span class="pre">fmt,</span> <span class="pre">...</span></code> - A format <span class="green">String</span> and optional format
 parameters.</li>
 </ul>
@@ -1499,8 +1503,9 @@ of the <span class="green">String</span> or <span class="green">Buffer</span> is
 <span class="green">Buffer</span> rather than a <span class="green">String</span>.  Useful for capturing
 binary data output.</li>
 <li><code class="docutils literal notranslate"><span class="pre">args</span></code> - <span class="green">Array</span>.  An array of arguments to be passed to the
-executable.  If arguments are also given as parameters to <code class="docutils literal notranslate"><span class="pre">exec()</span></code>,
-the <span class="green">Array</span> of arguments are appended.</li>
+executable.  If arguments are also given as positional parameters to
+<code class="docutils literal notranslate"><span class="pre">exec()</span></code>, the positional arguments come first, followed by the
+arguments from this <span class="green">Array</span>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">changeDirectory</span></code> - <span class="green">String</span>.  Change the working directory
 to value before executing.</li>
 <li><code class="docutils literal notranslate"><span class="pre">cd</span></code> - Alias for <code class="docutils literal notranslate"><span class="pre">changeDirectory</span></code> .</li>
@@ -2817,7 +2822,7 @@ abbreviations.</li>
 <h3>dateFmt<a class="headerlink" href="#datefmt" title="Permalink to this headline">¶</a></h3>
 <p>Format a date <span class="green">String</span>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">datestr</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">dateFmt</span><span class="p">(</span><span class="nx">format</span><span class="p">[,</span> <span class="nx">date</span><span class="p">][,</span> <span class="nx">input_format</span><span class="p">])</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">datestr</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">dateFmt</span><span class="p">(</span><span class="nx">format</span><span class="p">[,</span> <span class="nx">date</span><span class="p">][,</span> <span class="nx">tz</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -2826,17 +2831,25 @@ abbreviations.</li>
 <li><code class="docutils literal notranslate"><span class="pre">format</span></code> is a <a class="reference external" href="https://linux.die.net/man/3/strftime">strftime</a> style format
 <span class="green">String</span>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">date</span></code> is an optional date as a <span class="green">String</span>, <span class="green">Number</span> (seconds since 1970-01-01),
-or a <span class="green">Date</span>.  The default value is the current time.</li>
-<li><code class="docutils literal notranslate"><span class="pre">input_format</span></code> is an optional format if <code class="docutils literal notranslate"><span class="pre">date</span></code> is a <span class="green">String</span>, in the style of
-<a class="reference external" href="https://linux.die.net/man/3/strptime">strptime</a>.  The default is to try the following in order:</li>
+or a <span class="green">Date</span>.  The default value is the current time.  A <span class="green">String</span> date is parsed
+automatically (the same parser used by <a class="reference internal" href="#autoscandate">autoScanDate</a>), trying the following formats in order:</li>
 </ul>
 </div></blockquote>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;%Y-%m-%d %H:%M:%S %z&quot;</span>
-<span class="s2">&quot;%A %B %d %H:%M:%S %Y %z&quot;</span>
-<span class="s2">&quot;%Y-%m-%d %H:%M:%S&quot;</span>
-<span class="s2">&quot;%A %B %d %H:%M:%S %Y&quot;</span>
-<span class="s2">&quot;%Y-%m-%dT%H:%M:%S&quot;</span>
-<span class="s2">&quot;%c&quot;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> &quot;%Y-%m-%d %H:%M:%S %z&quot;
+ &quot;%A %B %d %H:%M:%S %Y %z&quot;
+ &quot;%Y-%m-%d %H:%M:%S&quot;
+ &quot;%A %B %d %H:%M:%S %Y&quot;
+ &quot;%Y-%m-%dT%H:%M:%S&quot;
+ &quot;%c&quot;
+
+* ``tz`` is an optional :green:`Number` or :green:`Boolean` selecting the time zone of the
+  output:
+
+    *  A :green:`Number` is a time zone offset in **hours** from UTC; the time is shown shifted
+       to that offset (e.g. ``-8`` for US Pacific Standard Time, ``0`` for UTC).
+
+    *  A :green:`Boolean` ``true`` formats the date in the system&#39;s **local** time; ``false``
+       (the default) formats in **UTC/GMT**.
 </pre></div>
 </div>
 <dl class="docutils">
@@ -2846,39 +2859,32 @@ or a <span class="green">Date</span>.  The default value is the current time.</l
 <p>Note:</p>
 <blockquote>
 <div><ul class="simple">
+<li>By default the output is in <strong>UTC/GMT</strong>.  Pass <code class="docutils literal notranslate"><span class="pre">true</span></code> as the third argument for local time,
+or a <span class="green">Number</span> for a specific UTC offset (in hours).</li>
 <li>Millisecond notation in the string in the form of <code class="docutils literal notranslate"><span class="pre">.123</span></code> or <code class="docutils literal notranslate"><span class="pre">.123Z</span></code> is disregarded.</li>
-<li>The return <span class="green">String</span> is a date in local time.</li>
 <li>If year or year/month/day formats are missing, the current year or date respectively is assumed.</li>
-<li>If the <code class="docutils literal notranslate"><span class="pre">%z</span></code> format is specified in the <code class="docutils literal notranslate"><span class="pre">input_format</span></code> <span class="green">String</span>,
-the date will be converted from that timezone offset to local time.</li>
-<li>The <code class="docutils literal notranslate"><span class="pre">%Z</span></code> format has no effect on the time zone.</li>
+<li>If a <span class="green">String</span> <code class="docutils literal notranslate"><span class="pre">date</span></code> includes a numeric <code class="docutils literal notranslate"><span class="pre">%z</span></code> style zone (e.g. <code class="docutils literal notranslate"><span class="pre">-0500</span></code>), it is
+converted from that zone before being formatted in the output zone.</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">%Z</span></code> format outputs the zone abbreviation but does not itself change the output zone.</li>
 </ul>
 </div></blockquote>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">();</span>
-
-<span class="nx">printf</span><span class="p">(</span> <span class="s2">&quot;%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n&quot;</span><span class="p">,</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c&quot;</span><span class="p">,</span> <span class="s2">&quot;Mon Jul 26 12:00:01 2021&quot;</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c&quot;</span><span class="p">,</span> <span class="s2">&quot;Mon Jul 26 12:00:01 2021 -04:00&quot;</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c&quot;</span><span class="p">,</span> <span class="s2">&quot;1999-12-31 23:59:59 -0000&quot;</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c&quot;</span><span class="p">,</span> <span class="s2">&quot;2020&quot;</span><span class="p">,</span> <span class="s2">&quot;%Y&quot;</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c&quot;</span><span class="p">,</span> <span class="nx">d</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%Y-%m-%d&quot;</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%m/%d/%Y %H:%M:%S %Z&quot;</span><span class="p">,</span> <span class="mi">946713599</span><span class="p">),</span>
-    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;Today&#39;s lunch:  %c&quot;</span><span class="p">,</span> <span class="s2">&quot;12:15&quot;</span><span class="p">,</span> <span class="s1">&#39;%H:%M&#39;</span><span class="p">)</span>
+<span class="nx">printf</span><span class="p">(</span> <span class="s2">&quot;%s\n%s\n%s\n%s\n%s\n&quot;</span><span class="p">,</span>
+    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">,</span> <span class="s2">&quot;1999-12-31 23:59:59 -0000&quot;</span><span class="p">),</span>
+    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">,</span> <span class="s2">&quot;1999-12-31 23:59:59 -0500&quot;</span><span class="p">),</span>
+    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%Y-%m-%dT%H:%M:%S&quot;</span><span class="p">,</span> <span class="mi">946713599</span><span class="p">),</span>
+    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%Y-%m-%dT%H:%M:%S&quot;</span><span class="p">,</span> <span class="mi">946713599</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">),</span>
+    <span class="nx">dateFmt</span><span class="p">(</span><span class="s2">&quot;%c&quot;</span><span class="p">,</span> <span class="s2">&quot;Mon Jul 26 12:00:01 2021&quot;</span><span class="p">)</span>
 <span class="p">);</span>
 
-<span class="cm">/* Expected output:</span>
-<span class="cm">Mon Jul 26 12:00:01 2021</span>
-<span class="cm">Mon Jul 26 09:00:01 2021</span>
-<span class="cm">Fri Dec 31 15:59:59 1999</span>
-<span class="cm">Wed Jan  1 00:00:00 2020</span>
-<span class="cm">Tue Jul 27 01:06:57 2021</span>
-<span class="cm">2021-07-27</span>
-<span class="cm">12/31/1999 23:59:59 PST</span>
-<span class="cm">Today&#39;s lunch:  Tue Jul 27 12:15:00 2021</span>
+<span class="cm">/* Expected output (UTC/GMT, since no local/offset is requested except line 4):</span>
+<span class="cm">1999-12-31 23:59:59</span>
+<span class="cm">2000-01-01 04:59:59</span>
+<span class="cm">2000-01-01T07:59:59</span>
+<span class="cm">1999-12-31T23:59:59</span>
+<span class="cm">Mon 26 Jul 2021 12:00:01 PM GMT</span>
 <span class="cm">*/</span>
 </pre></div>
 </div>

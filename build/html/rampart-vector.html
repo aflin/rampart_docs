@@ -159,6 +159,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#raw-vector-distance-function">Raw Vector Distance Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reconstructing-b8-to-a-wider-type-asymmetric-scoring">Reconstructing b8 to a wider type (asymmetric scoring)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#u8-i8-rebase">u8 → i8 rebase</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cross-type-distance-consistency">Cross-type distance consistency</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sqltoc.html">The rampart-sql module</a></li>
@@ -408,13 +414,16 @@ of <span class="green">Numbers</span> or <span class="green">Buffer</span>.</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">type</span></code> is a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code>,
-<code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">i8</span></code> or <code class="docutils literal notranslate"><span class="pre">u8</span></code>;</li>
+<code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">i8</span></code>, <code class="docutils literal notranslate"><span class="pre">u8</span></code> or <code class="docutils literal notranslate"><span class="pre">b8</span></code> (also spelled <code class="docutils literal notranslate"><span class="pre">bit</span></code>, a packed
+1-bit-per-dimension binary vector – see <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a> below);</li>
 <li><code class="docutils literal notranslate"><span class="pre">ndim</span></code> is a positive <span class="green">Number</span>, the dimensionality (number of elements)
 for a new zero-filled vector.</li>
 <li><code class="docutils literal notranslate"><span class="pre">rawbuf</span></code> is a <span class="green">Buffer</span>, the raw binary data holding a vector (i.e. <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">*</span></code>
-<code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> arrays in c).  Number of elements is calculated from the type and length of the vector.</li>
+<code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">*</span></code> arrays in c).  Number of elements is calculated from the type and length of the vector.
+For a <code class="docutils literal notranslate"><span class="pre">b8</span></code> vector the buffer holds packed bits and the dimension is <code class="docutils literal notranslate"><span class="pre">8</span> <span class="pre">×</span></code> its byte length.</li>
 <li><code class="docutils literal notranslate"><span class="pre">numbarr</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>, with each <span class="green">Number</span> being an element of the
-vector.</li>
+vector.  For a <code class="docutils literal notranslate"><span class="pre">b8</span></code> vector the numbers are binarized (see <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a>), with an
+optional third argument giving the cutoff.</li>
 </ul>
 </div></blockquote>
 </div>
@@ -477,9 +486,26 @@ vector.</li>
 <h3>Vector Object Conversion Functions<a class="headerlink" href="#vector-object-conversion-functions" title="Permalink to this headline">¶</a></h3>
 <p>Each <cite>Vector Object</cite> will have several methods to convert the underlying
 vector to other types.</p>
-<p>Note that not every vector type can be directly converted to another (for
-example there is no <code class="docutils literal notranslate"><span class="pre">.toU8()</span></code> function for a <cite>Vector Object</cite> with type
-<code class="docutils literal notranslate"><span class="pre">i8</span></code>).</p>
+<p>Note that not every vector type can be directly converted to another, so a
+given <cite>Vector Object</cite> only has the conversion methods that apply to it.  The
+current limitations are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">toF64()</span></code>, <code class="docutils literal notranslate"><span class="pre">toF32()</span></code> and <code class="docutils literal notranslate"><span class="pre">toNumbers()</span></code> are available for <strong>all</strong>
+types.</li>
+<li><code class="docutils literal notranslate"><span class="pre">toF16()</span></code> is available for every type <strong>except</strong> <code class="docutils literal notranslate"><span class="pre">bf16</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">toBf16()</span></code> is available only from <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code> and <code class="docutils literal notranslate"><span class="pre">bf16</span></code>
+(its own type).</li>
+<li><code class="docutils literal notranslate"><span class="pre">toI8()</span></code> is available from <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code> and <code class="docutils literal notranslate"><span class="pre">i8</span></code> (not
+<code class="docutils literal notranslate"><span class="pre">bf16</span></code> or <code class="docutils literal notranslate"><span class="pre">u8</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">toU8()</span></code> is available from <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code> and <code class="docutils literal notranslate"><span class="pre">u8</span></code> (not
+<code class="docutils literal notranslate"><span class="pre">bf16</span></code> or <code class="docutils literal notranslate"><span class="pre">i8</span></code>).</li>
+</ul>
+</div></blockquote>
+<p>In short, <code class="docutils literal notranslate"><span class="pre">bf16</span></code> only inter-converts with <code class="docutils literal notranslate"><span class="pre">f64</span></code>/<code class="docutils literal notranslate"><span class="pre">f32</span></code> (and itself), and
+the two 8-bit integer types (<code class="docutils literal notranslate"><span class="pre">i8</span></code>/<code class="docutils literal notranslate"><span class="pre">u8</span></code>) do not convert directly to each
+other.  To bridge an unsupported pair, convert through <code class="docutils literal notranslate"><span class="pre">f32</span></code> (or <code class="docutils literal notranslate"><span class="pre">f64</span></code>)
+first.  Calling a conversion method that is not present throws.</p>
 <p>Also note that each type has a conversion method to its own type (i.e.  an
 <code class="docutils literal notranslate"><span class="pre">f64</span></code> <cite>Vector Object</cite> will have a <code class="docutils literal notranslate"><span class="pre">.toF64()</span></code> method).  These are null
 operations and return the same <cite>Vector Object</cite>, while other methods return a new
@@ -493,9 +519,17 @@ operations and return the same <cite>Vector Object</cite>, while other methods r
 <li><code class="docutils literal notranslate"><span class="pre">toBf16()</span></code> - Convert to a Brain Float vector.</li>
 <li><code class="docutils literal notranslate"><span class="pre">toI8()</span></code> - Convert to a quantized 8 bit signed (<code class="docutils literal notranslate"><span class="pre">int8_t</span> <span class="pre">*</span></code>) vector.</li>
 <li><code class="docutils literal notranslate"><span class="pre">toU8()</span></code> - Convert to a quantized 8 bit unsigned (<code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">*</span></code>) vector.</li>
-<li><code class="docutils literal notranslate"><span class="pre">toNumbers()</span></code> - Convert to an <span class="green">Array</span> of <span class="green">Numbers</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">toBit([cutoff])</span></code> - Binarize to a <code class="docutils literal notranslate"><span class="pre">b8</span></code> (1-bit-per-dimension) vector.
+See <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">toNumbers()</span></code> - Convert to an <span class="green">Array</span> of <span class="green">Numbers</span>.  For a
+<code class="docutils literal notranslate"><span class="pre">b8</span></code> vector this returns an <span class="green">Array</span> of <code class="docutils literal notranslate"><span class="pre">0</span></code>/<code class="docutils literal notranslate"><span class="pre">1</span></code> values.</li>
 </ul>
 </div></blockquote>
+<p>Note that a <code class="docutils literal notranslate"><span class="pre">b8</span></code> <cite>Vector Object</cite> has a reduced method set: in addition to
+<code class="docutils literal notranslate"><span class="pre">toNumbers</span></code>, <code class="docutils literal notranslate"><span class="pre">toRaw</span></code>, <code class="docutils literal notranslate"><span class="pre">byteLength</span></code>, <code class="docutils literal notranslate"><span class="pre">copy</span></code> and <code class="docutils literal notranslate"><span class="pre">distance</span></code>, it provides
+the <em>reconstruction</em> methods <code class="docutils literal notranslate"><span class="pre">toF64</span></code>/<code class="docutils literal notranslate"><span class="pre">toF32</span></code>/<code class="docutils literal notranslate"><span class="pre">toF16</span></code>/<code class="docutils literal notranslate"><span class="pre">toBf16</span></code>/<code class="docutils literal notranslate"><span class="pre">toI8</span></code>/
+<code class="docutils literal notranslate"><span class="pre">toU8</span></code> (see <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a>) – but these are lossy expansions of the
+bits, <strong>not</strong> a round-trip to the original vector.</p>
 <p>Note that these methods take no arguments, except <code class="docutils literal notranslate"><span class="pre">toU8</span></code> and <code class="docutils literal notranslate"><span class="pre">toI8</span></code>
 may take an optional <code class="docutils literal notranslate"><span class="pre">(scale[,</span> <span class="pre">zeroPoint]))</span></code>. See Raw Conversions below
 for more detail.</p>
@@ -570,7 +604,7 @@ be taken that input vectors are of the expected type.</p>
 <p>Convert an <span class="green">Array</span> of <span class="green">Numbers</span> to a <span class="green">Buffer</span> holding a
 <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">NumbersToF64</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">numbersToF64</span><span class="p">(</span><span class="nx">myarr</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">myarray</span></code> is an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
@@ -657,7 +691,7 @@ be taken that input vectors are of the expected type.</p>
 <h3>rampart.vector.raw.f64ToNumbers<a class="headerlink" href="#rampart-vector-raw-f64tonumbers" title="Permalink to this headline">¶</a></h3>
 <p>Convert a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array to an <span class="green">Array</span> of <span class="green">Numbers</span>.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">NumbersToF64</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">f64ToNumbers</span><span class="p">(</span><span class="nx">mybuff</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">mybuff</span></code> is a <span class="green">Buffer</span> holding a <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">*</span></code> array.</p>
@@ -1155,12 +1189,27 @@ be taken that input vectors are of the expected type.</p>
 </pre></div>
 </div>
 <p>Where:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">myvec</span></code> is one of the supported vector types above.</li>
-<li><code class="docutils literal notranslate"><span class="pre">myvec2</span></code> is a vector matching <code class="docutils literal notranslate"><span class="pre">myvec</span></code> in type and dimensions (number of elements/Numbers in the array).</li>
-<li><code class="docutils literal notranslate"><span class="pre">metric</span></code> is a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">dot</span></code>, <code class="docutils literal notranslate"><span class="pre">cosine</span></code> or <code class="docutils literal notranslate"><span class="pre">euclidean</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">dot</span></code>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">vecType</span></code> is a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">i8</span></code> or <code class="docutils literal notranslate"><span class="pre">u8</span></code>
-specifying the type of <code class="docutils literal notranslate"><span class="pre">myvec</span></code> and <code class="docutils literal notranslate"><span class="pre">myvec2</span></code>.   Default is <code class="docutils literal notranslate"><span class="pre">f16</span></code>.</li>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">myvec</span></code> is one of the supported vector types above.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">myvec2</span></code> is a vector matching <code class="docutils literal notranslate"><span class="pre">myvec</span></code> in type and dimensions (number of elements/Numbers in the array).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">metric</span></code> is a <span class="green">String</span>. Default is <code class="docutils literal notranslate"><span class="pre">dot</span></code>. The supported metrics are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dot</span></code> (aliases <code class="docutils literal notranslate"><span class="pre">ip</span></code>, <code class="docutils literal notranslate"><span class="pre">inner</span></code>) - inner product / similarity.</li>
+<li><code class="docutils literal notranslate"><span class="pre">cosine</span></code> (alias <code class="docutils literal notranslate"><span class="pre">cos</span></code>) - cosine distance, <code class="docutils literal notranslate"><span class="pre">0</span></code> .. <code class="docutils literal notranslate"><span class="pre">2</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">euclidean</span></code> (alias <code class="docutils literal notranslate"><span class="pre">l2</span></code>) - true L2 distance (square root of the sum of squared differences).</li>
+<li><code class="docutils literal notranslate"><span class="pre">l2sq</span></code> (alias <code class="docutils literal notranslate"><span class="pre">sqeuclidean</span></code>) - squared L2 distance (faster; ranks identically to <code class="docutils literal notranslate"><span class="pre">euclidean</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">hamming</span></code>, <code class="docutils literal notranslate"><span class="pre">jaccard</span></code> - binary metrics, valid only for the <code class="docutils literal notranslate"><span class="pre">b8</span></code> vecType (see <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">kl</span></code> (aliases <code class="docutils literal notranslate"><span class="pre">kld</span></code>, <code class="docutils literal notranslate"><span class="pre">kullback_leibler</span></code>), <code class="docutils literal notranslate"><span class="pre">js</span></code> (alias <code class="docutils literal notranslate"><span class="pre">jensen_shannon</span></code>) - Kullback-Leibler and
+Jensen-Shannon divergences, for floating-point vectors that represent probability distributions.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">vecType</span></code> is a <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">i8</span></code>, <code class="docutils literal notranslate"><span class="pre">u8</span></code> or
+<code class="docutils literal notranslate"><span class="pre">b8</span></code> specifying the type of <code class="docutils literal notranslate"><span class="pre">myvec</span></code> and <code class="docutils literal notranslate"><span class="pre">myvec2</span></code>.   Default is <code class="docutils literal notranslate"><span class="pre">f16</span></code>.</p>
+</li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -1171,10 +1220,23 @@ specifying the type of <code class="docutils literal notranslate"><span class="p
 </dd>
 <dt>Note:</dt>
 <dd><ul class="first last simple">
-<li><code class="docutils literal notranslate"><span class="pre">euclidean</span></code> is a true distance function, taking into account angle and magnitude. The return distance range depends
-on the magnitude of the input vectors.</li>
+<li><code class="docutils literal notranslate"><span class="pre">euclidean</span></code> is a true distance function (the square root of the sum of squared
+differences), taking into account angle and magnitude. The return distance range
+depends on the magnitude of the input vectors.</li>
+<li><code class="docutils literal notranslate"><span class="pre">l2sq</span></code> (alias <code class="docutils literal notranslate"><span class="pre">sqeuclidean</span></code>) returns the <strong>squared</strong> Euclidean distance – the
+same value as <code class="docutils literal notranslate"><span class="pre">euclidean</span></code> before the square root.  It is slightly faster (no
+<code class="docutils literal notranslate"><span class="pre">sqrt</span></code>) and ranks identically to <code class="docutils literal notranslate"><span class="pre">euclidean</span></code>, so it is preferable when you only
+need relative ordering rather than an actual distance.</li>
 <li><code class="docutils literal notranslate"><span class="pre">dot</span></code>, assuming L2 Normalized vectors are given to it, will return a similarity score of <code class="docutils literal notranslate"><span class="pre">-1.0</span></code> to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> with <code class="docutils literal notranslate"><span class="pre">1.0</span></code> being
 an exact match and <code class="docutils literal notranslate"><span class="pre">-1.0</span></code> being the exact opposite.</li>
+<li>For the floating point types (<code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>, <code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>) <code class="docutils literal notranslate"><span class="pre">dot</span></code> is the
+plain inner product, which equals the cosine similarity only when the inputs are
+already L2 Normalized – skipping the normalization step is what makes <code class="docutils literal notranslate"><span class="pre">dot</span></code> faster.</li>
+<li>For the quantized integer types (<code class="docutils literal notranslate"><span class="pre">i8</span></code> and <code class="docutils literal notranslate"><span class="pre">u8</span></code>) a unit-length vector cannot be
+represented, so <code class="docutils literal notranslate"><span class="pre">dot</span></code> instead returns the scale-invariant normalized similarity
+(equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">cosineDistance</span></code>).  This keeps <code class="docutils literal notranslate"><span class="pre">dot</span></code> in the same <code class="docutils literal notranslate"><span class="pre">-1.0</span></code> to
+<code class="docutils literal notranslate"><span class="pre">1.0</span></code> range as the float types, so switching a vector’s storage type (e.g. <code class="docutils literal notranslate"><span class="pre">f16</span></code>
+to <code class="docutils literal notranslate"><span class="pre">i8</span></code>) does not change the meaning or range of the score.</li>
 <li><code class="docutils literal notranslate"><span class="pre">cosine</span></code> computes distance by dividing by vector magnitudes (effectively normalizing). It returns distance of <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">2.0</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">cosineScore</span> <span class="pre">==</span> <span class="pre">dotDistance</span></code> if the vectors are L2 Normalized.  However, the <code class="docutils literal notranslate"><span class="pre">dot</span></code> calculation is simpler and faster for
 vectors that are already L2 Normalized.</li>
@@ -1183,6 +1245,198 @@ of memory and speed while retaining a high level of accuracy.</li>
 </ul>
 </dd>
 </dl>
+</div>
+<div class="section" id="binary-vectors-b8">
+<h2>Binary Vectors (b8)<a class="headerlink" href="#binary-vectors-b8" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">b8</span></code> (also spelled <code class="docutils literal notranslate"><span class="pre">bit</span></code>) vector stores <strong>one bit per dimension</strong>, packed
+8 bits to a byte.  This is <em>binary quantization</em> – the most aggressive form of
+quantization, giving roughly <strong>32× less storage than f32</strong> (1 bit vs 32 bits per
+dimension).  Binary vectors are compared with the very fast <code class="docutils literal notranslate"><span class="pre">hamming</span></code> or
+<code class="docutils literal notranslate"><span class="pre">jaccard</span></code> metrics (a <code class="docutils literal notranslate"><span class="pre">popcount</span></code> of the XOR), which makes them ideal as the
+cheap first stage of a two-stage search: shortlist with <code class="docutils literal notranslate"><span class="pre">hamming</span></code> on bit
+vectors, then rescore the top candidates with full-precision (<code class="docutils literal notranslate"><span class="pre">f16</span></code>/<code class="docutils literal notranslate"><span class="pre">f32</span></code>)
+vectors.</p>
+<p>Binarization sets bit <code class="docutils literal notranslate"><span class="pre">i</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> when element <code class="docutils literal notranslate"><span class="pre">i</span></code> is <strong>greater than a
+cutoff</strong>.  The default cutoff is <code class="docutils literal notranslate"><span class="pre">0</span></code> (the sign bit) for the floating point and
+<code class="docutils literal notranslate"><span class="pre">i8</span></code> types, and <code class="docutils literal notranslate"><span class="pre">128</span></code> for <code class="docutils literal notranslate"><span class="pre">u8</span></code> (the symmetric-quantization zero point).
+The cutoff may be overridden.</p>
+<p>The functions below produce a packed <span class="green">Buffer</span> (<code class="docutils literal notranslate"><span class="pre">ceil(dim/8)</span></code> bytes;
+padding bits in the final byte are <code class="docutils literal notranslate"><span class="pre">0</span></code>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.numbersToBit(array[,</span> <span class="pre">cutoff])</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.f64ToBit(buffer[,</span> <span class="pre">cutoff])</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.f32ToBit(buffer[,</span> <span class="pre">cutoff])</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.f16ToBit(buffer[,</span> <span class="pre">cutoff])</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.bf16ToBit(buffer[,</span> <span class="pre">cutoff])</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.i8ToBit(buffer[,</span> <span class="pre">cutoff])</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.u8ToBit(buffer[,</span> <span class="pre">cutoff])</span></code> (default <code class="docutils literal notranslate"><span class="pre">cutoff</span></code> <code class="docutils literal notranslate"><span class="pre">128</span></code>)</li>
+</ul>
+</div></blockquote>
+<p>The typed <cite>Vector Object</cite> has the equivalent <code class="docutils literal notranslate"><span class="pre">toBit([cutoff])</span></code> method, which
+returns a <code class="docutils literal notranslate"><span class="pre">b8</span></code> <cite>Vector Object</cite>.  A <code class="docutils literal notranslate"><span class="pre">b8</span></code> vector can also be created directly
+with <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.vector('b8',</span> <span class="pre">rawbuf</span> <span class="pre">|</span> <span class="pre">ndim)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.vector('bit',</span> <span class="pre">numbersArray[,</span> <span class="pre">cutoff])</span></code>.</p>
+<p>Binary vectors are compared with two metrics (passed to
+<a class="reference internal" href="#raw-vector-distance-function">Raw Vector Distance Function</a> as <code class="docutils literal notranslate"><span class="pre">vecType</span></code> <code class="docutils literal notranslate"><span class="pre">b8</span></code>, or used directly on a
+<code class="docutils literal notranslate"><span class="pre">b8</span></code> <cite>Vector Object</cite> whose <code class="docutils literal notranslate"><span class="pre">distance()</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">hamming</span></code>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">hamming</span></code> - the number of differing bits (lower is closer).</li>
+<li><code class="docutils literal notranslate"><span class="pre">jaccard</span></code> - the Jaccard/Tanimoto distance, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">|intersection|/|union|</span></code>
+of the set bits (<code class="docutils literal notranslate"><span class="pre">0</span></code> identical .. <code class="docutils literal notranslate"><span class="pre">1</span></code> disjoint).</li>
+</ul>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="c1">// binarize two f32 vectors by sign and compare with hamming</span>
+<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">(</span><span class="s1">&#39;f32&#39;</span><span class="p">,</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]).</span><span class="nx">toBit</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">(</span><span class="s1">&#39;f32&#39;</span><span class="p">,</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]).</span><span class="nx">toBit</span><span class="p">();</span>
+
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d\n&quot;</span><span class="p">,</span> <span class="nx">a</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">b</span><span class="p">));</span>            <span class="cm">/* 4  (hamming is the b8 default) */</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d\n&quot;</span><span class="p">,</span> <span class="nx">a</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">a</span><span class="p">));</span>            <span class="cm">/* 0  (identical) */</span>
+
+<span class="c1">// raw form</span>
+<span class="kd">var</span> <span class="nx">ra</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">f32ToBit</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">numbersToF32</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]));</span>
+<span class="kd">var</span> <span class="nx">rb</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">f32ToBit</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">numbersToF32</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]));</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d\n&quot;</span><span class="p">,</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">.</span><span class="nx">raw</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">ra</span><span class="p">,</span> <span class="nx">rb</span><span class="p">,</span> <span class="s1">&#39;hamming&#39;</span><span class="p">,</span> <span class="s1">&#39;b8&#39;</span><span class="p">));</span>  <span class="cm">/* 4 */</span>
+</pre></div>
+</div>
+<div class="section" id="reconstructing-b8-to-a-wider-type-asymmetric-scoring">
+<h3>Reconstructing b8 to a wider type (asymmetric scoring)<a class="headerlink" href="#reconstructing-b8-to-a-wider-type-asymmetric-scoring" title="Permalink to this headline">¶</a></h3>
+<p>Binarization is one-way – the magnitude is gone – but a b8 vector can be
+<em>reconstructed</em> to a wider type by expanding each bit back to a sign value.
+This is useful for <strong>asymmetric scoring</strong>: comparing a full-precision query
+against binary-quantized documents (keeping the query precise recovers ranking
+quality that symmetric <code class="docutils literal notranslate"><span class="pre">hamming</span></code> discards).  Each bit expands as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>float targets</strong> (<code class="docutils literal notranslate"><span class="pre">f64</span></code>/<code class="docutils literal notranslate"><span class="pre">f32</span></code>/<code class="docutils literal notranslate"><span class="pre">f16</span></code>/<code class="docutils literal notranslate"><span class="pre">bf16</span></code>): bit 1 → <code class="docutils literal notranslate"><span class="pre">+1/√D</span></code>,
+bit 0 → <code class="docutils literal notranslate"><span class="pre">−1/√D</span></code> (where <code class="docutils literal notranslate"><span class="pre">D</span></code> is the dimension), so the result is a
+<strong>unit-length</strong> vector – a true <code class="docutils literal notranslate"><span class="pre">dot</span></code> against a normalized query then
+lands in <code class="docutils literal notranslate"><span class="pre">-1</span> <span class="pre">..</span> <span class="pre">1</span></code>.</li>
+<li><strong>integer targets</strong>: bit 1 → <code class="docutils literal notranslate"><span class="pre">+127</span></code>, bit 0 → <code class="docutils literal notranslate"><span class="pre">−127</span></code>, offset by an
+optional <code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> (default <code class="docutils literal notranslate"><span class="pre">0</span></code> for <code class="docutils literal notranslate"><span class="pre">i8</span></code>, <code class="docutils literal notranslate"><span class="pre">127</span></code> for <code class="docutils literal notranslate"><span class="pre">u8</span></code> →
+bytes <code class="docutils literal notranslate"><span class="pre">{254,</span> <span class="pre">0}</span></code>).  The <code class="docutils literal notranslate"><span class="pre">±127</span></code> is the full-scale <code class="docutils literal notranslate"><span class="pre">±1</span></code> <em>direction</em>;
+it is intentionally <strong>not</strong> <code class="docutils literal notranslate"><span class="pre">√D</span></code>-scaled, because the integer metrics are
+magnitude-invariant (see below) and a <code class="docutils literal notranslate"><span class="pre">√D</span></code> factor would only cost
+quantization headroom.</li>
+</ul>
+</div></blockquote>
+<p>The single rule behind both rows: reconstruct so an asymmetric score comes out
+<strong>calibrated to ``-1 .. 1``</strong>.  Floats reach that with <code class="docutils literal notranslate"><span class="pre">√D</span></code> under a true
+<code class="docutils literal notranslate"><span class="pre">dot</span></code>; <code class="docutils literal notranslate"><span class="pre">i8</span></code>/<code class="docutils literal notranslate"><span class="pre">u8</span></code> reach it because their <code class="docutils literal notranslate"><span class="pre">dot</span></code> is routed through
+<code class="docutils literal notranslate"><span class="pre">cosine</span></code> (which is magnitude-invariant) – so the integer direction needs no
+<code class="docutils literal notranslate"><span class="pre">√D</span></code>.</p>
+<p>The reconstruction is available as <cite>Vector Object</cite> methods on a <code class="docutils literal notranslate"><span class="pre">b8</span></code> vector
+(<code class="docutils literal notranslate"><span class="pre">b8vec.toF32()</span></code>, <code class="docutils literal notranslate"><span class="pre">b8vec.toI8([zeroPoint])</span></code>, etc.) and as raw functions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.bitToF64(buf)</span></code> / <code class="docutils literal notranslate"><span class="pre">bitToF32</span></code> / <code class="docutils literal notranslate"><span class="pre">bitToF16</span></code> / <code class="docutils literal notranslate"><span class="pre">bitToBf16</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.bitToI8(buf[,</span> <span class="pre">zeroPoint])</span></code> / <code class="docutils literal notranslate"><span class="pre">bitToU8(buf[,</span> <span class="pre">zeroPoint])</span></code></li>
+</ul>
+</div></blockquote>
+<p>(for the raw functions <code class="docutils literal notranslate"><span class="pre">D</span></code> is taken as <code class="docutils literal notranslate"><span class="pre">byteLength</span> <span class="pre">×</span> <span class="pre">8</span></code>; use the typed
+<cite>Vector Object</cite> if the dimension is not a multiple of 8).</p>
+</div>
+<div class="section" id="u8-i8-rebase">
+<h3>u8 → i8 rebase<a class="headerlink" href="#u8-i8-rebase" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">rampart.vector.raw.u8ToI8(buf[,</span> <span class="pre">zeroPoint])</span></code> (and the <code class="docutils literal notranslate"><span class="pre">u8</span></code> <cite>Vector
+Object</cite>’s <code class="docutils literal notranslate"><span class="pre">toI8([zeroPoint])</span></code> method) convert a signed <code class="docutils literal notranslate"><span class="pre">u8</span></code> vector to
+<code class="docutils literal notranslate"><span class="pre">i8</span></code> by subtracting the <code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> (default <code class="docutils literal notranslate"><span class="pre">127</span></code>): <code class="docutils literal notranslate"><span class="pre">i8</span> <span class="pre">=</span> <span class="pre">clamp(u8</span> <span class="pre">−</span>
+<span class="pre">zeroPoint,</span> <span class="pre">−128,</span> <span class="pre">127)</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You no longer need this rebase just to <em>compare</em> <code class="docutils literal notranslate"><span class="pre">u8</span></code> vectors: the
+distance function rebases <code class="docutils literal notranslate"><span class="pre">u8</span></code> internally (by the symmetric <code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code>
+<code class="docutils literal notranslate"><span class="pre">128</span></code>) for <code class="docutils literal notranslate"><span class="pre">cosine</span></code>/<code class="docutils literal notranslate"><span class="pre">dot</span></code>, so <code class="docutils literal notranslate"><span class="pre">u8</span></code> compares the same as <code class="docutils literal notranslate"><span class="pre">i8</span></code> and
+<code class="docutils literal notranslate"><span class="pre">f32</span></code> out of the box (see <a class="reference internal" href="#cross-type-distance-consistency">Cross-type distance consistency</a>).  <code class="docutils literal notranslate"><span class="pre">u8ToI8</span></code>
+remains useful when you want an explicit <code class="docutils literal notranslate"><span class="pre">i8</span></code> value, or to control the
+<code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> for asymmetrically-quantized data.</p>
+</div>
+<p>Example (asymmetric):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">(</span><span class="s1">&#39;f32&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span><span class="o">-</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="o">-</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="o">-</span><span class="mf">0.2</span><span class="p">]);</span>
+<span class="nx">query</span><span class="p">.</span><span class="nx">l2Normalize</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">doc</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">vector</span><span class="p">(</span><span class="s1">&#39;b8&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]);</span>   <span class="c1">// a stored binary doc</span>
+
+<span class="c1">// reconstruct the binary doc to a unit ±1/√D vector and score with cosine</span>
+<span class="kd">var</span> <span class="nx">score</span> <span class="o">=</span> <span class="nx">query</span><span class="p">.</span><span class="nx">distance</span><span class="p">(</span><span class="nx">doc</span><span class="p">.</span><span class="nx">toF32</span><span class="p">(),</span> <span class="s1">&#39;cosine&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cross-type-distance-consistency">
+<h2>Cross-type distance consistency<a class="headerlink" href="#cross-type-distance-consistency" title="Permalink to this headline">¶</a></h2>
+<p>A core guarantee of <code class="docutils literal notranslate"><span class="pre">rampart.vector</span></code>: you can store a vector in one type,
+convert it to another, and compute a distance, and get the <strong>same result
+within the bounds of the conversion’s quantization error</strong>.  Which metrics
+honor this depends on whether the metric cares about magnitude.</p>
+<p><strong>Scale-invariant metrics – ``cosine`` and ``dot`` – are consistent across
+every type.</strong>  Converting the same underlying vector to <code class="docutils literal notranslate"><span class="pre">f64</span></code>, <code class="docutils literal notranslate"><span class="pre">f32</span></code>,
+<code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">i8</span></code> or <code class="docutils literal notranslate"><span class="pre">u8</span></code> and comparing gives the same similarity to
+within quantization error (typically <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">1e-3</span></code> at moderate dimension; larger
+for low dimension).  Notes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dot</span></code> on <code class="docutils literal notranslate"><span class="pre">i8</span></code>/<code class="docutils literal notranslate"><span class="pre">u8</span></code> is computed as the cosine similarity (a true
+integer inner product would be a large, scale-dependent number); this
+keeps <code class="docutils literal notranslate"><span class="pre">dot</span></code> in the same <code class="docutils literal notranslate"><span class="pre">-1</span> <span class="pre">..</span> <span class="pre">1</span></code> range across all types.</li>
+<li><code class="docutils literal notranslate"><span class="pre">u8</span></code> is rebased internally by the symmetric <code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> <code class="docutils literal notranslate"><span class="pre">128</span></code> before
+<code class="docutils literal notranslate"><span class="pre">cosine</span></code>/<code class="docutils literal notranslate"><span class="pre">dot</span></code>, so it “just works” without a manual <code class="docutils literal notranslate"><span class="pre">u8ToI8</span></code>.</li>
+</ul>
+</div></blockquote>
+<p><strong>Scale-sensitive metrics – ``euclidean``/``l2`` and ``l2sq`` – are
+consistent only among the float types</strong> (<code class="docutils literal notranslate"><span class="pre">f64</span></code>/<code class="docutils literal notranslate"><span class="pre">f32</span></code>/<code class="docutils literal notranslate"><span class="pre">f16</span></code>/<code class="docutils literal notranslate"><span class="pre">bf16</span></code>).
+Integer and binary quantization deliberately store <em>direction at a normalized
+scale and discard absolute magnitude</em>, so a raw L2 distance on <code class="docutils literal notranslate"><span class="pre">i8</span></code>/<code class="docutils literal notranslate"><span class="pre">u8</span></code>
+(or a reconstructed <code class="docutils literal notranslate"><span class="pre">b8</span></code>) is <strong>not</strong> comparable to the float result – it is
+off by the quantization scale, and no rebase recovers it.  This is inherent to
+quantization, which is why vector databases pair quantized/binary types with
+<code class="docutils literal notranslate"><span class="pre">cosine</span></code>/<code class="docutils literal notranslate"><span class="pre">dot</span></code> rather than raw L2.  For <strong>normalized</strong> vectors L2 is anyway
+determined by cosine – <code class="docutils literal notranslate"><span class="pre">|a</span> <span class="pre">−</span> <span class="pre">b|²</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">−</span> <span class="pre">2·cos</span></code> – so staying normalized and
+using <code class="docutils literal notranslate"><span class="pre">cosine</span></code> gives L2-consistent ranking for free.</p>
+<p><strong>Binary (``b8``).</strong>  The asymmetric path – a full-precision (or <code class="docutils literal notranslate"><span class="pre">i8</span></code>) query
+against a <code class="docutils literal notranslate"><span class="pre">b8</span></code> document reconstructed with <code class="docutils literal notranslate"><span class="pre">toF32</span></code>/<code class="docutils literal notranslate"><span class="pre">toI8</span></code> – is consistent
+with the float reference to within the binarization error (<code class="docutils literal notranslate"><span class="pre">cosine</span></code> error on
+the order of <code class="docutils literal notranslate"><span class="pre">1e-4</span></code>).  A fully-binary <code class="docutils literal notranslate"><span class="pre">b8</span></code> × <code class="docutils literal notranslate"><span class="pre">b8</span></code> comparison is lossier
+by design (1 bit per dimension); use <code class="docutils literal notranslate"><span class="pre">hamming</span></code>/<code class="docutils literal notranslate"><span class="pre">jaccard</span></code> for it, optionally
+followed by a reconstruction-based or original-vector rescore.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The internal <code class="docutils literal notranslate"><span class="pre">u8</span></code> rebase assumes the <strong>symmetric</strong> quantization
+convention (<code class="docutils literal notranslate"><span class="pre">zeroPoint</span></code> <code class="docutils literal notranslate"><span class="pre">128</span></code>), which is what normalized data produces.
+<code class="docutils literal notranslate"><span class="pre">f32ToU8</span></code> with default arguments uses <em>asymmetric</em> per-vector calibration
+(<code class="docutils literal notranslate"><span class="pre">zeroPoint</span> <span class="pre">=</span> <span class="pre">round(−min</span> <span class="pre">/</span> <span class="pre">scale)</span></code>); for symmetric/normalized inputs this
+converges to <code class="docutils literal notranslate"><span class="pre">128</span></code> and the comparison is exact, but for strongly skewed
+data dequantize to a float type first (<code class="docutils literal notranslate"><span class="pre">toF32</span></code>) before comparing.</p>
+</div>
+<p>Recommended metric by type:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">vector type</th>
+<th class="head">use for cross-type comparison</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">f64</span></code> / <code class="docutils literal notranslate"><span class="pre">f32</span></code> / <code class="docutils literal notranslate"><span class="pre">f16</span></code> / <code class="docutils literal notranslate"><span class="pre">bf16</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">cosine</span></code>, <code class="docutils literal notranslate"><span class="pre">dot</span></code>, or the L2 family</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">i8</span></code> / <code class="docutils literal notranslate"><span class="pre">u8</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">cosine</span></code> or <code class="docutils literal notranslate"><span class="pre">dot</span></code> (not raw L2)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">b8</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">hamming</span></code> / <code class="docutils literal notranslate"><span class="pre">jaccard</span></code>; or reconstruct for asymmetric <code class="docutils literal notranslate"><span class="pre">cosine</span></code> / <code class="docutils literal notranslate"><span class="pre">dot</span></code></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 

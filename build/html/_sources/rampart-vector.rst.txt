@@ -186,16 +186,19 @@ Usage:
 Where:
 
    * ``type`` is a :green:`String`, one of ``f64``, ``f32``, ``f16``,
-     ``bf16``, ``i8`` or ``u8``;
+     ``bf16``, ``i8``, ``u8`` or ``b8`` (also spelled ``bit``, a packed
+     1-bit-per-dimension binary vector -- see `Binary Vectors (b8)`_ below);
 
    * ``ndim`` is a positive :green:`Number`, the dimensionality (number of elements)
      for a new zero-filled vector.
 
    * ``rawbuf`` is a :green:`Buffer`, the raw binary data holding a vector (i.e. ``double *``, ``float *``
      ``uint16_t *`` arrays in c).  Number of elements is calculated from the type and length of the vector.
+     For a ``b8`` vector the buffer holds packed bits and the dimension is ``8 ×`` its byte length.
 
    * ``numbarr`` is an :green:`Array` of :green:`Numbers`, with each :green:`Number` being an element of the
-     vector.
+     vector.  For a ``b8`` vector the numbers are binarized (see `Binary Vectors (b8)`_), with an
+     optional third argument giving the cutoff.
 
 Return Value from new rampart.vector()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -260,9 +263,24 @@ Vector Object Conversion Functions
 Each `Vector Object` will have several methods to convert the underlying
 vector to other types.
 
-Note that not every vector type can be directly converted to another (for
-example there is no ``.toU8()`` function for a `Vector Object` with type
-``i8``).
+Note that not every vector type can be directly converted to another, so a
+given `Vector Object` only has the conversion methods that apply to it.  The
+current limitations are:
+
+   *  ``toF64()``, ``toF32()`` and ``toNumbers()`` are available for **all**
+      types.
+   *  ``toF16()`` is available for every type **except** ``bf16``.
+   *  ``toBf16()`` is available only from ``f64``, ``f32`` and ``bf16``
+      (its own type).
+   *  ``toI8()`` is available from ``f64``, ``f32``, ``f16`` and ``i8`` (not
+      ``bf16`` or ``u8``).
+   *  ``toU8()`` is available from ``f64``, ``f32``, ``f16`` and ``u8`` (not
+      ``bf16`` or ``i8``).
+
+In short, ``bf16`` only inter-converts with ``f64``/``f32`` (and itself), and
+the two 8-bit integer types (``i8``/``u8``) do not convert directly to each
+other.  To bridge an unsupported pair, convert through ``f32`` (or ``f64``)
+first.  Calling a conversion method that is not present throws.
 
 Also note that each type has a conversion method to its own type (i.e.  an
 ``f64`` `Vector Object` will have a ``.toF64()`` method).  These are null
@@ -277,7 +295,16 @@ Available methods:
    *  ``toBf16()`` - Convert to a Brain Float vector.
    *  ``toI8()`` - Convert to a quantized 8 bit signed (``int8_t *``) vector.
    *  ``toU8()`` - Convert to a quantized 8 bit unsigned (``uint8_t *``) vector.
-   *  ``toNumbers()`` - Convert to an :green:`Array` of :green:`Numbers`.
+   *  ``toBit([cutoff])`` - Binarize to a ``b8`` (1-bit-per-dimension) vector.
+      See `Binary Vectors (b8)`_.
+   *  ``toNumbers()`` - Convert to an :green:`Array` of :green:`Numbers`.  For a
+      ``b8`` vector this returns an :green:`Array` of ``0``/``1`` values.
+
+Note that a ``b8`` `Vector Object` has a reduced method set: in addition to
+``toNumbers``, ``toRaw``, ``byteLength``, ``copy`` and ``distance``, it provides
+the *reconstruction* methods ``toF64``/``toF32``/``toF16``/``toBf16``/``toI8``/
+``toU8`` (see `Binary Vectors (b8)`_) -- but these are lossy expansions of the
+bits, **not** a round-trip to the original vector.
 
 Note that these methods take no arguments, except ``toU8`` and ``toI8``
 may take an optional ``(scale[, zeroPoint]))``. See Raw Conversions below
@@ -357,7 +384,7 @@ Usage:
 
 .. code-block:: javascript
 
-   rampart.vector.raw.NumbersToF64(myarr);
+   rampart.vector.raw.numbersToF64(myarr);
 
 Where ``myarray`` is an :green:`Array` of :green:`Numbers`.
 
@@ -464,7 +491,7 @@ Usage:
 
 .. code-block:: javascript
 
-   var res = rampart.vector.raw.NumbersToF64(mybuff);
+   var res = rampart.vector.raw.f64ToNumbers(mybuff);
 
 Where ``mybuff`` is a :green:`Buffer` holding a ``double *`` array.
 
@@ -1078,21 +1105,230 @@ Where:
 
 * ``myvec`` is one of the supported vector types above.
 * ``myvec2`` is a vector matching ``myvec`` in type and dimensions (number of elements/Numbers in the array).
-* ``metric`` is a :green:`String`, one of ``dot``, ``cosine`` or ``euclidean``. Default is ``dot``.
-* ``vecType`` is a :green:`String`, one of ``numbers``, ``f64``, ``f32``, ``f16``, ``bf16``, ``i8`` or ``u8``
-  specifying the type of ``myvec`` and ``myvec2``.   Default is ``f16``.
+* ``metric`` is a :green:`String`. Default is ``dot``. The supported metrics are:
+
+   * ``dot`` (aliases ``ip``, ``inner``) - inner product / similarity.
+   * ``cosine`` (alias ``cos``) - cosine distance, ``0`` .. ``2``.
+   * ``euclidean`` (alias ``l2``) - true L2 distance (square root of the sum of squared differences).
+   * ``l2sq`` (alias ``sqeuclidean``) - squared L2 distance (faster; ranks identically to ``euclidean``).
+   * ``hamming``, ``jaccard`` - binary metrics, valid only for the ``b8`` vecType (see `Binary Vectors (b8)`_).
+   * ``kl`` (aliases ``kld``, ``kullback_leibler``), ``js`` (alias ``jensen_shannon``) - Kullback-Leibler and
+     Jensen-Shannon divergences, for floating-point vectors that represent probability distributions.
+
+* ``vecType`` is a :green:`String`, one of ``numbers``, ``f64``, ``f32``, ``f16``, ``bf16``, ``i8``, ``u8`` or
+  ``b8`` specifying the type of ``myvec`` and ``myvec2``.   Default is ``f16``.
 
 Return Value:
    * For ``euclidean`` and ``cosine`` a measure of the distance between the two vectors (with 0 being the closest).
    * For ``dot`` the `Cosine Similarity` between two `L2-Normalized` vectors (with 1.0 being exact match and -1.0 being the opposite).
 
 Note:
-  * ``euclidean`` is a true distance function, taking into account angle and magnitude. The return distance range depends
-    on the magnitude of the input vectors.
+  * ``euclidean`` is a true distance function (the square root of the sum of squared
+    differences), taking into account angle and magnitude. The return distance range
+    depends on the magnitude of the input vectors.
+  * ``l2sq`` (alias ``sqeuclidean``) returns the **squared** Euclidean distance -- the
+    same value as ``euclidean`` before the square root.  It is slightly faster (no
+    ``sqrt``) and ranks identically to ``euclidean``, so it is preferable when you only
+    need relative ordering rather than an actual distance.
   * ``dot``, assuming L2 Normalized vectors are given to it, will return a similarity score of ``-1.0`` to ``1.0`` with ``1.0`` being
     an exact match and ``-1.0`` being the exact opposite.
+  * For the floating point types (``f64``, ``f32``, ``f16``, ``bf16``) ``dot`` is the
+    plain inner product, which equals the cosine similarity only when the inputs are
+    already L2 Normalized -- skipping the normalization step is what makes ``dot`` faster.
+  * For the quantized integer types (``i8`` and ``u8``) a unit-length vector cannot be
+    represented, so ``dot`` instead returns the scale-invariant normalized similarity
+    (equivalent to ``1 - cosineDistance``).  This keeps ``dot`` in the same ``-1.0`` to
+    ``1.0`` range as the float types, so switching a vector's storage type (e.g. ``f16``
+    to ``i8``) does not change the meaning or range of the score.
   * ``cosine`` computes distance by dividing by vector magnitudes (effectively normalizing). It returns distance of ``0`` to ``2.0``.
   * ``1 - cosineScore == dotDistance`` if the vectors are L2 Normalized.  However, the ``dot`` calculation is simpler and faster for
     vectors that are already L2 Normalized.
   *  The distance functions assumes ``dot`` and L2 normalized ``f16`` vectors, as these settings provides gains in terms
      of memory and speed while retaining a high level of accuracy.
+
+Binary Vectors (b8)
+-------------------
+
+A ``b8`` (also spelled ``bit``) vector stores **one bit per dimension**, packed
+8 bits to a byte.  This is *binary quantization* -- the most aggressive form of
+quantization, giving roughly **32× less storage than f32** (1 bit vs 32 bits per
+dimension).  Binary vectors are compared with the very fast ``hamming`` or
+``jaccard`` metrics (a ``popcount`` of the XOR), which makes them ideal as the
+cheap first stage of a two-stage search: shortlist with ``hamming`` on bit
+vectors, then rescore the top candidates with full-precision (``f16``/``f32``)
+vectors.
+
+Binarization sets bit ``i`` to ``1`` when element ``i`` is **greater than a
+cutoff**.  The default cutoff is ``0`` (the sign bit) for the floating point and
+``i8`` types, and ``128`` for ``u8`` (the symmetric-quantization zero point).
+The cutoff may be overridden.
+
+The functions below produce a packed :green:`Buffer` (``ceil(dim/8)`` bytes;
+padding bits in the final byte are ``0``):
+
+   * ``rampart.vector.raw.numbersToBit(array[, cutoff])``
+   * ``rampart.vector.raw.f64ToBit(buffer[, cutoff])``
+   * ``rampart.vector.raw.f32ToBit(buffer[, cutoff])``
+   * ``rampart.vector.raw.f16ToBit(buffer[, cutoff])``
+   * ``rampart.vector.raw.bf16ToBit(buffer[, cutoff])``
+   * ``rampart.vector.raw.i8ToBit(buffer[, cutoff])``
+   * ``rampart.vector.raw.u8ToBit(buffer[, cutoff])`` (default ``cutoff`` ``128``)
+
+The typed `Vector Object` has the equivalent ``toBit([cutoff])`` method, which
+returns a ``b8`` `Vector Object`.  A ``b8`` vector can also be created directly
+with ``new rampart.vector('b8', rawbuf | ndim)`` or
+``new rampart.vector('bit', numbersArray[, cutoff])``.
+
+Binary vectors are compared with two metrics (passed to
+`Raw Vector Distance Function`_ as ``vecType`` ``b8``, or used directly on a
+``b8`` `Vector Object` whose ``distance()`` defaults to ``hamming``):
+
+   * ``hamming`` - the number of differing bits (lower is closer).
+   * ``jaccard`` - the Jaccard/Tanimoto distance, ``1 - |intersection|/|union|``
+     of the set bits (``0`` identical .. ``1`` disjoint).
+
+Example:
+
+.. code-block:: javascript
+
+   rampart.globalize(rampart.utils);
+
+   // binarize two f32 vectors by sign and compare with hamming
+   var a = new rampart.vector('f32', [ 1, 1, 1, 1,-1,-1,-1,-1]).toBit();
+   var b = new rampart.vector('f32', [ 1, 1,-1,-1,-1,-1, 1, 1]).toBit();
+
+   printf("%d\n", a.distance(b));            /* 4  (hamming is the b8 default) */
+   printf("%d\n", a.distance(a));            /* 0  (identical) */
+
+   // raw form
+   var ra = rampart.vector.raw.f32ToBit(rampart.vector.raw.numbersToF32([1,1,1,1,-1,-1,-1,-1]));
+   var rb = rampart.vector.raw.f32ToBit(rampart.vector.raw.numbersToF32([1,1,-1,-1,-1,-1,1,1]));
+   printf("%d\n", rampart.vector.raw.distance(ra, rb, 'hamming', 'b8'));  /* 4 */
+
+Reconstructing b8 to a wider type (asymmetric scoring)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Binarization is one-way -- the magnitude is gone -- but a b8 vector can be
+*reconstructed* to a wider type by expanding each bit back to a sign value.
+This is useful for **asymmetric scoring**: comparing a full-precision query
+against binary-quantized documents (keeping the query precise recovers ranking
+quality that symmetric ``hamming`` discards).  Each bit expands as follows:
+
+   * **float targets** (``f64``/``f32``/``f16``/``bf16``): bit 1 → ``+1/√D``,
+     bit 0 → ``−1/√D`` (where ``D`` is the dimension), so the result is a
+     **unit-length** vector -- a true ``dot`` against a normalized query then
+     lands in ``-1 .. 1``.
+   * **integer targets**: bit 1 → ``+127``, bit 0 → ``−127``, offset by an
+     optional ``zeroPoint`` (default ``0`` for ``i8``, ``127`` for ``u8`` →
+     bytes ``{254, 0}``).  The ``±127`` is the full-scale ``±1`` *direction*;
+     it is intentionally **not** ``√D``-scaled, because the integer metrics are
+     magnitude-invariant (see below) and a ``√D`` factor would only cost
+     quantization headroom.
+
+The single rule behind both rows: reconstruct so an asymmetric score comes out
+**calibrated to ``-1 .. 1``**.  Floats reach that with ``√D`` under a true
+``dot``; ``i8``/``u8`` reach it because their ``dot`` is routed through
+``cosine`` (which is magnitude-invariant) -- so the integer direction needs no
+``√D``.
+
+The reconstruction is available as `Vector Object` methods on a ``b8`` vector
+(``b8vec.toF32()``, ``b8vec.toI8([zeroPoint])``, etc.) and as raw functions:
+
+   * ``rampart.vector.raw.bitToF64(buf)`` / ``bitToF32`` / ``bitToF16`` / ``bitToBf16``
+   * ``rampart.vector.raw.bitToI8(buf[, zeroPoint])`` / ``bitToU8(buf[, zeroPoint])``
+
+(for the raw functions ``D`` is taken as ``byteLength × 8``; use the typed
+`Vector Object` if the dimension is not a multiple of 8).
+
+u8 → i8 rebase
+~~~~~~~~~~~~~~
+
+``rampart.vector.raw.u8ToI8(buf[, zeroPoint])`` (and the ``u8`` `Vector
+Object`'s ``toI8([zeroPoint])`` method) convert a signed ``u8`` vector to
+``i8`` by subtracting the ``zeroPoint`` (default ``127``): ``i8 = clamp(u8 −
+zeroPoint, −128, 127)``.
+
+.. note::
+
+   You no longer need this rebase just to *compare* ``u8`` vectors: the
+   distance function rebases ``u8`` internally (by the symmetric ``zeroPoint``
+   ``128``) for ``cosine``/``dot``, so ``u8`` compares the same as ``i8`` and
+   ``f32`` out of the box (see `Cross-type distance consistency`_).  ``u8ToI8``
+   remains useful when you want an explicit ``i8`` value, or to control the
+   ``zeroPoint`` for asymmetrically-quantized data.
+
+Example (asymmetric):
+
+.. code-block:: javascript
+
+   rampart.globalize(rampart.utils);
+
+   var query = new rampart.vector('f32', [0.6,-0.8,0.5,-0.3,0.1,-0.9,0.4,-0.2]);
+   query.l2Normalize();
+
+   var doc = new rampart.vector('b8', [1,0,1,0,1,0,1,1]);   // a stored binary doc
+
+   // reconstruct the binary doc to a unit ±1/√D vector and score with cosine
+   var score = query.distance(doc.toF32(), 'cosine');
+
+Cross-type distance consistency
+-------------------------------
+
+A core guarantee of ``rampart.vector``: you can store a vector in one type,
+convert it to another, and compute a distance, and get the **same result
+within the bounds of the conversion's quantization error**.  Which metrics
+honor this depends on whether the metric cares about magnitude.
+
+**Scale-invariant metrics -- ``cosine`` and ``dot`` -- are consistent across
+every type.**  Converting the same underlying vector to ``f64``, ``f32``,
+``f16``, ``bf16``, ``i8`` or ``u8`` and comparing gives the same similarity to
+within quantization error (typically ``< 1e-3`` at moderate dimension; larger
+for low dimension).  Notes:
+
+   * ``dot`` on ``i8``/``u8`` is computed as the cosine similarity (a true
+     integer inner product would be a large, scale-dependent number); this
+     keeps ``dot`` in the same ``-1 .. 1`` range across all types.
+   * ``u8`` is rebased internally by the symmetric ``zeroPoint`` ``128`` before
+     ``cosine``/``dot``, so it "just works" without a manual ``u8ToI8``.
+
+**Scale-sensitive metrics -- ``euclidean``/``l2`` and ``l2sq`` -- are
+consistent only among the float types** (``f64``/``f32``/``f16``/``bf16``).
+Integer and binary quantization deliberately store *direction at a normalized
+scale and discard absolute magnitude*, so a raw L2 distance on ``i8``/``u8``
+(or a reconstructed ``b8``) is **not** comparable to the float result -- it is
+off by the quantization scale, and no rebase recovers it.  This is inherent to
+quantization, which is why vector databases pair quantized/binary types with
+``cosine``/``dot`` rather than raw L2.  For **normalized** vectors L2 is anyway
+determined by cosine -- ``|a − b|² = 2 − 2·cos`` -- so staying normalized and
+using ``cosine`` gives L2-consistent ranking for free.
+
+**Binary (``b8``).**  The asymmetric path -- a full-precision (or ``i8``) query
+against a ``b8`` document reconstructed with ``toF32``/``toI8`` -- is consistent
+with the float reference to within the binarization error (``cosine`` error on
+the order of ``1e-4``).  A fully-binary ``b8`` × ``b8`` comparison is lossier
+by design (1 bit per dimension); use ``hamming``/``jaccard`` for it, optionally
+followed by a reconstruction-based or original-vector rescore.
+
+.. note::
+
+   The internal ``u8`` rebase assumes the **symmetric** quantization
+   convention (``zeroPoint`` ``128``), which is what normalized data produces.
+   ``f32ToU8`` with default arguments uses *asymmetric* per-vector calibration
+   (``zeroPoint = round(−min / scale)``); for symmetric/normalized inputs this
+   converges to ``128`` and the comparison is exact, but for strongly skewed
+   data dequantize to a float type first (``toF32``) before comparing.
+
+Recommended metric by type:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - vector type
+     - use for cross-type comparison
+   * - ``f64`` / ``f32`` / ``f16`` / ``bf16``
+     - ``cosine``, ``dot``, or the L2 family
+   * - ``i8`` / ``u8``
+     - ``cosine`` or ``dot`` (not raw L2)
+   * - ``b8``
+     - ``hamming`` / ``jaccard``; or reconstruct for asymmetric ``cosine`` / ``dot``

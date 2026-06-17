@@ -292,7 +292,8 @@
 <h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="acknowledgement">
 <h3>Acknowledgement<a class="headerlink" href="#acknowledgement" title="Permalink to this headline">¶</a></h3>
-<p>Rampart uses the <a class="reference external" href="https://duktape.org">Duktape JavaScript Engine</a>. Duktape is an
+<p>Rampart uses a <a class="reference external" href="https://github.com/aflin/duktape">modified</a> version of the
+<a class="reference external" href="https://duktape.org">Duktape JavaScript Engine</a>. Duktape is an
 embeddable JavaScript engine, with a focus on portability and compact footprint.
 The developers of Rampart are extremely grateful for the excellent API and
 ease of use of this library.</p>
@@ -313,8 +314,9 @@ for the excellent code.</p>
 <p>Rampart uses a low memory footprint JavaScript interpreter to bring together
 several high performance tools and useful utilities for use in Web and
 information management applications.  At its core is the Duktape JavaScript
-library and added to it is a SQL database, full text search engine, a memory
-map NOSQL database, a fast multi-threaded webserver, client functionality
+library and added to it is a SQL database, full text and vector (semantic)
+search engines, a memory map NOSQL database, a fast multi-threaded
+webserver, client functionality
 via the Curl, crypto functions via OpenSSL and more.  It attempts to provide
 performance, maximum flexibility and ease of use through the marriage of C
 code and JavaScript scripting.</p>
@@ -349,12 +351,19 @@ following:</p>
 <li>File and C-functions utilities such as <code class="docutils literal notranslate"><span class="pre">printf</span></code>, <code class="docutils literal notranslate"><span class="pre">fseek</span></code>, and <code class="docutils literal notranslate"><span class="pre">exec</span></code>.</li>
 <li>Included <code class="docutils literal notranslate"><span class="pre">C</span></code> modules (<code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rampart-crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-html</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-lmdb</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-redis</span></code>,
-<code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code>).</li>
+<code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart-almanac</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-auth</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-totext</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-faiss</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-iroh</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-webview</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rampart-gm</span></code>).</li>
+<li>Included <code class="docutils literal notranslate"><span class="pre">JavaScript</span></code> modules (<code class="docutils literal notranslate"><span class="pre">rampart-chromeview</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart-cmodule</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-date-holidays</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-email</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart-llm</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-open-meteo</span></code>, <code class="docutils literal notranslate"><span class="pre">rampart-sqlUpdate</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rampart-webserver</span></code>).</li>
 <li>Event loop using <code class="docutils literal notranslate"><span class="pre">libevent2</span></code>.</li>
-<li>ECMA 2015 through ES2022 support (including class fields, private
-methods, nullish coalescing, and optional chaining) using the
-<a class="reference external" href="https://babeljs.io/">Babel</a> JavaScript transpiler.</li>
-<li>Full Text Search and SQL databasing via <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>.</li>
+<li>ECMA 2015 (ES6) and later language support via the built-in
+<a class="reference external" href="ECMAScript2015+withtranspiler">transpiler</a> or
+<a class="reference external" href="ECMAScript2015+andBabel.js">Babel</a>.</li>
+<li>Full Text Search, Vector (semantic) Search and SQL databasing via <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>.</li>
 <li>Generic threading, locking and variable sharing via <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code>.</li>
 <li>Multi-threaded http(s) server from libevhtp_ws via <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>.</li>
 <li>HTTP, FTP, etc. client functionality via <code class="docutils literal notranslate"><span class="pre">rampart-curl</span></code>.</li>
@@ -365,7 +374,7 @@ methods, nullish coalescing, and optional chaining) using the
 <li>Asynchronous networking and socket functions via <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code>.</li>
 <li>Python interpreter, running python functions and sharing variables via
 <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code></li>
-<li>Simple Event functions via <a class="reference internal" href="#rampart-event">rampart.event</a>.</li>
+<li>Simple, cross-thread Event functions via <a class="reference internal" href="#rampart-event">rampart.event</a>.</li>
 <li><a class="reference internal" href="#extra-javascript-functionality">Extra JavaScript Functionality</a>.</li>
 <li>Lazy-loaded <strong>Intl</strong> (ECMA-402) support — full surface
 (<code class="docutils literal notranslate"><span class="pre">DateTimeFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">NumberFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">Collator</span></code>, <code class="docutils literal notranslate"><span class="pre">Segmenter</span></code>,
@@ -389,15 +398,22 @@ rampart’s native modules for new code.  See
 </div>
 <div class="section" id="rampart-philosophy">
 <h2>Rampart philosophy<a class="headerlink" href="#rampart-philosophy" title="Permalink to this headline">¶</a></h2>
-<p>Rampart uses the Duktape JavaScript Engine and API as a gateway for high
-performance functions written in C.  JavaScript execution with Duktape is
-more memory efficient, but interpretation is slower than with, e.g., node.js.
-However, the functionality and speed of the available C functions provide
-comparable efficacy, excellent performance and is a viable alternative to
+<p>Rampart treats JavaScript as a thin orchestration layer over high
+performance functions written in C.  The heavy lifting — SQL, full text
+and vector (semantic) search, the HTTP(S) server, cryptography,
+compression, and document processing — happens in native code, so the
+speed of the interpreter itself rarely matters to overall throughput.
+Duktape is chosen for exactly this role: it is far more memory efficient
+than engines such as V8, and wherever its slower interpretation would
+otherwise be a bottleneck, the work has already been handed off to C.</p>
+<p>The result is a single, self-contained product — no separate database
+server, search cluster, or application tier to deploy and operate.  It is
+a viable alternative to stacks such as
 <a class="reference external" href="https://en.wikipedia.org/wiki/LAMP_(software_bundle)">LAMP</a>,
-<a class="reference external" href="https://en.wikipedia.org/wiki/MEAN_(solution_stack)">MEAN</a> or other stacks,
-all in a single product, while consuming considerably fewer resources than
-the aforementioned.</p>
+<a class="reference external" href="https://en.wikipedia.org/wiki/MEAN_(solution_stack)">MEAN</a>, or a
+<a class="reference external" href="https://en.wikipedia.org/wiki/Node.js">Node</a>/<a class="reference external" href="https://en.wikipedia.org/wiki/Express.js">Express</a>
+application paired with a separate search engine, while consuming
+considerably fewer resources than any of them.</p>
 </div>
 <div class="section" id="rampart-global-variable-and-functions">
 <h2>Rampart Global Variable and Functions<a class="headerlink" href="#rampart-global-variable-and-functions" title="Permalink to this headline">¶</a></h2>
@@ -1260,22 +1276,36 @@ contains functions and/or other JavaScript variables.</p>
 </div>
 <p>See <a class="reference external" href="https://duktape.org/api.html">The Duktape API Documentation</a>
 for a detailed listing of available Duktape C API functions.</p>
+<p>See also the <a class="reference internal" href="rampart-extras.html#rampart-cmodule"><span class="std std-ref">rampart-cmodule</span></a>
+helper, which automatically compiles embedded C code into a JavaScript
+function.</p>
 </div>
 <div class="section" id="module-search-path">
 <h3>Module Search Path<a class="headerlink" href="#module-search-path" title="Permalink to this headline">¶</a></h3>
 <p>Modules are searched for in the following order:</p>
 <ol class="arabic simple">
-<li>If <code class="docutils literal notranslate"><span class="pre">/path/to/module.js</span></code> is given, the absolute path is checked first.
-If absolute and not found, the search stops there.</li>
-<li>If included from within a module, in the module’s path.</li>
-<li>In <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
-<li>In the directory or <code class="docutils literal notranslate"><span class="pre">modules/</span></code> or <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>.</li>
-<li>In the <code class="docutils literal notranslate"><span class="pre">~/.rampart/modules</span></code> or <code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> directory of current user’s home directory
-as provided by the <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> environment variable.  If <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> is not
-set, <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> is used.</li>
-<li>If set, in the directory as provided by the <code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> environment variable.</li>
-<li>In <a class="reference internal" href="#modulespath"><span class="std std-ref">process.modulesPath</span></a>, i.e. the <code class="docutils literal notranslate"><span class="pre">modules</span></code> or
-<code class="docutils literal notranslate"><span class="pre">/lib/rampart_modules/</span></code> subdirectory of <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>.</li>
+<li>If an absolute path (<code class="docutils literal notranslate"><span class="pre">/path/to/module.js</span></code>) is given, only that path
+is checked; if not found, the search stops there.  (An absolute path is
+always resolved from disk, never from a bundle.)</li>
+<li>When running a <a class="reference internal" href="rampart-extras.html#single-file-bundles"><span class="std std-ref">single-file bundle</span></a>,
+the entire bundle (its appended zip) is searched before any on-disk
+location: the module name at the zip root, then in the zip’s
+<code class="docutils literal notranslate"><span class="pre">modules/</span></code> and <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectories.</li>
+<li>If included from within a module, in that module’s own directory
+(<code class="docutils literal notranslate"><span class="pre">module.path</span></code>).</li>
+<li>In <a class="reference internal" href="#scriptpath"><span class="std std-ref">process.scriptPath</span></a>, then in its
+<code class="docutils literal notranslate"><span class="pre">modules/</span></code> and <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectories.</li>
+<li>In the <code class="docutils literal notranslate"><span class="pre">modules/</span></code> and <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectories of
+<code class="docutils literal notranslate"><span class="pre">~/.rampart/</span></code> (i.e. <code class="docutils literal notranslate"><span class="pre">~/.rampart/modules/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">~/.rampart/lib/rampart_modules/</span></code>), where <code class="docutils literal notranslate"><span class="pre">~</span></code> is the current user’s
+home directory from the <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> environment variable.  If <code class="docutils literal notranslate"><span class="pre">$HOME</span></code>
+is unset or unreadable, <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> is used.</li>
+<li>If set, in the directory given by the <code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> environment
+variable.</li>
+<li>In <a class="reference internal" href="#installpath"><span class="std std-ref">process.installPath</span></a>, then in its
+<code class="docutils literal notranslate"><span class="pre">modules/</span></code> and <code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectories.  (The modules
+directory located here is exposed as
+<a class="reference internal" href="#modulespath"><span class="std std-ref">process.modulesPath</span></a>.)</li>
 </ol>
 </div>
 </div>

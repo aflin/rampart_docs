@@ -432,9 +432,13 @@ Where:
 
     * ``oldbuf`` is a :green:`Buffer` - the :green:`Buffer` to be appended.
 
-    * ``start`` is an optional :green:`Number`, where in ``oldbuf`` to start
-      writing data.  Default is the end of ``oldbuf``.  May be a negative
-      number, signifying how many bytes from the end of the string to start.
+    * ``start`` is an optional :green:`Number`.  ``oldbuf`` is first truncated
+      to this length and the formatted output is then appended (so any bytes of
+      ``oldbuf`` at and after ``start`` are discarded).  For example,
+      ``abprintf("hello", 2, "XX")`` yields ``"heXX"``.  Default is the end of
+      ``oldbuf`` (nothing truncated -- a plain append).  May be a negative
+      number, signifying how many bytes from the end of ``oldbuf`` to truncate
+      before appending.
 
     * ``fmt, ...`` - A format :green:`String` and optional format
       parameters.
@@ -1297,8 +1301,9 @@ Where:
       binary data output.
 
    *  ``args`` - :green:`Array`.  An array of arguments to be passed to the
-      executable.  If arguments are also given as parameters to ``exec()``,
-      the :green:`Array` of arguments are appended.
+      executable.  If arguments are also given as positional parameters to
+      ``exec()``, the positional arguments come first, followed by the
+      arguments from this :green:`Array`.
 
    *  ``changeDirectory`` - :green:`String`.  Change the working directory
       to value before executing.
@@ -2771,7 +2776,7 @@ Usage:
 
 .. code-block:: javascript
 
-    var datestr = rampart.utils.dateFmt(format[, date][, input_format])
+    var datestr = rampart.utils.dateFmt(format[, date][, tz])
 
 Where:
 
@@ -2779,10 +2784,8 @@ Where:
      :green:`String`.
 
    * ``date`` is an optional date as a :green:`String`, :green:`Number` (seconds since 1970-01-01),
-     or a :green:`Date`.  The default value is the current time.
-
-   * ``input_format`` is an optional format if ``date`` is a :green:`String`, in the style of
-     `strptime <https://linux.die.net/man/3/strptime>`_\ .  The default is to try the following in order:
+     or a :green:`Date`.  The default value is the current time.  A :green:`String` date is parsed
+     automatically (the same parser used by `autoScanDate`_\ ), trying the following formats in order:
 
 .. code-block:: javascript
 
@@ -2793,21 +2796,31 @@ Where:
     "%Y-%m-%dT%H:%M:%S"
     "%c"
 
+   * ``tz`` is an optional :green:`Number` or :green:`Boolean` selecting the time zone of the
+     output:
+
+       *  A :green:`Number` is a time zone offset in **hours** from UTC; the time is shown shifted
+          to that offset (e.g. ``-8`` for US Pacific Standard Time, ``0`` for UTC).
+
+       *  A :green:`Boolean` ``true`` formats the date in the system's **local** time; ``false``
+          (the default) formats in **UTC/GMT**.
+
 Return Value:
    The formatted date as a :green:`String`.
 
 Note:
 
-   *  Millisecond notation in the string in the form of ``.123`` or ``.123Z`` is disregarded.
+   *  By default the output is in **UTC/GMT**.  Pass ``true`` as the third argument for local time,
+      or a :green:`Number` for a specific UTC offset (in hours).
 
-   *  The return :green:`String` is a date in local time.
+   *  Millisecond notation in the string in the form of ``.123`` or ``.123Z`` is disregarded.
 
    *  If year or year/month/day formats are missing, the current year or date respectively is assumed.
 
-   *  If the ``%z`` format is specified in the ``input_format`` :green:`String`,
-      the date will be converted from that timezone offset to local time.
+   *  If a :green:`String` ``date`` includes a numeric ``%z`` style zone (e.g. ``-0500``), it is
+      converted from that zone before being formatted in the output zone.
 
-   *  The ``%Z`` format has no effect on the time zone.
+   *  The ``%Z`` format outputs the zone abbreviation but does not itself change the output zone.
 
 Example:
 
@@ -2815,28 +2828,20 @@ Example:
 
    rampart.globalize(rampart.utils);
 
-   var d = new Date();
-
-   printf( "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-       dateFmt("%c", "Mon Jul 26 12:00:01 2021"),
-       dateFmt("%c", "Mon Jul 26 12:00:01 2021 -04:00"),
-       dateFmt("%c", "1999-12-31 23:59:59 -0000"),
-       dateFmt("%c", "2020", "%Y"),
-       dateFmt("%c", d),
-       dateFmt("%Y-%m-%d"),
-       dateFmt("%m/%d/%Y %H:%M:%S %Z", 946713599),
-       dateFmt("Today's lunch:  %c", "12:15", '%H:%M')
+   printf( "%s\n%s\n%s\n%s\n%s\n",
+       dateFmt("%Y-%m-%d %H:%M:%S", "1999-12-31 23:59:59 -0000"),
+       dateFmt("%Y-%m-%d %H:%M:%S", "1999-12-31 23:59:59 -0500"),
+       dateFmt("%Y-%m-%dT%H:%M:%S", 946713599),
+       dateFmt("%Y-%m-%dT%H:%M:%S", 946713599, -8),
+       dateFmt("%c", "Mon Jul 26 12:00:01 2021")
    );
 
-   /* Expected output:
-   Mon Jul 26 12:00:01 2021
-   Mon Jul 26 09:00:01 2021
-   Fri Dec 31 15:59:59 1999
-   Wed Jan  1 00:00:00 2020
-   Tue Jul 27 01:06:57 2021
-   2021-07-27
-   12/31/1999 23:59:59 PST
-   Today's lunch:  Tue Jul 27 12:15:00 2021
+   /* Expected output (UTC/GMT, since no local/offset is requested except line 4):
+   1999-12-31 23:59:59
+   2000-01-01 04:59:59
+   2000-01-01T07:59:59
+   1999-12-31T23:59:59
+   Mon 26 Jul 2021 12:00:01 PM GMT
    */
 
 scanDate

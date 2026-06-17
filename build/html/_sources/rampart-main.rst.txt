@@ -7,7 +7,8 @@ Preface
 Acknowledgement
 """""""""""""""
 
-Rampart uses the `Duktape JavaScript Engine <https://duktape.org>`_. Duktape is an 
+Rampart uses a `modified <https://github.com/aflin/duktape>`_ version of the
+`Duktape JavaScript Engine <https://duktape.org>`_. Duktape is an
 embeddable JavaScript engine, with a focus on portability and compact footprint.
 The developers of Rampart are extremely grateful for the excellent API and
 ease of use of this library.
@@ -31,8 +32,9 @@ What does it do?
 Rampart uses a low memory footprint JavaScript interpreter to bring together
 several high performance tools and useful utilities for use in Web and
 information management applications.  At its core is the Duktape JavaScript
-library and added to it is a SQL database, full text search engine, a memory
-map NOSQL database, a fast multi-threaded webserver, client functionality
+library and added to it is a SQL database, full text and vector (semantic)
+search engines, a memory map NOSQL database, a fast multi-threaded
+webserver, client functionality
 via the Curl, crypto functions via OpenSSL and more.  It attempts to provide
 performance, maximum flexibility and ease of use through the marriage of C
 code and JavaScript scripting.
@@ -71,17 +73,25 @@ following:
 
 * File and C-functions utilities such as ``printf``, ``fseek``, and ``exec``.
 
-* Included ``C`` modules (``rampart-sql``, ``rampart-server``, ``rampart-curl``, 
-  ``rampart-crypto``, ``rampart-html``, ``rampart-lmdb``, ``rampart-redis``, 
-  ``rampart-cmark``, ``rampart-net``, ``rampart-python`` and ``rampart-robots``).
+* Included ``C`` modules (``rampart-sql``, ``rampart-server``, ``rampart-curl``,
+  ``rampart-crypto``, ``rampart-html``, ``rampart-lmdb``, ``rampart-redis``,
+  ``rampart-cmark``, ``rampart-net``, ``rampart-python``, ``rampart-robots``,
+  ``rampart-almanac``, ``rampart-auth``, ``rampart-totext``, ``rampart-faiss``,
+  ``rampart-llamacpp``, ``rampart-iroh``, ``rampart-webview`` and
+  ``rampart-gm``).
+
+* Included ``JavaScript`` modules (``rampart-chromeview``,
+  ``rampart-cmodule``, ``rampart-date-holidays``, ``rampart-email``,
+  ``rampart-llm``, ``rampart-open-meteo``, ``rampart-sqlUpdate`` and
+  ``rampart-webserver``).
 
 * Event loop using ``libevent2``.
 
-* ECMA 2015 through ES2022 support (including class fields, private
-  methods, nullish coalescing, and optional chaining) using the
-  `Babel <https://babeljs.io/>`_ JavaScript transpiler.
+* ECMA 2015 (ES6) and later language support via the built-in
+  `transpiler <ECMAScript 2015+ with transpiler>`_ or
+  `Babel <ECMAScript 2015+ and Babel.js>`_.
 
-* Full Text Search and SQL databasing via ``rampart-sql``.
+* Full Text Search, Vector (semantic) Search and SQL databasing via ``rampart-sql``.
 
 * Generic threading, locking and variable sharing via ``rampart.thread``.
 
@@ -102,7 +112,7 @@ following:
 * Python interpreter, running python functions and sharing variables via
   ``rampart-python``
 
-* Simple Event functions via `rampart.event`_\ .
+* Simple, cross-thread Event functions via `rampart.event`_\ .
 
 * `Extra JavaScript Functionality`_\ .
 
@@ -129,15 +139,23 @@ following:
 Rampart philosophy 
 ~~~~~~~~~~~~~~~~~~ 
 
-Rampart uses the Duktape JavaScript Engine and API as a gateway for high
-performance functions written in C.  JavaScript execution with Duktape is
-more memory efficient, but interpretation is slower than with, e.g., node.js. 
-However, the functionality and speed of the available C functions provide
-comparable efficacy, excellent performance and is a viable alternative to
-`LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_, 
-`MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_ or other stacks, 
-all in a single product, while consuming considerably fewer resources than
-the aforementioned.
+Rampart treats JavaScript as a thin orchestration layer over high
+performance functions written in C.  The heavy lifting — SQL, full text
+and vector (semantic) search, the HTTP(S) server, cryptography,
+compression, and document processing — happens in native code, so the
+speed of the interpreter itself rarely matters to overall throughput.
+Duktape is chosen for exactly this role: it is far more memory efficient
+than engines such as V8, and wherever its slower interpretation would
+otherwise be a bottleneck, the work has already been handed off to C.
+
+The result is a single, self-contained product — no separate database
+server, search cluster, or application tier to deploy and operate.  It is
+a viable alternative to stacks such as
+`LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_,
+`MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_, or a
+`Node <https://en.wikipedia.org/wiki/Node.js>`_\ /\ `Express <https://en.wikipedia.org/wiki/Express.js>`_
+application paired with a separate search engine, while consuming
+considerably fewer resources than any of them.
 
 Rampart Global Variable and Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1079,28 +1097,43 @@ The module could then be imported using the ``require()`` function.
 See `The Duktape API Documentation <https://duktape.org/api.html>`_
 for a detailed listing of available Duktape C API functions.
 
+See also the :ref:`rampart-cmodule <rampart-extras:rampart-cmodule>`
+helper, which automatically compiles embedded C code into a JavaScript
+function.
+
 Module Search Path
 """"""""""""""""""
 
 Modules are searched for in the following order:
 
-#. If ``/path/to/module.js`` is given, the absolute path is checked first.
-   If absolute and not found, the search stops there.
+#. If an absolute path (``/path/to/module.js``) is given, only that path
+   is checked; if not found, the search stops there.  (An absolute path is
+   always resolved from disk, never from a bundle.)
 
-#. If included from within a module, in the module's path.
+#. When running a :ref:`single-file bundle <rampart-extras:single-file bundles>`,
+   the entire bundle (its appended zip) is searched before any on-disk
+   location: the module name at the zip root, then in the zip's
+   ``modules/`` and ``lib/rampart_modules/`` subdirectories.
 
-#. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+#. If included from within a module, in that module's own directory
+   (``module.path``).
 
-#. In the directory or ``modules/`` or ``lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+#. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ , then in its
+   ``modules/`` and ``lib/rampart_modules/`` subdirectories.
 
-#. In the ``~/.rampart/modules`` or ``/lib/rampart_modules/`` directory of current user's home directory 
-   as provided by the ``$HOME`` environment variable.  If ``$HOME`` is not
-   set, ``/tmp`` is used.
+#. In the ``modules/`` and ``lib/rampart_modules/`` subdirectories of
+   ``~/.rampart/`` (i.e. ``~/.rampart/modules/`` and
+   ``~/.rampart/lib/rampart_modules/``), where ``~`` is the current user's
+   home directory from the ``$HOME`` environment variable.  If ``$HOME``
+   is unset or unreadable, ``/tmp`` is used.
 
-#. If set, in the directory as provided by the ``$RAMPART_PATH`` environment variable.
+#. If set, in the directory given by the ``$RAMPART_PATH`` environment
+   variable.
 
-#. In :ref:`process.modulesPath <rampart-main:modulesPath>`\ , i.e. the ``modules`` or 
-   ``/lib/rampart_modules/`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
+#. In :ref:`process.installPath <rampart-main:installPath>`\ , then in its
+   ``modules/`` and ``lib/rampart_modules/`` subdirectories.  (The modules
+   directory located here is exposed as
+   :ref:`process.modulesPath <rampart-main:modulesPath>`\ .)
 
 
 Extra JavaScript Functionality

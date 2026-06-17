@@ -30,6 +30,19 @@ clipboard.  Global variables which are defined and set **when the thread is
 created** will be copied to the stack of the newly created JavaScript
 interpreter.
 
+The clipboard used by `rampart.thread.put()`_ / `rampart.thread.get()`_ and the
+related functions is a single, process-wide namespace shared by **every**
+thread (including the main thread), keyed by :green:`String`.  Unrelated
+threads that use the same key will see each other's values, so choose key names
+accordingly.
+
+Functions passed to a thread with `thr.exec()`_ run in that thread's own event
+loop, which starts immediately.  Callbacks and delayed (``threadDelay``)
+executions run only while the creating thread's event loop is running.  For the
+**main** thread that loop does not start until the top-level script finishes,
+so a script that exits before then (for example via ``process.exit()``) will
+never run its pending callbacks.
+
 
 Thread Functions
 ----------------
@@ -92,9 +105,9 @@ new rampart.thread()
           thread per ``vm.createContext()`` to give each sandbox its own
           ECMAScript realm with no access to the host's ``rampart``
           surface or globals.  Bare threads can still communicate with
-          the parent via ``rampart.thread.put`` / ``onGet`` / ``getwait``
-          / ``waitfor`` / ``del`` because the ``rampart.thread`` surface
-          is installed.
+          the parent via ``rampart.thread.put`` / ``get`` / ``getwait`` /
+          ``onGet`` / ``waitfor`` / ``del`` because the ``rampart.thread``
+          surface is installed.
 
     Examples:
 
@@ -113,7 +126,8 @@ new rampart.thread()
         var thr4 = new rampart.thread({ bare: true, keepOpen: true });
 
     Return Value:
-        An :green:`Object` with two functions: `exec` and `close`.
+        An :green:`Object` with the functions `thr.exec()`_, `thr.close()`_,
+        `thr.terminate()`_ and `thr.getId()`_.
 
 
 thr.exec()
@@ -224,6 +238,16 @@ thr.exec()
           available to the thread as a global variable.  The variable
           ``notcopied`` will not be copied since it was set after the thread was
           created.
+
+        * In the positional form, optional arguments cannot be skipped with
+          ``null``/``undefined`` placeholders --
+          ``thr.exec(threadFunc, threadArg, null, threadDelay)`` throws.  To
+          set ``threadDelay`` without a ``callbackFunc``, use the
+          ``options`` :green:`Object` form instead.
+
+        * A ``callbackFunc`` runs in the event loop of the thread that called
+          ``new rampart.thread()``.  If that is the main thread, it will not
+          run until the top-level script finishes (see `How does it work?`_).
 
 thr.close()
 ~~~~~~~~~~~
@@ -408,9 +432,17 @@ rampart.thread.get()
         A **copy** of the variable stored with `rampart.thread.put()`_.
 
     Caveat:
-        The variable retrieved is a deep copy of the variable put.  If
-        the original variable that was put is altered, the changes will
-        not affect the retrieved version.
+        The value returned is a deep copy taken **when**
+        `rampart.thread.put()`_ was called.  Altering the original variable
+        after it was put does not affect the stored (or retrieved) value.
+
+    Note:
+        ``get()`` is *level-triggered*: if ``varName`` already has a value it
+        is returned immediately and ``timeOut`` is ignored.  ``timeOut``
+        applies only when the value is currently ``undefined``, in which case
+        ``get()`` waits (via `rampart.thread.waitfor()`_) for the next update.
+        To block until a value *changes* even when it is already defined, use
+        `rampart.thread.waitfor()`_ instead.
 
     Example:
 
@@ -454,6 +486,31 @@ rampart.thread.get()
            which the callbackFunc runs starts at the end of the script.
         */
 
+rampart.thread.getwait()
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Get a named variable from the clipboard, waiting for it if necessary.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var myval = rampart.thread.getwait(varName[, timeOut]);
+
+    Where ``varName`` and ``timeOut`` are as for `rampart.thread.get()`_.
+
+    Like `rampart.thread.get()`_, ``getwait()`` returns the current value of
+    ``varName`` immediately if one is set.  If the value is currently
+    ``undefined`` it waits for another thread to set it -- up to ``timeOut``
+    milliseconds if given, or **indefinitely** if ``timeOut`` is omitted.
+    (This is the one difference from `rampart.thread.get()`_, which returns
+    ``undefined`` immediately when the value is unset and no ``timeOut`` is
+    given.)
+
+    Return Value:
+        A **copy** of the variable stored with `rampart.thread.put()`_, or
+        ``undefined`` if the ``timeOut`` is reached.
+
 rampart.thread.onGet()
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -485,6 +542,25 @@ rampart.thread.onGet()
         An :green:`Object`, representing the event, and with the function ``remove()``, which
         when called will remove the event.  Note that this :green:`Object` is bound to ``this``
         in the callback.
+
+    Note:
+        ``onGet()`` only fires for updates made **after** the subscription is
+        registered; a `rampart.thread.put()`_ that happens before the
+        ``onGet()`` call is not seen.  When the watcher runs in a worker
+        thread, a common pattern is to have the worker register its
+        ``onGet()`` and then `rampart.thread.put()`_ a "ready" flag that the
+        producer waits on (with `rampart.thread.get()`_) before sending data.
+
+    Note:
+        Avoid calling `rampart.thread.put()`_ from inside an ``onGet()``
+        callback with a key that would match the callback's own ``varName`` /
+        ``varGlob`` -- each such put re-triggers the callback, creating an
+        unbounded feedback loop that eventually exhausts the interpreter
+        stack.  This is the same hazard as a function that calls itself with
+        no base case.  Either give the watcher a base case (call
+        ``this.remove()``, or stop putting once a condition is met -- as in
+        the example below), or publish to a key that does **not** match the
+        watch.
 
     Example:
 
@@ -603,9 +679,10 @@ rampart.thread.waitfor()
         ``undefined`` if the ``timeOut`` is reached.
 
     Note:
-        Unlike `rampart.thread.get()`_ above, this function will wait even
-        if ``varName`` is defined and will return only when it changes or
-        the ``timeOut`` is reached.
+        ``waitfor()`` is *edge-triggered*: unlike `rampart.thread.get()`_
+        above, it ignores any current value of ``varName`` and returns only
+        when the value is next updated by another thread, or when the
+        ``timeOut`` is reached.
 
 Lock Functions
 --------------
@@ -625,7 +702,9 @@ new rampart.lock()
         var thrlock = new rampart.lock();
 
     Return Value:
-        An :green:`Object` with two functions: `lock` and `unlock`.
+        An :green:`Object` with the functions `thrlock.lock()`_,
+        `thrlock.unlock()`_, `thrlock.trylock()`_ and
+        `thrlock.getLockingThread()`_.
 
 thrlock.lock()
 ~~~~~~~~~~~~~~
@@ -692,6 +771,22 @@ thrlock.trylock()
     Return Value:
         A :green:`Boolean`: ``true`` if the lock was obtained and ``false``
         if not.
+
+thrlock.getLockingThread()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Return the id of the thread currently holding ``thrlock`` (the same id
+    space as `rampart.thread.getCurrentId()`_), or ``-1`` if the lock is not
+    currently held.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var holder = thrlock.getLockingThread();
+
+    Return Value:
+        A :green:`Number`: the holding thread's id, or ``-1`` if unlocked.
 
 Lock Caveats
 ~~~~~~~~~~~~

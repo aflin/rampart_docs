@@ -102,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-getcurrentid">rampart.thread.getCurrentId()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-thread-getwait">rampart.thread.getwait()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-onget">rampart.thread.onGet()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-del">rampart.thread.del()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rampart-thread-waitfor">rampart.thread.waitfor()</a></li>
@@ -112,6 +113,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#thrlock-lock">thrlock.lock()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#thrlock-unlock">thrlock.unlock()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#thrlock-trylock">thrlock.trylock()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thrlock-getlockingthread">thrlock.getLockingThread()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#lock-caveats">Lock Caveats</a></li>
 </ul>
 </li>
@@ -229,6 +231,17 @@ be provided directly or by putting and getting from an internally maintained
 clipboard.  Global variables which are defined and set <strong>when the thread is
 created</strong> will be copied to the stack of the newly created JavaScript
 interpreter.</p>
+<p>The clipboard used by <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> / <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a> and the
+related functions is a single, process-wide namespace shared by <strong>every</strong>
+thread (including the main thread), keyed by <span class="green">String</span>.  Unrelated
+threads that use the same key will see each other’s values, so choose key names
+accordingly.</p>
+<p>Functions passed to a thread with <a class="reference internal" href="#thr-exec">thr.exec()</a> run in that thread’s own event
+loop, which starts immediately.  Callbacks and delayed (<code class="docutils literal notranslate"><span class="pre">threadDelay</span></code>)
+executions run only while the creating thread’s event loop is running.  For the
+<strong>main</strong> thread that loop does not start until the top-level script finishes,
+so a script that exits before then (for example via <code class="docutils literal notranslate"><span class="pre">process.exit()</span></code>) will
+never run its pending callbacks.</p>
 </div>
 </div>
 <div class="section" id="thread-functions">
@@ -288,9 +301,9 @@ for example, the rampart-nodeshim <code class="docutils literal notranslate"><sp
 thread per <code class="docutils literal notranslate"><span class="pre">vm.createContext()</span></code> to give each sandbox its own
 ECMAScript realm with no access to the host’s <code class="docutils literal notranslate"><span class="pre">rampart</span></code>
 surface or globals.  Bare threads can still communicate with
-the parent via <code class="docutils literal notranslate"><span class="pre">rampart.thread.put</span></code> / <code class="docutils literal notranslate"><span class="pre">onGet</span></code> / <code class="docutils literal notranslate"><span class="pre">getwait</span></code>
-/ <code class="docutils literal notranslate"><span class="pre">waitfor</span></code> / <code class="docutils literal notranslate"><span class="pre">del</span></code> because the <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code> surface
-is installed.</p>
+the parent via <code class="docutils literal notranslate"><span class="pre">rampart.thread.put</span></code> / <code class="docutils literal notranslate"><span class="pre">get</span></code> / <code class="docutils literal notranslate"><span class="pre">getwait</span></code> /
+<code class="docutils literal notranslate"><span class="pre">onGet</span></code> / <code class="docutils literal notranslate"><span class="pre">waitfor</span></code> / <code class="docutils literal notranslate"><span class="pre">del</span></code> because the <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code>
+surface is installed.</p>
 </li>
 </ul>
 </div></blockquote>
@@ -310,7 +323,8 @@ is installed.</p>
 </div>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>An <span class="green">Object</span> with two functions: <cite>exec</cite> and <cite>close</cite>.</dd>
+<dd>An <span class="green">Object</span> with the functions <a class="reference internal" href="#thr-exec">thr.exec()</a>, <a class="reference internal" href="#thr-close">thr.close()</a>,
+<a class="reference internal" href="#thr-terminate">thr.terminate()</a> and <a class="reference internal" href="#thr-getid">thr.getId()</a>.</dd>
 </dl>
 </div></blockquote>
 </div>
@@ -416,6 +430,14 @@ creation.  The variable <code class="docutils literal notranslate"><span class="
 available to the thread as a global variable.  The variable
 <code class="docutils literal notranslate"><span class="pre">notcopied</span></code> will not be copied since it was set after the thread was
 created.</li>
+<li>In the positional form, optional arguments cannot be skipped with
+<code class="docutils literal notranslate"><span class="pre">null</span></code>/<code class="docutils literal notranslate"><span class="pre">undefined</span></code> placeholders –
+<code class="docutils literal notranslate"><span class="pre">thr.exec(threadFunc,</span> <span class="pre">threadArg,</span> <span class="pre">null,</span> <span class="pre">threadDelay)</span></code> throws.  To
+set <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> without a <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code>, use the
+<code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> form instead.</li>
+<li>A <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> runs in the event loop of the thread that called
+<code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code>.  If that is the main thread, it will not
+run until the top-level script finishes (see <a class="reference internal" href="#how-does-it-work">How does it work?</a>).</li>
 </ul>
 </div></blockquote>
 </div></blockquote>
@@ -604,9 +626,16 @@ below will be called with <code class="docutils literal notranslate"><span class
 <dt>Return Value:</dt>
 <dd>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>.</dd>
 <dt>Caveat:</dt>
-<dd>The variable retrieved is a deep copy of the variable put.  If
-the original variable that was put is altered, the changes will
-not affect the retrieved version.</dd>
+<dd>The value returned is a deep copy taken <strong>when</strong>
+<a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> was called.  Altering the original variable
+after it was put does not affect the stored (or retrieved) value.</dd>
+<dt>Note:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">get()</span></code> is <em>level-triggered</em>: if <code class="docutils literal notranslate"><span class="pre">varName</span></code> already has a value it
+is returned immediately and <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is ignored.  <code class="docutils literal notranslate"><span class="pre">timeOut</span></code>
+applies only when the value is currently <code class="docutils literal notranslate"><span class="pre">undefined</span></code>, in which case
+<code class="docutils literal notranslate"><span class="pre">get()</span></code> waits (via <a class="reference internal" href="#rampart-thread-waitfor">rampart.thread.waitfor()</a>) for the next update.
+To block until a value <em>changes</em> even when it is already defined, use
+<a class="reference internal" href="#rampart-thread-waitfor">rampart.thread.waitfor()</a> instead.</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">thr1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">();</span>
@@ -650,6 +679,29 @@ not affect the retrieved version.</dd>
 </div>
 </div></blockquote>
 </div>
+<div class="section" id="rampart-thread-getwait">
+<h3>rampart.thread.getwait()<a class="headerlink" href="#rampart-thread-getwait" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Get a named variable from the clipboard, waiting for it if necessary.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myval</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">thread</span><span class="p">.</span><span class="nx">getwait</span><span class="p">(</span><span class="nx">varName</span><span class="p">[,</span> <span class="nx">timeOut</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">varName</span></code> and <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> are as for <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a>.</p>
+<p>Like <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a>, <code class="docutils literal notranslate"><span class="pre">getwait()</span></code> returns the current value of
+<code class="docutils literal notranslate"><span class="pre">varName</span></code> immediately if one is set.  If the value is currently
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> it waits for another thread to set it – up to <code class="docutils literal notranslate"><span class="pre">timeOut</span></code>
+milliseconds if given, or <strong>indefinitely</strong> if <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is omitted.
+(This is the one difference from <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a>, which returns
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> immediately when the value is unset and no <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is
+given.)</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a>, or
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</dd>
+</dl>
+</div></blockquote>
+</div>
 <div class="section" id="rampart-thread-onget">
 <h3>rampart.thread.onGet()<a class="headerlink" href="#rampart-thread-onget" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -679,6 +731,23 @@ set above.</li>
 <dd>An <span class="green">Object</span>, representing the event, and with the function <code class="docutils literal notranslate"><span class="pre">remove()</span></code>, which
 when called will remove the event.  Note that this <span class="green">Object</span> is bound to <code class="docutils literal notranslate"><span class="pre">this</span></code>
 in the callback.</dd>
+<dt>Note:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">onGet()</span></code> only fires for updates made <strong>after</strong> the subscription is
+registered; a <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> that happens before the
+<code class="docutils literal notranslate"><span class="pre">onGet()</span></code> call is not seen.  When the watcher runs in a worker
+thread, a common pattern is to have the worker register its
+<code class="docutils literal notranslate"><span class="pre">onGet()</span></code> and then <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> a “ready” flag that the
+producer waits on (with <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a>) before sending data.</dd>
+<dt>Note:</dt>
+<dd>Avoid calling <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> from inside an <code class="docutils literal notranslate"><span class="pre">onGet()</span></code>
+callback with a key that would match the callback’s own <code class="docutils literal notranslate"><span class="pre">varName</span></code> /
+<code class="docutils literal notranslate"><span class="pre">varGlob</span></code> – each such put re-triggers the callback, creating an
+unbounded feedback loop that eventually exhausts the interpreter
+stack.  This is the same hazard as a function that calls itself with
+no base case.  Either give the watcher a base case (call
+<code class="docutils literal notranslate"><span class="pre">this.remove()</span></code>, or stop putting once a condition is met – as in
+the example below), or publish to a key that does <strong>not</strong> match the
+watch.</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">)</span>
@@ -795,9 +864,10 @@ function will wait indefinely for the variable to be updated.</li>
 <dd>A <strong>copy</strong> of the variable stored with <a class="reference internal" href="#rampart-thread-put">rampart.thread.put()</a> or
 <code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</dd>
 <dt>Note:</dt>
-<dd>Unlike <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a> above, this function will wait even
-if <code class="docutils literal notranslate"><span class="pre">varName</span></code> is defined and will return only when it changes or
-the <code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</dd>
+<dd><code class="docutils literal notranslate"><span class="pre">waitfor()</span></code> is <em>edge-triggered</em>: unlike <a class="reference internal" href="#rampart-thread-get">rampart.thread.get()</a>
+above, it ignores any current value of <code class="docutils literal notranslate"><span class="pre">varName</span></code> and returns only
+when the value is next updated by another thread, or when the
+<code class="docutils literal notranslate"><span class="pre">timeOut</span></code> is reached.</dd>
 </dl>
 </div></blockquote>
 </div>
@@ -818,7 +888,9 @@ multiple threads.</div></blockquote>
 </div>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>An <span class="green">Object</span> with two functions: <cite>lock</cite> and <cite>unlock</cite>.</dd>
+<dd>An <span class="green">Object</span> with the functions <a class="reference internal" href="#thrlock-lock">thrlock.lock()</a>,
+<a class="reference internal" href="#thrlock-unlock">thrlock.unlock()</a>, <a class="reference internal" href="#thrlock-trylock">thrlock.trylock()</a> and
+<a class="reference internal" href="#thrlock-getlockingthread">thrlock.getLockingThread()</a>.</dd>
 </dl>
 </div></blockquote>
 </div>
@@ -885,6 +957,22 @@ calls <a class="reference internal" href="#thrlock-unlock">thrlock.unlock()</a> 
 <dt>Return Value:</dt>
 <dd>A <span class="green">Boolean</span>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the lock was obtained and <code class="docutils literal notranslate"><span class="pre">false</span></code>
 if not.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="thrlock-getlockingthread">
+<h3>thrlock.getLockingThread()<a class="headerlink" href="#thrlock-getlockingthread" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Return the id of the thread currently holding <code class="docutils literal notranslate"><span class="pre">thrlock</span></code> (the same id
+space as <a class="reference internal" href="#rampart-thread-getcurrentid">rampart.thread.getCurrentId()</a>), or <code class="docutils literal notranslate"><span class="pre">-1</span></code> if the lock is not
+currently held.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">holder</span> <span class="o">=</span> <span class="nx">thrlock</span><span class="p">.</span><span class="nx">getLockingThread</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">Number</span>: the holding thread’s id, or <code class="docutils literal notranslate"><span class="pre">-1</span></code> if unlocked.</dd>
 </dl>
 </div></blockquote>
 </div>
