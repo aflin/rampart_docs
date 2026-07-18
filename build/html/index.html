@@ -105,6 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -617,6 +618,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#storage">Storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#generating-embeddings">Generating embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows">Chunked documents (multi-vector rows)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#querying">Querying</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#indexing">Indexing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#migrating-between-dtypes">Migrating between dtypes</a></li>
@@ -639,6 +641,9 @@
 <li class="toctree-l3"><a class="reference internal" href="sql-server-funcs.html#vector-function">Vector Function</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#vecdist">vecdist</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#embed">embed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#chunkembed">chunkembed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#chunkavg">chunkavg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-server-funcs.html#chunkcoherence">chunkcoherence</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sql-server-funcs.html#general-functions">General Functions</a><ul>
@@ -797,6 +802,9 @@
 <li class="toctree-l3"><a class="reference internal" href="sql-set.html#embedding-properties">Embedding Properties</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#llamaembed">llamaEmbed</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sql-set.html#llamaembedperthread">llamaEmbedPerThread</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#onnxembed">onnxEmbed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#retrieval-prompts">Retrieval prompts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sql-set.html#likevcache">likevCache</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sql-set.html#indexing-properties">Indexing properties</a><ul>
@@ -1634,6 +1642,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#license">License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#what-do-they-do">What do they do?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#platform-availability">Platform Availability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#errors-warnings-and-logs">Errors, Warnings and Logs</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-langtools.html#the-rampart-llamacpp-module">The rampart-llamacpp module</a><ul>
@@ -1662,6 +1671,37 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#environment-variables">Environment Variables</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-langtools.html#the-rampart-onnx-module">The rampart-onnx module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#cpu-and-gpu-runtime-selection">CPU and GPU (runtime selection)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-initembed">onnx.initEmbed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#oemb-embedtexttofp16buf">oemb.embedTextToFp16Buf()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#oemb-embedtexttofp32buf-oemb-embedtexttonumbers">oemb.embedTextToFp32Buf() / oemb.embedTextToNumbers()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#oemb-embedtextstonumbers">oemb.embedTextsToNumbers()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#oemb-destroy">oemb.destroy()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-initrerank">onnx.initRerank</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#orr-rerank">orr.rerank()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-initsession">onnx.initSession</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#sess-run">sess.run()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#sess-inputs">sess.inputs()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#sess-metadata">sess.metadata()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-langtools.html#sess-destroy">sess.destroy()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-initsessionfrombuffer">onnx.initSessionFromBuffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-modelinfo">onnx.modelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-wordpiecetokenizer">onnx.wordPieceTokenizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-sptokenizer">onnx.spTokenizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-initsnacdecoder">onnx.initSnacDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-onnxversion">onnx.onnxVersion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-runtimeinfo">onnx.runtimeInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#onnx-getlog-onnx-clearlog">onnx.getLog / onnx.clearLog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#converting-a-model-to-float16-or-int8">Converting a model to float16 or int8</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-langtools.html#the-rampart-faiss-module">The rampart-faiss module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#openfactory">openFactory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#openindexfromfile">openIndexFromFile</a></li>
@@ -1682,6 +1722,16 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#init">init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#encoder-encode">encoder.encode()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#decode">decode</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-langtools.html#the-rampart-models-module">The rampart-models module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#models-get">models.get()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#models-ggufget-models-onnxget">models.ggufGet() / models.onnxGet()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#models-url">models.url()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#models-resolve">models.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#models-list">models.list()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#retrieval-prompt-sidecars">Retrieval prompt sidecars</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-langtools.html#command-line">Command line</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-langtools.html#putting-it-together">Putting It Together</a></li>
@@ -1774,6 +1824,79 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-gm.html#example-creating-an-animated-gif">Example: Creating an Animated GIF</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rampart-gm.html#example-thumbnail-server">Example: Thumbnail Server</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rampart-webview.html#preface">Preface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#acknowledgment">Acknowledgment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#license">License</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#what-does-it-do">What does it do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#how-does-it-work">How does it work?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-webview.html#loading-and-using-the-module">Loading and Using the Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#loading">Loading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#quick-start">Quick Start</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-webview.html#the-webview-gui">The WebView GUI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#creating-a-webview">Creating a WebView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-settitle-title"><code class="docutils literal notranslate"><span class="pre">w.setTitle(title)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-setsize-width-height-hint"><code class="docutils literal notranslate"><span class="pre">w.setSize(width,</span> <span class="pre">height</span> <span class="pre">[,</span> <span class="pre">hint])</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-navigate-url"><code class="docutils literal notranslate"><span class="pre">w.navigate(url)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-sethtml-html"><code class="docutils literal notranslate"><span class="pre">w.setHtml(html)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-init-js"><code class="docutils literal notranslate"><span class="pre">w.init(js)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-eval-js-callback"><code class="docutils literal notranslate"><span class="pre">w.eval(js</span> <span class="pre">[,</span> <span class="pre">callback])</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-getcontents-callback"><code class="docutils literal notranslate"><span class="pre">w.getContents(callback)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-on-event-handler"><code class="docutils literal notranslate"><span class="pre">w.on(event,</span> <span class="pre">handler)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-bind-name-callback"><code class="docutils literal notranslate"><span class="pre">w.bind(name,</span> <span class="pre">callback)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-unbind-name"><code class="docutils literal notranslate"><span class="pre">w.unbind(name)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-run"><code class="docutils literal notranslate"><span class="pre">w.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-terminate"><code class="docutils literal notranslate"><span class="pre">w.terminate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-destroy"><code class="docutils literal notranslate"><span class="pre">w.destroy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-snapshot-region"><code class="docutils literal notranslate"><span class="pre">w.snapshot([region])</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-setcookie-name-value"><code class="docutils literal notranslate"><span class="pre">w.setCookie(name,</span> <span class="pre">value)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-getcookies-uri"><code class="docutils literal notranslate"><span class="pre">w.getCookies([uri])</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-getallcookies"><code class="docutils literal notranslate"><span class="pre">w.getAllCookies()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#w-setuseragent-string"><code class="docutils literal notranslate"><span class="pre">w.setUserAgent(string)</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#constants">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#accessing-local-servers">Accessing Local Servers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#option-1-serve-the-page-from-the-same-server">Option 1: Serve the page from the same server</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#option-2-add-cors-headers-on-the-server">Option 2: Add CORS headers on the server</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#option-3-use-w-bind-as-a-proxy">Option 3: Use <code class="docutils literal notranslate"><span class="pre">w.bind()</span></code> as a proxy</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#running-without-a-display">Running Without a Display</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-webview.html#headless-javascriptcore">Headless JavaScriptCore</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#compatibility">Compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#webview-jscexec-code"><code class="docutils literal notranslate"><span class="pre">webview.jscExec(code)</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#new-webview-jsccontext"><code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">webview.JSCContext()</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#jsc-eval-code"><code class="docutils literal notranslate"><span class="pre">jsc.eval(code)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#jsc-loadscript-path"><code class="docutils literal notranslate"><span class="pre">jsc.loadScript(path)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#jsc-require-path"><code class="docutils literal notranslate"><span class="pre">jsc.require(path)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#jsc-set-name-value"><code class="docutils literal notranslate"><span class="pre">jsc.set(name,</span> <span class="pre">value)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#jsc-getglobal-name"><code class="docutils literal notranslate"><span class="pre">jsc.getGlobal(name)</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#jsc-destroy"><code class="docutils literal notranslate"><span class="pre">jsc.destroy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#working-with-wrapped-jsc-objects">Working with Wrapped JSC Objects</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#tovalue"><code class="docutils literal notranslate"><span class="pre">.toValue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-webview.html#tostring"><code class="docutils literal notranslate"><span class="pre">.toString()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rampart-webview.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#webview-counter-app">WebView: Counter App</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-webview.html#jsccontext-fetching-and-using-a-js-library">JSCContext: Fetching and Using a JS Library</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a><ul>

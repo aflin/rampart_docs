@@ -28,6 +28,7 @@ Welcome to Rampart's documentation.
    The rampart-almanac module <rampart-almanac>
    The rampart-url module <rampart-url>
    The rampart-gm module <rampart-gm>
+   The rampart-webview module <rampart-webview>
    The rampart-chromeview module <rampart-chromeview>
    Extras <rampart-extras>
    Tutorials <tutorialtoc>

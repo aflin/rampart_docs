@@ -7,12 +7,18 @@ Preface
 Acknowledgment
 ~~~~~~~~~~~~~~
 
-The rampart-langtools package provides three modules built on
+The rampart-langtools package provides four modules built on
 best-in-class machine-learning libraries:
 
 *  The rampart-llamacpp module is built on
    `llama.cpp <https://github.com/ggml-org/llama.cpp>`_, the C/C++
    LLM inference engine created by Georgi Gerganov and contributors.
+
+*  The rampart-onnx module is built on
+   `ONNX Runtime <https://onnxruntime.ai/>`_, the cross-platform
+   inference engine for ONNX models from Microsoft (with tokenizers
+   from
+   `onnxruntime-extensions <https://github.com/microsoft/onnxruntime-extensions>`_\ ).
 
 *  The rampart-faiss module is built on
    `FAISS <https://github.com/facebookresearch/faiss>`_, the library
@@ -30,9 +36,11 @@ License
 ~~~~~~~
 
 The llama.cpp library is licensed under the
-`MIT License <https://github.com/ggml-org/llama.cpp/blob/master/LICENSE>`_\ .
+`MIT License <https://github.com/ggml-org/llama.cpp/blob/master/LICENSE>`__\ .
+The ONNX Runtime library is licensed under the
+`MIT License <https://github.com/microsoft/onnxruntime/blob/main/LICENSE>`__\ .
 The FAISS library is licensed under the
-`MIT License <https://github.com/facebookresearch/faiss/blob/main/LICENSE>`_\ .
+`MIT License <https://github.com/facebookresearch/faiss/blob/main/LICENSE>`__\ .
 The SentencePiece library is licensed under the
 `Apache 2.0 License <https://github.com/google/sentencepiece/blob/master/LICENSE>`_\ .
 
@@ -41,12 +49,17 @@ The rampart-langtools modules are released under the MIT license.
 What do they do?
 ~~~~~~~~~~~~~~~~
 
-Together the three modules provide the building blocks for semantic
+Together the modules provide the building blocks for semantic
 search and local LLM inference inside Rampart:
 
 *  **rampart-llamacpp** runs GGUF models directly inside the rampart
    process: text embedding (`initEmbed`_\ ), reranking
    (`initRerank`_\ ) and text generation (`initGen`_\ ).
+
+*  **rampart-onnx** runs ONNX models: text embedding
+   (`onnx.initEmbed`_\ ) and reranking (`onnx.initRerank`_\ ) with
+   the same handle API as rampart-llamacpp, plus a general-purpose
+   session API (`onnx.initSession`_\ ) for running any ONNX model.
 
 *  **rampart-faiss** builds, trains, saves and searches vector
    indexes, from small exact-search indexes to compressed indexes
@@ -55,10 +68,16 @@ search and local LLM inference inside Rampart:
 *  **rampart-sentencepiece** tokenizes text into subword pieces
    (and back) using a SentencePiece model.
 
-A typical pipeline embeds documents with rampart-llamacpp, stores
-the vectors in a rampart-faiss index (and/or a rampart-sql table),
-searches that index with an embedded query vector, and optionally
-reranks the results with a reranking model.
+The package also ships **rampart-models**, a pure-JavaScript helper
+that downloads and locates the models the engines above consume —
+``models.get('bge-m3')`` returns a ready-to-use local path, fetching
+from HuggingFace on first use.  See
+`The rampart-models module`_\ .
+
+A typical pipeline embeds documents with rampart-llamacpp or
+rampart-onnx, stores the vectors in a rampart-faiss index (and/or a
+rampart-sql table), searches that index with an embedded query
+vector, and optionally reranks the results with a reranking model.
 
 Note that the rampart-sql module has this pipeline built in:  its
 ``embed()`` SQL function generates vectors in the SQL engine using
@@ -93,6 +112,45 @@ On macOS (Apple Silicon):
 On Linux, the modules are available in CPU and CUDA (GPU) builds.
 GPU-only features (such as the faiss `idx.enableGpu()`_ function)
 are noted where applicable.
+
+The rampart-onnx module additionally requires glibc 2.28 or later
+on Linux (it is not included in the packages built for older
+distributions), and its CUDA support requires an NVIDIA driver
+supporting CUDA 12 or later — see
+`CPU and GPU (runtime selection)`_\ .
+
+Errors, Warnings and Logs
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The modules never write to ``stdout`` or ``stderr``.  Instead:
+
+*  A **failure** throws a JavaScript :green:`Error` (a model that
+   cannot be loaded, a malformed tensor, a session used after
+   ``destroy()``).  Catch it as usual.
+
+*  A **warning** — a non-fatal problem that did not stop the call —
+   is placed in an ``errMsg`` property, exactly as rampart-sql does.
+   The property is set on the object the call was made on: the module
+   object for ``onnx.initEmbed()``, a handle for a handle method.  It
+   is **cleared at the start of every call**, so it always describes
+   the most recent one, and it is ``undefined`` when the call had
+   nothing to report.  Typical warnings are a GPU that could not be
+   used and silently fell back to the CPU, or an unusable
+   ``RAMPART_ONNX_RUNTIME`` override.
+
+.. code-block:: javascript
+
+    var emb = onnx.initEmbed(model);
+    if (onnx.errMsg)                       // e.g. "no usable GPU; using CPU"
+        console.log("warning: " + onnx.errMsg);
+
+``errMsg`` is deliberately kept separate from `getLog`_ /
+`onnx.getLog / onnx.clearLog`_\ , which capture the *informational*
+output of the underlying libraries (ggml/llama.cpp and ONNX Runtime).
+That log is verbose — a single embedding can produce thousands of
+lines — and a warning placed there would be lost in it.  Use
+``errMsg`` to find out whether something went wrong, and ``getLog()``
+when you want the engine's own diagnostics.
 
 The rampart-llamacpp module
 ---------------------------
@@ -200,6 +258,54 @@ initEmbed
        *  ``attention`` - A :green:`String`, ``"causal"`` or
           ``"non-causal"`` (``--attention``).
 
+       *  ``split`` - A :green:`String` or :green:`Function`.
+          ``"auto"`` (the default) chunks long text on its structure —
+          paragraphs, merged or packed as configured below;
+          ``"window"`` uses plain token windows.  A :green:`Function`
+          replaces the built-in chunker entirely: it is called with
+          the document text and must return an :green:`Array` of
+          :green:`Strings` — N strings always produce N vectors.  A
+          string that fits the token window gets its exact vector; an
+          oversized string gets its combined (average) vector over
+          its sub-chunks, and its ``chunks`` entry is marked
+          ``oversized``.  The strings
+          may freely transform the input (inject a title, drop
+          boilerplate, ...), so the returned ``chunks`` carry
+          ``{text, tokens}`` without byte spans.  Two notes: a
+          splitter shared with other rampart threads (via a copied
+          handle) must be self-contained — it cannot reference
+          variables outside itself; and the SQL ``chunkembed()`` /
+          5-argument ``abstract()`` machinery always uses the
+          built-in chunker, so custom splitters are for JS-side
+          pipelines.
+          (The built-in chunker is the same as `onnx.initEmbed`_'s —
+          the two modules share it, so identical options produce
+          identical chunk boundaries for the same tokenizer.)
+
+       *  ``minTokens`` - A :green:`Number`, the paragraph-fragment
+          floor: shorter paragraphs are merged with a neighbor.
+          ``-1`` disables merging.
+
+       *  ``packParagraphs`` - A :green:`Boolean`.  If ``true``,
+          consecutive paragraphs are packed together up to the token
+          window (fewer, fuller chunks) instead of one vector per
+          paragraph.
+
+       *  ``sentenceSplit`` - A :green:`Boolean`.  If ``true``, an
+          oversized paragraph (or structureless text) is split at
+          **sentence boundaries** and the sentences greedily packed
+          to the token window, instead of being cut at raw token
+          windows mid-sentence.  Boundaries come from a multi-script
+          terminator table (ASCII ``.!?`` with a whitespace guard;
+          self-delimiting CJK ``。！？``, Arabic, Devanagari and
+          others with none; fullwidth ``．`` digit-guarded so
+          ``３．１４`` never splits), and a chunk never ends on a
+          tiny trailing fragment (so a false boundary after "Mr."
+          can't take a cut).  Languages without sentence punctuation
+          (e.g. Thai) fall back to token windows.  Default ``false``:
+          enabling it changes chunk boundaries, which tables built
+          WITHOUT value headers depend on for snippet spans.
+
        The legacy option names ``nctx``, ``ubatch``, ``nthreads``
        and ``nthreads_batch`` are accepted as aliases for ``nCtx``,
        ``nUBatch``, ``threads`` and ``threadsBatch``.
@@ -240,7 +346,8 @@ initEmbed
 
         var v = emb.embedTextToFp16Buf("about a paragraph of text ...");
 
-        /* v = { vecs: [vec1, vec2, ...], avgVec: avgOfVecs }
+        /* v = { vecs: [vec1, ...], avgVec: avg, coherence: n,
+                 chunks: [ {start,end,tokens,text}, ... ] }
            If the text fits the model's context window,
            v.vecs.length == 1 and v.vecs[0] == v.avgVec.       */
 
@@ -258,7 +365,7 @@ emb.embedTextToFp16Buf()
     (little-endian) in a :green:`Buffer`.  This is the most compact
     format and is directly usable by
     :ref:`rampart.vector <rampart-vector:Rampart Vector Functions>`
-    functions, the :ref:`rampart-sql <rampart-sql:The rampart-sql module>`
+    functions, the :doc:`rampart-sql <rampart-sql>`
     ``vecdist()`` function and the faiss `idx.addFp16()`_ /
     `idx.searchFp16()`_ functions.
 
@@ -272,8 +379,11 @@ emb.embedTextToFp16Buf()
     containing text) to be embedded.
 
     If the tokenized text does not fit the model's context window,
-    it is split into overlapping chunks (one eighth of a window of
-    overlap) and one vector is produced per chunk.  Each vector is
+    it is chunked; with the default ``split: "auto"`` the chunking
+    is **structure-aware**: text is split on paragraph boundaries
+    (falling back to token windows for oversized paragraphs), so
+    each vector corresponds to a semantically meaningful span of the
+    input, and the spans are reported in ``chunks``.  Each vector is
     L2-normalized.
 
     Return Value:
@@ -286,6 +396,20 @@ emb.embedTextToFp16Buf()
            produced, the same vector as ``vecs[0]``.  Otherwise the
            re-normalized average of all the chunk vectors, suitable
            as a single whole-document vector.
+
+        *  ``coherence`` - A :green:`Number` in ``[0, 1]``: the
+           average pairwise cosine similarity of the chunk vectors
+           (``1.0`` for a single-chunk document).  A low value means
+           the document spans several topics and ``avgVec`` is a
+           blurrier summary of it.
+
+        *  ``chunks`` - An :green:`Array` of :green:`Objects`, one
+           per vector, with ``start`` / ``end`` (the chunk's byte
+           span in the input), ``tokens`` (its token count),
+           ``text`` (the chunk text itself) and ``oversized``
+           (:green:`Boolean` ``true`` when this vector is one of
+           several token windows over a single span that exceeded
+           the model window; such sub-chunks share their span).
 
         For empty or whitespace-only input, ``vecs`` is an empty
         :green:`Array` and ``avgVec`` is not set.
@@ -362,6 +486,23 @@ initRerank
     Return Value:
         An :green:`Object` (the reranker handle) with the functions
         `rr.rerank()`_ and ``destroy()`` (as in `emb.destroy()`_\ ).
+
+    Note:
+        Instruct-style rerankers — the
+        `Qwen3-Reranker <https://huggingface.co/Qwen/Qwen3-Reranker-0.6B>`_
+        family — judge relevance by answering a yes/no question inside
+        a chat prompt rather than through a bert-style classifier
+        head.  ``initRerank`` detects them by model architecture and
+        wraps each (query, document) pair in the required prompt
+        automatically.  Their scores are the probability of "yes"
+        (roughly 0.5 – 1.0 for plausible documents) rather than the
+        wide-range scores of bert-style rerankers; orderings are
+        comparable, magnitudes are not.  Beware that many community
+        GGUF conversions of these models were made as plain
+        language models and lack the ranking head — such a file loads
+        but scores every document identically.  The catalog's
+        ``models.ggufGet("qwen3-reranker-0.6b")`` is pinned to a
+        verified conversion.
 
     Example:
 
@@ -808,6 +949,826 @@ Environment Variables
        sets" are disabled by default to avoid an assertion at
        process exit.  Set ``RAMPART_METAL_RESIDENCY=1`` to keep the
        feature (a marginal performance optimization) enabled.
+
+The rampart-onnx module
+-----------------------
+
+Loading the module is a simple matter of using the ``require()``
+function:
+
+.. code-block:: javascript
+
+    var onnx = require("rampart-onnx");
+
+The module runs models in the
+`ONNX <https://onnx.ai/>`_ format via ONNX Runtime.  It provides
+two layers:
+
+*  High-level text embedding (`onnx.initEmbed`_\ ) and reranking
+   (`onnx.initRerank`_\ ) with the same handle API as
+   rampart-llamacpp's `initEmbed`_ / `initRerank`_ — use it when a
+   model is published in ONNX form rather than GGUF (as most
+   `sentence-transformers <https://huggingface.co/sentence-transformers>`_
+   models are).
+
+*  A general-purpose session API (`onnx.initSession`_\ ) for running
+   **any** ONNX model — named tensors in, named tensors out.
+
+For embedding and reranking, the simplest input is a HuggingFace
+model *directory* (e.g. a ``git clone`` of
+`all-MiniLM-L6-v2 <https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2>`_\ ):
+the ``.onnx`` file, the tokenizer, the pooling mode and the token
+window are all discovered from the directory contents.  A bare
+``.onnx`` file path also works, but then a tokenizer must be
+supplied.
+
+CPU and GPU (runtime selection)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    A single ``rampart-onnx.so`` serves both CPU and GPU: the module
+    contains a complete CPU-only ONNX Runtime, and GPU installs add
+    an optional CUDA runtime directory (``onnx-cu12/`` or
+    ``onnx-cu13/``) next to the module.  At first use the module
+    picks a runtime:
+
+    1. If the environment variable ``RAMPART_ONNX_RUNTIME`` is set
+       (``cpu``, ``cu12``, ``cu13`` or an absolute directory path),
+       it wins.
+
+    2. Otherwise, if an NVIDIA driver supporting CUDA 12 or later is
+       present **and** reports at least one GPU, the newest CUDA
+       runtime directory the driver supports is used, preferring one
+       built for the GPU's exact compute capability.
+
+    3. Otherwise (or if the chosen runtime fails to load), the
+       built-in CPU runtime is used.
+
+    `onnx.runtimeInfo`_ reports which runtime was picked.  Selecting a
+    GPU runtime makes GPU execution *available*, and sessions then use
+    it **automatically**: on a build where a GPU runtime was selected,
+    `onnx.initSession`_, `onnx.initEmbed`_ and `onnx.initRerank`_ run on
+    the GPU by default (the same auto-GPU behavior as the rampart-sql
+    embedding path).  Pass ``gpu: false`` (or ``provider: "cpu"``) to
+    force CPU.  A session that requests the GPU but cannot create one
+    (no device, or a driver problem) falls back to CPU with a one-line
+    notice rather than failing.
+
+onnx.initEmbed
+~~~~~~~~~~~~~~
+
+    The ``initEmbed`` function loads an ONNX embedding model and
+    returns a handle used to convert text into semantic vectors.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var oemb = onnx.initEmbed(modelPath[, options]);
+
+    Where:
+
+    *  ``modelPath`` is a :green:`String`: a HuggingFace-layout
+       model **directory** (recommended), or the path of a ``.onnx``
+       file.  Given a directory, the module discovers the ``.onnx``
+       model file, the tokenizer (a ``*vocab.txt`` selects WordPiece,
+       otherwise ``tokenizer.json`` selects a SentencePiece/BPE
+       tokenizer), the pooling mode (from ``1_Pooling/config.json``)
+       and the model's token window.  Given a bare ``.onnx`` file, the
+       module still tries to discover the tokenizer beside the model —
+       in the file's own directory and, when the file sits in an
+       ``onnx/`` subdirectory (the common HuggingFace layout), in its
+       parent — so pointing at a specific ``.onnx`` (e.g. an fp16
+       variant) usually works without ``options.tokenizer``; supply it
+       explicitly only when discovery cannot find one.
+
+    *  ``options`` is an optional :green:`Object` accepting all of
+       the session options of `onnx.initSession`_ (notably ``gpu``),
+       plus the following.  Every discovered setting can be
+       overridden here.
+
+       *  ``tokenizer`` - A :green:`String` (the path of a
+          SentencePiece model, loaded via rampart-sentencepiece) or
+          an :green:`Object` with an ``encodeIds(text)`` function
+          (e.g. from `onnx.wordPieceTokenizer`_ or
+          `onnx.spTokenizer`_\ , or custom JavaScript).
+
+       *  ``pooling`` - A :green:`String`, ``"mean"`` or ``"cls"``.
+          Default: the directory's declared pooling, else
+          ``"mean"``.
+
+       *  ``normalize`` - A :green:`Boolean`, L2-normalize each
+          vector.  Default: ``true``.
+
+       *  ``maxTokens`` - A :green:`Number`, the per-chunk token
+          window.  Default: the model's discovered positional
+          capacity (capped at 8192), else ``512``.
+
+       *  ``queryPrefix`` / ``passagePrefix`` - :green:`Strings`
+          prepended to query / passage text before embedding, for
+          models trained with instruction prefixes (e.g. e5's
+          ``"query: "`` / ``"passage: "``).  See the ``isQuery``
+          argument of `oemb.embedTextToFp16Buf()`_\ .
+
+       *  ``split`` - A :green:`String` or :green:`Function`.
+          ``"auto"`` (the default) chunks long text on its structure —
+          paragraphs, merged or packed as configured below;
+          ``"window"`` uses plain token windows.  A :green:`Function`
+          replaces the built-in chunker entirely: it is called with
+          the document text and must return an :green:`Array` of
+          :green:`Strings` — N strings always produce N vectors.  A
+          string that fits the token window gets its exact vector; an
+          oversized string gets its combined (average) vector over
+          its sub-chunks, and its ``chunks`` entry is marked
+          ``oversized``.  The strings
+          may freely transform the input (inject a title, drop
+          boilerplate, ...), so the returned ``chunks`` carry
+          ``{text, tokens}`` without byte spans.  Two notes: a
+          splitter shared with other rampart threads (via a copied
+          handle) must be self-contained — it cannot reference
+          variables outside itself; and the SQL ``chunkembed()`` /
+          5-argument ``abstract()`` machinery always uses the
+          built-in chunker, so custom splitters are for JS-side
+          pipelines.
+
+       *  ``minTokens`` - A :green:`Number`, the paragraph-fragment
+          floor: shorter paragraphs are merged with a neighbor.
+          ``-1`` disables merging.
+
+       *  ``packParagraphs`` - A :green:`Boolean`.  If ``true``,
+          consecutive paragraphs are packed together up to the token
+          window (fewer, fuller chunks) instead of one vector per
+          paragraph.
+
+       *  ``sentenceSplit`` - A :green:`Boolean`.  If ``true``, an
+          oversized paragraph (or structureless text) is split at
+          **sentence boundaries** and the sentences greedily packed
+          to the token window, instead of being cut at raw token
+          windows mid-sentence.  Boundaries come from a multi-script
+          terminator table (ASCII ``.!?`` with a whitespace guard;
+          self-delimiting CJK ``。！？``, Arabic, Devanagari and
+          others with none; fullwidth ``．`` digit-guarded so
+          ``３．１４`` never splits), and a chunk never ends on a
+          tiny trailing fragment (so a false boundary after "Mr."
+          can't take a cut).  Languages without sentence punctuation
+          (e.g. Thai) fall back to token windows.  Default ``false``:
+          enabling it changes chunk boundaries, which tables built
+          WITHOUT value headers depend on for snippet spans.
+
+       *  ``maxChunkBatch`` - A :green:`Number`, the maximum chunks
+          per batched model run (bounds memory for many-chunk
+          documents).  Default: ``64`` (CPU) or ``32`` (GPU).
+
+       *  ``bosId``, ``eosId``, ``padId``, ``idOffset`` -
+          :green:`Numbers`, special-token overrides.  Defaults
+          follow the detected tokenizer family (e.g. ``[CLS]``/
+          ``[SEP]`` ids 101/102 for WordPiece).
+
+       *  ``lowercase``, ``stripAccents``, ``tokenizeChinese`` -
+          :green:`Booleans`, WordPiece tokenizer settings (see
+          `onnx.wordPieceTokenizer`_\ ).  Default: ``true``.
+
+    Note:
+        The rampart-sql ``embed()``, ``chunkembed()`` and related
+        SQL functions can run this same engine inside the SQL
+        module: ``sql.set({onnxEmbed: {model: '/path/to/modeldir'}})``
+        loads the model through rampart-onnx.  When embedding rows
+        of a SQL table, that path avoids round-trips through
+        JavaScript — see
+        :ref:`Generating embeddings <rampart-sql:Generating embeddings>`,
+        :ref:`Chunked documents <rampart-sql:Chunked documents (multi-vector rows)>`
+        and the :ref:`onnxEmbed <sql-set:onnxEmbed>` property.
+
+    Return Value:
+        An :green:`Object` (the embedding handle) with the functions
+        `oemb.embedTextToFp16Buf()`_\ , ``embedTextToFp32Buf()``,
+        ``embedTextToNumbers()``, `oemb.embedTextsToNumbers()`_ and
+        ``destroy()``, plus ``session`` (the underlying
+        `onnx.initSession`_ handle).
+
+    Example:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var oemb = onnx.initEmbed("./all-MiniLM-L6-v2");
+
+        var v = oemb.embedTextToFp16Buf("about a paragraph of text ...");
+
+        /* v = { vecs: [vec1, ...], avgVec: avg, coherence: n,
+                 chunks: [ {start,end,tokens,text}, ... ] }      */
+
+        /* store the whole-document vector in a sql table */
+        sql.exec("insert into vecs values(?,?,?)",
+                 [v.avgVec, docId, text]);
+
+        oemb.destroy();
+
+oemb.embedTextToFp16Buf()
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    Embed text and return the vector(s) packed as 16-bit floats
+    (little-endian) in :green:`Buffers`, directly usable by
+    :ref:`rampart.vector <rampart-vector:Rampart Vector Functions>`
+    functions, the rampart-sql ``vecdist()`` function and the faiss
+    `idx.addFp16()`_ / `idx.searchFp16()`_ functions.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var ret = oemb.embedTextToFp16Buf(text[, isQuery]);
+
+    Where:
+
+    *  ``text`` is a :green:`String`, the text to be embedded.
+
+    *  ``isQuery`` is an optional :green:`Boolean`.  If ``true``,
+       the ``queryPrefix`` (if configured) is applied; if ``false``
+       or omitted, the ``passagePrefix`` (if configured) is applied.
+
+    If the tokenized text does not fit the model's token window, it
+    is chunked; with the default ``split: "auto"`` the chunking is
+    **structure-aware**: text is split on paragraph boundaries
+    (falling back to token windows for oversized paragraphs), so
+    each vector corresponds to a semantically meaningful span of the
+    input, and the spans are reported in ``chunks``.
+    rampart-llamacpp's `emb.embedTextToFp16Buf()`_ chunks the same
+    way — the two modules share the chunker.
+
+    Return Value:
+        An :green:`Object` with the following properties:
+
+        *  ``vecs`` - An :green:`Array` of :green:`Buffers`, one
+           vector per chunk (``2 * dimension`` bytes each).
+
+        *  ``avgVec`` - A :green:`Buffer`.  If only one chunk was
+           produced, the same vector as ``vecs[0]``; otherwise the
+           re-normalized average of the chunk vectors, suitable as a
+           single whole-document vector.
+
+        *  ``coherence`` - A :green:`Number` in ``[0, 1]``: the
+           average pairwise cosine similarity of the chunk vectors
+           (``1.0`` for a single-chunk document).  A low value means
+           the document spans several topics and ``avgVec`` is a
+           blurrier summary of it.
+
+        *  ``chunks`` - An :green:`Array` of :green:`Objects`, one
+           per vector:
+
+           *  ``start``, ``end`` - :green:`Numbers`, the chunk's
+              byte span in ``text``.
+
+           *  ``tokens`` - A :green:`Number`, the chunk's token
+              count.
+
+           *  ``text`` - A :green:`String`, the chunk text itself.
+
+           *  ``oversized`` - :green:`Boolean` ``true`` when this
+              vector is one of several token windows over a single
+              span that exceeded the model window (such sub-chunks
+              share their span).  Not set otherwise.
+
+        For empty input, the return value is ``{vecs: []}``.
+
+oemb.embedTextToFp32Buf() / oemb.embedTextToNumbers()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    The same as `oemb.embedTextToFp16Buf()`_ except that each vector
+    is packed as 32-bit floats (``4 * dimension`` bytes), or
+    returned as an :green:`Array` of :green:`Numbers`, respectively.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var ret = oemb.embedTextToFp32Buf(text[, isQuery]);
+        var ret = oemb.embedTextToNumbers(text[, isQuery]);
+
+oemb.embedTextsToNumbers()
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    Embed several short texts in one batched model run — the fast
+    path for many small inputs (e.g. embedding a list of queries or
+    titles).  Each text produces exactly **one** vector; text longer
+    than the token window is truncated, not chunked.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var ret = oemb.embedTextsToNumbers(texts[, isQuery]);
+
+    Where ``texts`` is an :green:`Array` of :green:`Strings` and
+    ``isQuery`` selects the prefix as in
+    `oemb.embedTextToFp16Buf()`_\ .
+
+    Return Value:
+        An :green:`Array` (same order as ``texts``) of
+        :green:`Objects`, each with a single property ``avgVec``:
+        the text's vector as an :green:`Array` of :green:`Numbers`.
+
+oemb.destroy()
+^^^^^^^^^^^^^^
+
+    Free the model session.  Using the handle after calling
+    ``destroy()`` throws an error.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        oemb.destroy();
+
+onnx.initRerank
+~~~~~~~~~~~~~~~
+
+    The ``initRerank`` function loads an ONNX cross-encoder
+    reranking model (such as
+    `bge-reranker-v2-m3 <https://huggingface.co/BAAI/bge-reranker-v2-m3>`_
+    or
+    `ms-marco-MiniLM-L6-v2 <https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2>`_\ )
+    and returns a handle used to score how well documents answer a
+    query.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var orr = onnx.initRerank(modelPath[, options]);
+
+    Where:
+
+    *  ``modelPath`` is a :green:`String`: a HuggingFace-layout
+       model directory (recommended; the model, tokenizer, specials,
+       token window and pair template are discovered) or a ``.onnx``
+       file path.  For a file path the tokenizer is still discovered
+       beside the model (the file's directory, and its parent when the
+       file is in an ``onnx/`` subdirectory), so naming a specific
+       ``.onnx`` variant works without ``options.tokenizer``; pass it
+       explicitly only if discovery fails.
+
+    *  ``options`` is an optional :green:`Object` accepting the
+       session options of `onnx.initSession`_ and the tokenizer /
+       special-token options of `onnx.initEmbed`_\ , plus:
+
+       *  ``pairTemplate`` - A :green:`String`, ``"bert"``
+          (``[CLS] query [SEP] document [SEP]`` with token types) or
+          ``"roberta"`` (``[bos] query [eos eos] document [eos]``).
+          Default: ``"bert"`` when the tokenizer is WordPiece, else
+          ``"roberta"``.  Instruct-style rerankers (the Qwen3-Reranker
+          family) are not supported here — use the rampart-llamacpp
+          `initRerank`_ for those.
+
+       *  ``sigmoid`` - A :green:`Boolean`.  If ``true`` (the
+          default), scores are passed through a sigmoid and lie in
+          ``(0, 1)``; if ``false``, raw model logits are returned
+          (matching rampart-llamacpp's `rr.rerank()`_\ ).
+
+    Return Value:
+        An :green:`Object` (the reranker handle) with the functions
+        `orr.rerank()`_ and ``destroy()``, plus ``session``.
+
+    Note:
+        The handle carries all of its state as object properties with
+        native methods, so it survives being shared with other rampart
+        threads — including a rampart-server ``preThreadFunc`` global
+        propagating to worker threads, like a rampart-llamacpp handle.
+        Handles from `onnx.initEmbed`_ and ``initSnacDecoder`` are
+        thread-portable the same way.
+
+orr.rerank()
+^^^^^^^^^^^^
+
+    Score one or more documents against a query.  All documents are
+    scored in one batched model run.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var score  = orr.rerank(query, document);
+        var scored = orr.rerank(query, documents[, scoresOnly]);
+
+    Where ``query`` is a :green:`String` and ``document`` /
+    ``documents`` is a :green:`String` or an :green:`Array` of
+    :green:`Strings`, as in the llamacpp `rr.rerank()`_\ .
+
+    Return Value:
+        *  Given a single :green:`String` document: a
+           :green:`Number`, the relevance score.
+
+        *  Given an :green:`Array` of documents: an :green:`Array`
+           of :green:`Objects`, each ``{document: String, score:
+           Number, index: Number}``, sorted best-first; ``index`` is
+           the document's position in the input :green:`Array`.
+           (Note this differs from the llamacpp reranker, which
+           returns results in input order.)
+
+        *  Given an :green:`Array` and ``scoresOnly`` = ``true``: an
+           :green:`Array` of :green:`Numbers` in **input order**
+           (llamacpp parity).
+
+    Example:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var orr = onnx.initRerank("./ms-marco-MiniLM-L6-v2");
+
+        var scored = orr.rerank("How tall is the Eiffel Tower?", [
+            "The Eiffel Tower is 330 metres tall.",
+            "Gustave Eiffel also designed bridges.",
+            "Paris is the capital of France."
+        ]);
+        /* [ { document: "The Eiffel Tower is ...", score: 0.98, index: 0 },
+             { document: "Paris is the capital ...", score: 0.03, index: 2 },
+             ...  -- sorted best-first                                     ] */
+
+        orr.destroy();
+
+onnx.initSession
+~~~~~~~~~~~~~~~~
+
+    The ``initSession`` function loads any ``.onnx`` model and
+    returns a low-level session handle: named input tensors go in,
+    named output tensors come out.  This is the layer beneath
+    `onnx.initEmbed`_ / `onnx.initRerank`_\ , exposed for models
+    that are neither embedders nor rerankers (classifiers, taggers,
+    audio and vision models, ...).
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var sess = onnx.initSession(path[, options]);
+
+    Where:
+
+    *  ``path`` is a :green:`String`, the path of a ``.onnx`` model
+       file.
+
+    *  ``options`` is an optional :green:`Object` with the following
+       properties:
+
+       *  ``gpu`` - A :green:`Boolean`.  Whether to run the session on
+          the GPU via the CUDA execution provider (see `CPU and GPU
+          (runtime selection)`_\ ).  **Default: auto** — ``true`` when
+          the module selected a GPU runtime (a GPU build with a usable
+          device), otherwise ``false``.  Pass ``gpu: false`` to force
+          CPU even on a GPU build.  A GPU session that cannot be
+          created falls back to CPU with a one-line notice rather than
+          throwing.  ``provider: "cuda"`` / ``"cpu"`` is accepted as an
+          alternative spelling (``provider: "cpu"`` also forces CPU).
+
+       *  ``device`` - A :green:`Number`, the CUDA device id (with
+          ``gpu: true``).  Default: ``0``.
+
+       *  ``intraOpThreads`` - A :green:`Number`, threads used
+          *within* an operator.  Default: ``0`` = ONNX Runtime's own
+          thread pool (sized to the machine's cores), so a single
+          call uses the full CPU.  Set ``1`` for a session with no
+          background threads — see the fork note below.
+
+       *  ``interOpThreads`` - A :green:`Number`, threads used to
+          run independent operators concurrently (only meaningful
+          with ``executionMode: "parallel"``).  Default: ``1``.
+
+       *  ``executionMode`` - A :green:`String`, ``"sequential"``
+          (default) or ``"parallel"``.
+
+       *  ``graphOpt`` - A :green:`String`, the graph optimization
+          level: ``"disable"``, ``"basic"``, ``"extended"`` or
+          ``"all"``.  Default: ONNX Runtime's default (``"all"``).
+
+    Note:
+        Fork safety costs no performance.  A session whose thread
+        pool is broken by a ``fork()`` is transparently **rebuilt**
+        from its model source on first use in the child process; a
+        GPU session (whose device context cannot be rebuilt in a
+        forked child) **throws** a descriptive error there instead.
+        ``intraOpThreads: 1`` (with sequential execution) creates a
+        session with **no background threads at all**, which a forked
+        child can keep using without any rebuild.  Concurrency is
+        also available *across* rampart threads: a session may be
+        used from several threads at once (``run`` is thread-safe).
+
+    Return Value:
+        An :green:`Object` (the session handle) with the functions
+        `sess.run()`_\ , `sess.inputs()`_\ , ``outputs()``,
+        `sess.metadata()`_ and ``destroy()``.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var sess = onnx.initSession("model.onnx");
+
+        /* what does it want? */
+        var ins  = sess.inputs();
+        /* [ { name: "input_ids",      type: "int64", shape: [-1,-1] },
+             { name: "attention_mask", type: "int64", shape: [-1,-1] } ] */
+
+        var out = sess.run({
+            input_ids:      { data: [101, 7592, 102], shape: [1, 3], type: "int64" },
+            attention_mask: { data: [1, 1, 1],        shape: [1, 3], type: "int64" }
+        });
+
+        /* out.last_hidden_state.array is a Float32Array,
+           out.last_hidden_state.shape e.g. [1, 3, 384] */
+
+        sess.destroy();
+
+sess.run()
+^^^^^^^^^^
+
+    Run the model once.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var outputs = sess.run(feeds);
+
+    Where ``feeds`` is an :green:`Object` mapping each input's name
+    to a tensor :green:`Object`:
+
+    *  ``data`` - A :green:`Buffer` (raw little-endian element
+       bytes) or an :green:`Array` of :green:`Numbers` (converted to
+       the given type).
+
+    *  ``shape`` - An :green:`Array` of :green:`Numbers`, the tensor
+       dimensions.  If omitted, the tensor is treated as 1-D.
+
+    *  ``type`` - A :green:`String`, the element type: ``"float32"``,
+       ``"float16"``, ``"double"``, ``"int64"``, ``"int32"``,
+       ``"int16"``, ``"int8"``, ``"uint8"`` or ``"bool"``.
+
+    Return Value:
+        An :green:`Object` mapping each output's name to a tensor
+        :green:`Object`:
+
+        *  ``data`` - An :green:`ArrayBuffer` of the raw element
+           bytes (so e.g. ``new Float32Array(t.data)`` reinterprets
+           rather than copies).
+
+        *  ``array`` - A ready-made typed-array view over ``data``
+           matching the element type (``Float32Array``,
+           ``Int32Array``, ...).  Omitted for ``int64`` outputs,
+           which have no native typed array (use ``data``).
+
+        *  ``shape`` - An :green:`Array` of :green:`Numbers`.
+
+        *  ``type`` - A :green:`String`, the element type.
+
+sess.inputs()
+^^^^^^^^^^^^^
+
+    Return the model's declared inputs (``sess.outputs()`` likewise
+    returns its outputs): an :green:`Array` of :green:`Objects`,
+    each ``{name: String, type: String, shape: Array}``.  Dynamic
+    dimensions appear as ``-1``.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var ins  = sess.inputs();
+        var outs = sess.outputs();
+
+sess.metadata()
+^^^^^^^^^^^^^^^
+
+    Return the model's metadata: an :green:`Object` with
+    ``producerName``, ``graphName``, ``domain``, ``description``
+    (:green:`Strings`, present when set in the model) and
+    ``version`` (a :green:`Number`).
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var meta = sess.metadata();
+
+sess.destroy()
+^^^^^^^^^^^^^^
+
+    Free the session.  Using the handle after calling ``destroy()``
+    throws an error.  Sessions are also freed automatically when
+    garbage collected.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        sess.destroy();
+
+onnx.initSessionFromBuffer
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    The same as `onnx.initSession`_ except that the model is read
+    from a :green:`Buffer` of model bytes rather than a file.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var sess = onnx.initSessionFromBuffer(buffer[, options]);
+
+onnx.modelInfo
+~~~~~~~~~~~~~~
+
+    Return a model's declared inputs and outputs without creating a
+    full session.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var info = onnx.modelInfo(path);
+
+    Where ``path`` is a :green:`String`, the path of a ``.onnx``
+    model file.
+
+    Return Value:
+        An :green:`Object` with ``inputs`` and ``outputs``, each an
+        :green:`Array` of ``{name, type, shape}`` :green:`Objects`
+        as returned by `sess.inputs()`_\ .
+
+onnx.wordPieceTokenizer
+~~~~~~~~~~~~~~~~~~~~~~~
+
+    Create a WordPiece (BERT-style) tokenizer from a ``vocab.txt``
+    file.  `onnx.initEmbed`_ / `onnx.initRerank`_ create one of
+    these automatically when the model directory contains a
+    ``*vocab.txt``; the function is exposed for custom pipelines.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var tok = onnx.wordPieceTokenizer(vocabPath[, options]);
+
+    Where:
+
+    *  ``vocabPath`` is a :green:`String`, the path of the
+       ``vocab.txt`` file.
+
+    *  ``options`` is an optional :green:`Object` with the
+       :green:`Boolean` properties ``lowercase``, ``stripAccents``
+       and ``tokenizeChinese``, each defaulting to ``true``.
+
+    Return Value:
+        An :green:`Object` with the property ``vocabSize`` (a
+        :green:`Number`) and the function ``encodeIds(text)``, which
+        returns an :green:`Array` of :green:`Numbers` — the
+        **content** token ids of ``text``, without special tokens
+        (``[CLS]``/``[SEP]`` are added by the embed/rerank layers).
+
+onnx.spTokenizer
+~~~~~~~~~~~~~~~~
+
+    Create a SentencePiece/BPE tokenizer from a HuggingFace
+    ``tokenizer.json``.  As with `onnx.wordPieceTokenizer`_\ , this
+    is created automatically for model directories that have a
+    ``tokenizer.json``.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var onnx = require("rampart-onnx");
+
+        var tok = onnx.spTokenizer(modelDir);
+
+    Where ``modelDir`` is a :green:`String`, the directory
+    containing ``tokenizer.json``.
+
+    Return Value:
+        An :green:`Object` with the function ``encodeIds(text)``, as
+        in `onnx.wordPieceTokenizer`_\ .
+
+onnx.initSnacDecoder
+~~~~~~~~~~~~~~~~~~~~
+
+    **Experimental.**  Load a
+    `SNAC <https://github.com/hubertsiuzdak/snac>`_ audio-codec
+    decoder model and return a handle that turns SNAC codes (as
+    produced by speech models such as Orpheus TTS) into 24 kHz audio
+    samples.  The handle has the property ``sampleRate`` (``24000``)
+    and the functions ``decode(codes)``, ``framesToCodes(frames)``,
+    ``decodeFrames(frames)``, ``decodeOrpheus(tokens)`` and
+    ``destroy()``; decoded audio is returned as a ``Float32Array``
+    of samples.  The API may change.
+
+onnx.onnxVersion
+~~~~~~~~~~~~~~~~
+
+    Return the ONNX Runtime version string (e.g. ``"1.27.0"``).
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var v = onnx.onnxVersion();
+
+onnx.runtimeInfo
+~~~~~~~~~~~~~~~~
+
+    Return a :green:`String` describing which runtime the selection
+    ladder picked (see `CPU and GPU (runtime selection)`_\ ) — e.g.
+    ``"built-in CPU"``, or the CUDA runtime directory with the
+    driver version and GPU compute capability.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        rampart.utils.printf("%s\n", onnx.runtimeInfo());
+        /* "/usr/local/rampart/modules/onnx-cu12 (driver CUDA 12.2, sm 89)" */
+
+onnx.getLog / onnx.clearLog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ONNX Runtime warnings and non-fatal errors are captured in an
+    internal buffer rather than printed to stderr.  ``getLog()``
+    returns the captured log as a :green:`String`; ``clearLog()``
+    empties it (``resetLog()`` is an alias, for rampart-llamacpp
+    naming parity).
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var log = onnx.getLog();
+        onnx.clearLog();
+
+Converting a model to float16 or int8
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ONNX embedding and reranking models are usually exported in
+    float32.  For GPU inference a **float16** copy roughly halves the
+    weight size and uses the GPU's tensor cores — usually the fastest
+    ONNX option (the module auto-uses the GPU; see `CPU and GPU
+    (runtime selection)`_\ ).  An **int8** (dynamically quantized) copy
+    is smaller still but is CPU-oriented: ONNX Runtime's CUDA
+    execution provider has sparse int8 kernel coverage, so int8 tends
+    to fall back to the CPU (with CPU⇄GPU copies) and is usually
+    *slower* on the GPU than fp16 — prefer it with ``gpu: false``.
+
+    Conversion is a one-time, offline step using Python's ONNX tooling
+    (not a runtime rampart operation): convert once and place the
+    resulting ``.onnx`` beside the original, then load it like any
+    other model.  Install the tooling into a throwaway virtualenv
+    matching your ``python3``:
+
+    .. code-block:: bash
+
+        python3 -m venv /tmp/onnxconv
+        /tmp/onnxconv/bin/pip install onnxruntime onnx sympy
+
+    **float16** — use ONNX Runtime's transformer optimizer, which
+    inserts/repairs the ``Cast`` nodes that a bare
+    ``onnxconverter_common`` pass gets wrong.  ``opt_level=0`` applies
+    no graph fusions (only the precision change, so outputs do not
+    drift); ``keep_io_types`` leaves the int/float inputs and outputs
+    unchanged; and ``use_external_data_format`` handles weights that
+    exceed protobuf's 2 GB single-file limit:
+
+    .. code-block:: python
+
+        from onnxruntime.transformers.optimizer import optimize_model
+        m = optimize_model("model.onnx", model_type="bert",
+                           opt_level=0, use_gpu=False)
+        m.convert_float_to_float16(keep_io_types=True)
+        m.save_model_to_file("model_fp16.onnx", use_external_data_format=True)
+
+    **int8** — weight-only dynamic quantization (no calibration data
+    needed):
+
+    .. code-block:: python
+
+        from onnxruntime.quantization import quantize_dynamic, QuantType
+        quantize_dynamic("model.onnx", "model_int8.onnx",
+                         weight_type=QuantType.QInt8)
+
+    Then load the result as usual, e.g.
+    ``onnx.initRerank("<dir>/onnx/model_fp16.onnx", {tokenizer: ...})``.
+    A ``.onnx`` saved with external data keeps its weights in a
+    sidecar file (``model_fp16.onnx.data``); keep the two together.
 
 The rampart-faiss module
 ------------------------
@@ -1337,21 +2298,281 @@ decode
     Return Value:
         A :green:`String`, the decoded text.
 
+The rampart-models module
+-------------------------
+
+Loading the module is a simple matter of using the ``require()``
+function:
+
+.. code-block:: javascript
+
+    var models = require("rampart-models");
+
+The module downloads and locates GGUF and ONNX models by short name,
+returning a local path that feeds `initEmbed`_\ , `initRerank`_\ ,
+`initGen`_\ , `onnx.initEmbed`_ / `onnx.initRerank`_ and the
+rampart-sql :ref:`llamaEmbed <sql-set:llamaEmbed>` /
+:ref:`onnxEmbed <sql-set:onnxEmbed>` properties directly:
+
+.. code-block:: javascript
+
+    var models   = require("rampart-models");
+    var onnx     = require("rampart-onnx");
+    var llamacpp = require("rampart-llamacpp");
+
+    var oemb = onnx.initEmbed( models.get("bge-m3") );          // onnx .onnx file
+    var emb  = llamacpp.initEmbed( models.get("bge-m3:q8_0") ); // gguf FILE
+    var gen  = llamacpp.initGen( models.get("qwen3-4b") );      // gen = gguf
+
+Models live under ``~/.rampart/models/<category>/`` (categories:
+``embed``, ``rerank``, ``gen``; plain URLs go to ``other``).  If the
+model is already on disk its path is returned immediately with no
+network access; otherwise it is downloaded from
+`HuggingFace <https://huggingface.co/>`_ with resume, retries and a
+single-line progress display.
+
+A short name is resolved in this order:
+
+1. Already on disk under ``~/.rampart/models/``.
+2. The embedded catalog — ~75 curated models (embedding, reranking
+   and text-generation), each pinned to a specific repository
+   revision.  Embedding entries also record the model's vector
+   dimension and its retrieval prompts, when it has them (see
+   `Retrieval prompt sidecars`_ below).  ``models.list()`` (or
+   ``--list`` on the command line) shows them.
+3. A name containing ``/`` is used as an exact HuggingFace
+   ``org/repo`` — no search.
+4. A live HuggingFace search (exact-name match first, model-family
+   organizations before converter organizations, then quant
+   coverage).  Live resolutions are remembered in
+   ``~/.rampart/models/.resolved.json`` so the same name resolves the
+   same way next time.
+
+models.get()
+~~~~~~~~~~~~
+
+    Resolve (and, if needed, download) a model; return its local path.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var path = models.get(name[, options]);
+
+    Where:
+
+    *  ``name`` is a :green:`String`: a catalog short name
+       (``"bge-m3"``), a short name with a quant suffix
+       (``"bge-m3:q8_0"`` — implies GGUF), an exact HuggingFace
+       ``"org/repo"``, or a full ``https://`` URL (downloaded as-is).
+
+    *  ``options`` is an optional :green:`Object`:
+
+       *  ``format`` - A :green:`String`, ``"onnx"`` or ``"gguf"``.
+          Default: ``"onnx"`` when the model has an ONNX form and is
+          an embedding/reranking model, else ``"gguf"``
+          (text-generation models are GGUF-only).
+
+       *  ``quant`` - A :green:`String`, the GGUF quantization (e.g.
+          ``"Q4_K_M"``, ``"Q8_0"``, ``"F16"``); same meaning as the
+          ``:quant`` name suffix.  When the exact quant isn't
+          available, the closest available one is chosen.
+
+       *  ``precision`` - A :green:`String`, the ONNX weight precision:
+          ``"fp16"`` (the default — half precision, the GPU sweet
+          spot), ``"fp32"`` (full precision, the reference), ``"int8"``
+          or ``"q4"`` (quantized — smaller and often faster on CPU).
+          Since model authors rarely publish every precision in the
+          original repository, the closest converter mirror
+          (``onnx-community/*``, ``Xenova/*``) is searched as well; if
+          the requested precision isn't found anywhere it falls back to
+          ``fp16`` then ``fp32``, printing a notice to stderr.  Ignored
+          for GGUF (use ``quant`` there).
+
+       *  ``category`` - A :green:`String`, the subdirectory under
+          ``~/.rampart/models/`` (default: from the catalog, else
+          ``"embed"``; URLs default to ``"other"``).
+
+       *  ``dest`` - A :green:`String`, an exact destination file or
+          directory, overriding the category layout.
+
+       *  ``progress`` - ``false`` (silent), a
+          :ref:`file handle <rampart-utils:fopen>` to write progress
+          to, or a :green:`Function` called with progress info.
+          Default: single-line progress on stdout.
+
+       *  ``force`` - A :green:`Boolean`, re-download even if the
+          model is already present.  Default: ``false``.
+
+       *  ``token`` - A :green:`String`, a HuggingFace access token
+          for gated repositories.  Default: the ``HF_TOKEN``
+          environment variable.
+
+       *  ``confirm`` - A :green:`Function`, called **only when a
+          download is actually needed** (the model isn't already on
+          disk), so the caller can prompt before a large fetch.  It
+          receives an info :green:`Object`
+          (``{name, format, dest, size, bytes, precision|quant,
+          repo}``) and returns a :green:`Boolean`; a falsy return skips
+          the download and `models.get()`_ returns ``null``.  Omit it
+          for the default silent fetch.  The module never reads stdin
+          itself — any prompt lives in this callback.
+
+       *  ``revision`` - A :green:`String`, the git revision to fetch.
+          Default: the catalog-pinned revision, else ``"main"``.
+
+    Return Value:
+        A :green:`String`: the local path — the ``.onnx`` *file* for
+        ONNX models, a ``.gguf`` *file* for GGUF.  Throws on resolution
+        or download failure.  Returns ``null`` when a ``confirm``
+        callback declines a needed download.
+
+    ``models.pull()`` is an alias of ``models.get()``.
+
+    Note:
+        For an ONNX model the whole usable directory is fetched — the
+        ``.onnx`` file (plus its ``.onnx_data`` weights sidecar when
+        present) alongside the tokenizer and configuration files
+        (``tokenizer.json`` / ``vocab.txt``, ``config.json``,
+        ``1_Pooling/`` etc.) — but the returned path is the ``.onnx``
+        file itself.  `onnx.initEmbed`_ / `onnx.initRerank`_ accept
+        that file directly and auto-discover the tokenizer and
+        configuration from its directory, so it feeds them (and the
+        :ref:`onnxEmbed <sql-set:onnxEmbed>` property) as-is.
+
+models.ggufGet() / models.onnxGet()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Format-explicit variants of `models.get()`_ — the call site then
+    reads as the engine it feeds:
+
+    .. code-block:: javascript
+
+        var emb  = llamacpp.initEmbed( models.ggufGet("bge-m3") );
+        var oemb = onnx.initEmbed(     models.onnxGet("bge-m3") );
+
+models.url()
+~~~~~~~~~~~~
+
+    Download a plain URL into the models directory (or ``dest``) with
+    the same resume/retry/progress machinery; returns the file path.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var path = models.url(theUrl[, options]);
+
+models.resolve()
+~~~~~~~~~~~~~~~~
+
+    Resolve a name to its catalog-shaped entry — repository, pinned
+    revision, available quants, license, category, and (for embedding
+    models) vector dimension and retrieval prompts — **without
+    downloading**.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var entry = models.resolve(name[, options]);
+
+models.list()
+~~~~~~~~~~~~~
+
+    Return the embedded catalog's short names grouped by category
+    (an :green:`Object` of :green:`Arrays`), each annotated with its
+    available formats:
+
+    .. code-block:: javascript
+
+        var l = models.list();
+        /* { embed:  [ "all-minilm-l6-v2 [onnx+gguf]", "bge-m3 [onnx+gguf]", ... ],
+             rerank: [ "ms-marco-minilm-l6-v2 [onnx+gguf]", ... ],
+             gen:    [ "qwen3-4b [gguf]", ... ] }                                  */
+
+    The module also exposes ``models.catalog`` (the raw catalog
+    :green:`Object`) and ``models.modelsDir`` (the
+    ``~/.rampart/models`` path).
+
+Retrieval prompt sidecars
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Many embedding models are *asymmetric*: they expect a short prefix
+    on queries, on documents, or on both (e.g.
+    ``nomic-embed-text-v1.5``'s ``"search_query: "`` /
+    ``"search_document: "``, or the e5 family's ``"query: "`` /
+    ``"passage: "``).  Using such a model without its prompts costs
+    retrieval quality.
+
+    The catalog records each model's published prompts, and every
+    download writes them into a small sidecar file next to the model:
+    ``<file>.gguf.prompts.json`` beside a GGUF file, and
+    ``<name>.prompts.json`` beside an ONNX model directory.  Fetching
+    the path of an already-downloaded model refreshes the sidecar, so
+    models downloaded before this feature gain one on their next
+    ``models.get()``.
+
+    The rampart-sql :ref:`llamaEmbed <sql-set:llamaEmbed>` and
+    :ref:`onnxEmbed <sql-set:onnxEmbed>` settings read the sidecar
+    automatically — ``likev`` queries, ``chunkembed()`` and
+    ``embed(?, 'query'|'document')`` then apply the right prompt with
+    no further configuration.  See :ref:`Retrieval prompts
+    <sql-set:Retrieval prompts>` for how the prompts are applied and
+    how to override or disable them.  Symmetric models (e.g.
+    ``all-minilm-l6-v2``) have no prompts and embed text verbatim.
+
+    The module-level engines embed exactly the text they are given:
+    when calling `initEmbed`_ / `onnx.initEmbed`_ directly, prepending
+    a model's prompts is the caller's responsibility.
+
+Command line
+~~~~~~~~~~~~
+
+    The module doubles as a downloader script:
+
+    .. code-block:: shell
+
+        rampart rampart-models.js bge-m3                # onnx .onnx file (fp16)
+        rampart rampart-models.js bge-m3 onnx fp32      # onnx, full precision
+        rampart rampart-models.js bge-m3 onnx q4        # onnx, 4-bit quantized
+        rampart rampart-models.js bge-m3 gguf Q8_0      # gguf file, chosen quant
+        rampart rampart-models.js qwen3-4b:q4_k_m       # quant suffix
+        rampart rampart-models.js --list                # show the catalog
+
+    The third argument is the ONNX ``precision``
+    (``fp16`` | ``fp32`` | ``int8`` | ``q4``, default ``fp16``) when the
+    format is ``onnx``, or the GGUF ``quant`` otherwise.  The resolved
+    local path is printed on success.  ``--list`` groups the catalog by
+    category, colorizes on a color terminal (plain when piped), and marks
+    already-downloaded models — e.g. ``[installed (onnx fp32, gguf
+    Q4_K_M)]`` — showing the on-disk precision/quant of each.
+
+    Environment: ``HF_TOKEN`` supplies the HuggingFace token for gated
+    repositories; ``HF_ENDPOINT`` overrides the HuggingFace host (for
+    mirrors).  Only HuggingFace's stable URL patterns are used
+    (``api/models``, ``resolve/{revision}/``), never CDN URLs.
+
 Putting It Together
 -------------------
 
-A compact end-to-end example: embed documents, index them, and
-serve semantic search queries.
+A compact end-to-end example: fetch a model, embed documents, index
+them, and serve semantic search queries.  Runs as-is on a fresh
+install — `models.get()`_ downloads the model on first use and
+returns its local path immediately thereafter.
 
 .. code-block:: javascript
 
     rampart.globalize(rampart.utils);
 
+    var models   = require("rampart-models");
     var llamacpp = require("rampart-llamacpp");
     var faiss    = require("rampart-faiss");
 
-    var emb = llamacpp.initEmbed("all-minilm-l6-v2_f16.gguf");
-    var dim = llamacpp.modelInfo("all-minilm-l6-v2_f16.gguf").embedDim;
+    var mdl = models.ggufGet("all-minilm-l6-v2");
+
+    var emb = llamacpp.initEmbed(mdl);
+    var dim = llamacpp.modelInfo(mdl).embedDim;
 
     var docs = [
         "The Eiffel Tower is 330 metres tall.",

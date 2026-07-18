@@ -1,5 +1,5 @@
 The rampart-crypto module
-==============================
+=========================
 
 Preface
 -------
@@ -14,9 +14,9 @@ tool.
 License
 ~~~~~~~
 
-The rampart-crypto module is released under the MIT license. 
-The `OpenSSL <https://www.openssl.org/>`_ library is released under the
-`OpenSSL License <https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/LICENSE>`_\ .
+The rampart-crypto module is released under the MIT license.
+The `OpenSSL <https://www.openssl.org/>`_ 4.0.0 library is released under the
+`Apache License 2.0 <https://github.com/openssl/openssl/blob/openssl-4.0/LICENSE.txt>`_\ .
 
 What does it do?
 ~~~~~~~~~~~~~~~~
@@ -24,8 +24,8 @@ What does it do?
 The rampart-crypto module provides methods to encrypt, decrypt, hash and
 generate HMACs from within Rampart JavaScript.
 It also includes the full libssl and libcrypto libraries and is needed for
-the rampart-curl and rampart-server modules to operate using the https
-protocol.
+the rampart-net, rampart-curl and rampart-server modules to operate using
+TLS and the https protocol.
 
 
 How does it work?
@@ -95,9 +95,31 @@ Where:
     the appropriate length to be used for encrypting the data. ``iv`` can be
     a :green:`Buffer` or a hex encoded :green:`String`.
 
-  * ``iter`` - number of iterations for generating a key and iv from ``pass``. 
+  * ``iter`` - number of iterations for generating a key and iv from ``pass``.
     Default is ``10000``.  If provided, the same value must be passed to
     `decrypt`_ below in order to decrypt the ciphertext.
+
+  * ``aad`` - a :green:`String` or :green:`Buffer`.  Additional
+    authenticated data for AEAD modes (``aes-*-gcm``, ``aes-*-ccm``,
+    ``aes-*-ocb``, ``chacha20-poly1305``).  Bound to the
+    authentication tag but not encrypted.  The same ``aad`` must
+    be passed to `decrypt`_.  Ignored for non-AEAD modes.
+
+  * ``tagLength`` - a :green:`Number`, the AEAD tag length in bytes
+    (default ``16``).  Used only for AEAD modes.  The tag is appended
+    to the ciphertext on encrypt and stripped on decrypt.
+
+Note on AEAD ciphers (``-gcm``, ``-ccm``, ``-ocb``, ``chacha20-poly1305``):
+  Ciphertext output is the encrypted bytes followed by the
+  authentication tag.  ``decrypt`` validates the tag and throws if it
+  fails.  Use ``aad`` to bind unencrypted associated data (e.g. a
+  header).
+
+Note on key-wrap ciphers (``aes-*-wrap``):
+  RFC 3394 key wrapping uses a fixed IV defined by the spec, so the
+  ``iv`` option must not be supplied (an error is thrown).  Input
+  ``data`` must be a multiple of 8 bytes, at least 16 bytes long.
+  Output is the input length plus 8 bytes of integrity overhead.
 
 Return Value:
   A :green:`Buffer` containing the ciphertext (encrypted data).
@@ -131,7 +153,7 @@ Return Value:
     A :green:`Buffer` containing the decrypted text.
     Calling ``crypto.decrypt("password", data)`` produces the same results
     as ``openssl enc -aes-256-cbc -d -pbkdf2  -pass pass:"password" -in myfile.enc``
-    using openssl version 1.1.1 from the command line.
+    using openssl version 4.0.0 from the command line.
 
 Example:
 
@@ -361,6 +383,34 @@ The following cipher/modes are supported in rampart:
 +---------------------+--------------------------------------+
 |aes-128-ofb          |128 bit AES in OFB mode               |
 +---------------------+--------------------------------------+
+|aes-128-gcm          |128 bit AES in GCM mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-192-gcm          |192 bit AES in GCM mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-256-gcm          |256 bit AES in GCM mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-128-ccm          |128 bit AES in CCM mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-192-ccm          |192 bit AES in CCM mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-256-ccm          |256 bit AES in CCM mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-128-ocb          |128 bit AES in OCB mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-192-ocb          |192 bit AES in OCB mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-256-ocb          |256 bit AES in OCB mode (AEAD)        |
++---------------------+--------------------------------------+
+|aes-128-wrap         |128 bit AES key wrap (RFC 3394)       |
++---------------------+--------------------------------------+
+|aes-192-wrap         |192 bit AES key wrap (RFC 3394)       |
++---------------------+--------------------------------------+
+|aes-256-wrap         |256 bit AES key wrap (RFC 3394)       |
++---------------------+--------------------------------------+
+|chacha20             |ChaCha20 stream cipher (no auth tag)  |
++---------------------+--------------------------------------+
+|chacha20-poly1305    |ChaCha20-Poly1305 AEAD (RFC 8439)     |
++---------------------+--------------------------------------+
 
 RSA Encryption
 --------------
@@ -544,6 +594,10 @@ Usage:
 
     var res = crypto.rsa_pub_encrypt(data, public_key[, paddingMode]);
 
+    /* or with options object: */
+
+    var res = crypto.rsa_pub_encrypt(data, public_key, opts);
+
 Where:
 
     * ``data`` is a :green:`String` or :green:`Buffer` with the content to
@@ -552,8 +606,19 @@ Where:
     * ``public_key`` is a :green:`String` or :green:`Buffer` with the content of
       the public key.
 
-    * ``paddingMode`` is an optiona :green:`String` that is one of the
-      following (as described 
+    * ``opts`` is an :green:`Object` for fine-grained OAEP control:
+
+        * ``padding`` - a :green:`String`, same values as ``paddingMode``
+          below.  Default ``"pkcs"``.
+        * ``hash`` - a :green:`String`, the OAEP hash and MGF1 hash
+          name (e.g. ``"sha256"``).  Only used when ``padding`` is
+          ``"oaep"``.  Default is ``"sha1"`` to match openssl's
+          ``-oaep`` behavior.
+        * ``label`` - a :green:`String` or :green:`Buffer`, optional
+          OAEP label.  Must match the value passed to `rsa_priv_decrypt`_.
+
+    * ``paddingMode`` is an optional :green:`String` that is one of the
+      following (as described
       `here <https://www.openssl.org/docs/man1.1.1/man3/RSA_public_encrypt.html>`_):
 
         * ``"pkcs"`` - default if not specified.  Use PKCS #1 v1.5 padding.
@@ -570,17 +635,25 @@ Where:
           implement cryptographically sound padding modes in the application
           code. Encrypting user data directly with RSA is insecure. 
       
-      Note that Openssl Library includes this warning:
-      
-      "Decryption failures in the RSA_PKCS1_PADDING mode leak information
-      which can potentially be used to mount a Bleichenbacher padding oracle
-      attack. This is an inherent weakness in the PKCS #1 v1.5 padding
-      design. Prefer RSA_PKCS1_OAEP_PADDING."  - see 
-      `this document <https://www.openssl.org/docs/man1.1.1/man3/RSA_public_encrypt.html>`_.
+      Note: PKCS #1 v1.5 is vulnerable to Bleichenbacher padding-
+      oracle attacks.  OpenSSL 4.0's decrypt call now silently
+      returns a fake plaintext on bad input instead of an error, so
+      a server using 4.0 no longer leaks the padding-validity signal
+      these attacks need — but only on the decrypting side, and only
+      for the default provider.  Peers still running older OpenSSL
+      remain vulnerable.  For new code, prefer OAEP padding.  See
+      `the OpenSSL 4.0 docs <https://docs.openssl.org/4.0/man3/RSA_public_encrypt/#warnings>`_
+      for details.
 
       Note also that the length of ``data`` cannot be more than the number of bytes of
       the modulus used to create the key pair minus 11 (or minus 42 in the case of
-      ``"oaep"``, or minus 0 in the case of ``raw``).
+      ``"oaep"``, or minus 0 in the case of ``raw``).  Exceeding this limit throws
+      an error naming the actual input length and the computed maximum; ``data``
+      is never silently truncated.  The ``"oaep"`` overhead of
+      42 is for the default SHA-1 hash; if a stronger hash is selected via
+      ``{padding:"oaep", hash:"<name>"}``, the overhead becomes
+      ``2 × hash_output_size + 2`` (e.g. 66 for SHA-256, 98 for SHA-384,
+      130 for SHA-512).
 
 Return Value:
     A :green:`Buffer` containing the encrypted text.
@@ -630,12 +703,16 @@ Usage:
 
     var res = crypto.rsa_priv_decrypt(data, private_key[, paddingMode][, password]);
 
+    /* or with options object: */
+
+    var res = crypto.rsa_priv_decrypt(data, private_key, opts);
+
 Where:
 
     * ``data`` is a :green:`String` or :green:`Buffer` with the content to
       decrypt.
 
-    * ``private_key`` is a :green:`String` or :green:`Buffer` with the contents of the 
+    * ``private_key`` is a :green:`String` or :green:`Buffer` with the contents of the
       private key.
 
     * ``paddingMode`` - a :green:`String`. See above - the same padding mode used to encrypt
@@ -643,6 +720,12 @@ Where:
 
     * ``password`` - a :green:`String`, if ``private_key`` is password
       protected, the password used to encrypt the private key.
+
+    * ``opts`` is an :green:`Object` accepting the same fields as
+      `rsa_pub_encrypt`_: ``padding``, ``hash``, ``label``, plus an
+      optional ``password`` to decrypt ``private_key``.  The
+      ``hash`` and ``label`` values must match those used at encrypt
+      time.
 
 Return Value:
     A :green:`Buffer` containing the decrypted text.
@@ -694,20 +777,38 @@ Usage:
 
     var signature = crypto.rsa_sign(message, private_key[, password]);
 
+    /* or with options object (for PSS, non-default hash, etc.): */
+
+    var signature = crypto.rsa_sign(message, private_key, opts);
+
 Where:
 
     * ``message`` is a :green:`String` or :green:`Buffer` with the content to
       sign.
 
-    * ``private_key`` is a :green:`String` or :green:`Buffer` with the contents of the 
+    * ``private_key`` is a :green:`String` or :green:`Buffer` with the contents of the
       private key.
 
     * ``password`` - a :green:`String`, if ``private_key`` is password
       protected, the password used to encrypt the private key.
 
+    * ``opts`` is an :green:`Object` which may contain:
+
+        * ``padding`` - a :green:`String`, ``"pkcs1"`` (default) or ``"pss"``.
+        * ``hash`` - a :green:`String`, hash name (e.g. ``"sha256"``,
+          ``"sha384"``, ``"sha512"``).  Default is ``"sha256"``.
+        * ``mgfHash`` - a :green:`String`, MGF1 hash name used for
+          PSS.  Defaults to ``hash``.
+        * ``saltLength`` - a :green:`Number`, PSS salt length.
+          ``-1`` (default) = digest length, ``-2`` = maximum, ``0``+ =
+          explicit byte count.
+        * ``password`` - a :green:`String`, the private-key password
+          if encrypted.
+
 Return Value:
-    A :green:`Buffer` with the content of the signature.  Same as 
+    A :green:`Buffer` with the content of the signature.  Same as
     ``openssl dgst -sha256 -sign private_key.pem -out sig msg.txt``
+    (or ``-sigopt rsa_padding_mode:pss`` for PSS signatures).
 
 
 rsa_verify
@@ -722,23 +823,741 @@ Usage:
 
     var crypto = require("rampart-crypto");
 
-    var verified = crypto.rsa_verify(data, public_key, signature);
+    var verified = crypto.rsa_verify(data, public_key, signature[, opts]);
 
 Where:
 
     * ``data`` is a :green:`String` or :green:`Buffer` with the content to
       verify.
 
-    * ``public_key`` is a :green:`String` or :green:`Buffer` with the contents of the 
+    * ``public_key`` is a :green:`String` or :green:`Buffer` with the contents of the
       public key.
 
     * ``signature`` - a :green:`Buffer` containing the signature
       generated with ``rsa_sign`` above, or with openssl.
 
+    * ``opts`` is an :green:`Object` accepting the same ``padding``,
+      ``hash``, ``mgfHash`` and ``saltLength`` fields as `rsa_sign`_.
+      These must match the values used at sign time.
+
 Return Value:
     A :green:`Boolean` - ``true`` if verification succeeded.  Otherwise
     ``false``. Same as 
     ``openssl dgst -sha256 -verify public_key.pem -signature sig msg.txt``.
+
+EC Encryption
+-------------
+
+Elliptic-curve key generation, ECDSA signing/verification, and ECDH
+key agreement on the NIST P-curves (P-256, P-384, P-521).  The
+calling convention and return-shape mirror the `RSA Encryption`_
+functions above — keys are PEM strings, the same positional and
+opts-object forms are accepted, and `rsa_import_priv_key`_-style
+password / rekey support is built in.
+
+ec_gen_key
+~~~~~~~~~~
+
+Generate an EC key pair on a named curve.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var key = crypto.ec_gen_key([curve][, password]);
+
+    /* or with an options object: */
+
+    var key = crypto.ec_gen_key({curve: "P-256", password: "mypass"});
+
+Where:
+
+    * ``curve`` is an optional :green:`String`, one of ``"P-256"``
+      (the default), ``"P-384"`` or ``"P-521"``.  Case-insensitive;
+      the SEC1 aliases ``"prime256v1"``, ``"secp384r1"`` and
+      ``"secp521r1"`` are also accepted.
+
+    * ``password`` is an optional :green:`String` used to encrypt
+      the returned private-key PEMs.  Omit for an unencrypted key.
+
+Return Value:
+    An :green:`Object` with:
+
+      * ``public`` - the public key in PKCS#8 SPKI ``pem`` format.
+      * ``private`` - the private key in PKCS#8 ``pem`` format,
+        encrypted if ``password`` is given.
+      * ``ec_private`` - the private key in the legacy SEC1
+        ``-----BEGIN EC PRIVATE KEY-----`` ``pem`` format, encrypted
+        if ``password`` is given.  This is the analog of RSA's
+        ``rsa_private``.
+
+ec_import_pub_key
+~~~~~~~~~~~~~~~~~
+
+Import an EC public key from PEM, DER, or raw bytes and return the
+canonical SPKI :green:`String` (PEM).
+
+Usage:
+
+.. code-block:: javascript
+
+    var pem = crypto.ec_import_pub_key(public_key[, curve]);
+
+    /* or with an options object: */
+
+    var pem = crypto.ec_import_pub_key({key: raw, curve: "P-256", format: "raw"});
+
+Where:
+
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER SPKI, or raw uncompressed point ``04||X||Y``).  Input
+      format is auto-detected for PEM/DER; raw bytes require an
+      explicit ``curve`` argument.
+
+    * ``curve`` is required when ``public_key`` is raw bytes.
+
+Return Value:
+    A :green:`String` containing the canonical SPKI PEM.
+
+ec_import_priv_key
+~~~~~~~~~~~~~~~~~~
+
+Import an existing EC private key and return both PEM forms (mirrors
+`rsa_import_priv_key`_).  Optionally re-encrypts the returned
+private keys with a new password.
+
+Usage:
+
+.. code-block:: javascript
+
+    var key = crypto.ec_import_priv_key(oldprivate_key[, opts]);
+
+    /* or */
+
+    var key = crypto.ec_import_priv_key(oldprivate_key[, oldpass][, newpass]);
+
+Where:
+
+    * ``oldprivate_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER).  Format is auto-detected.
+    * ``opts`` is an :green:`Object` with the properties
+      ``{decryptPassword: "oldpass", encryptPassword: "newpass"}``.
+      For raw scalar input, also accepts ``{key, curve, format:"raw"}``.
+    * ``oldpass`` is the password to decrypt ``oldprivate_key`` (if
+      encrypted).
+    * ``newpass`` is the optional password to encrypt the returned
+      private-key PEMs.
+
+Return Value:
+    The same shape as `ec_gen_key`_:
+
+      * ``public`` - the public key in PKCS#8 SPKI ``pem`` format.
+      * ``private`` - the private key in PKCS#8 ``pem`` format,
+        encrypted if ``newpass`` is given.
+      * ``ec_private`` - the private key in SEC1 ``pem`` format,
+        encrypted if ``newpass`` is given.
+
+ec_components
+~~~~~~~~~~~~~
+
+Get the component parts of an EC public or private key (mirrors
+`rsa_components`_).
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var components = crypto.ec_components(key);
+
+Return Value:
+    An :green:`Object`.
+
+    If ``key`` is a public key:
+
+        * ``curve`` - a :green:`String`, the curve name (``"P-256"``
+          / ``"P-384"`` / ``"P-521"``).
+        * ``x`` - a :green:`String` with the hex-encoded X-coordinate.
+        * ``y`` - a :green:`String` with the hex-encoded Y-coordinate.
+
+    If ``key`` is a private key, in addition to the above:
+
+        * ``scalar`` - a :green:`String` with the hex-encoded private
+          scalar.
+
+ecdsa_sign
+~~~~~~~~~~
+
+Sign a message with an ECDSA private key.
+
+Usage:
+
+.. code-block:: javascript
+
+    var signature = crypto.ecdsa_sign(message, private_key[, password]);
+
+    /* or with options object (for non-default hash, signature format, etc.): */
+
+    var signature = crypto.ecdsa_sign(message, private_key, opts);
+
+Where:
+
+    * ``message`` is a :green:`String` or :green:`Buffer`, the
+      content to sign.
+    * ``private_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER).
+    * ``password`` is a :green:`String`, the password to decrypt
+      ``private_key`` (if encrypted).
+    * ``opts`` is an :green:`Object` which may contain:
+
+        * ``hash`` - a :green:`String`, hash algorithm name.  Default
+          is ``"sha256"``.
+        * ``format`` - a :green:`String`, ``"der"`` (default) or
+          ``"p1363"``.  ``"der"`` is the standard ASN.1 SEQUENCE
+          used by OpenSSL.  ``"p1363"`` is the fixed-length
+          ``r || s`` form used by Web Crypto and JWS.
+        * ``password`` - same as the positional ``password`` above.
+
+Return Value:
+    A :green:`Buffer` containing the signature.  For ``"p1363"`` the
+    length is ``2 * scalar_size`` (64 / 96 / 132 bytes); ``"der"``
+    sigs vary in length signature to signature.
+
+ecdsa_verify
+~~~~~~~~~~~~
+
+Verify an ECDSA signature.
+
+Usage:
+
+.. code-block:: javascript
+
+    var ok = crypto.ecdsa_verify(data, public_key, signature[, opts]);
+
+Where:
+
+    * ``data`` is a :green:`String` or :green:`Buffer`, the message.
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER).
+    * ``signature`` is a :green:`Buffer`, the signature to verify.
+    * ``opts`` is an :green:`Object` accepting the same ``hash`` and
+      ``format`` fields as `ecdsa_sign`_; both must match the values
+      used at sign time.
+
+Return Value:
+    A :green:`Boolean` - ``true`` if the signature is valid,
+    ``false`` otherwise.
+
+ecdh
+~~~~
+
+Compute an ECDH shared secret.
+
+Usage:
+
+.. code-block:: javascript
+
+    var shared = crypto.ecdh(private_key, public_key[, password]);
+
+    /* or with an options object: */
+
+    var shared = crypto.ecdh({private: priv, public: pub, password: "pw"});
+
+Where:
+
+    * ``private_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER) of an EC private key.
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER) of an EC public key on the same curve.
+    * ``password`` is a :green:`String`, the password to decrypt
+      ``private_key`` (if encrypted).
+
+Return Value:
+    A :green:`Buffer` containing the raw shared X-coordinate (32
+    bytes for P-256, 48 for P-384, 66 for P-521).  The shared secret
+    should normally be passed through a KDF (e.g. `hkdf`_) before
+    use as a symmetric key.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var alice = crypto.ec_gen_key("P-256");
+    var bob   = crypto.ec_gen_key("P-256");
+
+    var sharedA = crypto.ecdh(alice.private, bob.public);
+    var sharedB = crypto.ecdh(bob.private,   alice.public);
+    /* sharedA equals sharedB */
+
+    /* Derive an AES-256 key from the shared secret. */
+    var aesKey = crypto.hkdf({
+        ikm:    sharedA,
+        info:   "aes-256-gcm",
+        length: 32,
+        hash:   "sha256"
+    });
+
+
+X25519 and Ed25519
+------------------
+
+Modern Curve25519-family keys: X25519 for ECDH-style key agreement,
+Ed25519 for signing.  Faster, simpler and more side-channel resistant
+than the NIST P-curves.  Raw keys are always 32 bytes; Ed25519
+signatures are always 64 bytes.
+
+Calling convention mirrors `EC Encryption`_ — positional or opts
+form, keys as PEM strings, password / rekey support.
+
+x25519_gen_key
+~~~~~~~~~~~~~~
+
+Generate an X25519 key pair.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var key = crypto.x25519_gen_key([password]);
+
+    /* or */
+
+    var key = crypto.x25519_gen_key({password: "mypass"});
+
+Where:
+
+    * ``password`` is an optional :green:`String` used to encrypt
+      the returned private-key PEM.
+
+Return Value:
+    An :green:`Object` with:
+
+      * ``public`` - the public key in PKCS#8 SPKI ``pem`` format
+        (44-byte body).
+      * ``private`` - the private key in PKCS#8 ``pem`` format
+        (48-byte body), encrypted if ``password`` is given.
+
+x25519_import_pub_key
+~~~~~~~~~~~~~~~~~~~~~
+
+Import an X25519 public key from PEM, DER, or raw 32-byte point and
+return the canonical SPKI PEM :green:`String`.
+
+Usage:
+
+.. code-block:: javascript
+
+    var pem = crypto.x25519_import_pub_key(public_key);
+
+    /* or with options object (required for raw bytes): */
+
+    var pem = crypto.x25519_import_pub_key({key: raw32, format: "raw"});
+
+Where:
+
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER) of an X25519 public key.
+    * The opts form additionally accepts ``format: "raw"`` for a
+      32-byte u-coordinate buffer.
+
+Return Value:
+    A :green:`String` containing the canonical SPKI PEM.
+
+x25519_import_priv_key
+~~~~~~~~~~~~~~~~~~~~~~
+
+Import an X25519 private key and return both PEM forms (mirrors
+`ec_import_priv_key`_ / `rsa_import_priv_key`_).
+
+Usage:
+
+.. code-block:: javascript
+
+    var key = crypto.x25519_import_priv_key(oldprivate_key[, oldpass[, newpass]]);
+
+    /* or */
+
+    var key = crypto.x25519_import_priv_key(oldprivate_key, {decryptPassword, encryptPassword});
+
+    /* or for raw 32-byte scalar: */
+
+    var key = crypto.x25519_import_priv_key({key: raw32, format: "raw"});
+
+Where:
+
+    * ``oldprivate_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER).
+    * ``oldpass`` is the password to decrypt the input (if encrypted).
+    * ``newpass`` is the optional password to encrypt the returned
+      private-key PEM.
+
+Return Value:
+    An :green:`Object` with ``public`` and ``private`` PEM strings
+    (same shape as `x25519_gen_key`_).
+
+x25519_components
+~~~~~~~~~~~~~~~~~
+
+Get the component parts of an X25519 public or private key.
+
+Usage:
+
+.. code-block:: javascript
+
+    var components = crypto.x25519_components(key);
+
+Return Value:
+    An :green:`Object`.
+
+    If ``key`` is a public key:
+
+        * ``curve`` - a :green:`String`, ``"X25519"``.
+        * ``public`` - a :green:`String`, hex-encoded 32-byte u-coordinate.
+
+    If ``key`` is a private key, in addition:
+
+        * ``private`` - a :green:`String`, hex-encoded 32-byte scalar.
+
+x25519_derive
+~~~~~~~~~~~~~
+
+Compute an X25519 shared secret.
+
+Usage:
+
+.. code-block:: javascript
+
+    var shared = crypto.x25519_derive(private_key, public_key[, password]);
+
+    /* or with options object: */
+
+    var shared = crypto.x25519_derive({private: priv, public: pub, password: "pw"});
+
+Where:
+
+    * ``private_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER) of an X25519 private key.
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER) of an X25519 public key.
+    * ``password`` is a :green:`String`, the password to decrypt
+      ``private_key`` (if encrypted).
+
+Return Value:
+    A :green:`Buffer` containing the 32-byte shared secret.  Should
+    normally be passed through a KDF (e.g. `hkdf`_) before use as a
+    symmetric key.
+
+ed25519_gen_key
+~~~~~~~~~~~~~~~
+
+Generate an Ed25519 key pair.  Same options and return shape as
+`x25519_gen_key`_.
+
+ed25519_import_pub_key
+~~~~~~~~~~~~~~~~~~~~~~
+
+Import an Ed25519 public key.  Same call shape as `x25519_import_pub_key`_.
+
+ed25519_import_priv_key
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Import an Ed25519 private key.  Same call shape as `x25519_import_priv_key`_.
+
+ed25519_components
+~~~~~~~~~~~~~~~~~~
+
+Get the component parts of an Ed25519 key.  Same shape as
+`x25519_components`_, but ``curve`` is ``"Ed25519"`` and the ``public``
+hex is the compressed point encoding.
+
+ed25519_sign
+~~~~~~~~~~~~
+
+Sign a message with an Ed25519 private key.  Ed25519 is a "pure"
+signature scheme — no hash parameter; the full message is signed
+directly.
+
+Usage:
+
+.. code-block:: javascript
+
+    var signature = crypto.ed25519_sign(message, private_key[, password]);
+
+Where:
+
+    * ``message`` is a :green:`String` or :green:`Buffer`.
+    * ``private_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER).
+    * ``password`` is the password to decrypt ``private_key`` (if
+      encrypted).
+
+Return Value:
+    A :green:`Buffer` containing the 64-byte signature.
+
+ed25519_verify
+~~~~~~~~~~~~~~
+
+Verify an Ed25519 signature.
+
+Usage:
+
+.. code-block:: javascript
+
+    var ok = crypto.ed25519_verify(data, public_key, signature);
+
+Where:
+
+    * ``data`` is a :green:`String` or :green:`Buffer`.
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer` (DER).
+    * ``signature`` is a :green:`Buffer`, the 64-byte signature.
+
+Return Value:
+    A :green:`Boolean` - ``true`` if valid, ``false`` otherwise.
+
+
+X448 and Ed448
+--------------
+
+Curve448 family — higher security strength (~224 bits) than the 25519
+family (~128 bits), at the cost of larger keys and signatures.  Call
+shapes are identical to `X25519 and Ed25519`_ — substitute ``x448``
+for ``x25519`` and ``ed448`` for ``ed25519`` in any function name and
+the semantics carry over.  The functions provided are:
+
+  * ``x448_gen_key([password])`` — same shape as `x25519_gen_key`_.
+  * ``x448_import_pub_key(pub)`` — same shape as `x25519_import_pub_key`_.
+  * ``x448_import_priv_key(priv[, oldpass[, newpass]])`` — same shape
+    as `x25519_import_priv_key`_.
+  * ``x448_components(key)`` — returns ``{curve:"X448", public, private?}``;
+    raw scalar/u-coordinate is 56 bytes (112 hex chars).
+  * ``x448_derive(private_key, public_key[, password])`` — returns
+    a 56-byte shared secret.
+  * ``ed448_gen_key([password])``, ``ed448_import_pub_key(pub)``,
+    ``ed448_import_priv_key(priv[, oldpass[, newpass]])``,
+    ``ed448_components(key)``,
+    ``ed448_sign(message, private_key[, password])``,
+    ``ed448_verify(data, public_key, signature)``.
+  * Ed448 raw keys are 57 bytes (compressed point / seed); Ed448
+    signatures are 114 bytes.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* X448 key agreement */
+    var alice = crypto.x448_gen_key();
+    var bob   = crypto.x448_gen_key();
+    var shared = crypto.x448_derive(alice.private, bob.public);   /* 56 bytes */
+
+    /* Ed448 sign/verify */
+    var keys = crypto.ed448_gen_key();
+    var sig = crypto.ed448_sign("message", keys.private);          /* 114 bytes */
+    var ok  = crypto.ed448_verify("message", keys.public, sig);
+
+
+Post-Quantum (ML-KEM, ML-DSA)
+-----------------------------
+
+NIST-standardized post-quantum primitives (FIPS 203 and 204).  Use
+these alongside classical algorithms in hybrid schemes for forward
+security against future quantum attacks.
+
+ML-KEM (Key Encapsulation Mechanism)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+NIST FIPS 203, formerly CRYSTALS-Kyber.  A key encapsulation
+mechanism, not a key agreement — the sender derives a shared secret
+*and* a ciphertext from the recipient's public key in one call; the
+recipient runs the ciphertext through their private key to recover
+the same shared secret.
+
+Three variants, listed with their security strength (roughly the
+equivalent of an AES key size against quantum attack):
+
+  * ``"ml-kem-512"``  — ~AES-128 equivalent.  Public 800 B, ciphertext 768 B.
+  * ``"ml-kem-768"``  — ~AES-192 equivalent.  Public 1184 B, ciphertext 1088 B.
+  * ``"ml-kem-1024"`` — ~AES-256 equivalent.  Public 1568 B, ciphertext 1568 B.
+
+The shared secret is always 32 bytes.
+
+mlkem_gen_key
+^^^^^^^^^^^^^
+
+Generate an ML-KEM key pair.
+
+Usage:
+
+.. code-block:: javascript
+
+    var keys = crypto.mlkem_gen_key(variant[, password]);
+
+Where:
+
+    * ``variant`` is a :green:`String`, one of ``"ml-kem-512"``,
+      ``"ml-kem-768"``, ``"ml-kem-1024"`` (case-insensitive).
+    * ``password`` is an optional :green:`String` used to encrypt
+      the returned private-key PEM.
+
+Return Value:
+    An :green:`Object` with ``public`` and ``private`` PEM strings
+    (same shape as `rsa_gen_key`_).
+
+mlkem_encapsulate
+^^^^^^^^^^^^^^^^^
+
+Generate a ciphertext + shared secret from a recipient's public key.
+
+Usage:
+
+.. code-block:: javascript
+
+    var out = crypto.mlkem_encapsulate(public_key);
+    /* out.ciphertext — to send to the recipient
+     * out.sharedSecret — to use locally as the shared key  */
+
+Where:
+
+    * ``public_key`` is a :green:`String` (PEM) or :green:`Buffer`
+      (DER) of an ML-KEM public key.
+
+Return Value:
+    An :green:`Object` with two :green:`Buffers`:
+
+      * ``ciphertext`` — the encapsulated bytes to transmit to the
+        recipient (variant-specific size).
+      * ``sharedSecret`` — the 32-byte shared secret to use locally.
+
+mlkem_decapsulate
+^^^^^^^^^^^^^^^^^
+
+Recover the shared secret from a ciphertext using the recipient's
+private key.
+
+Usage:
+
+.. code-block:: javascript
+
+    var shared = crypto.mlkem_decapsulate(ciphertext, private_key[, password]);
+
+Where:
+
+    * ``ciphertext`` is a :green:`Buffer`, as produced by
+      `mlkem_encapsulate`_.
+    * ``private_key`` is a :green:`String` (PEM) or :green:`Buffer` (DER).
+    * ``password`` is the password to decrypt ``private_key`` (if
+      encrypted).
+
+Return Value:
+    A 32-byte :green:`Buffer` containing the shared secret.
+
+    Note: ML-KEM is IND-CCA2.  Decapsulating with a *wrong* private
+    key does **not** throw — it deterministically returns a
+    pseudo-random secret derived from the key and ciphertext.  This
+    is "implicit rejection" by design; if the secret then fails to
+    decrypt downstream traffic, the attacker can't tell whether the
+    failure was due to wrong key vs. wrong padding.
+
+mlkem_import_pub_key / mlkem_import_priv_key / mlkem_components
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Same call shapes as the corresponding `x25519_import_pub_key`_ /
+`x25519_import_priv_key`_ / `x25519_components`_.  ``_components``
+returns ``{variant, public, private?}`` with raw bytes as hex
+strings; the ``variant`` field is the OpenSSL form (``"ML-KEM-768"``).
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* Alice (sender side) */
+    var bobPub = /* received Bob's public key */;
+    var out = crypto.mlkem_encapsulate(bobPub);
+    sendToBob(out.ciphertext);
+    var aliceShared = out.sharedSecret;
+
+    /* Bob (recipient side) */
+    var bobKey = /* Bob's loaded private key */;
+    var bobShared = crypto.mlkem_decapsulate(receivedCt, bobKey.private);
+    /* aliceShared == bobShared */
+
+
+ML-DSA (Module-Lattice Digital Signature Algorithm)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+NIST FIPS 204, formerly CRYSTALS-Dilithium.  Post-quantum digital
+signatures.  Like Ed25519, ML-DSA is a "pure" signature scheme — no
+hash parameter; the full message is signed directly.
+
+Three variants:
+
+  * ``"ml-dsa-44"`` — ~AES-128 equivalent.  Public 1312 B, signature 2420 B.
+  * ``"ml-dsa-65"`` — ~AES-192 equivalent.  Public 1952 B, signature 3309 B.
+  * ``"ml-dsa-87"`` — ~AES-256 equivalent.  Public 2592 B, signature 4627 B.
+
+Note that ML-DSA signing is non-deterministic — same key + same
+message produces different signatures on different invocations (the
+algorithm samples fresh randomness internally).
+
+mldsa_gen_key
+^^^^^^^^^^^^^
+
+Usage:
+
+.. code-block:: javascript
+
+    var keys = crypto.mldsa_gen_key(variant[, password]);
+
+Same shape as `mlkem_gen_key`_ — variant string + optional password,
+returns ``{public, private}`` PEMs.
+
+mldsa_sign
+^^^^^^^^^^
+
+Usage:
+
+.. code-block:: javascript
+
+    var sig = crypto.mldsa_sign(message, private_key[, password]);
+
+Same call shape as `ed25519_sign`_.
+
+mldsa_verify
+^^^^^^^^^^^^
+
+Usage:
+
+.. code-block:: javascript
+
+    var ok = crypto.mldsa_verify(data, public_key, signature);
+
+Same call shape as `ed25519_verify`_.
+
+mldsa_import_pub_key / mldsa_import_priv_key / mldsa_components
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Same shapes as the corresponding ML-KEM functions above.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var keys = crypto.mldsa_gen_key("ml-dsa-65");
+    var sig = crypto.mldsa_sign("the message", keys.private);
+    var ok  = crypto.mldsa_verify("the message", keys.public, sig);
+
 
 gen_csr
 ~~~~~~~
@@ -804,8 +1623,306 @@ Example:
         }
         /* , "password" */
     );
-    /* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */ 
+    /* csr == {pem: pem_formatted_csr, der: der_formatted_csr} */
 
+gen_cert
+~~~~~~~~
+
+Generate a self-signed X509v3 certificate and RSA private key.  This is
+the equivalent of running
+``openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem``
+from the command line.  The generated certificate is suitable for use with
+web servers such as nginx or the rampart-server module.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert(options);
+
+    /* or */
+
+    var res = crypto.gen_cert(subject_string[, options]);
+
+Where:
+
+* ``options`` is an :green:`Object` which may contain the following properties:
+
+  Subject properties (all optional :green:`Strings`):
+
+    * ``name`` - The "Common Name" (CN), usually the relevant domain name.
+    * ``country`` - A two letter country code (e.g. ``US`` or ``DE``).
+    * ``state`` - State or Province name.
+    * ``city`` - The locality or city of your organization.
+    * ``organization`` - The full legal name of your organization.
+    * ``organizationUnit`` - The department of your organization.
+    * ``email`` - Contact email address.
+
+  Certificate options:
+
+    * ``bits`` - a :green:`Number`, the RSA key size in bits.  Default is ``2048``.
+    * ``days`` - a :green:`Number`, the number of days the certificate is valid.  Default is ``365``.
+
+  Extension properties:
+
+    * ``basicConstraints`` - a :green:`String`, the value for the X509v3 Basic Constraints
+      extension.  Default is ``"CA:FALSE"``.
+    * ``keyUsage`` - a :green:`String`, the value for the X509v3 Key Usage extension.
+      Default is ``"digitalSignature, keyEncipherment"``.
+    * ``subjectAltName`` - a :green:`String` or :green:`Array` of :green:`Strings`,
+      the Subject Alternative Name entries for the certificate.
+    * ``subjectAltNameType`` - a :green:`String`, the type prefix for ``subjectAltName``
+      entries.  One of ``"dns"`` (the default), ``"ip"``, ``"email"`` or ``"uri"``
+      (case insensitive).  For web server certificates, ``"dns"`` should be used.
+
+* ``subject_string`` is a :green:`String` specifying the certificate subject in the
+  format used by ``openssl req -subj``, e.g. ``"/C=US/ST=Delaware/O=My Org/CN=example.com"``.
+  Standard OpenSSL short names are accepted (``C``, ``ST``, ``L``, ``O``, ``OU``, ``CN``,
+  ``emailAddress``, etc.).  When using this form, certificate and extension options may be
+  passed in an optional second argument ``options`` :green:`Object` (the subject properties
+  listed above are ignored in that case).
+
+Return Value:
+    An :green:`Object` with the following properties:
+
+      * ``key`` - a :green:`String`, the generated RSA private key in PEM format.
+      * ``cert`` - a :green:`String`, the generated self-signed certificate in PEM format.
+
+Example using an :green:`Object`:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert({
+        country: "US",
+        state: "Delaware",
+        city: "Wilmington",
+        organization: "My Company",
+        name: "example.com",
+        bits: 2048,
+        days: 365,
+        subjectAltName: ["example.com", "*.example.com"]
+    });
+
+    /* write key and cert to files for use with a web server */
+    rampart.utils.fprintf("/path/to/server.key", "%s", res.key);
+    rampart.utils.fprintf("/path/to/server.crt", "%s", res.cert);
+
+Example using a subject :green:`String`:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert(
+        "/C=US/ST=Delaware/L=Wilmington/O=My Company/CN=example.com",
+        {
+            days: 730,
+            subjectAltName: ["example.com", "*.example.com"]
+        }
+    );
+
+    rampart.utils.fprintf("/path/to/server.key", "%s", res.key);
+    rampart.utils.fprintf("/path/to/server.crt", "%s", res.cert);
+
+Example for use with the rampart-server module:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+    var server = require("rampart-server");
+
+    var certdir = process.scriptPath + "/certs";
+    var keyfile = certdir + "/server.key";
+    var certfile = certdir + "/server.crt";
+
+    /* generate certs if they don't exist */
+    if(!rampart.utils.stat(keyfile) || !rampart.utils.stat(certfile))
+    {
+        rampart.utils.mkdir(certdir);
+        var res = crypto.gen_cert({
+            name: "localhost",
+            subjectAltName: ["localhost", "*.localhost"]
+        });
+        rampart.utils.fprintf(keyfile, "%s", res.key);
+        rampart.utils.fprintf(certfile, "%s", res.cert);
+    }
+
+    server.start({
+        bind: "0.0.0.0:8443",
+        secure: true,
+        sslKeyFile: keyfile,
+        sslCertFile: certfile,
+        map: {
+            "/": function(req) { return {text: "Hello, HTTPS!"}; }
+        }
+    });
+
+cert_info
+~~~~~~~~~
+
+Parse a PEM formatted X509 certificate and return its details.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var info = crypto.cert_info(pem);
+
+Where:
+
+    * ``pem`` is a :green:`String` or :green:`Buffer` containing the PEM formatted
+      certificate.
+
+Return Value:
+    An :green:`Object` with properties describing the certificate, including
+    ``version``, ``serialNumber``, ``issuer``, ``subject``, ``notBefore``,
+    ``notAfter``, ``extensions`` and other fields as available in the certificate.
+    Note that ``notBefore`` and ``notAfter`` are JavaScript :green:`Date` objects
+    (shown below as strings due to JSON serialization).
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.gen_cert("/CN=example.com/O=My Company");
+    var info = crypto.cert_info(res.cert);
+
+    rampart.utils.printf("%3J\n", info);
+
+    /* sample output (abbreviated):
+    {
+       "version": 2,
+       "serialNumber": "...",
+       "issuer": "O=My Company, CN=example.com",
+       "subject": "O=My Company, CN=example.com",
+       "notBefore": "2026-03-10T00:00:00.000Z",
+       "notAfter": "2027-03-10T00:00:00.000Z",
+       "extensions": {
+          "X509v3 Basic Constraints": "CA:FALSE",
+          "X509v3 Key Usage": "Digital Signature, Key Encipherment"
+       }
+    }
+    */
+
+Password
+--------
+
+passwd
+~~~~~~
+
+Compute a salt/password entry using a standard algorithm. 
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var pwentry = crypto.passwd(pass[, salt[, algo]]);
+
+Where
+
+    * ``pass`` is a :green:`String`, the password to be hashed.
+
+    * ``salt`` is a :green:`String`, the salt to use to create the hash, or
+      ``null`` to generate a salt.
+
+    * ``algo`` is a :green:`String`, one of ``sha512`` (default),
+      ``sha256``, ``md5``, ``apr1``, ``aixmd5``, or ``crypt``.
+
+Return Value:
+    An :green:`Object` with keys ``line``, ``salt``, ``hash`` and ``mode``.
+
+See example below in `passwdCheck`_\ .
+
+passwdComponents
+~~~~~~~~~~~~~~~~
+
+Given a hash entry from a file such as ``/etc/passwd`` or ``/etc/shadow``,
+return the components.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var components = crypto.passwdComponents(line);
+
+Return Value:
+    Same as `passwd`_ above.
+
+passwdCheck
+~~~~~~~~~~~
+
+Given a hash entry and a password, check if they match.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var passok = crypto.passwdCheck(line, passwd);
+
+Where:
+
+    * ``line`` is a :green:`String`, the ``line`` property from the return of `passwd`_ or a
+      hash entry from a file such as ``/etc/passwd`` or ``/etc/shadow``.
+
+    * ``passwd`` is a :green:`String`, the password to check.
+
+Return Value:
+    a :green:`Boolean`, ``true`` if the password matches the hash.  Otherwise ``false``.
+
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+    var pw = crypto.passwd("mypasswd", null, "md5");
+    rampart.utils.printf("%3J\n", pw);
+
+    /* Sample Output:
+        {
+           "line": "$1$YR/UxoNq$cSEfWsMQH5OC7xY/AYM8S1",
+           "salt": "YR/UxoNq",
+           "hash": "cSEfWsMQH5OC7xY/AYM8S1",
+           "mode": "md5"
+        }
+    */
+
+    var line="$1$epCdp7c5$QROtiBBauvN/HPi5e22ty1";
+    var components = crypto.passwdComponents(line);
+    rampart.utils.printf("%3J\n", components);
+
+    /* Expected Output:
+        {
+           "line": "$1$epCdp7c5$QROtiBBauvN/HPi5e22ty1",
+           "salt": "epCdp7c5",
+           "hash": "QROtiBBauvN/HPi5e22ty1",
+           "mode": "md5"
+        }
+    */
+
+
+    if(crypto.passwdCheck(line, "mypasswd"))
+        console.log("password ok");
+    else
+        console.log("password fail");
+
+    /* Expected Output:
+        password ok
+    */
 
 Hashing
 -------
@@ -824,7 +1941,7 @@ Usage:
 
     var crypto = require("rampart-crypto");
 
-    var res = hash(data[, hash_func][, return_buffer]);
+    var res = hash(data[, hash_func][, return_option]);
 
 Where:
 
@@ -838,11 +1955,28 @@ Where:
   ``rmd160``, ``sha512-224``, ``sha512-256``, ``shake128``, ``shake256``,
   ``sm3``. Default is ``sha256``.
 
-* return_buffer is a :green:`Boolean`, if ``true``, the output will be
-  binary data in a :green:`Buffer`, and not hex encoded.
+* ``return_option`` controls the type of the returned value. It may be
+  either a :green:`Boolean` or an :green:`Object`:
+
+    * If omitted or :green:`false`, returns a hex-encoded :green:`String`
+      (the default).
+    * If :green:`true`, returns a raw :green:`Uint8Array`. This is the
+      historical "raw" form.
+    * If an options :green:`Object` of the form
+      ``{returnType: "hex" | "uint8array" | "buffer"}``:
+
+        * ``"hex"`` — hex-encoded :green:`String` (same as default).
+        * ``"uint8array"`` — raw :green:`Uint8Array` (same as ``true``).
+        * ``"buffer"`` — a node-style :green:`Buffer` (a ``Uint8Array``
+          subclass with node's prototype methods, e.g.
+          ``buf.toString('hex')``, ``buf.toString('base64')``,
+          ``buf.indexOf(...)``).  Used by ``rampart-nodeshim`` for
+          node-compatible code.
 
 Return Value:
-    A :green:`String` or :green:`Buffer`, the hash of the data.
+    A :green:`String`, :green:`Uint8Array`, or :green:`Buffer`,
+    depending on ``return_option`` above. Default is hex
+    :green:`String`.
 
 
 Example:
@@ -852,10 +1986,11 @@ Example:
     var crypto = require("rampart-crypto");
 
     var res = crypto.hash("hello world", "sha256");
+    /* res == 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9' */
 
-    /* 
-        res == 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'
-    */
+    /* As a node-style Buffer (so .toString('base64') etc. work): */
+    var buf = crypto.hash("hello world", "sha256", {returnType: "buffer"});
+    var b64 = buf.toString('base64');
 
 alias functions
 ~~~~~~~~~~~~~~~
@@ -879,7 +2014,7 @@ Usage:
 
     var crypto = require("rampart-crypto");
 
-    var res = crypto.hmac(secret, data[, hash_func][, return_buffer]);
+    var res = crypto.hmac(secret, data[, hash_func][, return_option]);
 
 Where:
 
@@ -895,19 +2030,28 @@ Where:
       ``rmd160``, ``sha512-224``, ``sha512-256``,
       ``sm3``. Default is ``sha256``.
 
-    * return_buffer is a :green:`Boolean`, if ``true``, the output will be
-      binary data in a :green:`Buffer`, and not hex encoded.
+    * ``return_option`` controls the type of the returned value. It
+      may be either a :green:`Boolean` or an :green:`Object`:
+
+        * If omitted or :green:`false`, returns a hex-encoded
+          :green:`String` (the default).
+        * If :green:`true`, returns a raw :green:`Uint8Array`.
+        * If an options :green:`Object` of the form
+          ``{returnType: "hex" | "uint8array" | "buffer"}``, selects
+          the corresponding return shape.  ``"buffer"`` yields a
+          node-style :green:`Buffer` (used by ``rampart-nodeshim``).
 
 Return Value:
-    A :green:`String` or :green:`Buffer`, the hmac hash of the data.
+    A :green:`String`, :green:`Uint8Array`, or :green:`Buffer`,
+    depending on ``return_option``.
 
-Random
-------
-
-rand
+kmac
 ~~~~
 
-The ``rand()`` function returns random generated bytes in a buffer.
+KMAC-128 / KMAC-256 (NIST SP 800-185) — a KECCAK-based MAC with an
+optional customization string for domain separation.  Built on the
+SHA-3 sponge, so faster than HMAC-SHA-3 and with arbitrary output
+length.
 
 Usage:
 
@@ -915,12 +2059,312 @@ Usage:
 
     var crypto = require("rampart-crypto");
 
-    var res = crypto.rand(nBytes);
+    var tag = crypto.kmac(key, data[, variant][, opts]);
 
-Where ``nBytes`` is the number of bytes to return.
+Where:
+
+    * ``key`` is a :green:`String` or :green:`Buffer`.  Minimum
+      length 4 bytes (OpenSSL constraint).  ≥16 bytes recommended
+      for KMAC-128, ≥32 bytes recommended for KMAC-256 to match
+      the variant's security strength.
+    * ``data`` is a :green:`String` or :green:`Buffer`.
+    * ``variant`` is an optional :green:`String`, ``"kmac-128"``
+      (default) or ``"kmac-256"`` (case-insensitive; ``"kmac128"`` /
+      ``"kmac256"`` also accepted).
+    * ``opts`` is an :green:`Object` with:
+
+        * ``length`` - a :green:`Number`, output bytes.  Default
+          is 32 for KMAC-128 and 64 for KMAC-256 (the variant's
+          natural security strength).
+        * ``customization`` - a :green:`String` or :green:`Buffer`,
+          domain-separation string (S in NIST notation).
+        * ``returnType`` - optional :green:`String`, same as for
+          `pbkdf2`_.
 
 Return Value:
-    a :green:`Buffer` with ``nBytes`` bytes of random data.
+    A :green:`Uint8Array` of ``length`` bytes by default, or a hex
+    :green:`String` / Node :green:`Buffer` depending on
+    ``returnType``.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* NIST SP 800-185 KMAC128 sample #1 */
+    var key = Buffer.alloc(32);
+    for (var i = 0; i < 32; i++) key[i] = 0x40 + i;
+    var tag = crypto.kmac(key, Buffer.from([0,1,2,3]), "kmac-128",
+                          {returnType: "hex"});
+    /* tag == "E5780B0D3EA6F7D3A429C5706AA43A00FADBD7D49628839E3187243F456EE14E" */
+
+cshake128 / cshake256
+~~~~~~~~~~~~~~~~~~~~~
+
+Customizable SHAKE (NIST SP 800-185) — like the regular
+`hash`_ ``shake128``/``shake256`` XOFs, but with an optional function-name
+N and customization S string for domain separation.  With both
+strings empty, cSHAKE-X is identical to SHAKE-X.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var bytes = crypto.cshake128(data[, opts]);
+    var bytes = crypto.cshake256(data[, opts]);
+
+Where:
+
+    * ``data`` is a :green:`String` or :green:`Buffer`.
+    * ``opts`` is an :green:`Object` with:
+
+        * ``length`` - a :green:`Number`, output bytes.  Default
+          16 for cSHAKE-128, 32 for cSHAKE-256 (matching the
+          underlying SHAKE defaults).
+        * ``customization`` - a :green:`String` or :green:`Buffer`,
+          the S parameter for domain separation.
+        * ``functionName`` - a :green:`String` or :green:`Buffer`,
+          the N parameter (typically reserved by other NIST functions
+          built on cSHAKE, such as KMAC).
+        * ``returnType`` - optional :green:`String`, same as for
+          `pbkdf2`_.
+
+Return Value:
+    A :green:`Uint8Array` of ``length`` bytes by default.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* NIST SP 800-185 cSHAKE-128 sample #2 */
+    var X = []; for (var i = 0; i <= 0xC7; i++) X.push(i);
+    var out = crypto.cshake128(Buffer.from(X),
+        {length: 32, customization: "Email Signature", returnType: "hex"});
+    /* out == "c5221d50e4f822d96a2e8881a961420f294b7b24fe3d2094baed2c6524cc166b" */
+
+Key Derivation
+--------------
+
+pbkdf2
+~~~~~~
+
+PBKDF2 (RFC 2898) — derive a key from a password by repeatedly
+applying an HMAC.  Suitable for password storage and for stretching
+human-typed secrets into symmetric keys.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var dk = crypto.pbkdf2(opts);
+
+Where:
+
+    * ``opts`` is an :green:`Object` with:
+
+        * ``pass`` - a :green:`String` or :green:`Buffer`, the
+          password.
+        * ``salt`` - a :green:`String` or :green:`Buffer`, the salt
+          (at least 16 bytes is recommended).
+        * ``iter`` - a :green:`Number`, the iteration count.
+        * ``length`` - a :green:`Number`, the derived-key length in
+          bytes.
+        * ``hash`` - a :green:`String`, HMAC hash name (e.g.
+          ``"sha256"``, ``"sha512"``).
+        * ``returnType`` - optional :green:`String`, one of ``"hex"``
+          (hex :green:`String`), ``"uint8array"`` (:green:`Uint8Array`,
+          the default) or ``"buffer"`` (node-style :green:`Buffer`,
+          used by ``rampart-nodeshim``).
+
+Return Value:
+    A :green:`Uint8Array` of ``length`` bytes by default; a hex
+    :green:`String` if ``returnType: "hex"``; or a :green:`Buffer` if
+    ``returnType: "buffer"``.  Same output as
+    ``openssl kdf -keylen <length> -kdfopt digest:<hash> -kdfopt pass:<pass>
+    -kdfopt salt:<salt> -kdfopt iter:<iter> PBKDF2``.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* RFC 6070 test vector #2 */
+    var dk = crypto.pbkdf2({
+        pass: "password",
+        salt: "salt",
+        iter: 2,
+        length: 20,
+        hash: "sha1",
+        returnType: "hex"
+    });
+    /* dk == "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957" */
+
+hkdf
+~~~~
+
+HKDF (RFC 5869) — extract-and-expand key derivation.  Suitable for
+deriving symmetric keys from high-entropy input keying material
+(e.g. an `ecdh`_ shared secret).  Not designed for password input —
+use `pbkdf2`_ for that.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var okm = crypto.hkdf(opts);
+
+Where:
+
+    * ``opts`` is an :green:`Object` with:
+
+        * ``ikm`` - a :green:`String` or :green:`Buffer`, the input
+          keying material.
+        * ``salt`` - optional :green:`String` or :green:`Buffer`.  May
+          be omitted or empty.
+        * ``info`` - optional :green:`String` or :green:`Buffer`,
+          contextual information binding the derived key to a
+          specific purpose.
+        * ``length`` - a :green:`Number`, the derived-key length
+          (max ``255 * hash_digest_size``).
+        * ``hash`` - a :green:`String`, the underlying hash name.
+        * ``returnType`` - optional :green:`String`, same as `pbkdf2`_.
+
+Return Value:
+    A :green:`Uint8Array` of ``length`` bytes (or a hex :green:`String`
+    if ``returnType: "hex"``).
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* Derive a 32-byte AES key from an ECDH shared secret. */
+    var alice = crypto.ec_gen_key({curve: "P-256"});
+    var bob   = crypto.ec_gen_key({curve: "P-256"});
+    var sharedSecret = crypto.ecdh({
+        privateKey: alice.privateKey,
+        publicKey:  bob.publicKey
+    });
+    var aesKey = crypto.hkdf({
+        ikm:    sharedSecret,
+        info:   "aes-256-gcm key",
+        length: 32,
+        hash:   "sha256"
+    });
+
+scrypt
+~~~~~~
+
+Memory-hard password-based KDF (RFC 7914).  Like `pbkdf2`_, designed
+for stretching human-typed secrets — but tuned so that brute-force
+hardware (GPUs, ASICs) gains less advantage thanks to the large
+working memory each derivation requires.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var dk = crypto.scrypt(opts);
+
+Where:
+
+    * ``opts`` is an :green:`Object` with:
+
+        * ``pass`` - a :green:`String` or :green:`Buffer`, the
+          password.
+        * ``salt`` - a :green:`String` or :green:`Buffer`, the salt
+          (at least 16 bytes recommended).
+        * ``N`` - a :green:`Number`, the CPU/memory cost factor.  Must
+          be a power of two ≥ 2.  Typical: ``16384`` (interactive),
+          ``1048576`` (sensitive storage).
+        * ``r`` - a :green:`Number`, the block size.  Usually ``8``.
+        * ``p`` - a :green:`Number`, the parallelization factor.
+          Usually ``1``.
+        * ``length`` - a :green:`Number`, the derived-key length in
+          bytes.
+        * ``returnType`` - optional :green:`String`, same as `pbkdf2`_.
+
+Return Value:
+    A :green:`Uint8Array` of ``length`` bytes by default; a hex
+    :green:`String` if ``returnType: "hex"``; or a :green:`Buffer` if
+    ``returnType: "buffer"``.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    /* RFC 7914 Test Vector 3 */
+    var dk = crypto.scrypt({
+        pass: "pleaseletmein",
+        salt: "SodiumChloride",
+        N: 16384, r: 8, p: 1,
+        length: 64,
+        returnType: "hex"
+    });
+    /* dk == "7023bdcb3afd7348..." (128 hex chars) */
+
+Random
+------
+
+rand
+~~~~
+
+The ``rand()`` function returns random generated bytes.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var res = crypto.rand(nBytes[, return_option]);
+
+Where:
+
+    * ``nBytes`` is the number of bytes to return.
+
+    * ``return_option`` controls the type of the returned value. When
+      omitted, ``rand()`` returns a raw :green:`Uint8Array` (historical
+      default — note this is unlike ``hash`` / ``hmac``, which default
+      to hex). It may also be:
+
+        * :green:`true` — same as omitted (raw :green:`Uint8Array`).
+        * :green:`false` — returns a hex-encoded :green:`String`.
+        * An options :green:`Object` of the form
+          ``{returnType: "hex" | "uint8array" | "buffer"}`` to select
+          the return shape. ``"buffer"`` returns a node-style
+          :green:`Buffer` (used by ``rampart-nodeshim``).
+
+Return Value:
+    A :green:`Uint8Array`, :green:`Buffer` or :green:`String` depending
+    on ``return_option``. Default is :green:`Uint8Array` of ``nBytes``
+    bytes.
+
+Examples:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var raw = crypto.rand(16);                                  // Uint8Array
+    var hex = crypto.rand(16, {returnType: "hex"});             // string of 32 hex chars
+    var buf = crypto.rand(16, {returnType: "buffer"});          // node-style Buffer
+    /* buf.toString('base64') works directly */
 
 randnum
 ~~~~~~~
@@ -979,6 +2423,90 @@ properties:
 
 * ``bytes`` - a :green:`Number` - Number of bytes to retrieve from ``file``. 
   Default is ``32``.
+
+Comparison
+----------
+
+timingSafeEqual
+~~~~~~~~~~~~~~~
+
+Compare two byte sequences in constant time — does not short-circuit
+on the first mismatching byte, so the comparison takes the same
+amount of time regardless of where (or whether) inputs differ.  Use
+this whenever comparing a secret value (HMAC tag, password hash,
+session token) against an untrusted input, to avoid leaking
+information through timing.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var equal = crypto.timingSafeEqual(a, b);
+
+Where:
+
+    * ``a``, ``b`` - :green:`Strings` or :green:`Buffers`.  Must have
+      the same length, or an error is thrown.
+
+Return Value:
+    A :green:`Boolean`, ``true`` if the inputs are byte-identical.
+
+PEM / DER conversion
+--------------------
+
+Pure encoding utilities — convert between text-friendly PEM (base64
+with banner lines) and binary DER.  Useful when interoperating with
+tools or wire formats that expect one form rather than the other.
+
+pemToDer
+~~~~~~~~
+
+Decode any single PEM block to its underlying DER :green:`Buffer`.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var der = crypto.pemToDer(pem);
+
+Where:
+
+    * ``pem`` is a :green:`String` or :green:`Buffer` containing a
+      single PEM block with ``-----BEGIN <type>-----`` /
+      ``-----END <type>-----`` framing.
+
+Return Value:
+    A :green:`Buffer` containing the base64-decoded body.
+
+derToPem
+~~~~~~~~
+
+Wrap DER bytes in PEM framing with the given type label.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var pem = crypto.derToPem(der, "PUBLIC KEY");
+
+Where:
+
+    * ``der`` is a :green:`String` or :green:`Buffer` of DER-encoded
+      bytes.
+    * ``type`` is a :green:`String`, the PEM type label (e.g.
+      ``"PUBLIC KEY"``, ``"PRIVATE KEY"``, ``"EC PRIVATE KEY"``,
+      ``"CERTIFICATE"``, ``"CERTIFICATE REQUEST"``).  Arbitrary
+      DER doesn't self-identify which banner to use, so the caller
+      provides the label.
+
+Return Value:
+    A :green:`String` containing the PEM-wrapped form.
 
 BigInt
 ------

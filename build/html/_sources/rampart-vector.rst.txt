@@ -251,6 +251,9 @@ Several constants and methods will be available as properties of the resulting `
          "copy": {
             "_c_func": true
          },
+         "split": {
+            "_c_func": true
+         },
          "distance": {
             "_c_func": true
          }
@@ -301,7 +304,8 @@ Available methods:
       ``b8`` vector this returns an :green:`Array` of ``0``/``1`` values.
 
 Note that a ``b8`` `Vector Object` has a reduced method set: in addition to
-``toNumbers``, ``toRaw``, ``byteLength``, ``copy`` and ``distance``, it provides
+``toNumbers``, ``toRaw``, ``byteLength``, ``copy``, ``split`` and
+``distance``, it provides
 the *reconstruction* methods ``toF64``/``toF32``/``toF16``/``toBf16``/``toI8``/
 ``toU8`` (see `Binary Vectors (b8)`_) -- but these are lossy expansions of the
 bits, **not** a round-trip to the original vector.
@@ -326,7 +330,29 @@ Utility Functions
      `Vector Object`.
    * ``resize(n)`` - Copy and grow or truncate the underlying :green:`Buffer`
      so the vector contains ``n`` elements.  Return a new `Vector Object`.
+   * ``split(n)`` - Split the vector into an :green:`Array` of new
+     `Vector Objects` of ``n`` elements each.  ``dim`` must be an exact
+     multiple of ``n`` (a vector whose ``dim`` equals ``n`` returns a
+     one-element :green:`Array`); each part is an independent copy of the
+     same type.  This is the JavaScript-side accessor for *multi-vector*
+     column values such as those produced by the SQL ``chunkembed()``
+     function, which concatenates a document's ``k`` chunk vectors into a
+     single ``k × n``-element value — see
+     :ref:`rampart-sql:Chunked documents (multi-vector rows)`.  For ``b8``
+     vectors ``n`` is a bit count and must be a multiple of 8.
    * ``byteLength()`` - Return the length of the underlying :green:`Buffer` in bytes.
+
+Example — splitting a multi-vector value:
+
+.. code-block:: javascript
+
+   // a chunkembed() column value: k chunk vectors of 384 elements each
+   var row = sql.one("select Vec from docs");
+   var chunks = row.Vec.split(384);      // Array of row.Vec.dim/384 vectors
+
+   for (var i = 0; i < chunks.length; i++)
+       printf("chunk %d: dim=%d best=%f\n", i, chunks[i].dim,
+              chunks[i].distance(queryVec, 'dot'));
 
 Distance Function
 ~~~~~~~~~~~~~~~~~

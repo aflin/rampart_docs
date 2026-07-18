@@ -11,7 +11,7 @@ The rampart-curl module uses the `libcurl <https://curl.se/libcurl/>`_
 library.  Libcurl is a multi-protocol file transfer library with a long
 history of feature rich and stable performance.  It also has an exceptionally
 well written and documented API.  The authors of Rampart extend our thanks
-to  Daniel Stenberg, et. al. for providing this library.
+to Daniel Stenberg, et. al. for providing this library.
 
 
 License
@@ -132,7 +132,7 @@ fetch() Results
     Other possible properties of the results :green:`Object` are (not all
     apply to non-http requests):
     
-    * ``text`` - a :green:`String` copy of the ``body`` contents if
+    * ``text`` - a :green:`String`, copy of the ``body`` contents if
       ``returnText`` is set ``true`` in `Curl Options`_.  It is set to the
       value equivalent to ``rampart.utils.bufferToString(result.body)``.  Note, internally
       this requires a copy of data, whereas the ``body`` :green:`Buffer` is
@@ -206,11 +206,210 @@ submit()
     * ``callback`` is a :green:`Function`, which takes as an argument the
       same :green:`Object` as returned in `fetch() Results`_ above.
 
+NOTE:  
+    ``submit()`` is preferred over ``fetch()`` when retrieving multiple urls
+    which neet to have different option apply to each url.
+           
+
+fetchAsync()
+~~~~~~~~~~~~
+
+    The same as ``fetch()`` above, except it requires a callback function
+    and waiting for socket data, retrieval of the document and the execution
+    of the callback happens in the Rampart event loop.
+
+    Return Value:
+        When called with a callback, returns an :green:`Object` with a
+        single method ``finally()``.  See `finally()`_ below.
+
+finally()
+"""""""""
+
+    The ``finally()`` method is available on the return value of
+    ``fetchAsync()`` and ``submitAsync()`` when called with a callback.
+    It registers a :green:`Function` that will be called after **all**
+    async requests have completed.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        curl.fetchAsync(url_list, options, function(res) {
+            // called once per URL
+        }).finally(function() {
+            // called once after all URLs have completed
+            printf("All requests finished\n");
+        });
+
+submitAsync()
+~~~~~~~~~~~~~
+
+    The same as ``submit()`` above, except that waiting for socket data,
+    retrieval of the document and the execution of the callback happens in
+    the Rampart event loop.
+
+    Return Value:
+        When called with a callback, returns an :green:`Object` with a
+        single method ``finally()``.  See `finally()`_ above.
+
+Promise / async-await Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    When the Rampart transpiler is active (via ``rampart -t``, ``"use transpiler"``
+    or ``"use transpilerGlobally"``), ``fetchAsync()`` and ``submitAsync()`` support
+    Promises and the ``async``/``await`` syntax.
+
+    **Single URL, no callback** — returns a :green:`Promise` that resolves
+    with the result :green:`Object`:
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        rampart.globalize(rampart.utils);
+        var curl = require('rampart-curl');
+
+        async function main() {
+            // await a single request
+            var res = await curl.fetchAsync('https://example.com/', {returnText: true});
+            printf("status: %d, length: %d\n", res.status, res.text.length);
+
+            // error handling with try/catch
+            try {
+                var res2 = await curl.fetchAsync('https://nonexistent.invalid/');
+            } catch(e) {
+                printf("error: %s\n", e.message);
+            }
+
+            // parallel requests with Promise.all
+            var results = await Promise.all([
+                curl.fetchAsync('https://example.com/page1'),
+                curl.fetchAsync('https://example.com/page2')
+            ]);
+            printf("got %d results\n", results.length);
+        }
+
+        main();
+
+    **Multiple URLs with callback** — the callback fires once per URL as
+    usual; the :green:`Promise` resolves when all URLs have completed:
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        rampart.globalize(rampart.utils);
+        var curl = require('rampart-curl');
+
+        async function main() {
+            await curl.fetchAsync(
+                ['https://example.com/a', 'https://example.com/b'],
+                function(res) {
+                    printf("got %s: %d\n", res.url, res.status);
+                }
+            );
+            printf("all requests done\n");
+        }
+
+        main();
+
+    **submitAsync** — works the same way.  A single request object without
+    a callback returns a :green:`Promise`:
+
+    .. code-block:: javascript
+
+        var res = await curl.submitAsync({url: 'https://example.com/', location: true});
+
+    **In server modules** — use ``{defer: true}`` with ``req.reply()``:
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        var curl = require('rampart-curl');
+
+        async function handle(req) {
+            var res = await curl.fetchAsync('https://api.example.com/data');
+            req.reply({ json: { status: res.status } });
+        }
+
+        module.exports = function(req) {
+            handle(req);
+            return { defer: true };
+        };
+
+    Note:  Promise support requires the transpiler's Promise polyfill.
+    Without the transpiler, the original callback-based API is unchanged.
+
+cancel
+~~~~~~
+
+    The ``curl.cancel`` :green:`Object` is a sentinel value.  When returned
+    from a ``chunkCallback`` or ``progressCallback`` function, the current
+    transfer is canceled.
+
+    .. code-block:: javascript
+
+        var curl = require('rampart-curl');
+
+        curl.fetch('https://example.com/largefile', {
+            chunkCallback: function(res) {
+                if (res.progress > 1000000)
+                    return curl.cancel;  // stop after 1MB
+            },
+            callback: function(res) {
+                printf("done, got %d bytes\n", res.body.length);
+            }
+        });
+
+setCaCert()
+~~~~~~~~~~~
+
+    Set the default CA certificate bundle path for all subsequent requests.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        curl.setCaCert('/path/to/ca-bundle.crt');
+
+    Where the argument is a :green:`String`, the path to a readable CA
+    certificate file.  Throws an error if the file does not exist or is
+    not readable.  The value is also reflected in ``curl.default_ca_file``.
+
+encode()
+~~~~~~~~
+
+    URL-encode a string.
+
+    .. code-block:: javascript
+
+        var encoded = curl.encode('hello world&foo=bar');
+        // "hello%20world%26foo%3Dbar"
+
+decode()
+~~~~~~~~
+
+    URL-decode a string.
+
+    .. code-block:: javascript
+
+        var decoded = curl.decode('hello%20world%26foo%3Dbar');
+        // "hello world&foo=bar"
+
+cleanup()
+~~~~~~~~~
+
+    Release all resources allocated by the Curl library's global
+    initialization.  Subsequent curl operations will re-initialize
+    automatically.
+
+    .. code-block:: javascript
+
+        curl.cleanup();
+
 default_ca_file
 ~~~~~~~~~~~~~~~
 
-The read only variable ``curl.default_ca_file`` is a :green:`String`, the 
-location of where Curl expects to find the 
+The read only variable ``curl.default_ca_file`` is a :green:`String`, the
+location of where Curl expects to find the
 `CA Certificate Bundle file <https://curl.se/docs/caextract.html>`_\ .
 If this file does not exist on the filesystem, ``https`` requests must
 either provide an alternate location for the file or be set as insecure.
@@ -230,6 +429,11 @@ Some of the options below have not been fully tested. The descriptions below are
 abbreviated version of the man page (written by Daniel Stenberg, et. al.). 
 See `curl command line tool <https://linux.die.net/man/1/curl>`_ for a full
 description of each.  
+
+Note that the following options may also be set using camel case in place of
+``-`` and underscores for dots.  For example, ``cert-type`` and ``certType``,
+``user-agent`` and ``userAgent`` as well as ``http1.0`` and ``http1_0`` are all
+equivalent.
 
 Supported Options
 """""""""""""""""
@@ -421,6 +625,209 @@ The following are additional options provided by the JavaScript module and
 have no corresponding setting in the `curl command line tool <https://linux.die.net/man/1/curl>`_.
 Note that `examples`_ are provided below.
 
+    * ``returnText`` - a :green:`Boolean`, whether to include the
+      ``text`` :green:`String` in the return value of a fetch/submit.
+      If ``true`` (the default), a copy of the ``body`` :green:`Buffer`
+      will be provided in the return :green:`Object`.
+
+    * ``callback`` - a :green:`Function`, alternate syntax for
+      providing a callback for the results of a fetch or submit request.
+
+    * ``chunkCallback`` - a :green:`Function`, a callback to handle
+      chunked responses.  Called each time there is a new chunk of
+      text.  Its sole parameter is the same ``res`` :green:`Object` as
+      used for the main callback, with the exception that  ``res.body`` 
+      will contain the current chunk of data and res.text is not present.
+      This function will return chunks of data regardless of whether
+      ``Content-Encoding: chunked`` is being used.
+
+    * ``progressCallback`` - a :green:`Function`, a callback to receive
+      download progress updates.  Called each time there is a new chunk of
+      text.  Its sole parameter is the same ``res`` :green:`Object` as
+      used for the main callback, with the exception that  ``res.body`` 
+      is empty,  res.text is not present, res.progress will contain the
+      number of bytes received and res.expectedTotal will be the expected
+      total as reported from the server header ``Content-Length`` or ``-1``
+      if server did not provide a `Content-Length`` header (as is common
+      with a ``chunked`` response).
+
+    * ``skipFinalRes`` - a :green:`Boolean`, if true do not accumulate a 
+      response in ``body`` of the return object or the ``res`` object provided 
+      to (body will be an empty 
+      buffer).  This is useful if downloading a large file and writing
+      the file out in chunks using a ``chunkCallback``.  Example:
+
+      .. code-block:: javascript
+      
+            var f = fopen(myfile,'w+');
+            var nchunks=0;
+            curl.fetchAsync(
+                myurl, 
+                {
+                    location: true,
+                    returnText: false,
+                    skipFinalRes: true,
+
+                    chunkCallback: function(res) {
+                        //write to file as we receive chunks from the server
+                        f.fprintf('%s', res.body);
+                    },
+
+                    progressCallback: function(res) {
+                        nchunks++;
+                        // print progress every 100 chunks.
+                        if(nchunks%100)
+                            return;
+
+                        var tot = res.progress;
+                        var rate = tot/(res.totalTime*1024);
+                        var unit = "Kbs";
+                        var perc = 100 * tot / res.expectedTotal;
+
+                        if(rate > 10000) {
+                            rate/=1024;
+                            unit = "Mbs"
+                        }
+                        var out;
+                        if(res.expectedTotal != -1)
+                            out=sprintf("    %Ad%%, %d of %d bytes, (%.2f %s)",
+                                'green', perc, tot, res.expectedTotal, rate, unit );
+                        else
+                            out=sprintf("    %d bytes", o.file, tot);
+                        printf('%M', [`downloading file ${myurl} ->`, `  ${myfile}`, out]);
+                    },
+
+                    callback: function(res) {
+                        printf("done\n")
+                        f.fclose();
+                    }
+                }
+            );
+
+
+    * ``xferCallback`` - a :green:`Function`, a tick-driven transfer
+      monitor.  Unlike ``progressCallback`` (which only fires when bytes
+      arrive), ``xferCallback`` is driven by libcurl's internal timer and
+      fires regularly even when no data is flowing — during connection
+      setup, TLS handshake, server prefill, or network stall.  This makes
+      it the right hook for deadlines, low-bandwidth aborts, byte caps,
+      and cross-thread cancellation.
+
+      The function receives one :green:`Object` argument with the
+      following properties:
+
+      +------------------+------------------------------------------------------+
+      | Property         | Description                                          |
+      +==================+======================================================+
+      | ``dlNow``        | bytes downloaded so far                              |
+      +------------------+------------------------------------------------------+
+      | ``dlTotal``      | expected total download bytes; ``0`` if the server   |
+      |                  | sent no ``Content-Length``                           |
+      +------------------+------------------------------------------------------+
+      | ``ulNow``        | bytes uploaded                                       |
+      +------------------+------------------------------------------------------+
+      | ``ulTotal``      | expected total upload bytes                          |
+      +------------------+------------------------------------------------------+
+      | ``elapsed``      | seconds since the request started                    |
+      +------------------+------------------------------------------------------+
+      | ``speedDl``      | current download rate in bytes/sec                   |
+      +------------------+------------------------------------------------------+
+      | ``speedUl``      | current upload rate in bytes/sec                     |
+      +------------------+------------------------------------------------------+
+      | ``connectTime``  | seconds until TCP connection established;            |
+      |                  | ``0`` until it happens                               |
+      +------------------+------------------------------------------------------+
+      |``appConnectTime``| seconds until TLS handshake complete; ``0`` for HTTP |
+      +------------------+------------------------------------------------------+
+      | ``headerTime``   | seconds until response headers arrived;              |
+      |                  | ``0`` until they do                                  |
+      +------------------+------------------------------------------------------+
+      | ``httpStatus``   | HTTP status code; ``0`` until headers received       |
+      +------------------+------------------------------------------------------+
+      | ``originalUrl``  | the URL the script passed to fetch/Async,            |
+      |                  | unchanged by any redirect                            |
+      +------------------+------------------------------------------------------+
+      | ``url``          | effective URL after redirect chain (matches          |
+      |                  | ``originalUrl`` if no redirects)                     |
+      +------------------+------------------------------------------------------+
+
+      Returning ``false`` from the callback aborts the transfer.
+      libcurl reports the abort via ``CURLE_ABORTED_BY_CALLBACK``; the
+      final callback's ``r.errMsg`` will contain ``"curl failed:
+      Operation was aborted by an application callback"``.
+
+      Returning any other value — including ``true``, an object, or no
+      return at all (``undefined``) — continues the transfer. This
+      matches rampart's convention for other callback APIs where
+      ``return false`` is the explicit "stop" signal and the default of
+      doing nothing means "keep going."  Errors thrown from the
+      callback are caught and treated as "continue" — they do not abort.
+
+      Common patterns:
+
+      .. code-block:: javascript
+
+         /* Hard deadline */
+         var deadline = Date.now() + 30000;
+         curl.fetchAsync(url, {
+             xferCallback: function(info){
+                 if (Date.now() > deadline) return false;
+             }
+         }, cb);
+
+         /* Low-bandwidth abort */
+         curl.fetchAsync(url, {
+             xferCallback: function(info) {
+                 if (info.speedDl > 0 && info.speedDl < 1024) return false;
+             }
+         }, cb);
+
+         /* Byte cap - bail if the response exceeds 10 MB */
+         curl.fetchAsync(url, {
+             xferCallback: function(info){
+                 if (info.dlNow > 10*1024*1024) return false;
+             }
+         }, cb);
+
+         /* Cross-thread cancel via shared state */
+         curl.fetchAsync(url, {
+             xferCallback: function(info) {
+                 if (rampart.thread.get('cancel') === true) return false;
+             }
+         }, cb);
+
+         /* Bail before reading body on a server error */
+         curl.fetchAsync(url, {
+             xferCallback: function(info){
+                 if (info.httpStatus >= 500) return false;
+             }
+         }, cb);
+
+      Available with ``fetch``, ``fetchAsync``, ``submit``, and
+      ``submitAsync`` — same surface across all four.  Not preserved
+      across ``addurl`` chained calls.
+
+      If ``xferCallback`` is not provided, libcurl's tick is left
+      disabled (``CURLOPT_NOPROGRESS=1``) and no overhead is incurred —
+      the no-callback path is byte-for-byte identical to today.
+
+    * ``xferCallbackRate`` - a :green:`Number`, the maximum
+      invocation rate of ``xferCallback`` in calls per second.
+      Default is ``4`` (one call every 250 ms).  A rate of ``1`` means
+      one call per second, ``10`` means 100 ms between calls.
+      Setting ``0`` removes the throttle and the callback fires on
+      every libcurl tick.  Has no effect when ``xferCallback`` is not
+      provided.
+
+      libcurl's own minimum tick is roughly 1 Hz; higher rates may be
+      bounded by that floor during idle waits but will produce more
+      frequent calls during active transfers.
+
+    * ``noCopyBuffer`` - a :green:`Boolean`, if ``true`` the response
+      ``body`` :green:`Buffer` is used directly from the Curl library
+      without copying.  This can improve performance for large responses
+      but the buffer must not be used after the next curl call.
+
     * ``arrayType`` - :green:`String` - How to translate arrays into
       parameters for ``get`` and ``post`` below.  See
       :ref:`rampart-utils:objectToQuery`.
@@ -504,6 +911,15 @@ Note that `examples`_ are provided below.
         If data is a :green:`String`, and it starts with ``@``, the data
         will be read from a file (e.g.  
         ``{post: "@/path/to/my/pic.jpg", header: "Content-Type: image/jpeg"}``).
+
+    * ``postJSON`` - a :green:`String`, :green:`Buffer` or  :green:`Object`.
+    
+        If an :green:`Object`, data is automatically converted and posted
+        as a JSON string converted using a method similar to
+        ``rampart.utils.printf("%J", myobject)`` (which checks for and 
+        converts cyclic references).
+        
+        Otherwise if not an :green:`Object`, data is handled the same as ``post`` above.
 
     * ``postform`` - an :green:`Object`. For POSTing with ``Content-Type: multipart/form-data``
       where each key/property sets the the name in each part of the posted data (i.e. - 
@@ -745,7 +1161,7 @@ links from the ``index.html`` page on a sample website (using
 
     var curl = require("rampart-curl");
 
-    var http = require("rampart-http");
+    var html = require("rampart-html");
 
     /* use an object to keep a list of unique urls */
     var fetched = { "http://localhost:8088/" : true };

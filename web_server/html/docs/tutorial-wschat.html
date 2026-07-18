@@ -7,46 +7,196 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      Using Websockets to Build a Chat — Rampart 0.1.0 documentation
+      Using Websockets to Build a Chat — Rampart 0.7.0 documentation
     </title>
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
     <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
     <link rel="stylesheet" href="_static/hacks.css" type="text/css">
     <link rel="index" title="Index" href="genindex.html">
     <link rel="search" title="Search" href="search.html">
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
     <link rel="up" title="Tutorials" href="tutorialtoc.html">
     <link rel="next" title="Building a Pi News Aggregator" href="tutorial-pi_news.html">
     <link rel="prev" title="Find Cities and their Closest Neighbors" href="tutorial-citysearch.html">
     <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
     <style>
-            .wy-nav-top,.wy-side-nav-search { background-color:black;}
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            dl:not(.docutils) dt {font-family: "Varela Round", Sans-Serif !important; font-size: 90% !important;}
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
             .autocomplete-group { padding: 2px 5px; }
-            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
-            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
-            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
-            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
             .expandBottom { bottom: 18px }
             .expandTop { top: 3px }
-            .expanded .fader { bottom : -15px }
+            .expanded .fader { bottom: -15px }
             .expanded .expandBottom { bottom: 38px; }
-            .wy-nav-content {max-width: 1600px;}
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
     </style>
   </head>
   <body class="wy-body-for-nav" role="document">
     <div class="wy-grid-for-nav">
       <nav data-toggle="wy-nav-shift" class="wy-nav-side">
         <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
           <div class="wy-side-nav-search">
-            <a href="/" class="icon icon-home">Rampart</a>
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
             <div role="search">
               <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
                 <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
@@ -66,10 +216,22 @@
                 <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
@@ -87,13 +249,40 @@
                 <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
               </li>
               <li class="toctree-l1 current">
                 <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
@@ -206,6 +395,9 @@
                   </li>
                 </ul>
               </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
+              </li>
             </ul>
           </div>
         </div>
@@ -273,30 +465,18 @@
                       This module will demonstrate:
                     </p>
                     <ul class="simple">
-                      <li>
-                        <p>
-                          Using <a class="reference internal" href="rampart-main.html#rampart-event"><span class=
-                          "std std-ref">event</span></a> functions to relay messages between clients.
-                        </p>
+                      <li>Using <a class="reference internal" href="rampart-main.html#rampart-event"><span class=
+                      "std std-ref">event</span></a> functions to relay messages between clients.
                       </li>
-                      <li>
-                        <p>
-                          Using the <a class="reference internal" href=
-                          "rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">Server
-                          module</span></a> to connect with clients using websockets.
-                        </p>
+                      <li>Using the <a class="reference internal" href=
+                      "rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">Server
+                      module</span></a> to connect with clients using websockets.
                       </li>
-                      <li>
-                        <p>
-                          Handling both text and files using websockets.
-                        </p>
+                      <li>Handling both text and files using websockets.
                       </li>
-                      <li>
-                        <p>
-                          Using <a class="reference internal" href=
-                          "rampart-redis.html#the-rampart-redis-module"><span class="std std-ref">rampart-redis
-                          module</span></a> to replace rampart.event so we can have a saved history.
-                        </p>
+                      <li>Using <a class="reference internal" href=
+                      "rampart-redis.html#the-rampart-redis-module"><span class="std std-ref">rampart-redis
+                      module</span></a> to replace rampart.event so we can have a saved history.
                       </li>
                     </ul>
                     <p>
@@ -378,37 +558,22 @@ user@localhost:~/wschat_demo/web_server$ find .
                         and therefore will dispense with a lengthy discussion about it. The main points are:
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            There is no security or user management. A new chat client merely types in a name and is
-                            connected via websockets to the server.
-                          </p>
+                        <li>There is no security or user management. A new chat client merely types in a name and is
+                        connected via websockets to the server.
                         </li>
-                        <li>
-                          <p>
-                            The <code class="docutils literal notranslate"><span class="pre">start()</span></code>
-                            function makes the initial connection to the server.
-                          </p>
+                        <li>The <code class="docutils literal notranslate"><span class="pre">start()</span></code>
+                        function makes the initial connection to the server.
                         </li>
-                        <li>
-                          <p>
-                            The <code class="docutils literal notranslate"><span class="pre">procmess()</span></code>
-                            receives messages from the server, decodes the JSON and displays the message for the user.
-                          </p>
+                        <li>The <code class="docutils literal notranslate"><span class="pre">procmess()</span></code>
+                        receives messages from the server, decodes the JSON and displays the message for the user.
                         </li>
-                        <li>
-                          <p>
-                            The <code class="docutils literal notranslate"><span class="pre">send()</span></code>
-                            function is called when the user presses &lt;enter&gt; in the text box at the bottom of the
-                            web page.
-                          </p>
+                        <li>The <code class="docutils literal notranslate"><span class="pre">send()</span></code>
+                        function is called when the user presses &lt;enter&gt; in the text box at the bottom of the web
+                        page.
                         </li>
-                        <li>
-                          <p>
-                            The <code class="docutils literal notranslate"><span class=
-                            "pre">showMessage()</span></code> function is used to display incoming or echo outgoing
-                            messages in the chat div.
-                          </p>
+                        <li>The <code class="docutils literal notranslate"><span class=
+                        "pre">showMessage()</span></code> function is used to display incoming or echo outgoing
+                        messages in the chat div.
                         </li>
                       </ul>
                       <p>
@@ -800,89 +965,61 @@ user@localhost:~/wschat_demo/web_server$ find .
                       <blockquote>
                         <div>
                           <ul class="simple">
-                            <li>
-                              <p>
-                                The <code class="docutils literal notranslate"><span class=
-                                "pre">module.exports</span></code> function is run for every incoming websocket
-                                message.
-                              </p>
+                            <li>The <code class="docutils literal notranslate"><span class=
+                            "pre">module.exports</span></code> function is run for every incoming websocket message.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">req.count</span></code> is
-                                the number of times function has been called since connection was made.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">req.count</span></code> is
+                              the number of times function has been called since connection was made.
+                            </li>
+                            <li>The first run (<code class="docutils literal notranslate"><span class=
+                            "pre">req.count==0</span></code>) will have an empty body and represents the initial
+                            connection.
+                            </li>
+                            <li>The <code class="docutils literal notranslate"><span class="pre">req</span></code>
+                            object is reused with <code class="docutils literal notranslate"><span class=
+                            "pre">req.body</span></code> updated for each incoming message.
+                            </li>
+                            <li>Sending data to the client is done with <code class=
+                            "docutils literal notranslate"><span class="pre">req.wsSend()</span></code>.
+                            </li>
+                            <li>Any data printed or put using <code class="docutils literal notranslate"><span class=
+                            "pre">req.printf</span></code>/<code class="docutils literal notranslate"><span class=
+                            "pre">req.put</span></code> will also be sent when <code class=
+                            "docutils literal notranslate"><span class="pre">req.wsSend()</span></code> is called or
+                            when the <code class="docutils literal notranslate"><span class=
+                            "pre">module.exports</span></code> function returns.
                             </li>
                             <li>
-                              <p>
-                                The first run (<code class="docutils literal notranslate"><span class=
-                                "pre">req.count==0</span></code>) will have an empty body and represents the initial
-                                connection.
-                              </p>
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">req.wsOnDisconnect</span></code> registers a function that is run when you
+                              disconnect or you are disconnected by the client.
                             </li>
                             <li>
-                              <p>
-                                The <code class="docutils literal notranslate"><span class="pre">req</span></code>
-                                object is reused with <code class="docutils literal notranslate"><span class=
-                                "pre">req.body</span></code> updated for each incoming message.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">req.wsEnd</span></code>
+                              forces a disconnect (but runs callback first);
                             </li>
                             <li>
-                              <p>
-                                Sending data to the client is done with <code class=
-                                "docutils literal notranslate"><span class="pre">req.wsSend()</span></code>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">req.websocketId</span></code> is a unique number to identify the current connection
+                              to a single client.
                             </li>
                             <li>
-                              <p>
-                                Any data printed or put using <code class="docutils literal notranslate"><span class=
-                                "pre">req.printf</span></code>/<code class="docutils literal notranslate"><span class=
-                                "pre">req.put</span></code> will also be sent when <code class=
-                                "docutils literal notranslate"><span class="pre">req.wsSend()</span></code> is called
-                                or when the <code class="docutils literal notranslate"><span class=
-                                "pre">module.exports</span></code> function returns.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">req.wsIsBin</span></code> is
+                              <code class="docutils literal notranslate"><span class="pre">true</span></code> if the
+                              client sends binary data. Data will be in <code class=
+                              "docutils literal notranslate"><span class="pre">req.body</span></code>.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">req.wsOnDisconnect</span></code> registers a function that is run when you
-                                disconnect or you are disconnected by the client.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">req.wsEnd</span></code>
-                                forces a disconnect (but runs callback first);
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">req.websocketId</span></code> is a unique number to identify the current
-                                connection to a single client.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">req.wsIsBin</span></code>
-                                is <code class="docutils literal notranslate"><span class="pre">true</span></code> if
-                                the client sends binary data. Data will be in <code class=
-                                "docutils literal notranslate"><span class="pre">req.body</span></code>.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">req.body</span></code> is
-                                always a <span class="green">Buffer</span>. If <code class=
-                                "docutils literal notranslate"><span class="pre">req.wsIsBin</span></code> is
-                                <code class="docutils literal notranslate"><span class="pre">false</span></code>, it
-                                can be converted to a <span class="green">String</span> using <code class=
-                                "docutils literal notranslate"><span class=
-                                "pre">rampart.utils.sprintf('%s',req.body)</span></code> or <code class=
-                                "docutils literal notranslate"><span class=
-                                "pre">rampart.utils.bufferToString(req.body)</span></code>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">req.body</span></code> is
+                              always a <span class="green">Buffer</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">req.wsIsBin</span></code> is
+                              <code class="docutils literal notranslate"><span class="pre">false</span></code>, it can
+                              be converted to a <span class="green">String</span> using <code class=
+                              "docutils literal notranslate"><span class=
+                              "pre">rampart.utils.sprintf('%s',req.body)</span></code> or <code class=
+                              "docutils literal notranslate"><span class=
+                              "pre">rampart.utils.bufferToString(req.body)</span></code>.
                             </li>
                           </ul>
                         </div>
@@ -2574,18 +2711,12 @@ user@localhost:~/wschat_demo/web_server$ find .
                       <blockquote>
                         <div>
                           <ul class="simple">
-                            <li>
-                              <p>
-                                Since Redis can store data of many types, we will need to manually parse the received
-                                JSON data from Redis.
-                              </p>
+                            <li>Since Redis can store data of many types, we will need to manually parse the received
+                            JSON data from Redis.
                             </li>
-                            <li>
-                              <p>
-                                JSON is not the ideal format for binary buffer data, so we will encode the file to a
-                                base64 string. Note that an alternative would be to use <a class="reference external"
-                                href="https://duktape.org/guide.html#builtin-cbor">CBOR</a> encoding.
-                              </p>
+                            <li>JSON is not the ideal format for binary buffer data, so we will encode the file to a
+                            base64 string. Note that an alternative would be to use <a class="reference external"
+                              href="https://duktape.org/guide.html#builtin-cbor">CBOR</a> encoding.
                             </li>
                           </ul>
                         </div>
@@ -3576,27 +3707,15 @@ user@localhost:~/wschat_demo/web_server$ find .
                       Some of the more obvious ones include:
                     </p>
                     <ul class="simple">
-                      <li>
-                        <p>
-                          Create a user management system.
-                        </p>
+                      <li>Create a user management system.
                       </li>
-                      <li>
-                        <p>
-                          Improve the look and functionality of the client-side script.
-                        </p>
+                      <li>Improve the look and functionality of the client-side script.
                       </li>
-                      <li>
-                        <p>
-                          Using multiple Redis Streams to add Direct Messaging and Channels.
-                        </p>
+                      <li>Using multiple Redis Streams to add Direct Messaging and Channels.
                       </li>
-                      <li>
-                        <p>
-                          Adding search by storing old messages in a <a class="reference internal" href=
-                          "rampart-sql.html#preface"><span class="std std-ref">rampart-sql</span></a> database with a
-                          Full Text Index.
-                        </p>
+                      <li>Adding search by storing old messages in a <a class="reference internal" href=
+                      "rampart-sql.html#preface"><span class="std std-ref">rampart-sql</span></a> database with a Full
+                      Text Index.
                       </li>
                     </ul>
                     <p>
@@ -3617,7 +3736,7 @@ user@localhost:~/wschat_demo/web_server$ find .
               <hr>
               <div role="contentinfo">
                 <p>
-                  © Copyright 2022, Moat Crossing Systems.
+                  © Copyright 2026, Moat Crossing Systems.
                 </p>
               </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
               "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
@@ -3630,7 +3749,7 @@ user@localhost:~/wschat_demo/web_server$ find .
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -3642,7 +3761,7 @@ user@localhost:~/wschat_demo/web_server$ find .
     <script type="text/javascript" src="_static/doctools.js"></script> 
     <script type="text/javascript" src="_static/language_data.js"></script> 
     <script type="text/javascript" src=
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
     <script type="text/javascript" src="_static/js/theme.js"></script> 
     <script type="text/javascript">
 

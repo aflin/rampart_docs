@@ -15,7 +15,7 @@ $(document).ready(function(){
         $("div[itemprop=articleBody]").after('<div id="searchres">');
         $("div[itemprop=articleBody],.rst-footer-buttons").hide();
         var sdiv = $('#searchres');
-        sdiv.html('<div style="cursor: pointer; float:right; border: 1px gray solid; border-radius:4px; position: relative;padding-left: 0.17em;" id="sclose">Close Search Results</div>');
+        sdiv.html('<div style="cursor: pointer; float:right; border: 1px solid #334155; border-radius:4px; position: relative; padding: 2px 8px; color:#22c55e; font-size:0.9rem;" id="sclose">Close Search Results</div>');
         $.getJSON(
             "/apps/docs/rsearch/results.json",
             {q:q},
@@ -31,7 +31,7 @@ $(document).ready(function(){
                           '<div class="expand expandTop">show less</div>' +
                           '<div class="fader">' +
                             '<div class="cont" style="bottom:3px; left:15px; position: relative;">...</div>' +
-                            '<hr style="margin: 2px 0;">'+
+                            '<hr style="margin: 2px 0; border-color: #334155;">'+
                             '<div class="expand expandBottom">show more</div>' +
                           '</div>' +
                          '</div>');
@@ -62,7 +62,7 @@ $(document).ready(function(){
                         var t=$(this);
                         if(t.height() < 233)
                         {
-                            t.find(".fader").replaceWith('<hr style="margin: 2px 0;">');
+                            t.find(".fader").replaceWith('<hr style="margin: 2px 0; border-color: #334155;">');
                         }
                     });
                 }
@@ -130,5 +130,23 @@ $(document).ready(function(){
         }
     );
 
+    // Theme toggle
+    function toggleTheme() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            document.cookie = 'theme=light; path=/; max-age=31536000; SameSite=Lax';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.cookie = 'theme=dark; path=/; max-age=31536000; SameSite=Lax';
+        }
+    }
+    $('#rp-theme-toggle').on('click', toggleTheme);
+
+    // Close sidebar overlay
+    $('#rp-close-sidebar').on('click', function() {
+        $('[data-toggle="wy-nav-shift"]').removeClass('shift');
+        $('[data-toggle="rst-versions"]').removeClass('shift');
+    });
 
 });

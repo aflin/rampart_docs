@@ -7,45 +7,195 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      The rampart-html module — Rampart 0.1.0 documentation
+      The rampart-html module — Rampart 0.7.0 documentation
     </title>
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
     <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
     <link rel="stylesheet" href="_static/hacks.css" type="text/css">
     <link rel="index" title="Index" href="genindex.html">
     <link rel="search" title="Search" href="search.html">
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
     <link rel="next" title="The rampart-crypto module" href="rampart-crypto.html">
-    <link rel="prev" title="The rampart-server HTTP module" href="rampart-server.html">
+    <link rel="prev" title="The rampart-net module" href="rampart-net.html">
     <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
     <style>
-            .wy-nav-top,.wy-side-nav-search { background-color:black;}
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            dl:not(.docutils) dt {font-family: "Varela Round", Sans-Serif !important; font-size: 90% !important;}
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
             .autocomplete-group { padding: 2px 5px; }
-            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
-            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
-            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
-            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
             .expandBottom { bottom: 18px }
             .expandTop { top: 3px }
-            .expanded .fader { bottom : -15px }
+            .expanded .fader { bottom: -15px }
             .expanded .expandBottom { bottom: 38px; }
-            .wy-nav-content {max-width: 1600px;}
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
     </style>
   </head>
   <body class="wy-body-for-nav" role="document">
     <div class="wy-grid-for-nav">
       <nav data-toggle="wy-nav-shift" class="wy-nav-side">
         <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
           <div class="wy-side-nav-search">
-            <a href="/" class="icon icon-home">Rampart</a>
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
             <div role="search">
               <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
                 <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
@@ -65,10 +215,22 @@
                 <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
               </li>
               <li class="toctree-l1 current">
                 <a class="current reference internal" href="#">The rampart-html module</a>
@@ -105,7 +267,7 @@
                         <a class="reference internal" href="#newdocument">newDocument</a>
                       </li>
                       <li class="toctree-l3">
-                        <a class="reference internal" href="#prettyprint">prettyPrint</a>
+                        <a class="reference internal" href="#objtohtml">objToHtml</a>
                       </li>
                     </ul>
                   </li>
@@ -114,6 +276,9 @@
                     <ul>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#the-html-object">The html object</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#destroy">destroy</a>
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#selecting-elements">Selecting Elements</a>
@@ -145,10 +310,21 @@
                             <a class="reference internal" href="#getallattr">getAllAttr</a>
                           </li>
                           <li class="toctree-l4">
+                            <a class="reference internal" href="#toobj">toObj</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#text-and-html-output">Text and HTML Output</a>
+                        <ul>
+                          <li class="toctree-l4">
                             <a class="reference internal" href="#tohtml">toHtml</a>
                           </li>
                           <li class="toctree-l4">
                             <a class="reference internal" href="#totext">toText</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#prettyprint">prettyPrint</a>
                           </li>
                         </ul>
                       </li>
@@ -265,16 +441,46 @@
                 <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
               </li>
             </ul>
           </div>
@@ -417,19 +623,20 @@
                       </p>
                       <ul>
                         <li>
-                          <p>
+                          <p class="first">
                             <code class="docutils literal notranslate"><span class="pre">document_text</span></code> is
                             a <span class="green">String</span> or <span class="green">Buffer</span> containing the
-                            HTML text to be parsed. If not specified or a blank string, an empty document with the
-                            <code class="docutils literal notranslate"><span class="pre">html</span></code>,
-                            <code class="docutils literal notranslate"><span class="pre">head</span></code>,
-                            <code class="docutils literal notranslate"><span class="pre">title</span></code> and
-                            <code class="docutils literal notranslate"><span class="pre">body</span></code> tags in
-                            place will be created.
+                            HTML text to be parsed. It also can be an <span class="green">Object</span> produced by
+                            <a class="reference internal" href="#toobj">toObj</a> below. If not specified or a blank
+                            string, an empty document with the <code class="docutils literal notranslate"><span class=
+                            "pre">html</span></code>, <code class="docutils literal notranslate"><span class=
+                            "pre">head</span></code>, <code class="docutils literal notranslate"><span class=
+                            "pre">title</span></code> and <code class="docutils literal notranslate"><span class=
+                            "pre">body</span></code> tags in place will be created.
                           </p>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
                             optional <span class="green">Object</span> of key/value pairs that correspond to the
                             <a class="reference external" href=
@@ -447,152 +654,293 @@
                           </p>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">indent</span></code> - a
-                                <span class="green">Boolean</span>, whether to add indentation and word wrapping to the
-                                output when using <a class="reference internal" href="#prettyprint">prettyPrint</a>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">indent</span></code> - a
+                              <span class="green">Boolean</span>, whether to add indentation and word wrapping to the
+                              output when using <a class="reference internal" href="#prettyprint">prettyPrint</a>.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">indent-spaces</span></code> (aka <code class=
-                                "docutils literal notranslate"><span class="pre">indentSpaces</span></code>) - a
-                                <span class="green">Number</span> indicating the number of spaces to indent the output
-                                when using <a class="reference internal" href="#prettyprint">prettyPrint</a> and
-                                <code class="docutils literal notranslate"><span class="pre">indent</span></code> above
-                                is set <code class="docutils literal notranslate"><span class="pre">true</span></code>.
-                                The default is <code class="docutils literal notranslate"><span class=
-                                "pre">2</span></code>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">indent-spaces</span></code>
+                              (aka <code class="docutils literal notranslate"><span class=
+                              "pre">indentSpaces</span></code>) - a <span class="green">Number</span> indicating the
+                              number of spaces to indent the output when using <a class="reference internal" href=
+                              "#prettyprint">prettyPrint</a> and <code class=
+                              "docutils literal notranslate"><span class="pre">indent</span></code> above is set
+                              <code class="docutils literal notranslate"><span class="pre">true</span></code>. The
+                              default is <code class="docutils literal notranslate"><span class="pre">2</span></code>.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">wrap</span></code> - a
-                                <span class="green">Number</span> indicating the maximum length of a line of text or
-                                HTML used when using <a class="reference internal" href="#prettyprint">prettyPrint</a>
-                                and <code class="docutils literal notranslate"><span class="pre">indent</span></code>
-                                above is set <code class="docutils literal notranslate"><span class=
-                                "pre">true</span></code>. The default is <code class=
-                                "docutils literal notranslate"><span class="pre">68</span></code>. There may be some
-                                circumstances where it is not possible to wrap a line.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">wrap</span></code> - a
+                              <span class="green">Number</span> indicating the maximum length of a line of text or HTML
+                              used when using <a class="reference internal" href="#prettyprint">prettyPrint</a> and
+                              <code class="docutils literal notranslate"><span class="pre">indent</span></code> above
+                              is set <code class="docutils literal notranslate"><span class="pre">true</span></code>.
+                              The default is <code class="docutils literal notranslate"><span class=
+                              "pre">68</span></code>. There may be some circumstances where it is not possible to wrap
+                              a line.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">drop-empty-elements</span></code> (aka <code class=
-                                "docutils literal notranslate"><span class="pre">dropEmptyElements</span></code>) - a
-                                <span class="green">Boolean</span>, whether to drop empty elements. <strong>In
-                                Rampart</strong> the default is <code class="docutils literal notranslate"><span class=
-                                "pre">false</span></code>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">drop-empty-elements</span></code> (aka <code class=
+                              "docutils literal notranslate"><span class="pre">dropEmptyElements</span></code>) - a
+                              <span class="green">Boolean</span>, whether to drop empty elements. <strong>In
+                              Rampart</strong> the default is <code class="docutils literal notranslate"><span class=
+                              "pre">false</span></code>.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">tidy-mark</span></code>
-                                (aka <code class="docutils literal notranslate"><span class=
-                                "pre">tidyMark</span></code>) - a <span class="green">Boolean</span>, whether to insert
-                                a <code class="docutils literal notranslate"><span class="pre">meta</span></code> tag
-                                in the head of the document indicating that the <a class="reference external" href=
-                                "http://www.html-tidy.org/">Tidy-HTML5</a> library was used to process the document.
-                                <strong>In Rampart</strong> the default is <code class=
-                                "docutils literal notranslate"><span class="pre">false</span></code>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">tidy-mark</span></code> (aka
+                              <code class="docutils literal notranslate"><span class="pre">tidyMark</span></code>) - a
+                              <span class="green">Boolean</span>, whether to insert a <code class=
+                              "docutils literal notranslate"><span class="pre">meta</span></code> tag in the head of
+                              the document indicating that the <a class="reference external" href=
+                              "http://www.html-tidy.org/">Tidy-HTML5</a> library was used to process the document.
+                              <strong>In Rampart</strong> the default is <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code>.
                             </li>
                             <li>
-                              <p>
-                                See the <a class="reference external" href=
-                                "https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html">HTML Tidy Options
-                                Quick Reference</a> for more options.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">vertical-space</span></code>
+                              - a <span class="green">Boolean</span> or a <span class="green">String</span>, whether to
+                              add some extra empty lines for readability. The default is <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code>. If set to
+                              <code class="docutils literal notranslate"><span class="pre">"auto"</span></code> nearly
+                              all newline characters will be eliminated.
+                            </li>
+                            <li>See the <a class="reference external" href=
+                            "https://api.html-tidy.org/tidy/tidylib_api_5.6.0/tidy_quickref.html">HTML Tidy Options
+                            Quick Reference</a> for more options.
                             </li>
                           </ul>
                         </li>
                       </ul>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            An <em>html object</em> with all the functions for manipulating the HTML document. In
-                            addition, this will be the <em>root html object</em>, which will also contain the
-                            <code class="docutils literal notranslate"><span class="pre">prettyPrint()</span></code>
-                            function.
-                          </p>
+                          An <em>html object</em> with all the functions for manipulating the HTML document. In
+                          addition, this will be the <em>root html object</em>.
                         </dd>
                       </dl>
                     </div>
-                    <div class="section" id="prettyprint">
+                    <div class="section" id="objtohtml">
                       <h3>
-                        prettyPrint<a class="headerlink" href="#prettyprint" title="Permalink to this headline">¶</a>
+                        objToHtml<a class="headerlink" href="#objtohtml" title="Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        The <em>root html object</em> includes an additional function which will output the entire text
-                        of the document with optional indentation.
+                        Take the output of <a class="reference internal" href="#toobj">toObj</a> and produce html text.
                       </p>
                       <p>
-                        Example:
+                        Usage:
                       </p>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">
-                          <pre><span></span><span class="kd">var</span> <span class="nx">html</span> <span class=
+                          <pre><span></span> <span class="kd">var</span> <span class="nx">html</span> <span class=
                           "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
                           "s2">"rampart-html"</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">mydoc</span> <span class="o">=</span> <span class=
-"nx">html</span><span class="p">.</span><span class="nx">newDocument</span><span class="p">({</span> <span class=
-"nx">indent</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+ <span class="kd">var</span> <span class="nx">mydoc</span> <span class="o">=</span> <span class=
+"nx">html</span><span class="p">.</span><span class="nx">newDocument</span><span class="p">(</span><span class=
+"nx">mydocText</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class=
-"nx">mydoc</span><span class="p">.</span><span class="nx">prettyPrint</span><span class="p">();</span>
+<span class="cm">/* manipulate document here */</span>
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class=
-"nx">output</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">htmlJSON</span> <span class="o">=</span> <span class=
+"nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class=
+"nx">mydoc</span><span class="p">.</span><span class="nx">toObj</span><span class="p">());</span>
 
-<span class="cm">/* expected output:</span>
+<span class="cm">/* save the json in a file */</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class=
+"s2">"/path/to/my_html.json"</span><span class="p">,</span> <span class="s1">'%s'</span><span class=
+"p">,</span> <span class="nx">htmlJSON</span><span class="p">);</span>
 
-<span class="cm">&lt;!DOCTYPE html&gt;</span>
-<span class="cm">&lt;html&gt;</span>
-<span class="cm">  &lt;head&gt;</span>
-<span class="cm">    &lt;title&gt;&lt;/title&gt;</span>
-<span class="cm">  &lt;/head&gt;</span>
-<span class="cm">  &lt;body&gt;</span>
-<span class="cm">  &lt;/body&gt;</span>
-<span class="cm">&lt;/html&gt;</span>
+<span class="cm">/* **** in another script **** */</span>
 
-<span class="cm">*/</span>
+<span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class=
+"nx">require</span><span class="p">(</span><span class="s2">"rampart-html"</span><span class="p">);</span>
+<span class="cm">/* load json, convert to object and then convert to text/html */</span>
+<span class="kd">var</span> <span class="nx">htmlText</span> <span class="o">=</span> <span class=
+"nx">html</span><span class="p">.</span><span class="nx">objToHtml</span><span class="p">(</span> <span class=
+"nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
+"nx">readFile</span><span class="p">(</span><span class="s2">"/path/to/my_html.json"</span><span class=
+"p">)</span> <span class="p">);</span>
 
-<span class="nx">mydoc</span> <span class="o">=</span> <span class="nx">html</span><span class="p">.</span><span class=
-"nx">newDocument</span><span class="p">(</span>
-    <span class="s1">'&lt;title&gt;My Page&lt;/title&gt;&lt;h1&gt;Welcome to my page&lt;/h2&gt;'</span><span class=
-"p">,</span>
-    <span class="p">{</span> <span class="nx">indent</span><span class="o">:</span> <span class=
-"kc">true</span> <span class="p">}</span>
-<span class="p">);</span>
+<span class="cm">/* htmlText = "&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;...&lt;/html&gt;" */</span>
+</pre>
+                        </div>
+                      </div>
+                      <dl class="docutils">
+                        <dt>
+                          Note:
+                        </dt>
+                        <dd>
+                          The same can be performed in the browser by using JavaScript similar to this:
+                        </dd>
+                      </dl>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="cm">/* distinguish between a plain object and an array</span>
+<span class="cm">   and make output similar to rampart.utils.getType()    */</span>
+<span class="kd">function</span> <span class="nx">getType</span><span class="p">(</span><span class=
+"nx">v</span><span class="p">)</span> <span class="p">{</span>
 
-<span class="nx">output</span> <span class="o">=</span> <span class="nx">mydoc</span><span class=
-"p">.</span><span class="nx">prettyPrint</span><span class="p">();</span>
+    <span class="k">if</span><span class="p">(</span><span class="k">typeof</span> <span class=
+"nx">v</span> <span class="o">==</span> <span class="s1">'object'</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">v</span> <span class=
+"nx">instanceOf</span> <span class="nb">Array</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">"Array"</span><span class="p">;</span>
+        <span class="k">return</span> <span class="s2">"Object"</span>
+    <span class="p">}</span>
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class=
+"k">typeof</span> <span class="nx">v</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">.</span><span class=
+"nx">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class=
+"nx">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">ret</span><span class=
+"p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class=
-"nx">output</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">singletons</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"br"</span><span class="p">,</span>
+        <span class="s2">"input"</span><span class="p">,</span>
+        <span class="s2">"link"</span><span class="p">,</span>
+        <span class="s2">"meta"</span><span class="p">,</span>
+        <span class="s2">"!doctype"</span><span class="p">,</span>
+        <span class="s2">"col"</span><span class="p">,</span>
+        <span class="s2">"area"</span><span class="p">,</span>
+        <span class="s2">"base"</span><span class="p">,</span>
+        <span class="s2">"param"</span><span class="p">,</span>
+        <span class="s2">"track"</span><span class="p">,</span>
+        <span class="s2">"wbr"</span><span class="p">,</span>
+        <span class="s2">"keygen"</span>
+<span class="p">];</span>
 
-<span class="cm">/* expected output:</span>
-<span class="cm">&lt;!DOCTYPE html&gt;</span>
-<span class="cm">&lt;html&gt;</span>
-<span class="cm">  &lt;head&gt;</span>
-<span class="cm">    &lt;title&gt;</span>
-<span class="cm">      My Page</span>
-<span class="cm">    &lt;/title&gt;</span>
-<span class="cm">  &lt;/head&gt;</span>
-<span class="cm">  &lt;body&gt;</span>
-<span class="cm">    &lt;h1&gt;</span>
-<span class="cm">      Welcome to my page</span>
-<span class="cm">    &lt;/h1&gt;</span>
-<span class="cm">  &lt;/body&gt;</span>
-<span class="cm">&lt;/html&gt;</span>
-<span class="cm">*/</span>
+<span class="kd">function</span> <span class="nx">objToHtmlArr</span><span class="p">(</span><span class=
+"nx">obj</span><span class="p">,</span> <span class="nx">txtarr</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">i</span><span class=
+"o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">len</span><span class=
+"p">,</span> <span class="nx">issingleton</span><span class="o">=</span><span class="kc">false</span><span class=
+"p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">txtarr</span><span class=
+"p">)</span>
+        <span class="nx">txtarr</span><span class="o">=</span><span class="p">[];</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">getType</span><span class=
+"p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="o">!=</span> <span class=
+"s2">"Object"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[];</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class=
+"nx">type</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">obj</span><span class=
+"p">.</span><span class="nx">type</span> <span class="o">!=</span><span class="s1">'document'</span><span class=
+"p">)</span> <span class="p">{</span>
+            <span class="nx">issingleton</span> <span class="o">=</span> <span class="nx">singletons</span><span class=
+"p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">obj</span><span class=
+"p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">toLowerCase</span><span class=
+"p">());</span>
+            <span class="nx">txtarr</span><span class="p">.</span><span class="nx">push</span><span class=
+"p">(</span><span class="s1">'&lt;'</span> <span class="o">+</span> <span class="nx">obj</span><span class=
+"p">.</span><span class="nx">type</span><span class="p">);</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="nx">obj</span><span class=
+"p">.</span><span class="nx">attributes</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">getType</span><span class=
+"p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">attributes</span><span class=
+"p">)</span> <span class="o">==</span> <span class="s2">"Object"</span><span class="p">){</span>
+                    <span class="nx">a</span> <span class="o">=</span> <span class="nx">obj</span><span class=
+"p">.</span><span class="nx">attributes</span><span class="p">;</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="nx">key</span> <span class=
+"k">in</span> <span class="nx">a</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">txtarr</span><span class="p">.</span><span class="nx">push</span><span class=
+"p">(</span><span class="s1">' '</span> <span class="o">+</span> <span class="nx">key</span> <span class=
+"o">+</span> <span class="s1">'="'</span> <span class="o">+</span> <span class="nx">a</span><span class=
+"p">[</span><span class="nx">key</span><span class="p">].</span><span class="nx">replace</span><span class=
+"p">(</span><span class="sr">/"/g</span><span class="p">,</span><span class="s1">'&amp;quot;'</span><span class=
+"p">)</span><span class="o">+</span><span class="s1">'"'</span> <span class="p">)</span>
+                    <span class="p">}</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class=
+"p">(</span><span class="nx">getType</span><span class="p">(</span><span class="nx">obj</span><span class=
+"p">.</span><span class="nx">attributes</span><span class="p">)</span> <span class="o">==</span> <span class=
+"s2">"Array"</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">a</span> <span class="o">=</span> <span class="nx">obj</span><span class=
+"p">.</span><span class="nx">attributes</span><span class="p">;</span>
+                    <span class="nx">len</span> <span class="o">=</span> <span class="nx">a</span><span class=
+"p">.</span><span class="nx">length</span><span class="p">;</span>
+                    <span class="k">for</span><span class="p">(;</span><span class="nx">i</span><span class=
+"o">&lt;</span><span class="nx">len</span><span class="p">;</span><span class="nx">i</span><span class=
+"o">++</span><span class="p">){</span>
+                        <span class="nx">txtarr</span><span class="p">.</span><span class="nx">push</span><span class=
+"p">(</span><span class="s1">' '</span> <span class="o">+</span> <span class="nx">a</span><span class=
+"p">[</span><span class="nx">i</span><span class="p">]);</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="nx">txtarr</span><span class="p">.</span><span class="nx">push</span><span class=
+"p">(</span><span class="s1">'&gt;'</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class=
+"nx">contents</span> <span class="o">&amp;&</span> <span class="nx">getType</span><span class="p">(</span><span class=
+"nx">obj</span><span class="p">.</span><span class="nx">contents</span><span class="p">)</span><span class=
+"o">==</span><span class="s1">'Array'</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">a</span><span class="o">=</span><span class="nx">obj</span><span class=
+"p">.</span><span class="nx">contents</span><span class="p">;</span>
+        <span class="nx">len</span><span class="o">=</span><span class="nx">a</span><span class=
+"p">.</span><span class="nx">length</span><span class="p">;</span>
+        <span class="k">for</span><span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class=
+"mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class=
+"nx">len</span><span class="p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">getType</span><span class=
+"p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">i</span><span class=
+"p">])</span><span class="o">==</span><span class="s1">'String'</span><span class="p">)</span>
+                <span class="nx">txtarr</span><span class="p">.</span><span class="nx">push</span><span class=
+"p">(</span><span class="nx">a</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class=
+"nx">getType</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class=
+"nx">i</span><span class="p">])</span><span class="o">==</span><span class="s1">'Object'</span><span class="p">)</span>
+                <span class="nx">txtarr</span> <span class="o">=</span> <span class=
+"nx">objToHtmlArr</span><span class="p">(</span><span class="nx">a</span><span class="p">[</span><span class=
+"nx">i</span><span class="p">],</span><span class="nx">txtarr</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class=
+"nx">type</span> <span class="o">&amp;&</span> <span class="nx">obj</span><span class="p">.</span><span class=
+"nx">type</span> <span class="o">!=</span><span class="s1">'document'</span> <span class="o">&amp;&</span> <span class=
+"o">!</span><span class="nx">issingleton</span><span class="p">)</span>
+        <span class="nx">txtarr</span><span class="p">.</span><span class="nx">push</span><span class=
+"p">(</span><span class="s2">"&lt;/"</span><span class="o">+</span><span class="nx">obj</span><span class=
+"p">.</span><span class="nx">type</span><span class="o">+</span><span class="s1">'&gt;'</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">txtarr</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">objToHtml</span><span class="p">(</span><span class=
+"nx">obj</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class=
+"p">,</span><span class="nx">ret</span><span class="o">=</span><span class="p">[];</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">getType</span><span class=
+"p">(</span><span class="nx">obj</span><span class="p">)</span><span class="o">==</span><span class=
+"s2">"Array"</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span><span class="p">(;</span><span class="nx">i</span><span class=
+"o">&lt;</span><span class="nx">obj</span><span class="p">.</span><span class="nx">length</span><span class=
+"p">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+            <span class="nx">ret</span><span class="o">=</span><span class="nx">objToHtmlArr</span><span class=
+"p">(</span><span class="nx">obj</span><span class="p">[</span><span class="nx">i</span><span class=
+"p">],</span><span class="nx">ret</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class=
+"nx">getType</span><span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class=
+"o">==</span> <span class="s2">"Object"</span><span class="p">){</span>
+        <span class="nx">ret</span><span class="o">=</span><span class="nx">objToHtmlArr</span><span class=
+"p">(</span><span class="nx">obj</span><span class="p">[</span><span class="nx">i</span><span class=
+"p">],</span><span class="nx">ret</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">.</span><span class=
+"nx">join</span><span class="p">(</span><span class="s1">''</span><span class="p">);</span>
+<span class="p">}</span>
 </pre>
                         </div>
                       </div>
@@ -619,8 +967,7 @@
                       <p>
                         The <em>root html object</em> is the <span class="green">Object</span> returned from <a class=
                         "reference internal" href="#newdocument">newDocument</a>. It is identical to other <em>html
-                        objects</em>, except that it additionally includes the <a class="reference internal" href=
-                        "#prettyprint">prettyPrint</a> function.
+                        objects</em>, except that it contains only one element (the document root).
                       </p>
                       <p>
                         In addition to the <em>root html object</em>, new ones can be created. A new list of elements
@@ -630,14 +977,53 @@
                       <p>
                         Each <em>html object</em> created from any other <em>html object</em> will refer to elements in
                         the same document. These elements represent the actual content in the HTML document, and if
-                        manipulated, will change the contents returned from <a class="reference internal" href=
-                        "#prettyprint">prettyPrint</a>.
+                        manipulated, will change the contents returned from any other <em>html object</em> derived from
+                        the same <em>root html object</em>.
                       </p>
                       <p>
                         Additionally, the <em>html object</em> includes the <code class=
                         "docutils literal notranslate"><span class="pre">length</span></code> property (number of
-                        elements in the current list).
+                        elements in the list).
                       </p>
+                    </div>
+                    <div class="section" id="destroy">
+                      <h3>
+                        destroy<a class="headerlink" href="#destroy" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Destroy and release resources used by a document created with <code class=
+                        "docutils literal notranslate"><span class="pre">newDocument()</span></code>.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">html</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-html"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">mydoc</span> <span class="o">=</span> <span class=
+"nx">html</span><span class="p">.</span><span class="nx">newDocument</span><span class="p">([</span><span class=
+"nx">document_text</span><span class="p">][,</span> <span class="nx">options</span><span class="p">]);</span>
+
+<span class="nx">mydoc</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre>
+                        </div>
+                      </div>
+                      <dl class="docutils">
+                        <dt>
+                          NOTE:
+                        </dt>
+                        <dd>
+                          <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> may be
+                          used from the <em>root html object</em> or any list of elements produced from functions below
+                          (any dependent <em>html object</em>). Calling destroy will invalidate the <em>root html
+                          object</em> and any lists created from it (see <code class=
+                          "docutils literal notranslate"><span class="pre">Manipulating</span> <span class=
+                          "pre">the</span> <span class="pre">HTML</span></code> below).
+                        </dd>
+                      </dl>
                     </div>
                     <div class="section" id="selecting-elements">
                       <h3>
@@ -715,10 +1101,41 @@
                           the name of the attribute in the element to be selected (e.g. “id”).
                         </p>
                         <p>
-                          Additionally, <code class="docutils literal notranslate"><span class=
-                          "pre">attrname</span></code> can specify a value by using <code class=
-                          "docutils literal notranslate"><span class="pre">attr=val</span></code> syntax.
+                          Additionally:
                         </p>
+                        <blockquote>
+                          <div>
+                            <ul class="simple">
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">attrname</span></code> can
+                                specify a value by using <code class="docutils literal notranslate"><span class=
+                                "pre">"attr=val"</span></code> syntax.
+                              </li>
+                              <li>whitespace is ignored (e.g. <code class="docutils literal notranslate"><span class=
+                              "pre">"attr</span> <span class="pre">=</span> <span class="pre">val</span> <span class=
+                              "pre">"</span></code>.
+                              </li>
+                              <li>globs may be used at the beginning or end (but not both) of <code class=
+                              "docutils literal notranslate"><span class="pre">val</span></code> (e.g <code class=
+                              "docutils literal notranslate"><span class="pre">"id=my_id_*"</span></code> or
+                              <code class="docutils literal notranslate"><span class="pre">id=*_val</span></code>)
+                              </li>
+                              <li>quotes are respected (e.g. <code class="docutils literal notranslate"><span class=
+                              "pre">"id='my</span> <span class="pre">val'"</span></code> or <code class=
+                              "docutils literal notranslate"><span class="pre">'id="my</span> <span class=
+                              "pre">val"'</span></code>)
+                              </li>
+                              <li>quotes can be escaped (e.g. <code class="docutils literal notranslate"><span class=
+                              "pre">"id='john\\'s</span> <span class="pre">msg'"</span></code>). Note the double
+                              backslash. It is required for the JavaScript string to pass a single backslash.
+                              </li>
+                              <li>Quotes, backslashes and globs are also available in <a class="reference internal"
+                              href="#filterattr">filterAttr</a> and <a class="reference internal" href=
+                              "#hasattr">hasAttr</a>.
+                              </li>
+                            </ul>
+                          </div>
+                        </blockquote>
                         <p>
                           Example:
                         </p>
@@ -1014,6 +1431,195 @@
                           </div>
                         </div>
                       </div>
+                      <div class="section" id="toobj">
+                        <h4>
+                          toObj<a class="headerlink" href="#toobj" title="Permalink to this headline">¶</a>
+                        </h4>
+                        <p>
+                          Return an <span class="green">Array</span> of <span class="green">Objects</span> representing
+                          the elements in the <em>html object</em> or the entire document if the object is the <em>root
+                          html object</em>.
+                        </p>
+                        <p>
+                          Example:
+                        </p>
+                        <div class="highlight-javascript notranslate">
+                          <div class="highlight">
+                            <pre><span></span><span class="kd">var</span> <span class="nx">html</span> <span class=
+                            "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                            "s2">"rampart-html"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">doc</span> <span class="o">=</span> <span class=
+"nx">html</span><span class="p">.</span><span class="nx">newDocument</span><span class="p">(</span>
+    <span class="s1">'&lt;div title="div1"&gt;one&lt;/div&gt;&lt;div&gt;two&lt;/div&gt;'</span> <span class=
+"o">+</span>
+    <span class="s1">'&lt;div title="div3"&gt;three&lt;/div&gt;&lt;div&gt;four&lt;/div&gt;'</span> <span class=
+"o">+</span>
+    <span class="s1">'&lt;div title="div5"&gt;five &lt;span&gt;six&lt;/span&gt;&lt;/div&gt;'</span>
+<span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">mytags</span> <span class="o">=</span> <span class=
+"nx">doc</span><span class="p">.</span><span class="nx">findTag</span><span class="p">(</span><span class=
+"s2">"div"</span><span class="p">).</span><span class="nx">toObj</span><span class="p">();</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">mytags</span><span class="p">);</span>
+
+<span class="cm">/* expected output:</span>
+<span class="cm">[</span>
+<span class="cm">   {</span>
+<span class="cm">      "type": "div",</span>
+<span class="cm">      "attributes": {</span>
+<span class="cm">         "title": "div1"</span>
+<span class="cm">      },</span>
+<span class="cm">      "contents": [</span>
+<span class="cm">         "one"</span>
+<span class="cm">      ]</span>
+<span class="cm">   },</span>
+<span class="cm">   {</span>
+<span class="cm">      "type": "div",</span>
+<span class="cm">      "contents": [</span>
+<span class="cm">         "two"</span>
+<span class="cm">      ]</span>
+<span class="cm">   },</span>
+<span class="cm">   {</span>
+<span class="cm">      "type": "div",</span>
+<span class="cm">      "attributes": {</span>
+<span class="cm">         "title": "div3"</span>
+<span class="cm">      },</span>
+<span class="cm">      "contents": [</span>
+<span class="cm">         "three"</span>
+<span class="cm">      ]</span>
+<span class="cm">   },</span>
+<span class="cm">   {</span>
+<span class="cm">      "type": "div",</span>
+<span class="cm">      "contents": [</span>
+<span class="cm">         "four"</span>
+<span class="cm">      ]</span>
+<span class="cm">   },</span>
+<span class="cm">   {</span>
+<span class="cm">      "type": "div",</span>
+<span class="cm">      "attributes": {</span>
+<span class="cm">         "title": "div5"</span>
+<span class="cm">      },</span>
+<span class="cm">      "contents": [</span>
+<span class="cm">         "five ",</span>
+<span class="cm">         {</span>
+<span class="cm">            "type": "span",</span>
+<span class="cm">            "contents": [</span>
+<span class="cm">               "six"</span>
+<span class="cm">            ]</span>
+<span class="cm">         }</span>
+<span class="cm">      ]</span>
+<span class="cm">   }</span>
+<span class="cm">]</span>
+<span class="cm">*/</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">doc</span><span class="p">.</span><span class="nx">toObj</span><span class=
+"p">());</span>
+
+<span class="cm">/* expected output:</span>
+<span class="cm">[</span>
+<span class="cm">   {</span>
+<span class="cm">      "type": "document",</span>
+<span class="cm">      "contents": [</span>
+<span class="cm">         {</span>
+<span class="cm">            "type": "!DOCTYPE",</span>
+<span class="cm">            "attributes": [</span>
+<span class="cm">               "html"</span>
+<span class="cm">            ]</span>
+<span class="cm">         },</span>
+<span class="cm">         {</span>
+<span class="cm">            "type": "html",</span>
+<span class="cm">            "contents": [</span>
+<span class="cm">               {</span>
+<span class="cm">                  "type": "head",</span>
+<span class="cm">                  "contents": [</span>
+<span class="cm">                     {</span>
+<span class="cm">                        "type": "title"</span>
+<span class="cm">                     }</span>
+<span class="cm">                  ]</span>
+<span class="cm">               },</span>
+<span class="cm">               {</span>
+<span class="cm">                  "type": "body",</span>
+<span class="cm">                  "contents": [</span>
+<span class="cm">                     {</span>
+<span class="cm">                        "type": "div",</span>
+<span class="cm">                        "attributes": {</span>
+<span class="cm">                           "title": "div1"</span>
+<span class="cm">                        },</span>
+<span class="cm">                        "contents": [</span>
+<span class="cm">                           "one"</span>
+<span class="cm">                        ]</span>
+<span class="cm">                     },</span>
+<span class="cm">                     {</span>
+<span class="cm">                        "type": "div",</span>
+<span class="cm">                        "contents": [</span>
+<span class="cm">                           "two"</span>
+<span class="cm">                        ]</span>
+<span class="cm">                     },</span>
+<span class="cm">                     {</span>
+<span class="cm">                        "type": "div",</span>
+<span class="cm">                        "attributes": {</span>
+<span class="cm">                           "title": "div3"</span>
+<span class="cm">                        },</span>
+<span class="cm">                        "contents": [</span>
+<span class="cm">                           "three"</span>
+<span class="cm">                        ]</span>
+<span class="cm">                     },</span>
+<span class="cm">                     {</span>
+<span class="cm">                        "type": "div",</span>
+<span class="cm">                        "contents": [</span>
+<span class="cm">                           "four"</span>
+<span class="cm">                        ]</span>
+<span class="cm">                     },</span>
+<span class="cm">                     {</span>
+<span class="cm">                        "type": "div",</span>
+<span class="cm">                        "attributes": {</span>
+<span class="cm">                           "title": "div5"</span>
+<span class="cm">                        },</span>
+<span class="cm">                        "contents": [</span>
+<span class="cm">                           "five ",</span>
+<span class="cm">                           {</span>
+<span class="cm">                              "type": "span",</span>
+<span class="cm">                              "contents": [</span>
+<span class="cm">                                 "six"</span>
+<span class="cm">                              ]</span>
+<span class="cm">                           }</span>
+<span class="cm">                        ]</span>
+<span class="cm">                     }</span>
+<span class="cm">                  ]</span>
+<span class="cm">               }</span>
+<span class="cm">            ]</span>
+<span class="cm">         }</span>
+<span class="cm">      ]</span>
+<span class="cm">   }</span>
+<span class="cm">]</span>
+
+<span class="cm">*/</span>
+</pre>
+                          </div>
+                        </div>
+                        <dl class="docutils">
+                          <dt>
+                            Note:
+                          </dt>
+                          <dd>
+                            The return <span class="green">Object</span> can be used as the input for html.<a class=
+                            "reference internal" href="#newdocument">newDocument</a> or html.<a class=
+                            "reference internal" href="#objtohtml">objToHtml</a> above.
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                    <div class="section" id="text-and-html-output">
+                      <h3>
+                        Text and HTML Output<a class="headerlink" href="#text-and-html-output" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
                       <div class="section" id="tohtml">
                         <h4>
                           toHtml<a class="headerlink" href="#tohtml" title="Permalink to this headline">¶</a>
@@ -1068,11 +1674,12 @@
                           toText<a class="headerlink" href="#totext" title="Permalink to this headline">¶</a>
                         </h4>
                         <p>
-                          Return an <span class="green">Array</span> of <span class="green">Strings</span>, each string
-                          the plain text extracted from each of the given elements and their children. By default,
-                          <code class="docutils literal notranslate"><span class="pre">toText()</span></code> attempts
-                          to extract only visible text. Options below allow for some formatting and other relevant text
-                          to be returned as well.
+                          Return an <span class="green">Array</span> of <span class="green">Strings</span> (or
+                          optionally a concatenated <span class="green">String</span>), each string being the plain
+                          text extracted from each of the given elements and their children. By default, <code class=
+                          "docutils literal notranslate"><span class="pre">toText()</span></code> attempts to extract
+                          only visible text. Options below allow for some formatting and other relevant text to be
+                          returned as well.
                         </p>
                         <p>
                           Usage:
@@ -1091,19 +1698,19 @@
                         </p>
                         <ul>
                           <li>
-                            <p>
+                            <p class="first">
                               <code class="docutils literal notranslate"><span class="pre">tags</span></code> is the
                               return value.
                             </p>
                           </li>
                           <li>
-                            <p>
+                            <p class="first">
                               <code class="docutils literal notranslate"><span class="pre">hobj</span></code> is an
                               <em>html object</em> with 0 or more elements.
                             </p>
                           </li>
                           <li>
-                            <p>
+                            <p class="first">
                               <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
                               <span class="green">Object</span> with the following setting:
                             </p>
@@ -1111,108 +1718,89 @@
                               <div>
                                 <ul class="simple">
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">concatenate</span></code> - a <span class="green">Boolean</span> if true,
-                                      the function will return a <span class="green">String</span> consisting of the
-                                      concatenated output from each given element. Default is <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">concatenate</span></code> - a <span class="green">Boolean</span> if true, the
+                                    function will return a <span class="green">String</span> consisting of the
+                                    concatenated output from each given element. Default is <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">metaDescription</span></code> - a <span class="green">Boolean</span> if
-                                      true, text from the <code class="docutils literal notranslate"><span class=
-                                      "pre">content</span></code> of an existing <code class=
-                                      "docutils literal notranslate"><span class="pre">&lt;meta</span> <span class=
-                                      "pre">name="description"</span> <span class=
-                                      "pre">content="text"&gt;</span></code> will also be output. Default is
-                                      <code class="docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">metaDescription</span></code> - a <span class="green">Boolean</span> if true,
+                                    text from the <code class="docutils literal notranslate"><span class=
+                                    "pre">content</span></code> of an existing <code class=
+                                    "docutils literal notranslate"><span class="pre">&lt;meta</span> <span class=
+                                    "pre">name="description"</span> <span class="pre">content="text"&gt;</span></code>
+                                    will also be output. Default is <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">metaKeywords</span></code> - a <span class="green">Boolean</span> if true,
-                                      text from the <code class="docutils literal notranslate"><span class=
-                                      "pre">content</span></code> of an existing <code class=
-                                      "docutils literal notranslate"><span class="pre">&lt;meta</span> <span class=
-                                      "pre">name="keywords"</span> <span class="pre">content="text"&gt;</span></code>
-                                      will also be output. Default is <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">metaKeywords</span></code> - a <span class="green">Boolean</span> if true,
+                                    text from the <code class="docutils literal notranslate"><span class=
+                                    "pre">content</span></code> of an existing <code class=
+                                    "docutils literal notranslate"><span class="pre">&lt;meta</span> <span class=
+                                    "pre">name="keywords"</span> <span class="pre">content="text"&gt;</span></code>
+                                    will also be output. Default is <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">enumerateLists</span></code> - a <span class="green">Boolean</span> if
-                                      true, text in <code class="docutils literal notranslate"><span class=
-                                      "pre">&lt;li&gt;</span></code> tags will be indented and prepended with an
-                                      asterisk <code class="docutils literal notranslate"><span class=
-                                      "pre">*</span></code> for unordered lists (<code class=
-                                      "docutils literal notranslate"><span class="pre">&lt;ul&gt;</span></code>) or a
-                                      sequential number followed by a period (e.g. <code class=
-                                      "docutils literal notranslate"><span class="pre">1.</span></code>) for ordered
-                                      lists (<code class="docutils literal notranslate"><span class=
-                                      "pre">&lt;ol&gt;</span></code>). Text inside <code class=
-                                      "docutils literal notranslate"><span class=
-                                      "pre">&lt;dl&gt;/&lt;dt&gt;/&lt;dd&gt;</span></code> tags will also be indented.
-                                      Default is <code class="docutils literal notranslate"><span class=
-                                      "pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">enumerateLists</span></code> - a <span class="green">Boolean</span> if true,
+                                    text in <code class="docutils literal notranslate"><span class=
+                                    "pre">&lt;li&gt;</span></code> tags will be indented and prepended with an asterisk
+                                    <code class="docutils literal notranslate"><span class="pre">*</span></code> for
+                                    unordered lists (<code class="docutils literal notranslate"><span class=
+                                    "pre">&lt;ul&gt;</span></code>) or a sequential number followed by a period (e.g.
+                                    <code class="docutils literal notranslate"><span class="pre">1.</span></code>) for
+                                    ordered lists (<code class="docutils literal notranslate"><span class=
+                                    "pre">&lt;ol&gt;</span></code>). Text inside <code class=
+                                    "docutils literal notranslate"><span class=
+                                    "pre">&lt;dl&gt;/&lt;dt&gt;/&lt;dd&gt;</span></code> tags will also be indented.
+                                    Default is <code class="docutils literal notranslate"><span class=
+                                    "pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">titleText</span></code> - a <span class="green">Boolean</span> if true,
-                                      text from any element which contains a <code class=
-                                      "docutils literal notranslate"><span class="pre">title</span></code> attribute
-                                      will also be output. Default is <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">titleText</span></code> - a <span class="green">Boolean</span> if true, text
+                                    from any element which contains a <code class=
+                                    "docutils literal notranslate"><span class="pre">title</span></code> attribute will
+                                    also be output. Default is <code class="docutils literal notranslate"><span class=
+                                    "pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">showHRTags</span></code>- a <span class="green">Boolean</span> if true,
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">&lt;hr&gt;</span></code> will be replaced with <code class=
-                                      "docutils literal notranslate"><span class="pre">\n---\n</span></code> instead of
-                                      <code class="docutils literal notranslate"><span class="pre">\n</span></code>.
-                                      Default is <code class="docutils literal notranslate"><span class=
-                                      "pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">showHRTags</span></code>- a <span class="green">Boolean</span> if true,
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">&lt;hr&gt;</span></code> will be replaced with <code class=
+                                    "docutils literal notranslate"><span class="pre">\n---\n</span></code> instead of
+                                    <code class="docutils literal notranslate"><span class="pre">\n</span></code>.
+                                    Default is <code class="docutils literal notranslate"><span class=
+                                    "pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class="pre">aLinks</span></code>
-                                      - a <span class="green">Boolean</span> if true, the <code class=
-                                      "docutils literal notranslate"><span class="pre">href</span></code> value from
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">&lt;a&gt;</span></code> tags will be output after the enclosed text in
-                                      parentheses in markdown style. Default is <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">aLinks</span></code> -
+                                    a <span class="green">Boolean</span> if true, the <code class=
+                                    "docutils literal notranslate"><span class="pre">href</span></code> value from
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">&lt;a&gt;</span></code> tags will be output after the enclosed text in
+                                    parentheses in markdown style. Default is <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">imgAltText</span></code> - a <span class="green">Boolean</span> if true,
-                                      alt text from images will also be output. Default is <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">imgAltText</span></code> - a <span class="green">Boolean</span> if true, alt
+                                    text from images will also be output. Default is <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">imgLinks</span></code> - a <span class="green">Boolean</span> if true, the
-                                      <code class="docutils literal notranslate"><span class="pre">src</span></code>
-                                      value from <code class="docutils literal notranslate"><span class=
-                                      "pre">&lt;img&gt;</span></code> tags will be output after the enclosed text in
-                                      parentheses in markdown style. Default is <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">imgLinks</span></code>
+                                    - a <span class="green">Boolean</span> if true, the <code class=
+                                    "docutils literal notranslate"><span class="pre">src</span></code> value from
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">&lt;img&gt;</span></code> tags will be output after the enclosed text in
+                                    parentheses in markdown style. Default is <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>.
                                   </li>
                                 </ul>
                               </div>
@@ -1308,6 +1896,139 @@
 <span class="cm">![me at 21](myimage2.jpg)</span>
 <span class="cm">I got a job guessing weights at [a carnival](http://example.com/ "The Carnival Website")...</span>
 
+<span class="cm">*/</span>
+</pre>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="section" id="prettyprint">
+                        <h4>
+                          prettyPrint<a class="headerlink" href="#prettyprint" title="Permalink to this headline">¶</a>
+                        </h4>
+                        <p>
+                          Format and output a <span class="green">String</span> of the <em>first</em> element in the
+                          list of elements. If used with the <em>root html object</em>, it will output the entire
+                          document.
+                        </p>
+                        <p>
+                          Usage:
+                        </p>
+                        <div class="highlight-javascript notranslate">
+                          <div class="highlight">
+                            <pre><span></span><span class="kd">var</span> <span class="nx">html</span> <span class=
+                            "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                            "s2">"rampart-html"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">mydoc</span> <span class="o">=</span> <span class=
+"nx">html</span><span class="p">.</span><span class="nx">newDocument</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class=
+"nx">mydoc</span><span class="p">.</span><span class="nx">prettyPrint</span><span class="p">({</span><span class=
+"nx">formattingOptions</span><span class="p">});</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class=
+"nx">mydoc</span><span class="p">.</span><span class="nx">prettyPrint</span><span class="p">(</span><span class=
+"nx">indentSpaces</span><span class="p">,</span> <span class="nx">wrap</span><span class="p">);</span>
+</pre>
+                          </div>
+                        </div>
+                        <p>
+                          Where
+                        </p>
+                        <blockquote>
+                          <div>
+                            <ul class="simple">
+                              <li>
+                                <cite>formattingOptions</cite> is an <span class="green">Object</span> - the same
+                                formatting options from <a class="reference internal" href=
+                                "#newdocument">newDocument</a> above.
+                              </li>
+                              <li>
+                                <cite>indentSpaces</cite> is a <span class="green">Number</span> - number of spaces to
+                                be used for indentation.
+                              </li>
+                              <li>
+                                <cite>wrap</cite> is a <span class="green">Number</span> - minimum number of characters
+                                to print before wrapping a line. Line length may exceed this value but will break at
+                                the first opportunity when line length exceeds it.
+                              </li>
+                            </ul>
+                          </div>
+                        </blockquote>
+                        <dl class="docutils">
+                          <dt>
+                            Note:
+                          </dt>
+                          <dd>
+                            Setting options in <code class="docutils literal notranslate"><span class=
+                            "pre">prettyPrint</span></code> overrides the options set in <a class="reference internal"
+                            href="#newdocument">newDocument</a> for all future operations.
+                          </dd>
+                        </dl>
+                        <p>
+                          Example:
+                        </p>
+                        <div class="highlight-javascript notranslate">
+                          <div class="highlight">
+                            <pre><span></span><span class="kd">var</span> <span class="nx">html</span> <span class=
+                            "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                            "s2">"rampart-html"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">mydoc</span> <span class="o">=</span> <span class=
+"nx">html</span><span class="p">.</span><span class="nx">newDocument</span><span class="p">();</span>
+
+<span class="kd">var</span> <span class="nx">output</span> <span class="o">=</span> <span class=
+"nx">mydoc</span><span class="p">.</span><span class="nx">prettyPrint</span><span class="p">(</span><span class=
+"mi">2</span><span class="p">,</span><span class="mi">80</span><span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class=
+"nx">output</span><span class="p">);</span>
+
+<span class="cm">/* expected output:</span>
+
+<span class="cm">&lt;!DOCTYPE html&gt;</span>
+<span class="cm">&lt;html&gt;</span>
+<span class="cm">  &lt;head&gt;</span>
+<span class="cm">    &lt;title&gt;&lt;/title&gt;</span>
+<span class="cm">  &lt;/head&gt;</span>
+<span class="cm">  &lt;body&gt;</span>
+<span class="cm">  &lt;/body&gt;</span>
+<span class="cm">&lt;/html&gt;</span>
+
+<span class="cm">*/</span>
+
+<span class="nx">mydoc</span> <span class="o">=</span> <span class="nx">html</span><span class="p">.</span><span class=
+"nx">newDocument</span><span class="p">(</span>
+    <span class="s1">'&lt;title&gt;My Page&lt;/title&gt;&lt;h1&gt;Welcome to my page&lt;/h2&gt;'</span><span class=
+"p">,</span>
+    <span class="p">{</span> <span class="nx">indent</span><span class="o">:</span> <span class=
+"kc">true</span> <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="nx">output</span> <span class="o">=</span> <span class="nx">mydoc</span><span class=
+"p">.</span><span class="nx">prettyPrint</span><span class="p">({</span><span class="nx">indent</span><span class=
+"o">:</span><span class="kc">true</span><span class="p">,</span> <span class="nx">indentSpaces</span><span class=
+"o">:</span><span class="mi">2</span><span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class=
+"nx">output</span><span class="p">);</span>
+
+<span class="cm">/* expected output:</span>
+<span class="cm">&lt;!DOCTYPE html&gt;</span>
+<span class="cm">&lt;html&gt;</span>
+<span class="cm">  &lt;head&gt;</span>
+<span class="cm">    &lt;title&gt;</span>
+<span class="cm">      My Page</span>
+<span class="cm">    &lt;/title&gt;</span>
+<span class="cm">  &lt;/head&gt;</span>
+<span class="cm">  &lt;body&gt;</span>
+<span class="cm">    &lt;h1&gt;</span>
+<span class="cm">      Welcome to my page</span>
+<span class="cm">    &lt;/h1&gt;</span>
+<span class="cm">  &lt;/body&gt;</span>
+<span class="cm">&lt;/html&gt;</span>
 <span class="cm">*/</span>
 </pre>
                           </div>
@@ -1506,7 +2227,7 @@
                           Note that even though there are four elements in <code class=
                           "docutils literal notranslate"><span class="pre">myspans</span></code>, <code class=
                           "docutils literal notranslate"><span class="pre">parent()</span></code>, like all <em>html
-                          object</em> functions, returns a unique list.
+                          object</em> functions, it returns a unique list.
                         </p>
                       </div>
                       <div class="section" id="getdocument">
@@ -1813,25 +2534,32 @@
                         </p>
                         <ul class="simple">
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">newlist</span></code> is the
-                              returned <em>html object</em>.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">newlist</span></code> is the
+                            returned <em>html object</em>.
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">oldlist</span></code> is the
-                              <em>html object</em> with an array of elements to be appended.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">oldlist</span></code> is the
+                            <em>html object</em> with an array of elements to be appended.
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">additions</span></code> is
-                              an <em>html object</em> or a <span class="green">String</span> of text or HTML to be
-                              added to the list.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">additions</span></code> is an
+                            <em>html object</em> or a <span class="green">String</span> of text or HTML to be added to
+                            the list.
                           </li>
                         </ul>
+                        <dl class="docutils">
+                          <dt>
+                            Note:
+                          </dt>
+                          <dd>
+                            Additions made to list with <code class="docutils literal notranslate"><span class=
+                            "pre">add()</span></code> are detached and will not be a part of the output of
+                            <cite>prettyPrint</cite> unless one of <a class="reference internal" href=
+                            "#append">append</a>, <a class="reference internal" href="#prepend">prepend</a>, <a class=
+                            "reference internal" href="#before">before</a>, or <a class="reference internal" href=
+                            "#after">after</a> is used to insert the list into the document.
+                          </dd>
+                        </dl>
                         <p>
                           Example:
                         </p>
@@ -2284,24 +3012,18 @@
                         </p>
                         <ul class="simple">
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">newlist</span></code> is a
-                              new <em>html object</em> containing the elements from <code class=
-                              "docutils literal notranslate"><span class="pre">oldlist</span></code>.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">newlist</span></code> is a new
+                            <em>html object</em> containing the elements from <code class=
+                            "docutils literal notranslate"><span class="pre">oldlist</span></code>.
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">oldlist</span></code>
-                              contains the given elements to append.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">oldlist</span></code> contains
+                            the given elements to append.
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">elems</span></code> is an
-                              <em>html object</em> or a <span class="green">String</span> of text or HTML to be
-                              appended to the given elements.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">elems</span></code> is an
+                            <em>html object</em> or a <span class="green">String</span> of text or HTML to be appended
+                            to the given elements.
                           </li>
                         </ul>
                         <p>
@@ -2453,25 +3175,19 @@
                         </p>
                         <ul class="simple">
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">newlist</span></code> is a
-                              new <em>html object</em> containing the elements from <code class=
-                              "docutils literal notranslate"><span class="pre">oldlist</span></code> and <code class=
-                              "docutils literal notranslate"><span class="pre">elems</span></code>.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">newlist</span></code> is a new
+                            <em>html object</em> containing the elements from <code class=
+                            "docutils literal notranslate"><span class="pre">oldlist</span></code> and <code class=
+                            "docutils literal notranslate"><span class="pre">elems</span></code>.
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">oldlist</span></code>
-                              contains the given elements which provide a reference for placement.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">oldlist</span></code> contains
+                            the given elements which provide a reference for placement.
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">elems</span></code> is an
-                              <em>html object</em> or a <span class="green">String</span> of text or HTML to be placed
-                              after to the given elements.
-                            </p>
+                            <code class="docutils literal notranslate"><span class="pre">elems</span></code> is an
+                            <em>html object</em> or a <span class="green">String</span> of text or HTML to be placed
+                            after the given elements.
                           </li>
                         </ul>
                         <p>
@@ -2683,14 +3399,14 @@
             <footer>
               <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
                 <a href="rampart-crypto.html" class="btn btn-neutral float-right" title="The rampart-crypto module"
-                accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-server.html"
-                class="btn btn-neutral" title="The rampart-server HTTP module" accesskey="p"><span class=
+                accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-net.html" class=
+                "btn btn-neutral" title="The rampart-net module" accesskey="p"><span class=
                 "fa fa-arrow-circle-left"></span> Previous</a>
               </div>
               <hr>
               <div role="contentinfo">
                 <p>
-                  © Copyright 2022, Moat Crossing Systems.
+                  © Copyright 2026, Moat Crossing Systems.
                 </p>
               </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
               "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
@@ -2703,7 +3419,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -2715,7 +3431,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script> 
     <script type="text/javascript" src="_static/language_data.js"></script> 
     <script type="text/javascript" src=
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
     <script type="text/javascript" src="_static/js/theme.js"></script> 
     <script type="text/javascript">
 

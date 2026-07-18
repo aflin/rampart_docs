@@ -142,6 +142,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#storage">Storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#generating-embeddings">Generating embeddings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunked-documents-multi-vector-rows">Chunked documents (multi-vector rows)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#querying">Querying</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#indexing">Indexing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#migrating-between-dtypes">Migrating between dtypes</a></li>
@@ -182,6 +183,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -1732,9 +1734,25 @@ resolve to the same variable-length representation internally; the
 </tbody>
 </table>
 <p>A vector value can also be stored in a <code class="docutils literal notranslate"><span class="pre">byte(N)</span></code> or <code class="docutils literal notranslate"><span class="pre">varbyte(N)</span></code>
-column as raw bytes; in that case <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span> <span class="pre">INDEX</span></code> requires
-<code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'&lt;dtype&gt;'</span></code> so the index knows how to interpret the
-bytes.</p>
+column as raw bytes.  This is supported for compatibility with existing
+tables and for code that produces raw byte buffers, but <strong>a typed
+``varvec*`` column is preferred wherever possible</strong>: storage is
+byte-identical, and the column itself declares the element type.  A
+<code class="docutils literal notranslate"><span class="pre">varbyte</span></code> column does not — its dtype lives only in a vector index’s
+parameters (<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span> <span class="pre">INDEX</span></code> on it requires
+<code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'&lt;dtype&gt;'</span></code>) — with several consequences:</p>
+<ul class="simple">
+<li>Inserts are unchecked: any blob is accepted, and a wrong-dtype or
+wrong-dimension vector only surfaces at query time as a silently
+non-matching row.</li>
+<li>The bytes are ambiguous on their own (768 bytes are 384 f16 cells or
+192 f32 cells), so nothing reading the column can interpret a value
+without consulting the index.</li>
+<li>An <em>unindexed</em> <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> column cannot auto-embed a string
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> parameter at all — there is nowhere to learn the element
+type from.  A typed column supports index-less (linear-scan)
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> with string parameters.</li>
+</ul>
 </div>
 </div>
 <div class="section" id="database-indexing">
@@ -2126,8 +2144,8 @@ step that folds those back in.</p>
 </pre></div>
 </div>
 <p>The supported column types for the vector data are listed in
-<a class="reference internal" href="#column-data-types">Column Data Types</a>.  Typed <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> columns auto-detect their
-dimensionality; <code class="docutils literal notranslate"><span class="pre">byte</span></code> and <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> columns require
+<a class="reference internal" href="#column-data-types">Column Data Types</a>.  Typed <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> columns (preferred) auto-detect
+their dimensionality; <code class="docutils literal notranslate"><span class="pre">byte</span></code> and <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> columns require
 <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'&lt;dtype&gt;'</span></code>.</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
@@ -2185,6 +2203,25 @@ accepts the options below.  Re-running <code class="docutils literal notranslate
 existing index of the same table+column is silently treated as
 <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">…</span> <span class="pre">OPTIMIZE</span></code> (mirroring fulltext); WITH options other
 than <code class="docutils literal notranslate"><span class="pre">indexmeter</span></code> are ignored on re-CREATE.</p>
+<p>Index creation is <strong>non-blocking</strong>: the table stays fully readable
+<em>and writable</em> while the index builds.  Rows inserted, updated or
+deleted during the build are tracked live and are searchable the
+moment the index goes live — nothing is missed and no follow-up
+<code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code> is required.  (Fulltext index creation is also
+non-blocking, but rows added <em>during</em> a fulltext CREATE or REBUILD
+only become searchable at the next <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">…</span> <span class="pre">OPTIMIZE</span></code>; the
+vector index has no such blind spot.)  Searches issued while the
+build is still running do not yet use the index (an index-less
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> at that point follows the <code class="docutils literal notranslate"><span class="pre">allinear</span></code> policy above).</p>
+<p>An HNSW index may be created on an <strong>empty table</strong> if <code class="docutils literal notranslate"><span class="pre">vec_dim</span></code> is
+given (there is no row to infer the dimension from); rows inserted
+afterwards are tracked as usual.  IVFPQ cannot: its product-quantizer
+training needs data — at least <code class="docutils literal notranslate"><span class="pre">256</span> <span class="pre">×</span> <span class="pre">vec_pq_min_points_per_centroid</span></code>
+vectors (the coarse/PQ k-means floor).</p>
+<p><code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">TABLE</span> <span class="pre">…</span> <span class="pre">COMPACT</span></code> is refused while a table has vector
+indexes, because compaction moves row ids that the sealed index
+stores: <code class="docutils literal notranslate"><span class="pre">DROP</span></code> the vector index(es) first, compact, then
+re-<code class="docutils literal notranslate"><span class="pre">CREATE</span></code>.</p>
 <p>Common options (both backends):</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
@@ -2219,7 +2256,21 @@ than <code class="docutils literal notranslate"><span class="pre">indexmeter</sp
 <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> columns it overrides the column’s element type
 (HNSW only — IVFPQ uses its own PQ quantization regardless).</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">indexmeter</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">vec_dim</span></code></td>
+<td>positive integer</td>
+<td>auto from first row</td>
+<td>Per-vector dimensionality.  Usually <strong>optional</strong>: the first
+usable row decides it — from the self-describing header
+<a class="reference internal" href="sql-server-funcs.html#chunkembed"><span class="std std-ref">chunkembed()</span></a> writes into
+each value (which records <code class="docutils literal notranslate"><span class="pre">dim</span></code> even for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">dim</span></code>-cell
+chunked rows), or, for plain headerless values, from the row’s
+cell count.  Required only when no row can reveal it: CREATE on
+an <strong>empty table</strong>, or <em>headerless</em> multi-vector data (raw
+<code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">dim</span></code> concatenations not made by <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>).  An
+explicit <code class="docutils literal notranslate"><span class="pre">vec_dim</span></code> always wins; rows whose header disagrees
+with the index dim are warned about and skipped.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">indexmeter</span></code></td>
 <td><code class="docutils literal notranslate"><span class="pre">'on'</span></code>, <code class="docutils literal notranslate"><span class="pre">'off'</span></code>, <code class="docutils literal notranslate"><span class="pre">'always'</span></code>, …</td>
 <td>process default</td>
 <td>Build-time progress meter.  Also honored on
@@ -2308,6 +2359,28 @@ it.</td>
 centroid trains on fewer points; recall suffers).  Mostly a
 test knob.</td>
 </tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">vec_encode_batch</span></code></td>
+<td>integer in <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1048576]</span></code></td>
+<td>auto from <a class="reference internal" href="sql-set.html#indexmem"><span class="std std-ref">indexMem</span></a>, clamped to
+<code class="docutils literal notranslate"><span class="pre">[16384,</span> <span class="pre">262144]</span></code></td>
+<td>Vectors accumulated per encoding call during the build.  Larger
+batches let the encoder use the whole machine (blocked BLAS +
+all cores); the buffer costs <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">×</span> <span class="pre">4</span></code> bytes per vector.  A
+build-performance knob only — the resulting index is identical.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">vec_encode_gpu</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">'auto'</span></code>, <code class="docutils literal notranslate"><span class="pre">'on'</span></code>, <code class="docutils literal notranslate"><span class="pre">'off'</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">'auto'</span></code></td>
+<td>Run the encode stage’s coarse assignment on a GPU when a
+CUDA-enabled <code class="docutils literal notranslate"><span class="pre">rampart-faiss</span></code> module is installed and a device
+is present (one message reports it; any GPU problem falls back
+to CPU with a warning).  <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> also skips the GPU for
+small jobs — e.g. a routine <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">...</span> <span class="pre">OPTIMIZE</span></code> over a
+few thousand inserts — where one-time GPU startup would cost
+more than it saves.  <code class="docutils literal notranslate"><span class="pre">'on'</span></code> always uses the GPU and fails
+the build if it can’t; <code class="docutils literal notranslate"><span class="pre">'off'</span></code> never tries.  The index is
+identical either way.</td>
+</tr>
 </tbody>
 </table>
 <p>Examples:</p>
@@ -2354,19 +2427,52 @@ no conversion happens.</p>
 <p>Basic top-K:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT id, $rank
   FROM emb
- WHERE v LIKEV ?
- ORDER BY 2 DESC;
+ WHERE v LIKEV ?;
 </pre></div>
 </div>
 <ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> returns rows <strong>automatically ordered by rank</strong>, best
+first (like <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code>) — no <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> needed.  This is true with
+and without a vector index: a linear (index-less) search produces
+the <strong>identical</strong> result — same rows, same <code class="docutils literal notranslate"><span class="pre">$rank</span></code> values, same
+order, same <code class="docutils literal notranslate"><span class="pre">likevRows</span></code> cap — just slower, because every row is
+scored.  If it is too slow, build the index.</p>
+</li>
+<li><p class="first">Like <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code>, an index-less <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> requires opting in to the
+full table scan: without <code class="docutils literal notranslate"><span class="pre">allinear</span></code> set the query is refused
+(“would require linear search”) and returns zero rows.  Enable it
+per connection with <code class="docutils literal notranslate"><span class="pre">sql.set({allinear:</span> <span class="pre">true})</span></code> (or per statement
+batch with <code class="docutils literal notranslate"><span class="pre">SET</span> <span class="pre">allinear=1;</span></code>).  This applies only when there is
+<strong>no usable vector index</strong> — the incremental scan of rows added
+after the index was created (or last optimized) is part of the
+indexed search and never needs <code class="docutils literal notranslate"><span class="pre">allinear</span></code>.</p>
+</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">$rank</span></code> is the per-row score, scaled to <code class="docutils literal notranslate"><span class="pre">[-100000,</span> <span class="pre">100000]</span></code>.
 With unit-norm vectors the practical range is <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">100000]</span></code>.</p>
 </li>
 <li><p class="first">Use the <code class="docutils literal notranslate"><span class="pre">maxRows</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">exec()</span></code> to retrieve top-K.</p>
 </li>
-<li><p class="first">If the planner can’t use the index — wrong column type, dimension
-mismatch, or no index present — it falls back to brute force.
-Results are identical, just slower.</p>
+<li><p class="first">If the index exists but can’t serve the query — wrong column type,
+dimension mismatch, unreadable index files — <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> falls back to
+the same linear scan (subject to the <code class="docutils literal notranslate"><span class="pre">allinear</span></code> policy above).
+A <strong>query-dimension mismatch</strong> additionally warns explicitly —
+“<em>query vector has N cells but the index dim is D — embedding model
+mismatch for this table?</em>” — since querying with a different
+embedding model than the table was built with is almost always the
+cause.  (The linear scan warns the same way when the query vector is
+size-incompatible with every row.)  In a hybrid <code class="docutils literal notranslate"><span class="pre">OR</span></code> the keyword
+side still serves, so a wrong-model query degrades to keyword-only
+results with both messages in the error text.</p>
+</li>
+<li><p class="first">A bare <strong>string</strong> right-hand side auto-embeds with or without an
+index (typed <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> columns; an unindexed <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> column
+cannot auto-embed, since the element type is only recorded in a
+vector index’s parameters).</p>
+</li>
+<li><p class="first">On a <em>chunked</em> (multi-vector) row — see
+<a class="reference internal" href="#chunked-documents-multi-vector-rows">Chunked documents (multi-vector rows)</a> — <code class="docutils literal notranslate"><span class="pre">$rank</span></code> is the row’s
+<strong>best-matching chunk’s</strong> score (max over the row’s chunks), on both
+the index path and the brute-force/re-score path.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">$rank</span></code> <strong>is exact at the column’s stored precision</strong> for both
 HNSW and IVFPQ.  The index returns a candidate pool (up to
@@ -2385,6 +2491,91 @@ See <a href="#id20"><span class="problematic" id="id21">`When to use vecdist()`_
 <a class="reference internal" href="sql-set.html#likevrows"><span class="std std-ref">likevRows</span></a> (both backends), or, for
 IVFPQ, raise <a class="reference internal" href="sql-set.html#likevpqnprobe"><span class="std std-ref">likevPqNprobe</span></a> — these
 surface more candidates that <code class="docutils literal notranslate"><span class="pre">$rank</span></code> will then exact-score.</p>
+</li>
+</ul>
+<p>A single <code class="docutils literal notranslate"><span class="pre">OR</span></code> combines a full-text (<code class="docutils literal notranslate"><span class="pre">LIKEP</span></code>) and a vector
+(<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>) search into one hybrid query, ranked by <strong>Reciprocal Rank
+Fusion</strong> — the standard method for merging retrievers whose scores
+live on incomparable scales (metamorph proximity vs scaled cosine):</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT id, title, $rank
+  FROM docs
+ WHERE doc LIKEP ? OR v LIKEV ?;
+</pre></div>
+</div>
+<p>When <strong>both</strong> columns are indexed (a metamorph index on <code class="docutils literal notranslate"><span class="pre">doc</span></code>, a
+vector index on <code class="docutils literal notranslate"><span class="pre">v</span></code>), the engine takes each side’s ranked candidate
+list — the keyword list capped by <a class="reference internal" href="sql-set.html#likeprows"><span class="std std-ref">likeprows</span></a>,
+the vector list capped by <a class="reference internal" href="sql-set.html#likevrows"><span class="std std-ref">likevRows</span></a> and
+already re-scored by exact distance — and fuses them by list
+<em>position</em>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$rank  =  sum over lists of   1000000 / (60 + position)
+</pre></div>
+</div>
+<p>so no score calibration between the two retrievers is needed, and a
+document found by <strong>both</strong> gets additive credit: a row ranked #1 by
+both sides scores 32787, always beating a row that is merely #1 in
+one list.  The fused <code class="docutils literal notranslate"><span class="pre">$rank</span></code>’s practical range is about
+<code class="docutils literal notranslate"><span class="pre">[3000,</span> <span class="pre">32787]</span></code>.</p>
+<p>Rows are returned <strong>automatically ordered by the fused rank</strong>, best
+first — no <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> needed, exactly as a single <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> or
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> returns rank-ordered rows on its own.  This holds with or
+without the vector index: a missing index only makes the vector side
+a (slower) linear scan producing the same ranked candidate list, so
+results are identical — if they arrive too slowly, build the index.</p>
+<p>Notes:</p>
+<ul>
+<li><p class="first">The vector side fuses <strong>with or without its index</strong>, but the
+index-less case is subject to the same <code class="docutils literal notranslate"><span class="pre">allinear</span></code> policy as
+<code class="docutils literal notranslate"><span class="pre">LIKEP</span></code>: with <code class="docutils literal notranslate"><span class="pre">allinear</span></code> set, the vector side’s ranked list is
+built by linear scan and fused results are identical (slower);
+without it that side is refused and contributes nothing (a
+<code class="docutils literal notranslate"><span class="pre">LIKEP</span></code>-indexed OR then returns keyword results only).  A missing
+metamorph index degrades the same way: without its index and
+without <code class="docutils literal notranslate"><span class="pre">allinear</span></code> the keyword side has no ranked list.</p>
+</li>
+<li><p class="first">The two list depths are the fusion pool knobs: <code class="docutils literal notranslate"><span class="pre">likeprows</span></code>
+(default 100) and <code class="docutils literal notranslate"><span class="pre">likevRows</span></code> (default 1000) bound what each
+retriever contributes.</p>
+</li>
+<li><p class="first"><strong>Performance — do not add</strong> <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">$rank</span> <span class="pre">DESC</span></code>.  Output is
+already fused-rank-ordered.  Without an ORDER BY the SELECT list is
+evaluated <em>lazily</em> — only for the rows <code class="docutils literal notranslate"><span class="pre">maxRows</span></code> actually returns
+— so even an expensive function like
+<a class="reference internal" href="sql-server-funcs.html#abstract"><span class="std std-ref">abstract()</span></a> in the select list
+costs only <code class="docutils literal notranslate"><span class="pre">maxRows</span></code> evaluations.  An explicit ORDER BY destroys
+both properties: the engine materializes every fused candidate (up
+to <code class="docutils literal notranslate"><span class="pre">likeprows</span> <span class="pre">+</span> <span class="pre">likevRows</span></code> rows) and runs the full select list on
+each before sorting what was already in order — on a large table
+with an in-query abstract that is the difference between
+milliseconds and minutes.</p>
+</li>
+<li><p class="first">The 5-argument vec form of
+<a class="reference internal" href="sql-server-funcs.html#abstract"><span class="std std-ref">abstract()</span></a> works directly in the
+fused query — the complete hybrid search is one statement:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>SELECT $rank score, id, title,
+       abstract(doc, 400, &#39;querybest&#39;, ?, v) snip
+  FROM docs
+ WHERE doc LIKEP ? OR v LIKEV ?;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">abstract()</span></code> selects the winning chunk itself: it embeds its
+query argument (a cache hit — <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> just embedded the same
+string) and scores the row’s chunks with the same scorer <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>
+uses, so best-chunk seeding is deterministic in any query shape —
+fused, plain <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>, or a per-row <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">=</span> <span class="pre">?</span></code> lookup — and never
+depends on what the surrounding query evaluated.  (Only when the
+abstract query argument is empty does it fall back to the
+surrounding <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s per-row scoring state, e.g. vector-literal
+queries with no text.)</p>
+</li>
+<li><p class="first">An <code class="docutils literal notranslate"><span class="pre">AND</span></code> of the two predicates is a <strong>filter</strong>, not a fusion:
+“must match the keywords, ranked by vector similarity” (e.g. an
+exact product code plus semantic ordering).  Its <code class="docutils literal notranslate"><span class="pre">$rank</span></code> derives
+from the branch ranks and is not a calibrated hybrid score — use
+the <code class="docutils literal notranslate"><span class="pre">OR</span></code> form when ranking quality is the goal.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">OR</span></code> of two <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> predicates (or two <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> predicates) is
+unchanged — fusion applies only to the mixed keyword/vector shape.</p>
 </li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> is a standalone distance function, not a re-rank
@@ -2511,9 +2702,11 @@ detailed reference elsewhere in the docs.</p>
 <p>A <em>semantic vector</em> (also called an <em>embedding</em>) is a fixed-length array of
 floats that represents a piece of text in a continuous space, such that two
 texts with similar meaning have vectors that are close together.  Embeddings
-are produced by a model (typically loaded once into the SQL engine via
-<code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:'/path/to/model.gguf'});</span></code>); similarity is measured by dot
-product or L2 distance and reported by <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> and <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>.</p>
+are produced by a model, loaded once into the SQL engine via
+<code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:'/path/to/model.gguf'})</span></code> (a <code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code> GGUF
+model) or <code class="docutils literal notranslate"><span class="pre">sql.set({onnxEmbed:{model:'/path/to/model-dir'}})</span></code> (an ONNX
+model directory); similarity is measured by dot product or L2 distance
+and reported by <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> and <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>.</p>
 <p>The typical end-to-end pipeline:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s1">&#39;/path/to/db&#39;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
@@ -2535,9 +2728,10 @@ product or L2 distance and reported by <code class="docutils literal notranslate
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create vector index docs_vec on docs (v) with backend &#39;hnsw&#39;;&quot;</span><span class="p">);</span>
 
 <span class="c1">// 5. Query.  A string on the right-hand side of LIKEV is auto-coerced</span>
-<span class="c1">//    to embed(?).</span>
+<span class="c1">//    to embed(?).  Rows arrive rank-ordered (best first) with or</span>
+<span class="c1">//    without the index -- the index only makes it fast.</span>
 <span class="kd">var</span> <span class="nx">hits</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
-    <span class="s2">&quot;select id, text, $rank from docs where v likev ? order by 3 desc&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select id, text, $rank from docs where v likev ?&quot;</span><span class="p">,</span>
     <span class="p">[</span><span class="s2">&quot;chocolate cake recipe&quot;</span><span class="p">],</span>
     <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">10</span><span class="p">}</span>
 <span class="p">);</span>
@@ -2563,23 +2757,61 @@ you need to migrate or re-quantize later.</li>
 storage only — direct indexing is not yet enabled, but HNSW i8/u8
 <em>quantized indexes over varvecF* columns</em> are supported via
 <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'i8'</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">byte(N)</span></code> / <code class="docutils literal notranslate"><span class="pre">varbyte(N)</span></code> — opaque bytes, used when the same
-column needs to hold vectors of more than one dtype or when integrating
-with code that produces raw byte buffers.  An index over a <code class="docutils literal notranslate"><span class="pre">varbyte</span></code>
-column requires <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'&lt;dtype&gt;'</span></code> so the index knows how to
-interpret the bytes.</li>
+<li><code class="docutils literal notranslate"><span class="pre">byte(N)</span></code> / <code class="docutils literal notranslate"><span class="pre">varbyte(N)</span></code> — opaque bytes, supported for
+compatibility: pre-existing tables, code that produces raw byte
+buffers, or a column that must hold vectors of more than one dtype.
+<strong>Prefer a typed ``varvec*`` column</strong> — a <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> column cannot
+carry the element type, so inserts are unchecked, values are
+ambiguous without the index (which requires
+<code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">vec_dtype</span> <span class="pre">'&lt;dtype&gt;'</span></code>), and string <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> parameters only
+work once that index exists.  See the caveat list under
+<a class="reference internal" href="#vector"><span class="std std-ref">Vector</span></a> in “Column Data Types”.</li>
 </ul>
 <p>The column dimensionality of a typed <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> is auto-detected from the
 first inserted vector.  Subsequent inserts must match.</p>
 </div>
 <div class="section" id="generating-embeddings">
 <h2>Generating embeddings<a class="headerlink" href="#generating-embeddings" title="Permalink to this headline">¶</a></h2>
-<p>Embedding generation runs inside the SQL engine via a loaded <code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code>
-model.</p>
+<p>Embedding generation runs inside the SQL engine via a loaded embedding
+model.  Two engines are available; a connection uses whichever was set
+most recently:</p>
+<ul class="simple">
+<li><a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> — a <code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code> <code class="docutils literal notranslate"><span class="pre">.gguf</span></code>
+model file (module <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code>).</li>
+<li><a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> — an ONNX model <em>directory</em>
+(module <code class="docutils literal notranslate"><span class="pre">rampart-onnx</span></code>); the directory self-configures tokenizer,
+pooling and special tokens.  ONNX sessions run concurrently across
+threads with no per-thread setup.</li>
+</ul>
+<p class="rubric">Which engine?</p>
+<p>Both engines produce equivalent vectors from the same underlying model
+(most embedding models are published in both GGUF and ONNX form), so the
+choice is about hardware and model availability, not accuracy:</p>
+<ul class="simple">
+<li><strong>Linux with an NVIDIA GPU</strong> — use <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code>.  The CUDA-enabled
+install uses the GPU automatically, and it is the fastest path for
+bulk ingestion (<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> over millions of rows).</li>
+<li><strong>CPU-only Linux, and macOS</strong> — use <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code>.  llama.cpp’s CPU
+kernels are 2–3× faster than ONNX Runtime at every model size we
+measured (x86 and ARM), and on Apple Silicon its Metal backend is an
+order of magnitude faster again on large models.  (Apple’s CoreML
+path gains little for text encoders and is not the answer there.)</li>
+<li><strong>Model only published as ONNX</strong> — use <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code> on any hardware;
+it also reproduces HuggingFace tokenizer behavior exactly, which
+matters for models with unusual tokenizers.</li>
+</ul>
+<p>Vectors are interchangeable: a table built with one engine can be
+queried with the other, provided the <em>model</em> is the same — results
+stay correct and relevant.  They are not byte-identical, though:
+published GGUF and ONNX files of the same model differ in weight
+precision (f16 vs f32), which shifts near-tie rankings and which
+chunk of a document wins (measured: ~80% identical top results,
+~84% identical snippets).  For reproducible output, serve with the
+same engine and weight file the table was built with.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Embedding requires the <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> module to be installed
-and loadable.</p>
+<p>Embedding requires the corresponding module (<code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> or
+<code class="docutils literal notranslate"><span class="pre">rampart-onnx</span></code>) to be installed and loadable.</p>
 <p>On the first <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code> call, if no llamacpp
 module is already loaded, <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> automatically tries
 <code class="docutils literal notranslate"><span class="pre">require()</span></code> in order:</p>
@@ -2607,7 +2839,7 @@ inoperable.  <code class="docutils literal notranslate"><span class="pre">rampar
 <code class="docutils literal notranslate"><span class="pre">rampart-langtools</span></code>; see its module documentation for build
 variants and install instructions.</p>
 </div>
-<p>Two settings configure it, both documented in detail under
+<p>The settings below configure it, all documented in detail under
 <a class="reference internal" href="sql-set.html#embedding-properties"><span class="std std-ref">Embedding Properties</span></a>:</p>
 <ul class="simple">
 <li><a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> — the path to a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code> embedding
@@ -2618,7 +2850,16 @@ all threads, when <code class="docutils literal notranslate"><span class="pre">l
 (the default), each worker thread keeps its own <code class="docutils literal notranslate"><span class="pre">llama_context</span></code> over
 the shared model, so concurrent <code class="docutils literal notranslate"><span class="pre">embed()</span></code> calls run in parallel on GPU
 or multi-core CPU.  Set to <code class="docutils literal notranslate"><span class="pre">false</span></code> to serialize through a single
-context (lower memory, lower throughput).</li>
+context (lower memory, lower throughput).  (llama.cpp only — ONNX
+sessions are concurrent by nature.)</li>
+<li><a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> — load an ONNX model directory as
+the connection’s embedding engine instead of a GGUF.</li>
+<li><a class="reference internal" href="sql-set.html#likevcache"><span class="std std-ref">likevCache</span></a> — size of the per-model
+document-embedding result cache (default 10 documents; <code class="docutils literal notranslate"><span class="pre">0</span></code>
+disables).  Any of <code class="docutils literal notranslate"><span class="pre">embed()</span></code> / <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> / <code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">chunkcoherence()</span></code> — or a repeated <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> search string — on the
+<em>same text</em> is served from it, so the model runs once per distinct
+text.</li>
 </ul>
 <p>Once a model is loaded, <a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a> produces a
 typed vec for use in SELECT projections, INSERT values, or on the
@@ -2638,6 +2879,109 @@ type, so <code class="docutils literal notranslate"><span class="pre">select</sp
 <code class="docutils literal notranslate"><span class="pre">varvecF16</span></code>.  The text argument is typically a column or a bound
 parameter; a literal string is also accepted.</p>
 </div>
+<div class="section" id="chunked-documents-multi-vector-rows">
+<h2>Chunked documents (multi-vector rows)<a class="headerlink" href="#chunked-documents-multi-vector-rows" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">embed()</span></code> reduces a whole document to <em>one</em> vector — fine for short
+texts, but a long document’s meaning gets averaged away.
+<a class="reference internal" href="sql-server-funcs.html#chunkembed"><span class="std std-ref">chunkembed()</span></a> instead has the
+embedding engine split the document into chunks (structure-aware:
+paragraph boundaries first, then the model’s token window) and returns
+<strong>all</strong> of the chunk vectors concatenated — a <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">dim</span></code>-cell value
+stored in the ordinary <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> column types.  No new column type, no
+separate chunk table: one document, one row.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table docs (id int, doc varchar(16000), v varvecF16);&quot;</span><span class="p">);</span>
+
+<span class="c1">// one row per document; k chunk vectors land in v.  The title as</span>
+<span class="c1">// the per-chunk PREFIX (&#39;&#39; = default dtype): every chunk embeds as</span>
+<span class="c1">// &quot;&lt;title&gt; &lt;chunk text&gt;&quot;, so name-seeking queries match any chunk</span>
+<span class="c1">// of the document by its name.</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into docs values (?, ?, chunkembed(?, &#39;&#39;, ?))&quot;</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class="nx">doc</span><span class="p">,</span> <span class="nx">doc</span><span class="p">,</span> <span class="nx">title</span><span class="p">]);</span>
+
+<span class="c1">// no vec_dim needed: chunkembed()&#39;s value header records the</span>
+<span class="c1">// per-chunk dim, and the first row&#39;s header sets the index</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create vector index docs_vec on docs (v);&quot;</span><span class="p">);</span>
+
+<span class="c1">// rank by each document&#39;s best-matching chunk; snip is the text of</span>
+<span class="c1">// the chunk that won</span>
+<span class="kd">var</span> <span class="nx">hits</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="s2">&quot;select id, abstract(doc, 200, &#39;smart&#39;, ?, v) snip, $rank &quot;</span> <span class="o">+</span>
+    <span class="s2">&quot;from docs where v likev ?&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="nx">q</span><span class="p">,</span> <span class="nx">q</span><span class="p">],</span> <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">10</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>How the pieces behave with chunked rows:</p>
+<ul>
+<li><p class="first"><strong>Index / LIKEV</strong> — every chunk is indexed under its row; a row’s
+<code class="docutils literal notranslate"><span class="pre">$rank</span></code> is its best chunk’s score (max over chunks).  A row whose
+cell count is a multiple of the query dimension is treated as chunked;
+a single-vector row is simply <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">1</span></code>, so chunked and plain rows mix
+freely in one column.</p>
+</li>
+<li><p class="first"><strong>Dimension mismatches</strong> — <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> columns do not enforce a
+dimension (the declared size is a hint), so an INSERT whose vector
+doesn’t fit the index always <strong>succeeds at the table level</strong>; what
+varies is how the index treats it:</p>
+<ul class="simple">
+<li>a value <strong>with a chunkembed() header</strong> whose recorded <code class="docutils literal notranslate"><span class="pre">dim</span></code>
+disagrees with the index dim is definitively wrong (a different
+embedding model, or corruption) — it is warned about and skipped
+at INSERT time and during CREATE/REBUILD scans, <em>even when</em> its
+total cell count happens to be a multiple of the index dim.  One
+bad row never fails a build; it is skipped and the rest proceed.</li>
+<li>a <strong>headerless</strong> cell count that is a multiple of the index dim is
+indistinguishable from a legitimate chunked row and is silently
+indexed as <code class="docutils literal notranslate"><span class="pre">k</span></code> chunks — inserting a bare 1024-cell vector into a
+512-dim index makes a 2-chunk row, searchable by either half.
+Nothing can detect this case; keep your writers honest.</li>
+<li>a cell count that is <strong>not a multiple</strong> of the index dim can never
+be served: the row is stored but is invisible to <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>, and the
+engine warns at every point it notices — at INSERT time
+(“<em>inserted vector has N cells, not a multiple of the index dim
+D; the row is stored but will not be searchable via LIKEV</em>”) and
+during a CREATE/REBUILD table scan.  The index itself is never
+corrupted — every reader validates before touching vector bytes.</li>
+<li>NULL/empty vectors are legal, stored, and quietly non-matching.</li>
+</ul>
+<p>One caveat: rows written <em>while</em> the index is still being built
+can’t be dimension-checked at INSERT time (the in-progress index
+doesn’t expose its dim yet); a non-multiple row that slips in during
+that window is still harmless and invisible, just without the
+INSERT-time warning.</p>
+</li>
+<li><p class="first"><strong>abstract()</strong> — pass the vector column as a 5th argument
+(<code class="docutils literal notranslate"><span class="pre">abstract(doc,</span> <span class="pre">size,</span> <span class="pre">style,</span> <span class="pre">query,</span> <span class="pre">v)</span></code>) in a query whose <code class="docutils literal notranslate"><span class="pre">WHERE</span></code>
+contains <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> on that column, and the snippet is seeded from the
+text span of the winning chunk.  An empty <code class="docutils literal notranslate"><span class="pre">query</span></code> string gives a
+pure vector snippet; a real query merges keyword hits with the chunk
+span.  See <a class="reference internal" href="sql-server-funcs.html#abstract"><span class="std std-ref">abstract</span></a>.</p>
+</li>
+<li><p class="first"><strong>Companion scalars</strong> —
+<a class="reference internal" href="sql-server-funcs.html#chunkavg"><span class="std std-ref">chunkavg()</span></a> returns the document’s
+single combined vector (identical to <code class="docutils literal notranslate"><span class="pre">embed()</span></code> of the same text)
+for a separate coarse-search column, and
+<a class="reference internal" href="sql-server-funcs.html#chunkcoherence"><span class="std std-ref">chunkcoherence()</span></a> returns a
+0-to-1 “how single-topic is this document” signal.  All of the
+embedding scalars share a per-model result cache
+(<a class="reference internal" href="sql-set.html#likevcache"><span class="std std-ref">likevCache</span></a>), so</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class="k">VALUES</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="n">chunkavg</span><span class="p">(</span><span class="o">?</span><span class="p">),</span> <span class="n">chunkembed</span><span class="p">(</span><span class="o">?</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>embeds the document <strong>once</strong>, regardless of argument order.  (When
+using the per-chunk prefix, pass the <em>same</em> prefix to every scalar —
+<code class="docutils literal notranslate"><span class="pre">chunkavg(?,</span> <span class="pre">'',</span> <span class="pre">?title)</span></code> etc. — the prefix is part of the cache
+key.)</p>
+</li>
+<li><p class="first"><strong>UPDATE / DELETE</strong> — the standard paths work; an updated row’s old
+chunks are retired and the new ones indexed.</p>
+</li>
+<li><p class="first"><strong>JavaScript</strong> — a selected chunked value is a normal
+<cite>Vector Object</cite> with <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">==</span> <span class="pre">k</span> <span class="pre">×</span> <span class="pre">384</span></code>; use
+<a class="reference internal" href="rampart-vector.html#utility-functions"><span class="std std-ref">split()</span></a> to recover the
+individual chunk vectors: <code class="docutils literal notranslate"><span class="pre">row.v.split(384)</span></code>.</p>
+</li>
+</ul>
+</div>
 <div class="section" id="querying">
 <h2>Querying<a class="headerlink" href="#querying" title="Permalink to this headline">¶</a></h2>
 <p>Similarity queries use the <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> predicate.  See
@@ -2645,8 +2989,7 @@ parameter; a literal string is also accepted.</p>
 authoritative reference; a brief overview:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT id, $rank
   FROM docs
- WHERE v LIKEV ?
- ORDER BY 2 DESC;
+ WHERE v LIKEV ?;
 </pre></div>
 </div>
 <ul class="simple">
@@ -2655,8 +2998,8 @@ or bound <span class="green">String</span> parameter is auto-coerced via <code c
 the currently-loaded model — so <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">LIKEV</span> <span class="pre">'chocolate</span> <span class="pre">cake</span> <span class="pre">recipe'</span></code> is
 equivalent to <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">LIKEV</span> <span class="pre">embed('chocolate</span> <span class="pre">cake</span> <span class="pre">recipe')</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">$rank</span></code> is the per-row score, scaled to <code class="docutils literal notranslate"><span class="pre">[-100000,</span> <span class="pre">100000]</span></code>.  With
-unit-norm vectors the practical range is <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">100000]</span></code>; sort
-<code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span> <span class="pre">...</span> <span class="pre">DESC</span></code>.</li>
+unit-norm vectors the practical range is <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">100000]</span></code>.  Indexed
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> returns rows rank-ordered automatically.</li>
 <li>Use the <code class="docutils literal notranslate"><span class="pre">maxRows</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">exec()</span></code> to retrieve top-K.</li>
 <li><code class="docutils literal notranslate"><span class="pre">$rank</span></code> <strong>is exact at the column’s stored precision</strong> — the value is
 computed per-row by <code class="docutils literal notranslate"><span class="pre">rp_vector_distance</span></code> on the actual stored column
@@ -3478,7 +3821,7 @@ color-coded differently, and the <code class="docutils literal notranslate"><spa
 </tr>
 <tr class="row-odd"><td>max</td>
 <td><span class="green">Number</span></td>
-<td>Maximum length in characters of the abstract.</td>
+<td>Maximum length in bytes of the abstract.</td>
 </tr>
 <tr class="row-even"><td>style</td>
 <td><span class="green">String</span></td>
@@ -3501,9 +3844,10 @@ for a custom format (such as “%mCH”).</td>
 <dt>Return Value:</dt>
 <dd><span class="green">String</span>. The abstract text.</dd>
 </dl>
-<p>The abstract will be less than <code class="docutils literal notranslate"><span class="pre">max</span></code> characters long, and will attempt to
-end at a word boundary.  If <code class="docutils literal notranslate"><span class="pre">max</span></code> is not specified (or is less than or
-equal to 0) then a default size of 230 characters is used.</p>
+<p>The abstract will be less than <code class="docutils literal notranslate"><span class="pre">max</span></code> bytes long, and will attempt to
+end at a word boundary (a multi-byte UTF-8 character is never split).
+If <code class="docutils literal notranslate"><span class="pre">max</span></code> is not specified (or is less than or equal to 0) then a
+default size of 230 bytes is used.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">style</span></code> argument allows a choice between several different ways of
 creating the abstract.  Note that some of these styles require the <code class="docutils literal notranslate"><span class="pre">query</span></code>
 argument as well, which is a Metamorph search query:</p>

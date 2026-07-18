@@ -83,7 +83,7 @@ init()
       which means to wait forever.
         
     Return Value:
-        A :green:`Object` - the handle representing the connection to the Redis
+        An :green:`Object` - the handle representing the connection to the Redis
         server as well as containing the functions/redis commands listed below.
 
 Client Functions
@@ -116,7 +116,7 @@ Client Commands
         *  ``paramX`` is one or more parameters, required or optional for the given Redis command.
 
         *  ``callback_function`` is an optional (if synchronous) or required (if
-           asynchronous) function which takes a single parameter.
+           asynchronous) function which takes a ``function(res,err)``.
         
         *  ``options`` is an optional :green:`Object` with the following optional
            properties:
@@ -133,7 +133,13 @@ Client Commands
               ``strings`` and ``bulk strings`` will be returned in :green:`Buffers`.
 
     Return Value:
-        See below.
+        ``undefined`` if there is a callback. ``Null`` if error.  
+        Otherwise, on success see `return values <rampart-redis.html#return-values-from-supported-commands>`_
+        below.
+
+    Errors:
+        Error messages are written to ``rcl.errMsg``.  For calls with a callback function, it is
+        also passed to the function as the second parameter.
 
     Note: 
         All commands are by default synchronous commands, except
@@ -161,6 +167,44 @@ _async Commands
     their non-async counterparts with the ``options`` :green:`Object` set to
     ``{async:true}``.
 
+Promise / async-await Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    When the Rampart transpiler is active (via ``rampart -t``,
+    ``"use transpiler"`` or ``"use transpilerGlobally"``), any async
+    command may be called without a callback.  In this case, a
+    :green:`Promise` is returned that resolves with the complete result
+    (equivalent to the synchronous return value) or rejects on error.
+
+    This applies to commands using ``{async:true}`` in the options
+    :green:`Object` or the ``*_async`` shortcut functions.  It does not
+    apply to ``subscribe``, ``psubscribe``, ``xread_block_async`` or
+    ``xread_auto_async``, which require a callback for their continuous
+    event handling.
+
+    .. code-block:: javascript
+
+        "use transpiler"
+        var redis = require("rampart-redis");
+        var rcl = new redis.init();
+
+        async function main() {
+            await rcl.set({async:true}, "mykey", "myvalue");
+            var val = await rcl.get({async:true}, "mykey");
+            // val === "myvalue"
+
+            var list = await rcl.lrange({async:true}, "mylist", 0, -1);
+            // list is the full Array, same as the synchronous return
+
+            try {
+                await rcl.hget({async:true}, "mykey", "field");
+            } catch(e) {
+                // e.message contains the Redis error
+            }
+        }
+
+        main();
+
 format
 ~~~~~~
 
@@ -186,11 +230,11 @@ format
           as :ref:`rampart-utils:printf`).  However only a limited number
           of format codes are available:
 
-            * ``%s`` - the corresponding parameter is and will be send as a
+            * ``%s`` - the corresponding parameter is and will be sent as a
               :green:`String`
 
             * ``%c`` - the corresponding parameter is a :green:`String`, the
-              first character of which will be send as a single character.
+              first character of which will be sent as a single character.
 
             * ``%i`` - the corresponding parameter is a :green:`Number` and
               will be converted and sent as an integer.
@@ -251,11 +295,16 @@ xread_auto_async
     way it acts more like ``subscribe`` and continually accepts new streamed
     messages similar to a PUB/SUB model.
 
+    For more information, see the redis `xread command <https://redis.io/docs/latest/commands/xread/>`_
+    and :ref:`this section <tutorial-wschat:Chat with History using Redis>` of
+    the tutorials, as well as #12 in the `return values <rampart-redis.html#return-values-from-supported-commands>`_
+    section below.
+
 Supported Commands
 ------------------
 
 The following commands have been tested and return values formatted
-appropriately for the given command (number in parantheses is the format of
+appropriately for the given command (number in parentheses is the format of
 the :ref:`return value <rampart-redis:Return Values from Supported Commands>`):
 
     ``bitcount``\ →(1), ``bitfield``\ →(2), ``bitop``\ →(1), ``bitpos``\ →(1),
@@ -515,11 +564,11 @@ Unsupported Commands
 Proxy Objects
 -------------
 
-A Rampart Redis Proxy Object is an JavaScript :green:`Object` whose
+A Rampart Redis Proxy Object is a JavaScript :green:`Object` whose
 properties are backed by a `Redis Hash <https://redis.io/topics/data-types-intro#redis-hashes>`_
 and for which operations on the :green:`Object` serves as a shortcut for the
 ``hset``, ``hget``, ``hgetall`` and ``hdel`` commands.  They are intended as
-a quick and easy storage system for occassionally used variables that are
+a quick and easy storage system for occasionally used variables that are
 shared between scripts or threads.  They should not be used as a robust
 databasing solution.
 

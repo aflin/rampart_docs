@@ -1,0 +1,540 @@
+The rampart-python module
+=========================
+
+Preface
+-------
+
+License
+~~~~~~~
+
+The Python library is licensed under the `PSF LICENSE <https://docs.python.org/3/license.html#psf-license>`_\ .
+
+The rampart-python module is released under the MIT license.
+
+What does it do?
+~~~~~~~~~~~~~~~~
+
+The rampart-python module includes functions which import Python modules
+and scripts, executes them and translates variables between Python and
+JavaScript.
+
+How does it work?
+~~~~~~~~~~~~~~~~~
+
+The module and the embedded Python interpreter are used to load Python
+modules and scripts into the Python environment.  Translation of variables
+between the two languages are handled automatically.  As the Python Library
+does not function in parallel in multiple threads, if run in
+:ref:`rampart.threads <rampart-thread:Rampart Thread Functions>` the module
+will run in multiple processes.
+
+
+Loading the Javascript Module
+-----------------------------
+
+    Loading of the python module from within Rampart JavaScript is a simple matter
+    of using the ``require`` statement:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+
+    Return value:
+        An :green:`Object` with the functions listed below.
+
+
+Python Module Functions
+-----------------------
+
+python.import()
+~~~~~~~~~~~~~~~
+
+    Import a python module.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+
+        /* same as "import mymod" in Python */
+        var mymod=python.import("mymod");
+
+
+    Return Value:
+        An :green:`Object` with callable properties corresponding to the functions of the imported module.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python = require("rampart-python");
+
+        var pathlib = python.import('pathlib');
+
+        var pvar = pathlib.PosixPath('./');
+
+python.importString()
+~~~~~~~~~~~~~~~~~~~~~
+
+    Import a python module or script from a :green:`String`.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+
+        var mymod = python.importString(pyscript[, scriptName);
+
+    Where:
+
+    * ``script`` is a :green:`String`, the python source code
+    * ``scriptName`` is a :green:`String`, an optional name for this script for
+      error reporting.  Default is ``"module_from_string"``.
+
+    Return Value:
+        An :green:`Object` with callable properties corresponding to the functions of the imported module.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+
+        var pyscript=`
+        def makedict(k,v):
+            return {k:v}
+        `;
+
+        var mymod = python.importString(pyscript);
+
+        var pvar = mymod.makedict("mykey", ["val1", "val2"]);
+
+python.importFile()
+~~~~~~~~~~~~~~~~~~~
+
+    Import a python module or script from a file.  Same as
+    `python.importString()`_ except the source is loaded from
+    the named file.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+
+        var mymod = python.importFile(fileName);
+
+    Where:
+
+    * ``fileName`` is a :green:`String`, the path of the file to be imported.
+
+    Return Value:
+        An :green:`Object` with callable properties corresponding to the functions of the imported module.
+
+pvar.toString()
+~~~~~~~~~~~~~~~
+
+    Return the string version of the python variable.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python = require("rampart-python");
+
+        var pathlib = python.import('pathlib');
+
+        var pvar = pathlib.PosixPath('./');
+
+        rampart.utils.printf( "pathlib=%s\npvar=%s\npvar.resolve()=%s\n",
+            pathlib.toString(), pvar.toString(), pvar.resolve().toString() );
+
+        /* output:
+            pathlib=<module 'pathlib' from '/usr/local/rampart/modules/python3-lib/pathlib.py'>
+            pvar=.
+            pvar.resolve()=/path/to/my/current/directory
+        */
+
+    Return Value:
+        A :green:`String`.
+
+pvar.toValue()
+~~~~~~~~~~~~~~
+
+    Translate the python variable referenced in ``pyvar`` to a JavaScript
+    variable.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+        var printf = rampart.printf;
+
+        var mymod = python.importString("/path/to/myscript.py");
+
+        var pvar = mymod.makedict("mykey", ["val1", "val2"]);
+
+        printf( "mykey = %s\nmykey.toValue=%3J\n",
+            pvar.mykey.toString(), pvar.mykey.toValue() );
+
+        /* output:
+            mykey = ('val1', 'val2')
+            mykey.toValue=[
+               "val1",
+               "val2"
+            ]
+        */
+
+Handling Variables
+------------------
+
+From Javascript to Python
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Variables passed to Python functions are automatically converted as follows:
+
+    +-----------------------+------------------------------------------+
+    |    JavaScript Type    | Python Type                              |
+    +=======================+==========================================+
+    |  :green:`Number`      | Float                                    |
+    +-----------------------+------------------------------------------+
+    |  :green:`String`      | String                                   |
+    +-----------------------+------------------------------------------+
+    |  :green:`Array`       | Tuple                                    |
+    +-----------------------+------------------------------------------+
+    |  :green:`Object`      | Dictionary                               |
+    +-----------------------+------------------------------------------+
+    |  :green:`Buffer`      | Bytes Object                             |
+    +-----------------------+------------------------------------------+
+    |  :green:`Date`        | Datetime                                 |
+    +-----------------------+------------------------------------------+
+    |  :green:`Undefined`   | None                                     |
+    +-----------------------+------------------------------------------+
+    |  :green:`null`        | None                                     |
+    +-----------------------+------------------------------------------+
+
+    Where possible, translations can be specified by creating an
+    :green:`Object` with ``pyType`` and ``value`` properties set.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+        var printf = rampart.utils.printf;
+
+        var pyscript=`
+        def printvar(v):
+            print( "%-30s %s" % (type(v), v))
+        `;
+
+        var mymod = python.importString(pyscript);
+
+        mymod.printvar({pyType: "date",    value: 946713599999});
+        mymod.printvar({pyType: "int",     value: "1234567800000000000000000000000000000000000000"});
+        mymod.printvar({pyType: "list",    value: ["a", "b", "c"]});
+        mymod.printvar({pyType: "tuple",   value: "d"});
+        mymod.printvar({pyType: "complex", value: [1,2]});
+        mymod.printvar({pyType: "dict",    value: "e"});
+
+        /* output:
+            <class 'datetime.datetime'>    1999-12-31 23:59:59.999000
+            <class 'int'>                  1234567800000000000000000000000000000000000000
+            <class 'list'>                 ['a', 'b', 'c']
+            <class 'tuple'>                ('d',)
+            <class 'complex'>              (1+2j)
+            <class 'dict'>                 {'0': 'e'}
+        */
+
+From Python to JavaScript
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Translation of return values from Python are automatic when using
+    ``.toValue()``.  For types which cannot be translated, a string
+    representation (same as ``.toString()``) will be returned instead.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+        var printf = rampart.utils.printf;
+
+        var pyscript=`
+        def retvar(v):
+            return v
+        `;
+
+        var mymod = python.importString(pyscript);
+
+        var ret;
+
+        ret=mymod.retvar({pyType:"date", value: 946713599999});
+        printf("%J\n", ret.toValue());
+
+        ret=mymod.retvar({pyType: "int",     value: "1234567800000000000000000000000000000000000000"});
+        printf("%J\n", ret.toValue());
+
+        ret=mymod.retvar({pyType: "list",    value: ["a", "b", "c"]});
+        printf("%J\n", ret.toValue());
+
+        ret=mymod.retvar({pyType: "tuple",   value: "d"});
+        printf("%J\n", ret.toValue());
+
+        ret=mymod.retvar({pyType: "complex", value: [1,2]});
+        printf("%J\n", ret.toValue());
+
+        ret=mymod.retvar({pyType: "dict",    value: "e"});
+        printf("%J\n", ret.toValue());
+
+        ret=mymod.retvar(mymod);
+        printf("%J\n", ret.toValue());
+
+        /* output:
+            "1999-12-31T23:59:59.999Z"
+            1.2345678e+45
+            ["a","b","c"]
+            ["d"]
+            [1,2]
+            {"0":"e"}
+            <module 'module_from_string' from '/home/user/src/mytest.js'>
+        */
+
+Python to Python
+~~~~~~~~~~~~~~~~
+
+    Variables returned from a Python function can be used as parameters to other Python functions.
+    No translation will be performed.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+        var printf = rampart.utils.printf;
+
+        var pyscript=`
+        def retvar(v):
+            return v
+
+        def add(a,b):
+            return a+b;
+        `;
+
+        var a = mymod.retvar({pyType: "complex", value: [1,2]});
+        var b = mymod.retvar({pyType: "complex", value: [3,4]});
+        var ret = mymod.add(a, b);
+        printf("%J\n", ret.toValue());
+
+        /* output:
+            [3,4]
+
+           note that var a and b hold the Python variables and are
+           not translated when mymod.add(a,b) is called.
+       */
+
+Python Named Arguments
+~~~~~~~~~~~~~~~~~~~~~~
+
+    Named arguments to Python functions may be use as shown
+    in the following example:
+
+    .. code-block:: javascript
+
+        var python=require("rampart-python");
+        var printf = rampart.utils.printf;
+
+        var pyscript=`
+        def retvar(v):
+            return v
+
+        def add(a,b):
+            return a+b;
+        `;
+
+        var comp1 = mymod.retvar({pyType: "complex", value: [1,2]});
+        var comp2 = mymod.retvar({pyType: "complex", value: [3,4]});
+
+        var myNamedArgs = { pyArgs: {a:comp1, b:comp2} };
+
+        var ret = mymod.add( myNamedArgs );
+        printf("%J\n", ret.toValue());
+
+        /*
+           calling in JavaScript:
+               mymod.add( {pyArgs: {a:comp1, b:comp2} } );
+           is equivalent to calling with named arguments in python:
+               add(a=comp1, b=comp2);
+        */
+
+Calling rampart from within Python
+----------------------------------
+
+When python scripts are executed from within rampart, the ``rampart`` module
+is available to python.  It includes two methods: ``call`` and
+``triggerEvent``.
+
+rampart.call
+~~~~~~~~~~~~
+
+    Call a global rampart function from within python.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var python = require('rampart-python');
+
+        var iscript =
+        `
+        #when operating from within rampart, the rampart module is available
+        import rampart
+
+        #call a rampart global func
+        def callRampartFunc(funcName, var1, var2):
+            res = rampart.call(funcName, var1, var2);
+            print(res);
+        `;
+
+
+        function add(a,b) {
+            return [ `${a} + ${b}`, a+b ];
+        }
+
+        var r=python.importString(iscript);
+
+        r.callRampartFunc("add", 3, 4);
+
+        /* expected results:
+            ('3 + 4', 7.0)
+        */
+
+
+rampart.triggerEvent
+~~~~~~~~~~~~~~~~~~~~
+
+    A registered event in a thread may be triggered from within rampart
+
+    Example:
+
+    .. code-block:: javascript
+
+        rampart.globalize(rampart.utils);
+        var python = require('rampart-python');
+
+        var iscript =
+        `
+        #when operating from within rampart, the rampart module is availabe
+        import rampart
+
+        #trigger a rampart event and pass a "triggerVar" to it
+        def trigger(eventName, triggervar):
+            rampart.triggerEvent(eventName, triggervar);
+        `;
+
+
+        function pytrigger(val,err){
+            //check for errors in thrfunc
+            if(!val)
+                console.log(err);
+            // load script into python and return its functions
+            var r=python.importString(iscript);
+            console.log("trigger myev");
+            // execute "trigger" function in python script with a triggervar
+            r.trigger("myev","Hello from Python");
+        }
+
+        // create a new thread in rampart
+        var thr = new rampart.thread();
+
+        // the function which will be run in the rampart.thread.
+        function thrfunc() {
+            console.log("setup myev");
+            // register an event in this thread
+            rampart.event.on(
+                // the name of the event
+                "myev",
+                // the name of the function (required but not used here)
+                "myfunc",
+                // the function to be executed when triggered
+                function(uservar,triggervar){
+                    printf("Uservar='%s'\nTriggervar='%s'\n", uservar, triggervar);
+                    //remove the event so thread is empty of events and rampart can exit
+                    rampart.event.remove("myev");
+                },
+                //the user variable to be passed upon triggering
+                "Hello from JS main thread"
+            );
+            return 1;
+        }
+
+        //execute the function thrfunc in the thread, and then run
+        //pytriggervar in the main thread.
+        thr.exec(thrfunc,pytrigger);
+
+        /* expected results:
+            setup myev
+            trigger myev
+            Uservar='Hello from JS main thread'
+            Triggervar='Hello from Python'
+        */
+
+Example Use Importing Data
+--------------------------
+
+    .. code-block:: javascript
+
+        var python = require('rampart-python');
+        var Sql = require('rampart-sql');
+        var printf = rampart.utils.printf;
+
+        /* create the rampart sql db*/
+        var sql = new Sql.connection("./pytest-sql", true);
+
+        /* the sqlite db */
+        var dbfile="./test.db";
+
+        /* use python to create and connect to sqlite db */
+        var pysql = python.import('sqlite3');
+        var connection = pysql.connect(dbfile);
+        var cursor = connection.cursor();
+
+        /* create a test table */
+        cursor.execute("create table IF NOT EXISTS test(i int, i2 int);");
+
+        /* insert some test data into the db */
+        for (var i=0; i<100; i+=2) {
+            cursor.execute("insert into test values(?,?)", [i,   i+1]);
+        }
+
+        /* print out what we have */
+        cursor.execute("select * from test");
+        res = cursor.fetchall().toValue();
+        printf("Dump of sqlite table:\n%J\n", res);
+
+
+        /* create rampart sql table and copy data from sqlite */
+        sql.exec("create table test (i int, i2 int);");
+        for (i=0;i<res.length;i++) {
+            sql.exec("insert into test values(?,?);", res[i]);
+        }
+
+        var res2 = sql.exec("select * from test", {returnType:"array", maxRows:-1});
+        printf("Dump of rampart sql table:\n%J\n", res2.rows);
+
+        /* output:
+            Dump of sqlite table:
+            [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[12,13],[14,15],[16,17],[18,19],[20,21],[22,23],[24,25],
+              [26,27],[28,29],[30,31],[32,33],[34,35],[36,37],[38,39],[40,41],[42,43],[44,45],[46,47],[48,49],
+              [50,51],[52,53],[54,55],[56,57],[58,59],[60,61],[62,63],[64,65],[66,67],[68,69],[70,71],[72,73],
+              [74,75],[76,77],[78,79],[80,81],[82,83],[84,85],[86,87],[88,89],[90,91],[92,93],[94,95],[96,97],[98,99]]
+            Dump of rampart sql table:
+            [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[12,13],[14,15],[16,17],[18,19],[20,21],[22,23],[24,25],
+              [26,27],[28,29],[30,31],[32,33],[34,35],[36,37],[38,39],[40,41],[42,43],[44,45],[46,47],[48,49],
+              [50,51],[52,53],[54,55],[56,57],[58,59],[60,61],[62,63],[64,65],[66,67],[68,69],[70,71],[72,73],
+              [74,75],[76,77],[78,79],[80,81],[82,83],[84,85],[86,87],[88,89],[90,91],[92,93],[94,95],[96,97],[98,99]]
+
+        */

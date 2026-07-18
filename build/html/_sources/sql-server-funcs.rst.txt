@@ -48,33 +48,66 @@ embed
 """""
 
 Compute a semantic embedding vector for a piece of text using the
-currently-loaded llama.cpp model.
+connection's currently-loaded embedding model
+(:ref:`llamaEmbed <sql-set:llamaEmbed>` — a ``llama.cpp`` GGUF — or
+:ref:`onnxEmbed <sql-set:onnxEmbed>` — an ONNX model directory).
 
 .. code-block:: sql
 
-    embed(text [, dtype])
+    embed(text [, dtype] [, kind [, title]])
 
 * ``text`` is a :green:`String` column, bound parameter, literal, or any
   expression that evaluates to text.  ``NULL`` and the empty string
   produce ``NULL``.
 * ``dtype`` is an optional :green:`String` naming the result vec dtype.
-  One of ``'f16'`` (default), ``'f32'``, ``'f64'``, or ``'bf16'``.  The
+  One of ``'f16'`` (default), ``'f32'``, ``'f64'``, or ``'bf16'``.
+  ``''`` and ``'auto'`` are accepted placeholders for the default —
+  useful in the three-argument ``chunkembed()``/``chunkavg()`` forms
+  where a later argument follows the dtype.  The
   named dtype propagates to the result column type: ``embed(?, 'f32')``
   returns a ``varvecF32``, ``embed(?)`` returns a ``varvecF16``.
+* ``kind`` is an optional :green:`String` prompt kind for models with
+  asymmetric retrieval prompts (see
+  :ref:`Retrieval prompts <sql-set:Retrieval prompts>`): ``'query'``,
+  ``'document'``, or ``'raw'``.  It may be given directly as the second
+  argument (``embed(?, 'query')``) or after a dtype
+  (``embed(?, 'f32', 'query')``).  ``embed(text)`` embeds verbatim —
+  exactly as before prompts existed; with no prompts configured, every
+  kind embeds verbatim.
+* ``title`` is an optional :green:`String`, valid only with
+  ``'document'``: ``embed(?, 'document', ?)`` folds the title into the
+  document prompt (models whose prompt has a title slot use it; others
+  get prompt + title + newline + text).
 
-The model is configured process-wide via
-:ref:`llamaEmbed <sql-set:llamaEmbed>`; concurrency behavior is
-controlled by :ref:`llamaEmbedPerThread <sql-set:llamaEmbedPerThread>`.
-The output dimensionality is determined by the model — for example,
-``all-MiniLM-L6-v2`` produces 384-dim vectors; ``BGE-base`` produces
-768-dim.  Vectors are L2-normalized; norm ≈ 1.0 within dtype
-quantization noise.
+With an asymmetric model loaded, single-vector inserts should use
+``embed(?, 'document')`` so stored vectors match the query side —
+``LIKEV`` with a string automatically applies the query prompt, and
+``chunkembed()`` automatically applies the document prompt.
 
-``embed()`` requires the ``rampart-llamacpp`` module to be installed.
-``rampart-sql`` auto-loads it on the first ``sql.set({llamaEmbed: ...})``
-call (trying ``rampart-llamacpp``, then ``rampart-llamacpp_cuda``,
-then ``rampart-llamacpp_cpu``).  To force a specific variant, call
-``require('rampart-llamacpp_cpu')`` (or ``_cuda``, etc.) first.  See
+The model is configured via :ref:`llamaEmbed <sql-set:llamaEmbed>` or
+:ref:`onnxEmbed <sql-set:onnxEmbed>`; llama.cpp concurrency behavior is
+controlled by :ref:`llamaEmbedPerThread <sql-set:llamaEmbedPerThread>`
+(ONNX sessions are concurrent by nature).  The output dimensionality is
+determined by the model — for example, ``all-MiniLM-L6-v2`` produces
+384-dim vectors; ``bge-m3`` produces 1024-dim.  Vectors are
+L2-normalized; norm ≈ 1.0 within dtype quantization noise.
+
+Long text is not truncated: the engine splits it into chunks
+(structure-aware, sized to the model's token window), embeds every
+chunk, and returns the L2-normalized **mean** of the chunk vectors.  To
+keep the individual chunk vectors instead, use
+:ref:`chunkembed() <sql-server-funcs:chunkembed>` below.
+
+Results are cached per model (see
+:ref:`likevCache <sql-set:likevCache>`): any of the embedding scalars
+applied to the same text — in one statement, across statements, or
+across threads — runs the model once.
+
+``embed()`` requires the engine's module (``rampart-llamacpp`` or
+``rampart-onnx``) to be installed.  ``rampart-sql`` auto-loads it on the
+first ``sql.set({llamaEmbed: ...})`` / ``sql.set({onnxEmbed: ...})``
+call (trying the canonical name, then ``_cuda``, then ``_cpu``).  To
+force a specific variant, ``require()`` it first.  See
 :ref:`Generating embeddings <rampart-sql:Generating embeddings>` for
 the full dependency and install notes.
 
@@ -105,6 +138,183 @@ Use in SELECT projections, INSERT values, or as the right-hand side of
 See :ref:`Vector Search <rampart-sql:Vector Search>` for the end-to-end
 pipeline (model setup → table schema → INSERT → vector index →
 ``LIKEV``).
+
+chunkembed
+""""""""""
+
+Embed a whole document, keeping **all** of its chunk vectors.
+
+.. code-block:: sql
+
+    chunkembed(text [, dtype [, prefix]])
+    chunkembed(textList [, dtype [, prefix [, spans]]])
+
+Like :ref:`embed() <sql-server-funcs:embed>`, but where ``embed()``
+returns the single combined (mean) vector, ``chunkembed()`` returns the
+document's per-chunk vectors concatenated back to back — a
+``k × dim``-cell value in the same ``varvec*`` types (dtype argument and
+default as in ``embed()``).  The embedding engine does the chunking:
+paragraph boundaries first, then the model's token window; a short text
+comes back as ``k = 1``, byte-identical to a plain single vector.
+
+The optional third argument is a **per-chunk prefix** — typically the
+document's title.  It is prepended to every chunk's *embedding input*
+(each chunk embeds as if it read ``<prefix> <chunk text>``), so
+name-seeking queries ("who plays X in Y?") can match any chunk of the
+document by its name, not just chunks that happen to repeat it.  The
+prefix never changes the chunk **boundaries**, the chunk **count**, or
+the text spans :ref:`abstract <sql-server-funcs:abstract>` computes —
+only what the model sees.  (A chunk that already fills the model window
+gives up its last few tail tokens of embedding input to make room.)
+
+To pass a prefix without naming a dtype, use ``''`` or ``'auto'`` as
+the dtype placeholder (both mean "the default"):
+
+.. code-block:: sql
+
+    -- title-prefixed chunks, default dtype:
+    INSERT INTO docs (id, title, doc, v)
+        VALUES (?, ?, ?, chunkembed(?, '', ?));   -- params: ..., doc, title
+
+Search-side queries need no change — the query string embeds without a
+title; the stored chunk vectors simply carry the document's name in
+their semantics.
+
+With an asymmetric model's :ref:`retrieval prompts
+<sql-set:Retrieval prompts>` in effect, ``chunkembed()`` folds the
+model's **document** prompt around this title automatically — a model
+whose prompt has a ``{title}`` slot fills it, others get
+``<document prompt><title>`` as the per-chunk prefix — and ``LIKEV``'s
+string auto-embedding applies the **query** prompt.  Both sides stay
+consistent with no change to the SQL.
+
+Stored in a vector-indexed column, a chunked value gives ``LIKEV``
+*best-chunk* ranking over long documents — every chunk is indexed under
+its row, and the row's ``$rank`` is its best chunk's score.  The vector
+index over a chunked column requires the ``vec_dim`` WITH-option.  See
+:ref:`Chunked documents (multi-vector rows)
+<rampart-sql:Chunked documents (multi-vector rows)>` for the full
+pattern, including best-chunk snippets via
+:ref:`abstract <sql-server-funcs:abstract>`.
+
+.. code-block:: sql
+
+    -- one row per document; k chunk vectors in v
+    INSERT INTO docs (id, doc, v) VALUES (?, ?, chunkembed(?));
+
+**Caller-supplied chunks.**  The first argument may instead be a
+``strlst`` — a list of strings, each of which becomes **exactly one
+chunk** in list order (N elements always produce N vectors, so the
+caller's own chunk bookkeeping stays positional).  An element that
+fits the model window gets its exact vector; an oversized element
+gets its ``embed()``-style *combined* vector — the normalized mean
+over its sub-window vectors — rather than extra vectors or a
+truncation.  Empty elements are skipped.  This replaces the
+built-in chunker with your own splitting, mirroring the
+``split: function`` option of the JavaScript embedding handles.  From
+rampart, pass a :green:`Array` of :green:`Strings` wrapped in
+``Sql.list()`` (a bare array parameter is bound as JSON text, not a
+list):
+
+.. code-block:: javascript
+
+    var myChunks = mySplitter(docText);    // -> [ "chunk 1 ...", ... ]
+    sql.exec("insert into docs values (?, ?, chunkembed(?, 'f16'))",
+             [id, docText, Sql.list(myChunks)]);
+
+The prefix argument still applies to every listed chunk.
+
+**Spans (4th argument).**  A numeric list of ``{start, end}`` byte
+offsets into the stored document — two numbers per list element, in
+element order — tells :ref:`abstract <sql-server-funcs:abstract>`
+where each custom chunk came from, so the 5-argument vec form can
+seed **best-chunk snippets for custom chunkings** exactly as it does
+for the built-in chunker:
+
+.. code-block:: javascript
+
+    // splitter returns [{text, start, end}, ...]
+    var parts = mySplitter(docText);
+    sql.exec("insert into docs values (?, ?, chunkembed(?, 'f16', ?, ?))",
+             [id, docText, Sql.list(parts.map(p => p.text)),
+              title, Sql.list(parts.flatMap(p => [p.start, p.end]))]);
+
+The offsets are UTF-8 **bytes**, not JavaScript string indices.  A JS
+string position counts *characters*, so offsets taken from
+``.indexOf()``/``.length`` arithmetic are only correct for pure-ASCII
+documents and silently drift on any multi-byte text.  Compute byte
+positions instead (e.g. sum the UTF-8 byte lengths of the pieces).
+Mis-computed spans never error: ``abstract()`` clamps them to the text
+and aligns its cuts to whole UTF-8 characters — the snippet simply
+comes from the wrong part of the document.
+
+Without spans, custom-chunked rows still rank normally under
+``LIKEV``; their abstracts fall back to plain keyword snippets.
+
+**The value header.**  Every ``chunkembed()`` result carries a small
+self-describing header ahead of its cells recording the chunk count,
+dimension, element type and (when known) the chunk spans — for the
+built-in chunker the spans are recorded automatically.  The header
+is invisible in SQL and in rampart (a selected vector reports its
+true cell ``dim``, plus a ``chunkSpans`` property when spans are
+present), survives storage in ``varbyte`` columns, and is stripped
+by cell-converting ``convert()`` calls.  Values without a header
+(``embed()``, user-computed vectors, pre-existing tables) behave
+exactly as before.  Because the winning chunk's span now travels
+*inside the value*, ``abstract()`` no longer re-runs the chunker at
+query time, and the serving side needs no chunker/model agreement
+for snippets — only the query embedding still uses the model.
+Tables written with headers require correspondingly current
+binaries (older builds would misread the header bytes as cells).
+
+chunkavg
+""""""""
+
+The document's single combined vector, from the same model run as
+``chunkembed()``.
+
+.. code-block:: sql
+
+    chunkavg(text [, dtype [, prefix]])
+
+Returns the L2-normalized mean of the document's chunk vectors — the
+same value ``embed(text)`` returns (when no prefix is given) — exposed
+as its own scalar so a
+table can store **both** the chunk array (``chunkembed()``, fine
+per-passage ranking) and the combined vector (``chunkavg()``, a second
+independently-indexable column for coarse first-stage search) from one
+model run:
+
+.. code-block:: sql
+
+    -- the shared result cache makes this ONE model run:
+    INSERT INTO docs (id, avgv, v) VALUES (?, chunkavg(?), chunkembed(?));
+
+The optional ``prefix`` argument is the per-chunk prefix described under
+``chunkembed()``; when storing prefixed chunk vectors, pass the **same**
+prefix to ``chunkavg()`` (and ``chunkcoherence()``) — the trio then still
+shares one cached model run, and the average stays consistent with the
+chunks it summarizes.
+
+chunkcoherence
+""""""""""""""
+
+How single-topic a document is, from its chunk vectors.
+
+.. code-block:: sql
+
+    chunkcoherence(text [, prefix])
+
+Returns a :green:`Number` (SQL ``double``) in ``[0, 1]``: the average
+pairwise cosine similarity between the document's chunk vectors.  ``1.0``
+for a single-chunk document or one that stays tightly on topic; values
+near ``0`` indicate a diffuse, multi-topic document.  Useful as a stored
+signal for deciding whether a document's combined vector
+(``chunkavg()``) is a faithful summary or whether per-chunk search
+(``chunkembed()``) is needed.
+
+Shares the model run with the other embedding scalars via the result
+cache (:ref:`likevCache <sql-set:likevCache>`).
 
 
 General Functions
@@ -1186,12 +1396,13 @@ Generate an abstract of a given portion of text. The syntax is
 
 .. code-block:: sql
 
-       abstract(text[, maxsize[, style[, query]]])
+       abstract(text[, maxsize[, style[, query[, vecColumn]]]])
 
-The abstract will be less than ``maxsize`` characters long, and will
-attempt to end at a word boundary. If ``maxsize`` is not specified (or
-is less than or equal to 0) then a default size of 230 characters is
-used.
+The abstract will be less than ``maxsize`` bytes long, and will
+attempt to end at a word boundary (a multi-byte UTF-8 character is
+never split, so the cut always falls on a whole character). If
+``maxsize`` is not specified (or is less than or equal to 0) then a
+default size of 230 bytes is used.
 
 The ``style`` argument is a string or integer, and allows a choice
 between several different ways of creating the abstract. Note that some
@@ -1232,6 +1443,47 @@ that it more closely reflects an index-obtained hit.
          SELECT     abstract(STORY, 0, 1, 'power struggle')
          FROM       ARTICLES
          WHERE      ARTID = 'JT09115' ;
+
+**Vector (best-chunk) snippets** — the optional 5th argument names the
+row's vector column.  When the column holds *chunked* values
+(:ref:`chunkembed() <sql-server-funcs:chunkembed>`), the abstract is
+seeded from the text span of the row's **best-matching chunk**: with a
+non-empty ``query`` string, ``abstract()`` embeds the query itself
+(a cache hit when the surrounding query's ``LIKEV`` used the same
+string) and scores the row's chunks with the same scorer ``LIKEV``
+uses — so it works in any query shape, including per-row ``id = ?``
+lookups with no ``LIKEV`` at all.  With an empty ``query`` string it
+instead uses the winning chunk recorded by a ``LIKEV`` in the same
+query's ``WHERE`` clause:
+
+.. code-block:: sql
+
+    SELECT Title, abstract(Doc, 200, 'smart', ?, Vec) snip, $rank
+      FROM docs
+     WHERE Vec LIKEV ? ;
+
+With an empty ``query`` string (``''``) the snippet is centered purely
+on the winning chunk; with a real query string, keyword hits are merged
+with the chunk span (hybrid).  The winning chunk's byte span is read
+directly from the vector value: ``chunkembed()`` records the spans in
+the value's header — automatically for the built-in chunker, and from
+the caller-supplied 4th argument for custom chunkings — so no chunker
+runs at query time and any embedding engine may serve the query.  Only
+for older, *headerless* values is the span recomputed from the text by
+the loaded embedding model's chunker; for those rows the same engine
+(:ref:`llamaEmbed <sql-set:llamaEmbed>` /
+:ref:`onnxEmbed <sql-set:onnxEmbed>`) must be set at query time.  See
+:ref:`Chunked documents (multi-vector rows)
+<rampart-sql:Chunked documents (multi-vector rows)>`.
+
+The vec form works directly in a hybrid rank-fused query
+(``Doc LIKEP ? OR Vec LIKEV ?`` — see :ref:`Hybrid keyword + vector
+queries (rank fusion)
+<rampart-sql:Hybrid keyword + vector queries (rank fusion)>`), where
+best-chunk snippets seed normally even for rows only the keyword side
+contributed (abstract scores that row's chunks itself).  Do not add an
+``ORDER BY`` to such a query — see the performance note in the hybrid
+section.
 
 See also the Rampart JavaScript :ref:`rampart-sql:abstract()` function.
 

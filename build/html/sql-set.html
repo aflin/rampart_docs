@@ -177,6 +177,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#embedding-properties">Embedding Properties</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#llamaembed">llamaEmbed</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#llamaembedperthread">llamaEmbedPerThread</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#onnxembed">onnxEmbed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#retrieval-prompts">Retrieval prompts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#likevcache">likevCache</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#indexing-properties">Indexing properties</a><ul>
@@ -272,6 +275,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -733,7 +737,7 @@ read lock – regardless of this setting – due to the nature of
 the index.</dd>
 <dt>indexdataonlycheckpredicates</dt>
 <dd>When enabled (the default), allows the index-data-only
-optimization <a class="footnote-reference" href="#id3" id="id1">[1]</a> to proceed even if the SELECT columns are
+optimization <a class="footnote-reference" href="#id19" id="id1">[1]</a> to proceed even if the SELECT columns are
 renamed or altered in expressions. Previously, the columns had
 to be selected as-is with no renaming or expressions.</dd>
 <dt>indexvirtualfields</dt>
@@ -1538,9 +1542,15 @@ once surfaced, they are scored exactly.  See
 </div>
 <div class="section" id="embedding-properties">
 <h2>Embedding Properties<a class="headerlink" href="#embedding-properties" title="Permalink to this headline">¶</a></h2>
-<p>These settings configure the in-process <code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code> embedding model
-used by the <a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a> SQL function and by
-<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s auto-coercion of string parameters to vectors.  See
+<p>These settings configure the in-process embedding model — either a
+<code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code> <code class="docutils literal notranslate"><span class="pre">.gguf</span></code> (<code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code>) or an ONNX model directory
+(<code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code>) — used by the SQL functions
+<a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a>,
+<a class="reference internal" href="sql-server-funcs.html#chunkembed"><span class="std std-ref">chunkembed()</span></a>,
+<a class="reference internal" href="sql-server-funcs.html#chunkavg"><span class="std std-ref">chunkavg()</span></a> and
+<a class="reference internal" href="sql-server-funcs.html#chunkcoherence"><span class="std std-ref">chunkcoherence()</span></a>, and by
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s auto-coercion of string parameters to vectors.  A connection
+uses whichever engine was set most recently.  See
 <a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> for the end-to-end
 pipeline these settings fit into.</p>
 <p>Using <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">name=value;</span></code> is not available for the following properties.
@@ -1554,6 +1564,18 @@ subsequent calls to <a class="reference internal" href="sql-server-funcs.html#em
 any <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> predicate whose right-hand side is a string (which is
 auto-coerced via <code class="docutils literal notranslate"><span class="pre">embed()</span></code>).</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s1">&#39;/models/all-minilm-l6-v2_f16.gguf&#39;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>An <span class="green">Object</span> form is also accepted for models that need
+retrieval prompts (see <a class="reference internal" href="#retrieval-prompts"><span class="std std-ref">Retrieval prompts</span></a> below):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">model</span><span class="o">:</span>          <span class="s1">&#39;/models/nomic-embed-text-v1.5.Q8_0.gguf&#39;</span><span class="p">,</span>
+    <span class="c1">// optional -- normally discovered from the model&#39;s sidecar:</span>
+    <span class="nx">queryPrompt</span><span class="o">:</span>    <span class="s1">&#39;search_query: &#39;</span><span class="p">,</span>
+    <span class="nx">documentPrompt</span><span class="o">:</span> <span class="s1">&#39;search_document: &#39;</span><span class="p">,</span>
+    <span class="c1">// documentTitlePrompt: &#39;title: {title} | text: &#39;,</span>
+    <span class="c1">// prompts: false,     // disable prompts entirely</span>
+<span class="p">}});</span>
 </pre></div>
 </div>
 <p>Loading requires the <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> module to be installed.
@@ -1614,6 +1636,144 @@ process-wide for subsequent <code class="docutils literal notranslate"><span cla
 embed calls are in flight is safe — already-issued calls run to
 completion under their current mode; the new mode takes effect on
 the next call.</p>
+<p>llama.cpp only — ONNX sessions (<code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code>) run concurrently
+across threads by nature and ignore this setting.</p>
+</div></blockquote>
+</div>
+<div class="section" id="onnxembed">
+<h3>onnxEmbed<a class="headerlink" href="#onnxembed" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Load an ONNX embedding model as the connection’s embedding engine —
+an alternative to <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code>.  Takes an <span class="green">Object</span> whose
+<code class="docutils literal notranslate"><span class="pre">model</span></code> property names an ONNX model <strong>directory</strong> (containing
+<code class="docutils literal notranslate"><span class="pre">model.onnx</span></code> or <code class="docutils literal notranslate"><span class="pre">onnx/model.onnx</span></code>, a tokenizer — <code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code>
+or <code class="docutils literal notranslate"><span class="pre">*vocab.txt</span></code> — and the usual config files, as downloaded from a
+Hugging Face model repository).  The directory self-configures the
+tokenizer, pooling, special tokens and normalization.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">onnxEmbed</span><span class="o">:</span> <span class="p">{</span><span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;/models/all-minilm-l6-v2&#39;</span><span class="p">}});</span>
+</pre></div>
+</div>
+<p>Optional properties of the object (rarely needed in directory mode):
+<code class="docutils literal notranslate"><span class="pre">tokenizer</span></code> (path, for a bare <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> file instead of a
+directory), <code class="docutils literal notranslate"><span class="pre">maxTokens</span></code>, <code class="docutils literal notranslate"><span class="pre">pooling</span></code> (<code class="docutils literal notranslate"><span class="pre">'auto'</span></code> | <code class="docutils literal notranslate"><span class="pre">'mean'</span></code> |
+<code class="docutils literal notranslate"><span class="pre">'cls'</span></code>), <code class="docutils literal notranslate"><span class="pre">normalize</span></code> (<span class="green">Boolean</span>), and the token ids
+<code class="docutils literal notranslate"><span class="pre">bosId</span></code> / <code class="docutils literal notranslate"><span class="pre">eosId</span></code> / <code class="docutils literal notranslate"><span class="pre">padId</span></code> / <code class="docutils literal notranslate"><span class="pre">idOffset</span></code>.  The retrieval
+prompt keys <code class="docutils literal notranslate"><span class="pre">queryPrompt</span></code> / <code class="docutils literal notranslate"><span class="pre">documentPrompt</span></code> /
+<code class="docutils literal notranslate"><span class="pre">documentTitlePrompt</span></code> / <code class="docutils literal notranslate"><span class="pre">prompts:</span> <span class="pre">false</span></code> are accepted exactly as
+in <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code>’s object form (see <a class="reference internal" href="#retrieval-prompts"><span class="std std-ref">Retrieval prompts</span></a> below); the older engine-level
+<code class="docutils literal notranslate"><span class="pre">queryPrefix</span></code> / <code class="docutils literal notranslate"><span class="pre">passagePrefix</span></code> strings are still honored, and
+their presence disables sidecar prompts so the two mechanisms never
+stack.</p>
+<p>Chunker options, mirroring <code class="docutils literal notranslate"><span class="pre">initEmbed</span></code>’s (see
+<a class="reference internal" href="rampart-langtools.html#initembed"><span class="std std-ref">rampart-langtools</span></a> for full
+descriptions): <code class="docutils literal notranslate"><span class="pre">split</span></code> (<code class="docutils literal notranslate"><span class="pre">'auto'</span></code> | <code class="docutils literal notranslate"><span class="pre">'window'</span></code>),
+<code class="docutils literal notranslate"><span class="pre">minTokens</span></code>, <code class="docutils literal notranslate"><span class="pre">packParagraphs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sentenceSplit</span></code>
+(sentence-boundary packing of oversized paragraphs; multi-script,
+default <code class="docutils literal notranslate"><span class="pre">false</span></code>).  These change <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>’s chunk
+boundaries: a table’s build settings and any HEADERLESS serving
+must agree — values written by current <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> carry
+their spans in-band and don’t depend on this agreement.</p>
+<p>Module resolution mirrors <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code>: on first use,
+<code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> tries <code class="docutils literal notranslate"><span class="pre">require('rampart-onnx')</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">rampart-onnx_cuda</span></code>, then <code class="docutils literal notranslate"><span class="pre">rampart-onnx_cpu</span></code>; an explicitly
+<code class="docutils literal notranslate"><span class="pre">require()</span></code>d variant takes precedence.  <code class="docutils literal notranslate"><span class="pre">rampart-onnx</span></code> ships
+separately in <code class="docutils literal notranslate"><span class="pre">rampart-langtools</span></code>.</p>
+<p>A connection has <strong>one</strong> embedding engine: whichever of
+<code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> / <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code> was set most recently serves its
+<code class="docutils literal notranslate"><span class="pre">embed()</span></code> / <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> / <code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">chunkcoherence()</span></code> calls and its <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> string coercion.
+Different connections may use different engines (or different
+models) at the same time.  A given model directory (with a given
+option set) is loaded once per process and shared across all
+threads and connections that name it.</p>
+<p>ONNX sessions support concurrent inference across threads with no
+per-thread setup — <code class="docutils literal notranslate"><span class="pre">llamaEmbedPerThread</span></code> does not apply.</p>
+</div></blockquote>
+</div>
+<div class="section" id="retrieval-prompts">
+<h3>Retrieval prompts<a class="headerlink" href="#retrieval-prompts" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Many recent embedding models are <strong>asymmetric</strong>: they expect a
+prompt prefixed to search queries and (for some) documents — e.g.
+nomic’s <a href="#id2"><span class="problematic" id="id3">``</span></a>search_query: `` / <a href="#id4"><span class="problematic" id="id5">``</span></a>search_document: <a href="#id6"><span class="problematic" id="id7">``</span></a>, bge’s
+<a href="#id8"><span class="problematic" id="id9">``</span></a>Represent this sentence for searching relevant passages: <a href="#id10"><span class="problematic" id="id11">``</span></a>,
+e5’s <a href="#id12"><span class="problematic" id="id13">``</span></a>query: `` / <a href="#id14"><span class="problematic" id="id15">``</span></a>passage: <a href="#id16"><span class="problematic" id="id17">``</span></a>.  Skipping the prompts, or applying
+them on only one side, measurably degrades retrieval quality.</p>
+<p>When an embed model is bound to a connection, <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> looks
+for the prompts <strong>once</strong> — next to the model on disk:</p>
+<ol class="arabic simple">
+<li><code class="docutils literal notranslate"><span class="pre">&lt;model-path&gt;.prompts.json</span></code> — written automatically by
+<code class="docutils literal notranslate"><span class="pre">rampart-models</span></code> when it downloads a model whose catalog entry
+carries prompts (works for <code class="docutils literal notranslate"><span class="pre">.gguf</span></code> files and ONNX model
+directories alike);</li>
+<li>for ONNX directories, the repo’s own
+<code class="docutils literal notranslate"><span class="pre">config_sentence_transformers.json</span></code> when it publishes a
+<code class="docutils literal notranslate"><span class="pre">prompts</span></code> dict.</li>
+</ol>
+<p>The file format is HuggingFace’s:
+<code class="docutils literal notranslate"><span class="pre">{&quot;prompts&quot;:</span> <span class="pre">{&quot;query&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;document&quot;:</span> <span class="pre">&quot;...&quot;,</span>
+<span class="pre">&quot;documentWithTitle&quot;:</span> <span class="pre">&quot;...</span> <span class="pre">{title}</span> <span class="pre">...&quot;}}</span></code>
+(<code class="docutils literal notranslate"><span class="pre">&quot;passage&quot;</span></code> is accepted as an alias for <code class="docutils literal notranslate"><span class="pre">&quot;document&quot;</span></code>;
+<code class="docutils literal notranslate"><span class="pre">documentWithTitle</span></code> is a rampart extension for models whose
+document prompt has a title slot).  A hand-downloaded model gains
+prompt support by writing this sidecar next to it.</p>
+<p>Once loaded, the prompts are applied automatically — a plain string
+prepend before the model runs, never file I/O on the query path:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> with a <span class="green">String</span> right-hand side, and the query
+embedding inside <code class="docutils literal notranslate"><span class="pre">abstract(...'querybest'...)</span></code>, get the
+<strong>query</strong> prompt;</li>
+<li><code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> gets the <strong>document</strong> prompt, folded around its
+title argument when one is given;</li>
+<li><code class="docutils literal notranslate"><span class="pre">embed()</span></code> embeds verbatim unless told otherwise:
+<code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'query')</span></code> / <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'document'[,</span> <span class="pre">title])</span></code> — see
+<a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a>.</li>
+</ul>
+<p>With no sidecar (e.g. <code class="docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code>, which is symmetric),
+everything embeds verbatim — behavior is byte-identical to older
+releases.</p>
+<p>Explicit <code class="docutils literal notranslate"><span class="pre">queryPrompt</span></code> / <code class="docutils literal notranslate"><span class="pre">documentPrompt</span></code> /
+<code class="docutils literal notranslate"><span class="pre">documentTitlePrompt</span></code> keys in the <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> / <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code>
+object override the sidecar <strong>wholesale</strong> (unlisted kinds get no
+prompt), and <code class="docutils literal notranslate"><span class="pre">prompts:</span> <span class="pre">false</span></code> disables prompts entirely.</p>
+<p><strong>Consistency matters</strong>: the same document prompt must be in effect
+at index build time and afterwards, and stored vectors must have
+been embedded with the document prompt for query-prompted searches
+to score correctly.  With an asymmetric model, insert single
+vectors via <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'document')</span></code> (<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> is automatic)
+and rebuild the index if you change a model’s prompts.</p>
+</div></blockquote>
+</div>
+<div class="section" id="likevcache">
+<h3>likevCache<a class="headerlink" href="#likevcache" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Size, in documents, of the per-model embedding result cache.
+Default <code class="docutils literal notranslate"><span class="pre">10</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> disables.  Also accepted as
+<code class="docutils literal notranslate"><span class="pre">likevCacheSize</span></code>.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">onnxEmbed</span><span class="o">:</span> <span class="p">{</span><span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;/models/all-minilm-l6-v2&#39;</span><span class="p">},</span>
+         <span class="nx">likevCache</span><span class="o">:</span> <span class="mi">50</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Each loaded embedding model keeps an LRU cache of complete
+document-embedding results, keyed on the input text.  All of the
+embedding scalars — <code class="docutils literal notranslate"><span class="pre">embed()</span></code>, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>, <code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">chunkcoherence()</span></code> — and <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s auto-embedding of string
+parameters share it, so any of them applied to the <em>same text</em> runs
+the model <strong>once</strong>, regardless of call order, across statements and
+across threads.  Two common wins:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>-- one model run, not two:
+INSERT INTO docs VALUES (?, chunkavg(?), chunkembed(?));
+
+-- a repeated search string embeds once; the second query&#39;s
+-- embedding cost is ~zero:
+SELECT id, $rank FROM docs WHERE v LIKEV ?;
+</pre></div>
+</div>
+<p>The cache belongs to the <em>model</em> (all connections and threads using
+a model share its cache), sized per this setting on a connection
+bound to that model — set it together with (or after) the
+<code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> / <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code> key.  Distinct models have
+independent caches.</p>
 </div></blockquote>
 </div>
 </div>
@@ -2199,7 +2359,7 @@ as set in <code class="docutils literal notranslate"><span class="pre">conf/texi
 <code class="docutils literal notranslate"><span class="pre">sql.exec(&quot;update</span> <span class="pre">myTable</span> <span class="pre">set</span> <span class="pre">myStrchrField</span> <span class="pre">=</span> <span class="pre">?;&quot;,[</span> <span class="pre">[1,2,3]</span> <span class="pre">]);</span></code></li>
 <li><code class="docutils literal notranslate"><span class="pre">create</span></code> - indicates that the separator is to be created:
 the entire string is taken intact as the sole item for the resulting
-<code class="docutils literal notranslate"><span class="pre">strlst</span></code>, <a class="footnote-reference" href="#id4" id="id2">[2]</a> and a separator is created that is not present in
+<code class="docutils literal notranslate"><span class="pre">strlst</span></code>, <a class="footnote-reference" href="#id20" id="id18">[2]</a> and a separator is created that is not present in
 the string (to aid re-conversion to <code class="docutils literal notranslate"><span class="pre">varchar</span></code>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">lastchar</span></code> indicates that the last character in the
 source string should be the separator; e.g. “a,b,c,” would be split
@@ -2350,7 +2510,7 @@ Overrides Validate Btrees setting in <code class="docutils literal notranslate">
 <li><code class="docutils literal notranslate"><span class="pre">0x2000</span></code> - overwrite freed pages in memory</li>
 </ul>
 </div></blockquote>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
+<table class="docutils footnote" frame="void" id="id19" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The index-data-only optimization allows Texis to not only use the
@@ -2361,10 +2521,10 @@ optimization is that the SELECT clause only refer to columns
 available in the index.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
+<table class="docutils footnote" frame="void" id="id20" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Note that in create mode, an empty source string will result in an empty
+<tr><td class="label"><a class="fn-backref" href="#id18">[2]</a></td><td>Note that in create mode, an empty source string will result in an empty
 (zero-items) strlst: this helps maintain consistency of empty-string
 meaning empty-set for strlst, as is true in other contexts.</td></tr>
 </tbody>
@@ -2417,6 +2577,12 @@ field. Under such circumstances, other unindexable terms in the query can
 generally be resolved quickly, if the “anchor” term limits the linear search
 to a tiny fraction of the table. The error message “Query would require
 linear search” may be generated by linear queries if allinear is off.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> follows the same policy: a vector search on a column with
+no usable vector index is a full-table scan (every row scored) and
+is refused with the same “would require linear search” message
+unless <code class="docutils literal notranslate"><span class="pre">allinear</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.  Rows added after a vector index
+was created (or last optimized) are scanned as part of the indexed
+search and do not need <code class="docutils literal notranslate"><span class="pre">allinear</span></code>.</p>
 <p>Note that an otherwise indexable query like “rocket” may become linear if
 there is no text index on its field, or if an index for another part of
 the SQL query is favored instead by Texis. For example, with the SQL query

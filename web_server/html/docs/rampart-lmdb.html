@@ -7,45 +7,195 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      The rampart-lmdb module — Rampart 0.1.0 documentation
+      The rampart-lmdb module — Rampart 0.7.0 documentation
     </title>
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
     <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
     <link rel="stylesheet" href="_static/hacks.css" type="text/css">
     <link rel="index" title="Index" href="genindex.html">
     <link rel="search" title="Search" href="search.html">
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
     <link rel="next" title="The rampart-redis module" href="rampart-redis.html">
     <link rel="prev" title="The rampart-curl module" href="rampart-curl.html">
     <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
     <style>
-            .wy-nav-top,.wy-side-nav-search { background-color:black;}
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            dl:not(.docutils) dt {font-family: "Varela Round", Sans-Serif !important; font-size: 90% !important;}
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
             .autocomplete-group { padding: 2px 5px; }
-            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
-            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
-            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
-            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
             .expandBottom { bottom: 18px }
             .expandTop { top: 3px }
-            .expanded .fader { bottom : -15px }
+            .expanded .fader { bottom: -15px }
             .expanded .expandBottom { bottom: 38px; }
-            .wy-nav-content {max-width: 1600px;}
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
     </style>
   </head>
   <body class="wy-body-for-nav" role="document">
     <div class="wy-grid-for-nav">
       <nav data-toggle="wy-nav-shift" class="wy-nav-side">
         <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
           <div class="wy-side-nav-search">
-            <a href="/" class="icon icon-home">Rampart</a>
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
             <div role="search">
               <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
                 <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
@@ -65,10 +215,22 @@
                 <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
@@ -203,16 +365,46 @@
                 <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
               </li>
             </ul>
           </div>
@@ -322,9 +514,15 @@
                     </h2>
                     <p>
                       Within LMDB, a “database environment” is a single file which lives in its own directory, and has
-                      an accompanying lock file. Within that file, data may be partitioned into “databases”. Thus an
+                      an accompanying lock file. Within that file, data may be partitioned into “databases”. Thus, an
                       LMDB “database environment” is organizationally similar to a SQL database and an LMDB “database”
                       is similar to a SQL table.
+                    </p>
+                    <p>
+                      Note that LMDB has the concept of a default database. However it is unused in Rampart except to
+                      retrieve the names of other named LMDB databases. In Rampart, the <em>default</em> database is an
+                      LMDB database named <code class="docutils literal notranslate"><span class=
+                      "pre">"default"</span></code>.
                     </p>
                   </div>
                   <div class="section" id="main-function-init">
@@ -354,21 +552,21 @@
                       <div>
                         <ul>
                           <li>
-                            <p>
+                            <p class="first">
                               <code class="docutils literal notranslate"><span class="pre">path</span></code> is a
                               <span class="green">String</span>, the location of the database environment.
                             </p>
                           </li>
                           <li>
-                            <p>
+                            <p class="first">
                               <code class="docutils literal notranslate"><span class="pre">create</span></code> is a
                               <span class="green">Boolean</span>, whether to create a new database environment, if it
                               doesn’t exist.
                             </p>
                           </li>
                           <li>
-                            <p>
-                              <code class="docutils literal notranslate"><span class="pre">options</span></code> is a
+                            <p class="first">
+                              <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
                               <span class="green">Object</span>, a list of options for opening a new database
                               environment. Options include:
                             </p>
@@ -376,139 +574,129 @@
                               <div>
                                 <ul class="simple">
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">mapSize</span></code> - a <span class="green">Number</span>, an integer to
-                                      set the size of the memory map in megabytes to use for this environment. The size
-                                      of the memory map is also the maximum size of the database environment. The value
-                                      should be chosen as large as possible, to accommodate future growth of the
-                                      database environment. It may be increased after the database environment is
-                                      created. The default is <code class="docutils literal notranslate"><span class=
-                                      "pre">16</span></code> (16Mb).
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">mapSize</span></code>
+                                    - a <span class="green">Number</span>, an integer to set the size of the memory map
+                                    in megabytes to use for this environment. The size of the memory map is also the
+                                    maximum size of the database environment. The value should be chosen as large as
+                                    possible, to accommodate future growth of the database environment. It may be
+                                    increased after the database environment is created. The default is <code class=
+                                    "docutils literal notranslate"><span class="pre">16</span></code> (16Mb).
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">conversion</span></code> - <span class="green">String</span>, whether and
-                                      what type of conversions should be performed before storing values. This applies
-                                      to <a class="reference internal" href="#lmdb-easy-functions">LMDB Easy
-                                      Functions</a> only. The value is of these case-insensitive <span class=
-                                      "green">Strings</span>:
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">conversion</span></code> - <span class="green">String</span>, whether and
+                                    what type of conversions should be performed before storing values. This applies to
+                                    <a class="reference internal" href="#lmdb-easy-functions">LMDB Easy Functions</a>
+                                    only. The value is of these case-insensitive <span class="green">Strings</span>:
                                     <ul>
                                       <li>
-                                        <p>
-                                          <code class="docutils literal notranslate"><span class=
-                                          "pre">Buffer</span></code> - the default if not specified. Input values
-                                          (<a class="reference internal" href="#put">put</a>) can be a <span class=
-                                          "green">String</span> or a <span class="green">Buffer</span> and are stored
-                                          as is. Output values (<a class="reference internal" href="#get">get</a>) will
-                                          be a <span class="green">Buffer</span>.
-                                        </p>
+                                        <code class="docutils literal notranslate"><span class=
+                                        "pre">Buffer</span></code> - the default if not specified. Input values
+                                        (<a class="reference internal" href="#put">put</a>) can be a <span class=
+                                        "green">String</span> or a <span class="green">Buffer</span> and are stored as
+                                        is. Output values (<a class="reference internal" href="#get">get</a>) will be a
+                                        <span class="green">Buffer</span>.
                                       </li>
                                       <li>
-                                        <p>
-                                          <code class="docutils literal notranslate"><span class=
-                                          "pre">String</span></code> - Input values (<a class="reference internal"
-                                          href="#put">put</a>) can be a <span class="green">String</span> or a
-                                          <span class="green">Buffer</span> and are stored as is. Output values
-                                          (<a class="reference internal" href="#get">get</a>) will be a <span class=
-                                          "green">String</span>. If the output value includes NULL characters, the
-                                          <span class="green">String</span> will be truncated.
-                                        </p>
+                                        <code class="docutils literal notranslate"><span class=
+                                        "pre">String</span></code> - Input values (<a class="reference internal" href=
+                                        "#put">put</a>) can be a <span class="green">String</span> or a <span class=
+                                        "green">Buffer</span> and are stored as is. Output values (<a class=
+                                        "reference internal" href="#get">get</a>) will be a <span class=
+                                        "green">String</span>. If the output value includes NULL characters, the
+                                        <span class="green">String</span> will be truncated.
                                       </li>
                                       <li>
-                                        <p>
-                                          <code class="docutils literal notranslate"><span class=
-                                          "pre">JSON</span></code> - Input values (<a class="reference internal" href=
-                                          "#put">put</a>) can be any type except a <span class="green">Buffer</span> or
-                                          an <span class="green">Object</span> that contains a <span class=
-                                          "green">Buffer</span>. Output values (<a class="reference internal" href=
-                                          "#get">get</a>) will be the same as the input value.
-                                        </p>
+                                        <code class="docutils literal notranslate"><span class="pre">JSON</span></code>
+                                        - Input values (<a class="reference internal" href="#put">put</a>) can be any
+                                        type, except a <span class="green">Buffer</span> or an <span class=
+                                        "green">Object</span> that contains a <span class="green">Buffer</span>. Output
+                                        values (<a class="reference internal" href="#get">get</a>) will be the same as
+                                        the input value.
                                       </li>
                                       <li>
-                                        <p>
-                                          <code class="docutils literal notranslate"><span class=
-                                          "pre">CBOR</span></code> - Input values (<a class="reference internal" href=
-                                          "#put">put</a>) can be any type including a <span class="green">Buffer</span>
-                                          or <span class="green">Objects</span> that contains a <span class=
-                                          "green">Buffers</span>. Output values (<a class="reference internal" href=
-                                          "#get">get</a>) will be the same as the input value. See <a class=
-                                          "reference external" href="https://duktape.org/guide.html#builtin-cbor">CBOR
-                                          encoding description</a> for more information on CBOR encoding.
-                                        </p>
+                                        <code class="docutils literal notranslate"><span class="pre">CBOR</span></code>
+                                        - Input values (<a class="reference internal" href="#put">put</a>) can be any
+                                        type, including a <span class="green">Buffer</span> or <span class=
+                                        "green">Objects</span> that contains a <span class="green">Buffers</span>.
+                                        Output values (<a class="reference internal" href="#get">get</a>) will be the
+                                        same as the input value. See <a class="reference external" href=
+                                        "https://duktape.org/guide.html#builtin-cbor">CBOR encoding description</a> for
+                                        more information on CBOR encoding.
                                       </li>
                                     </ul>
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class="pre">maxDbs</span></code>
-                                      - a positive <span class="green">Number</span>, the maximum number of named
-                                      databases that can be used in the opened database environment. Default is 256.
-                                      There is a cost to opening an environment with a large <code class=
-                                      "docutils literal notranslate"><span class="pre">maxDbs</span></code> value.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">maxDbs</span></code> -
+                                    a positive <span class="green">Number</span>, the maximum number of named databases
+                                    that can be used in the opened database environment. Default is 256. There is a
+                                    cost to opening an environment with a large <code class=
+                                    "docutils literal notranslate"><span class="pre">maxDbs</span></code> value.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class="pre">noSync</span></code>
-                                      - a <span class="green">Boolean</span>, whether to turn off the flushing of LMDB
-                                      buffers to disk when committing a transaction. This optimization means a system
-                                      crash can corrupt the database or lose the last transactions if buffers are not
-                                      yet flushed to disk. The risk is governed by how often the system flushes dirty
-                                      buffers to disk and how often <a class="reference internal" href="#sync">sync</a>
-                                      is manually called. However, if the filesystem preserves write order and the
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">writeMap</span></code> setting below is not set or set <code class=
-                                      "docutils literal notranslate"><span class="pre">false</span></code>,
-                                      transactions exhibit ACI (atomicity, consistency, isolation) properties and only
-                                      lose D (durability). This means database integrity is maintained, but a system
-                                      crash may undo the final transactions.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">noSync</span></code> -
+                                    a <span class="green">Boolean</span>, whether to turn off the flushing of LMDB
+                                    buffers to disk when committing a transaction. This optimization means a system
+                                    crash can corrupt the database or lose the last transactions if buffers are not yet
+                                    flushed to disk. The risk is governed by how often the system flushes dirty buffers
+                                    to disk and how often <a class="reference internal" href="#sync">sync</a> is
+                                    manually called. However, if the file system preserves write order and the
+                                    <code class="docutils literal notranslate"><span class="pre">writeMap</span></code>
+                                    setting below is not set or set <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>, transactions
+                                    exhibit ACI (atomicity, consistency, isolation) properties and only lose D
+                                    (durability). This means database integrity is maintained, but a system crash may
+                                    undo the final transactions.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">noMetaSync</span></code> - a <span class="green">Boolean</span>, whether
-                                      flushing of the system buffers to disk happens only once per transaction,
-                                      omitting the metadata flush. If true, LMDB will defer that until the system
-                                      flushes files to disk, or when <a class="reference internal" href=
-                                      "#sync">sync</a> below is called. This optimization maintains database integrity,
-                                      but a system crash may undo the last committed transaction.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">noMetaSync</span></code> - a <span class="green">Boolean</span>, whether
+                                    flushing of the system buffers to disk happens only once per transaction, omitting
+                                    the metadata flush. If true, LMDB will defer that until the system flushes files to
+                                    disk, or when <a class="reference internal" href="#sync">sync</a> below is called.
+                                    This optimization maintains database integrity, but a system crash may undo the
+                                    last committed transaction.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">mapAsync</span></code> - a <span class="green">Boolean</span>, whether,
-                                      when using <code class="docutils literal notranslate"><span class=
-                                      "pre">writeMap</span></code>, LMDB should use asynchronous flushes to disk. As
-                                      with <code class="docutils literal notranslate"><span class=
-                                      "pre">noSync</span></code>, a system crash can then corrupt the database or lose
-                                      the last transactions. Calling <a class="reference internal" href=
-                                      "#sync">sync</a> below ensures on-disk database integrity.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">mapAsync</span></code>
+                                    - a <span class="green">Boolean</span>, whether, when using <code class=
+                                    "docutils literal notranslate"><span class="pre">writeMap</span></code>, LMDB
+                                    should use asynchronous flushes to disk. As with <code class=
+                                    "docutils literal notranslate"><span class="pre">noSync</span></code>, a system
+                                    crash can then corrupt the database or lose the last transactions. Calling
+                                    <a class="reference internal" href="#sync">sync</a> below ensures on-disk database
+                                    integrity.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">noReadAhead</span></code> - a <span class="green">Boolean</span>, whether
-                                      LMDB should Turn off readahead. Most operating systems perform readahead on read
-                                      requests by default. This option turns it off if the OS supports it. Turning it
-                                      off may help random read performance when the DB is larger than RAM and system
-                                      RAM is full.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">noReadAhead</span></code> - a <span class="green">Boolean</span>, whether
+                                    LMDB should turn off readahead. Most operating systems perform readahead on read
+                                    requests by default. This option turns it off if the OS supports it. Turning it off
+                                    may help random read performance when the DB is larger than RAM and system RAM is
+                                    full.
                                   </li>
                                   <li>
-                                    <p>
-                                      <code class="docutils literal notranslate"><span class=
-                                      "pre">writeMap</span></code> - a <span class="green">Boolean</span>, whether to
-                                      write data directly to LMDB’s memory map of the database environment. This is
-                                      faster and uses fewer mallocs, but loses protection from application bugs like
-                                      wild pointer writes and other bad updates into the database.
-                                    </p>
+                                    <code class="docutils literal notranslate"><span class="pre">writeMap</span></code>
+                                    - a <span class="green">Boolean</span>, whether to write data directly to LMDB’s
+                                    memory map of the database environment. This is faster and uses fewer mallocs, but
+                                    loses protection from application bugs like wild pointer writes and other bad
+                                    updates into the database.
+                                  </li>
+                                  <li>
+                                    <code class="docutils literal notranslate"><span class=
+                                    "pre">growOnPut</span></code> - a <span class="green">Boolean</span>, whether to
+                                    automatically close and reopen the database with a larger <code class=
+                                    "docutils literal notranslate"><span class="pre">mapSize</span></code> when a
+                                    <code class="docutils literal notranslate"><span class="pre">lmdb.put</span></code>
+                                    would otherwise throw a <code class="docutils literal notranslate"><span class=
+                                    "pre">MAP_FULL</span></code> error. The database will be reopened with a map 1.5
+                                    times its previous size. This setting has no effect on <a class=
+                                    "reference internal" href="#lmdb-transaction-functions">LMDB Transaction
+                                    Functions</a> below and <code class="docutils literal notranslate"><span class=
+                                    "pre">txn.put</span></code>/<code class="docutils literal notranslate"><span class=
+                                    "pre">txn.commit</span></code> will throw an error if the database environment is
+                                    full. Default is <code class="docutils literal notranslate"><span class=
+                                    "pre">false</span></code>.
                                   </li>
                                 </ul>
                               </div>
@@ -517,14 +705,24 @@
                         </ul>
                       </div>
                     </blockquote>
-                    <dl class="simple">
+                    <dl class="docutils">
                       <dt>
                         Return Value:
                       </dt>
                       <dd>
-                        <p>
-                          A set of functions to operate on the database environment. See below.
-                        </p>
+                        A set of functions to operate on the database environment. See below.
+                      </dd>
+                      <dt>
+                        Caveat:
+                      </dt>
+                      <dd>
+                        The LMDB library only allows one open handle to any <em>database environment</em>. Calling
+                        <code class="docutils literal notranslate"><span class="pre">new</span> <span class=
+                        "pre">Lmdb.init()</span></code> again in another function or thread will return the previously
+                        opened handle, and newly set <code class="docutils literal notranslate"><span class=
+                        "pre">options</span></code> from above will be ignored. In order to apply new settings, the
+                        <em>database environment</em> must first be closed (see <code class=
+                        "docutils literal notranslate"><span class="pre">lmdb.close</span></code> below).
                       </dd>
                     </dl>
                   </div>
@@ -596,8 +794,8 @@
                             <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
                             <span class="green">String</span>, the name of the database to be accessed. If <code class=
                             "docutils literal notranslate"><span class="pre">undefined</span></code> or <code class=
-                            "docutils literal notranslate"><span class="pre">null</span></code>, the lmdb default
-                            database for the database envirnoment will be opened.
+                            "docutils literal notranslate"><span class="pre">null</span></code>, the <em>default</em>
+                            database for the database environment will be opened.
                           </p>
                           <p>
                             <code class="docutils literal notranslate"><span class="pre">create</span></code> is a
@@ -607,27 +805,23 @@
                           </p>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            A <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                            "pre">object</span></code> representing the opened database.
-                          </p>
+                          A <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
+                          "pre">object</span></code> representing the opened database.
                         </dd>
                         <dt>
                           Note:
                         </dt>
                         <dd>
-                          <p>
-                            If opening a database for use in one of the <a class="reference internal" href=
-                            "#lmdb-transaction-functions">LMDB Transaction Functions</a> below, this function must be
-                            called before any transaction is opened (before calling <code class=
-                            "docutils literal notranslate"><span class="pre">new</span> <span class=
-                            "pre">lmdb.transaction()</span></code>).
-                          </p>
+                          If opening a database for use in one of the <a class="reference internal" href=
+                          "#lmdb-transaction-functions">LMDB Transaction Functions</a> below, this function must be
+                          called before any transaction is opened (before calling <code class=
+                          "docutils literal notranslate"><span class="pre">new</span> <span class=
+                          "pre">lmdb.transaction()</span></code>).
                         </dd>
                       </dl>
                     </div>
@@ -673,22 +867,29 @@
                         <div>
                           <ul>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is
                                 <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
                                 "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a> or a <span class="green">String</span>, the name of the database
-                                to be accessed. If the database does not exist, an error will be thrown.
+                                "#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class=
+                                "pre">null</span></code> (to open the <em>default</em> database) or a <span class=
+                                "green">String</span>, the name of the database to be accessed. If the database does
+                                not exist, an error will be thrown.
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
-                                <span class="green">String</span>, the name of the key whose data will be retrieved.
+                                <span class="green">String</span>, the name of the key whose data will be retrieved. If
+                                <code class="docutils literal notranslate"><span class="pre">endkey</span></code> or
+                                <code class="docutils literal notranslate"><span class="pre">nKeys</span></code> below
+                                is set, <code class="docutils literal notranslate"><span class="pre">key</span></code>
+                                may be an empty string (<code class="docutils literal notranslate"><span class=
+                                "pre">""</span></code>) to start with the first entry in the database.
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">nKeys</span></code> is an
                                 optional <span class="green">Number</span>, the total number of keys to retrieve. If a
                                 positive number, the <code class="docutils literal notranslate"><span class=
@@ -705,7 +906,7 @@
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">endkey</span></code> is an
                                 optional <span class="green">String</span>, the last key to retrieve, retrieving all
                                 keys between <code class="docutils literal notranslate"><span class=
@@ -727,7 +928,7 @@
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">max</span></code> is an
                                 optional positive <span class="green">Number</span> greater than 0 which may be
                                 specified to limit the number of key/value pairs returned when using <code class=
@@ -737,19 +938,19 @@
                           </ul>
                         </div>
                       </blockquote>
-                      <dl>
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
+                          <p class="first">
                             If neither <code class="docutils literal notranslate"><span class="pre">nKeys</span></code>
                             nor <code class="docutils literal notranslate"><span class="pre">endkey</span></code> is
                             specified, a single value is returned. The type of the return value is determined by the
                             <code class="docutils literal notranslate"><span class="pre">conversion</span></code>
                             setting above.
                           </p>
-                          <p>
+                          <p class="last">
                             If either <code class="docutils literal notranslate"><span class="pre">nKeys</span></code>
                             or <code class="docutils literal notranslate"><span class="pre">endkey</span></code> is
                             specified, an <span class="green">Object</span> of key/value pairs is returned with each
@@ -797,48 +998,40 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a> or a <span class="green">String</span>, the name of the database
-                                to be accessed. If the database does not exist, it will be created.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is
+                              <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
+                              "pre">object</span></code> returned from <a class="reference internal" href=
+                              "#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class=
+                              "pre">null</span></code> (to open the <em>default</em> database) or a <span class=
+                              "green">String</span>, the name of the database to be accessed. If the database does not
+                              exist, it will be created.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is
-                                an <span class="green">Object</span> with each <span class="green">Object</span> key
-                                corresponding to a database key to be used and each <span class="green">Object</span>
-                                value corresponding to the database value to be stored. Note: Values must be a
-                                <span class="green">String</span> or <span class="green">Buffer</span> unless
-                                <code class="docutils literal notranslate"><span class="pre">conversion</span></code>
-                                above is set to “JSON” or “CBOR”.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is an
+                              <span class="green">Object</span> with each <span class="green">Object</span> key
+                              corresponding to a database key to be used and each <span class="green">Object</span>
+                              value corresponding to the database value to be stored. Note: Values must be a
+                              <span class="green">String</span> or <span class="green">Buffer</span> unless
+                              <code class="docutils literal notranslate"><span class="pre">conversion</span></code>
+                              above is set to “JSON” or “CBOR”.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">key</span></code> is the
-                                key of a single key:value pair.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> is the key
+                              of a single key:value pair.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">value</span></code> is the
-                                value of a single key:value pair.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> is the
+                              value of a single key:value pair.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                       </dl>
                     </div>
@@ -917,15 +1110,16 @@
                         <div>
                           <ul>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
                                 <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
                                 "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a> or a <span class="green">String</span>, the name of the database
-                                to be dropped.
+                                "#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class=
+                                "pre">null</span></code> (to select the default database) or a <span class=
+                                "green">String</span>, the name of the database to be dropped.
                               </p>
                               <p>
-                                To drop the default database, pass an empty string or <code class=
+                                To drop the <em>default</em> database, pass an empty string or <code class=
                                 "docutils literal notranslate"><span class="pre">null</span></code>: <code class=
                                 "docutils literal notranslate"><span class="pre">lmdb.drop(null);</span></code>.
                               </p>
@@ -933,36 +1127,30 @@
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                         <dt>
                           Note:
                         </dt>
                         <dd>
-                          <p>
-                            If a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                            "pre">object</span></code> is specified, it must not be used as a parameter to any other
-                            function after executing <code class="docutils literal notranslate"><span class=
-                            "pre">lmdb.drop()</span></code>. It, however, may be recreated calling <code class=
-                            "docutils literal notranslate"><span class="pre">openDb(dbname,</span> <span class=
-                            "pre">true)</span></code> again.
-                          </p>
+                          If a <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
+                          "pre">object</span></code> is specified, it must not be used as a parameter to any other
+                          function after executing <code class="docutils literal notranslate"><span class=
+                          "pre">lmdb.drop()</span></code>. It, however, may be recreated calling <code class=
+                          "docutils literal notranslate"><span class="pre">openDb(dbname,</span> <span class=
+                          "pre">true)</span></code> again.
                         </dd>
                         <dt>
                           Note:
                         </dt>
                         <dd>
-                          <p>
-                            Dropping the default database will delete the its contents, however it will not be removed
-                            and the named database metadata will remain.
-                          </p>
+                          Dropping the <em>default</em> database will delete its contents, however it will not be
+                          removed.
                         </dd>
                       </dl>
                     </div>
@@ -993,14 +1181,12 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                       </dl>
                     </div>
@@ -1035,23 +1221,21 @@
                       </p>
                       <blockquote>
                         <div>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is
-                            <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                            "pre">object</span></code> returned from <a class="reference internal" href=
-                            "#opendb">openDb</a> or a <span class="green">String</span>, the name of the database to be
-                            accessed. If the database does not exist, an error will be thrown.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is
+                          <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
+                          "pre">object</span></code> returned from <a class="reference internal" href=
+                          "#opendb">openDb</a>, a <code class="docutils literal notranslate"><span class=
+                          "pre">null</span></code> (to open the <em>default</em> database) or a <span class=
+                          "green">String</span>, the name of the database to be accessed. If the database does not
+                          exist, an error will be thrown.
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            A <span class="green">Number</span>, the number of items in the database.
-                          </p>
+                          A <span class="green">Number</span>, the number of items in the database.
                         </dd>
                       </dl>
                     </div>
@@ -1081,25 +1265,13 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            An <span class="green">Array</span> of <span class="green">Strings</span>, the names of all
-                            named databases.
-                          </p>
-                        </dd>
-                        <dt>
-                          Note:
-                        </dt>
-                        <dd>
-                          <p>
-                            The names of named databases are stored in the default database. To retrieve the names,
-                            every item in the default database must be scanned. When using named databases, the best
-                            practice is to not store data in the default database.
-                          </p>
+                          An <span class="green">Array</span> of <span class="green">Strings</span>, the names of all
+                          named databases.
                         </dd>
                       </dl>
                     </div>
@@ -1108,7 +1280,7 @@
                         close<a class="headerlink" href="#close" title="Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        Close the database envirnoment. After closing, all transaction handles, database handles and
+                        Close the database environment. After closing, all transaction handles, database handles and
                         all functions using the previously opened environment will throw errors if used again.
                       </p>
                       <p>
@@ -1130,14 +1302,12 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                       </dl>
                     </div>
@@ -1372,7 +1542,7 @@
                         </div>
                       </div>
                       <p>
-                        In order to conserver memory and to insert in a single transaction, see the <a class=
+                        In order to conserve memory and to insert in a single transaction, see the <a class=
                         "reference internal" href="#transaction-functions-full-example">Transaction Functions Full
                         Example</a> below.
                       </p>
@@ -1456,59 +1626,53 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a> or a <span class="green">String</span>, the name of the database
-                                to be accessed. If the database does not exist, it will be created. If omitted, the
-                                lmdb default database for the current database environment will be use. This database
-                                will be the default for all operations below. However, more than one database may be
-                                used per transaction.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
+                              <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
+                              "pre">object</span></code> returned from <a class="reference internal" href=
+                              "#opendb">openDb</a> or a <span class="green">String</span>, the name of the database to
+                              be accessed. If the database does not exist, it will be created. If omitted, the lmdb
+                              <em>default</em> database for the current database environment will be used. This
+                              database will be the default for all operations below. However, more than one database
+                              may be used per transaction.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">open_rw</span></code> is
-                                an <span class="green">Boolean</span>, if <code class=
-                                "docutils literal notranslate"><span class="pre">true</span></code>, open the
-                                transaction for read/write. This is needed if any data will be added or deleted from a
-                                database. If <code class="docutils literal notranslate"><span class=
-                                "pre">false</span></code> (the default), the transaction will be read only.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">open_rw</span></code> is a
+                              <span class="green">Boolean</span>, if <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, open the transaction
+                              for read/write. This is needed if any data will be added or deleted from a database. If
+                              <code class="docutils literal notranslate"><span class="pre">false</span></code> (the
+                              default), the transaction will be read only.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">commit_by_default</span></code> is an <span class="green">Boolean</span>. When a
-                                transaction is opened, it must be eventually closed using either <a class=
-                                "reference internal" href="#txn-commit">txn.commit</a> or <a class="reference internal"
-                                href="#txn-abort">txn.abort</a>. If the script exits or <code class=
-                                "docutils literal notranslate"><span class="pre">var</span> <span class=
-                                "pre">txn</span></code> goes out of scope (e.g. the function in which <code class=
-                                "docutils literal notranslate"><span class="pre">var</span> <span class=
-                                "pre">txn</span></code> was declared returns) without closing, it will be automatically
-                                closed. If <code class="docutils literal notranslate"><span class=
-                                "pre">commit_by_default</span></code> is <code class=
-                                "docutils literal notranslate"><span class="pre">true</span></code>, <a class=
-                                "reference internal" href="#txn-commit">txn.commit</a> will be called. Otherwise if
-                                <code class="docutils literal notranslate"><span class="pre">false</span></code> (the
-                                default) or not set, <a class="reference internal" href="#txn-abort">txn.abort</a> will
-                                be called. This is only relevant when <code class=
-                                "docutils literal notranslate"><span class="pre">open_rw</span></code> is <code class=
-                                "docutils literal notranslate"><span class="pre">true</span></code> and the database is
-                                being altered.
-                              </p>
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">commit_by_default</span></code> is a <span class="green">Boolean</span>. When a
+                              transaction is opened, it must be eventually closed using either <a class=
+                              "reference internal" href="#txn-commit">txn.commit</a> or <a class="reference internal"
+                              href="#txn-abort">txn.abort</a>. If the script exits or <code class=
+                              "docutils literal notranslate"><span class="pre">var</span> <span class=
+                              "pre">txn</span></code> goes out of scope (e.g. the function in which <code class=
+                              "docutils literal notranslate"><span class="pre">var</span> <span class=
+                              "pre">txn</span></code> was declared returns) without closing, it will be automatically
+                              closed. If <code class="docutils literal notranslate"><span class=
+                              "pre">commit_by_default</span></code> is <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, <a class=
+                              "reference internal" href="#txn-commit">txn.commit</a> will be called. Otherwise if
+                              <code class="docutils literal notranslate"><span class="pre">false</span></code> (the
+                              default) or not set, <a class="reference internal" href="#txn-abort">txn.abort</a> will
+                              be called. This is only relevant when <code class=
+                              "docutils literal notranslate"><span class="pre">open_rw</span></code> is <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code> and the database is
+                              being altered.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl>
+                      <dl class="docutils">
                         <dt>
                           Note:
                         </dt>
                         <dd>
-                          <p>
+                          <p class="first">
                             Only one read/write transaction per database environment may be open at any time.
                             Attempting to open one while another is open will throw an error. However, along with one
                             read/write transaction, several read only transactions may be concurrently open in a single
@@ -1525,7 +1689,7 @@
                             should be opened using <a class="reference internal" href="#opendb">openDb</a> to create it
                             before any read/write transactions are opened.
                           </p>
-                          <p>
+                          <p class="last">
                             Note also that the one open read/write transaction restriction is per-thread, so no special
                             care is needed when using LMDB from <a class="reference internal" href=
                             "rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">The
@@ -1538,9 +1702,7 @@
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            An <span class="green">Object</span> of functions.
-                          </p>
+                          An <span class="green">Object</span> of functions.
                         </dd>
                       </dl>
                     </div>
@@ -1571,9 +1733,8 @@
 "kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">([</span><span class=
-"nx">dbase</span> <span class="p">,]</span> <span class="nx">key</span> <span class="p">[,</span> <span class=
-"nx">return_string</span><span class="p">]);</span>
+"nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class=
+"nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
@@ -1586,46 +1747,30 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
+                              <span class="green">String</span> or <span class="green">Buffer</span>, the key of the
+                              item to be retrieved.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
-                                <span class="green">String</span> or <span class="green">Buffer</span>, the key of the
-                                item to be retrieved.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">return_string</span></code> is a <span class="green">Boolean</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">true</span></code> the
-                                return value will be a <span class="green">String</span>. If <code class=
-                                "docutils literal notranslate"><span class="pre">false</span></code> or not set, the
-                                return value will be a <span class="green">Buffer</span>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">return_string</span></code>
+                              is a <span class="green">Boolean</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code> the return value will
+                              be a <span class="green">String</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code> or not set, the
+                              return value will be a <span class="green">Buffer</span>.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            A <span class="green">Buffer</span> or, if <code class=
-                            "docutils literal notranslate"><span class="pre">return_string</span></code> is
-                            <code class="docutils literal notranslate"><span class="pre">true</span></code>, a
-                            <span class="green">String</span>.
-                          </p>
+                          A <span class="green">Buffer</span> or, if <code class=
+                          "docutils literal notranslate"><span class="pre">return_string</span></code> is <code class=
+                          "docutils literal notranslate"><span class="pre">true</span></code>, a <span class=
+                          "green">String</span>.
                         </dd>
                       </dl>
                     </div>
@@ -1656,8 +1801,8 @@
 "kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">([</span><span class=
-"nx">dbase</span> <span class="p">,]</span> <span class="nx">key</span><span class="p">);</span>
+"nx">txn</span><span class="p">.</span><span class="nx">getRef</span><span class="p">(</span><span class=
+"nx">key</span><span class="p">);</span>
 
 <span class="cm">/* use res here */</span>
 
@@ -1674,50 +1819,36 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
-                                <span class="green">String</span> or <span class="green">Buffer</span>, the key of the
-                                item to be retrieved.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
+                              <span class="green">String</span> or <span class="green">Buffer</span>, the key of the
+                              item to be retrieved.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl>
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            A <span class="green">Buffer</span>. The buffer is backed by the mmaped data on disk and is
-                            only valid until <a class="reference internal" href="#txn-commit">txn.commit</a> or
-                            <a class="reference internal" href="#txn-abort">txn.abort</a> is called, or until the
-                            <code class="docutils literal notranslate"><span class="pre">txn</span></code> variable is
-                            no longer in scope.
-                          </p>
+                          A <span class="green">Buffer</span>. The buffer is backed by the mmaped data on disk and is
+                          only valid until <a class="reference internal" href="#txn-commit">txn.commit</a> or <a class=
+                          "reference internal" href="#txn-abort">txn.abort</a> is called, or until the <code class=
+                          "docutils literal notranslate"><span class="pre">txn</span></code> variable is no longer in
+                          scope.
                         </dd>
                         <dt>
                           Note:
                         </dt>
                         <dd>
-                          <p>
+                          <p class="first">
                             This can be used to have <a class="reference internal" href=
                             "rampart-server.html#the-rampart-server-http-module"><span class="std std-ref">The
                             rampart-server HTTP module</span></a> serve content directly from the disk with no copies.
                             In order to do so, the <code class="docutils literal notranslate"><span class=
                             "pre">txn</span></code> variable must stay in scope until the content is served.
                           </p>
-                          <p>
+                          <p class="last">
                             In the following example, <code class="docutils literal notranslate"><span class=
                             "pre">setTimeout</span></code> is used to keep the <code class=
                             "docutils literal notranslate"><span class="pre">txn</span></code> object in scope until
@@ -1788,15 +1919,13 @@
 "p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class=
 "kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class=
-"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">kvpairs</span><span class=
-"p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class=
+"nx">kvpairs</span><span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">([</span><span class=
-"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class=
-"p">,</span> <span class="nx">value</span><span class="p">);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class=
+"nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
@@ -1809,55 +1938,37 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is an
+                              <span class="green">Object</span> with each <span class="green">Object</span> key
+                              corresponding to a database key to be used and each <span class="green">Object</span>
+                              value corresponding to the database value to be stored.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">kvpairs</span></code> is
-                                an <span class="green">Object</span> with each <span class="green">Object</span> key
-                                corresponding to a database key to be used and each <span class="green">Object</span>
-                                value corresponding to the database value to be stored.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
+                              <span class="green">String</span> or <span class="green">Buffer</span>, the key of a
+                              single key:value pair.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
-                                <span class="green">String</span> or <span class="green">Buffer</span>, the key of a
-                                single key:value pair.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">value</span></code> is a
-                                <span class="green">String</span>, <span class="green">Buffer</span> or <span class=
-                                "green">Object</span>. The value of a single key:value pair. If <code class=
-                                "docutils literal notranslate"><span class="pre">value</span></code> is an <span class=
-                                "green">Object</span>, it will be automatically converted to a <span class=
-                                "green">Buffer</span> using <code class="docutils literal notranslate"><span class=
-                                "pre">CBOR.encode()</span></code>. Note, when retrieved using <code class=
-                                "docutils literal notranslate"><span class="pre">txn.get</span></code> or <code class=
-                                "docutils literal notranslate"><span class="pre">txn.cursorGet</span></code>, a CBOR
-                                encoded value will not be automatically decoded.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> is a
+                              <span class="green">String</span>, <span class="green">Buffer</span> or <span class=
+                              "green">Object</span>. The value of a single key:value pair. If <code class=
+                              "docutils literal notranslate"><span class="pre">value</span></code> is an <span class=
+                              "green">Object</span>, it will be automatically converted to a <span class=
+                              "green">Buffer</span> using <code class="docutils literal notranslate"><span class=
+                              "pre">CBOR.encode()</span></code>. Note, when retrieved using <code class=
+                              "docutils literal notranslate"><span class="pre">txn.get</span></code> or <code class=
+                              "docutils literal notranslate"><span class="pre">txn.cursorGet</span></code>, a CBOR
+                              encoded value will not be automatically decoded.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                       </dl>
                     </div>
@@ -1866,7 +1977,7 @@
                         txn.del<a class="headerlink" href="#txn-del" title="Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        Delete an the item with the given key.
+                        Delete an item with the given key.
                       </p>
                       <p>
                         Usage:
@@ -1888,8 +1999,9 @@
 "p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class=
 "kc">true</span><span class="p">);</span>
 
-<span class="nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">([</span><span class=
-"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class=
+"nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class=
+"nx">key</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
@@ -1902,36 +2014,22 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">key</span></code> is the
-                                key of the item to be deleted.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> is the key
+                              of the item to be deleted.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            A <span class="green">Boolean</span>: <code class=
-                            "docutils literal notranslate"><span class="pre">true</span></code> if the item was
-                            deleted. <code class="docutils literal notranslate"><span class="pre">false</span></code>
-                            if there was no item with the given <code class="docutils literal notranslate"><span class=
-                            "pre">key</span></code> found.
-                          </p>
+                          A <span class="green">Boolean</span>: <code class="docutils literal notranslate"><span class=
+                          "pre">true</span></code> if the item was deleted. <code class=
+                          "docutils literal notranslate"><span class="pre">false</span></code> if there was no item
+                          with the given <code class="docutils literal notranslate"><span class="pre">key</span></code>
+                          found.
                         </dd>
                       </dl>
                     </div>
@@ -1979,10 +2077,10 @@
 "kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class=
-"nx">dbase</span> <span class="p">,]</span> <span class="nx">op</span> <span class="p">[,</span> <span class=
-"nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">key_is_string</span> <span class=
-"p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+"nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class=
+"nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class=
+"p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class=
+"nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
@@ -1995,17 +2093,7 @@
                         <div>
                           <ul>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">op</span></code> is a
                                 flag, which specifies the operation mode and is one of the following:
                               </p>
@@ -2013,62 +2101,48 @@
                                 <div>
                                   <ul class="simple">
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_set</span></code> - Position the cursor at the item with the key
-                                        <code class="docutils literal notranslate"><span class="pre">key</span></code>.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_set</span></code> - Position the cursor at the item with the key
+                                      <code class="docutils literal notranslate"><span class="pre">key</span></code>.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_setRange</span></code> - Position the cursor at the first item
-                                        with a key greater than or equal to <code class=
-                                        "docutils literal notranslate"><span class="pre">key</span></code>.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_setRange</span></code> - Position the cursor at the first item with
+                                      a key greater than or equal to <code class=
+                                      "docutils literal notranslate"><span class="pre">key</span></code>.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_first</span></code> - Position the cursor at the first item in
-                                        the given database.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_first</span></code> - Position the cursor at the first item in the
+                                      given database.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_last</span></code> - Position the cursor at the last item in the
-                                        given database.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_last</span></code> - Position the cursor at the last item in the
+                                      given database.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_next</span></code> - Position the cursor one after its current
-                                        position. If the cursor has not been set, position at the first item in the
-                                        database.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_next</span></code> - Position the cursor one after its current
+                                      position. If the cursor has not been set, position at the first item in the
+                                      database.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_prev</span></code> - Position the cursor one before its current
-                                        position. If the cursor has not been set, position at the last item in the
-                                        database.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_prev</span></code> - Position the cursor one before its current
+                                      position. If the cursor has not been set, position at the last item in the
+                                      database.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">lmdb.op_current</span></code> - Cursor stays at its current position.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">lmdb.op_current</span></code> - Cursor stays at its current position.
                                     </li>
                                   </ul>
                                 </div>
                               </blockquote>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">key</span></code> is the
                                 key of the item to be retrieved. Used for <code class=
                                 "docutils literal notranslate"><span class="pre">op_set</span></code> and <code class=
@@ -2076,7 +2150,7 @@
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class=
                                 "pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If
                                 <code class="docutils literal notranslate"><span class="pre">true</span></code>, the
@@ -2088,7 +2162,7 @@
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class=
                                 "pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If
                                 <code class="docutils literal notranslate"><span class="pre">true</span></code>, the
@@ -2102,19 +2176,17 @@
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            An <span class="green">Object</span> with the properties <code class=
-                            "docutils literal notranslate"><span class="pre">key</span></code> and <code class=
-                            "docutils literal notranslate"><span class="pre">value</span></code> set to the key and
-                            value of the retrieved item (e.g. <code class="docutils literal notranslate"><span class=
-                            "pre">{"key":</span> <span class="pre">"database_key",</span> <span class=
-                            "pre">"value":</span> <span class="pre">"database_value"}</span></code>).
-                          </p>
+                          An <span class="green">Object</span> with the properties <code class=
+                          "docutils literal notranslate"><span class="pre">key</span></code> and <code class=
+                          "docutils literal notranslate"><span class="pre">value</span></code> set to the key and value
+                          of the retrieved item (e.g. <code class="docutils literal notranslate"><span class=
+                          "pre">{"key":</span> <span class="pre">"database_key",</span> <span class=
+                          "pre">"value":</span> <span class="pre">"database_value"}</span></code>).
                         </dd>
                       </dl>
                     </div>
@@ -2124,8 +2196,8 @@
                         "Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        Put (store) value in a given into a database, indexed by the the given key. Move cursor to the
-                        items location.
+                        Put (store) a value into a database, indexed by the given key. Move cursor to the item’s
+                        location.
                       </p>
                       <p>
                         Usage:
@@ -2148,8 +2220,7 @@
 "kc">true</span><span class="p">);</span>
 
 <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class=
-"p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class=
-"nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
+"p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
@@ -2162,47 +2233,31 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
+                              <span class="green">String</span> or <span class="green">Buffer</span>, the key of a
+                              single key:value pair.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
-                                <span class="green">String</span> or <span class="green">Buffer</span>, the key of a
-                                single key:value pair.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">value</span></code> is a
-                                <span class="green">String</span> <span class="green">Buffer</span>, or <span class=
-                                "green">Object</span>. The value of a single key:value pair. If <code class=
-                                "docutils literal notranslate"><span class="pre">value</span></code> is an <span class=
-                                "green">Object</span>, it will be automatically converted to a <span class=
-                                "green">Buffer</span> using <code class="docutils literal notranslate"><span class=
-                                "pre">CBOR.encode()</span></code>. Note, when retrieved using <code class=
-                                "docutils literal notranslate"><span class="pre">txn.get</span></code> or <code class=
-                                "docutils literal notranslate"><span class="pre">txn.cursorGet</span></code>, a CBOR
-                                encoded value will not be automatically decoded.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> is a
+                              <span class="green">String</span> <span class="green">Buffer</span>, or <span class=
+                              "green">Object</span>. The value of a single key:value pair. If <code class=
+                              "docutils literal notranslate"><span class="pre">value</span></code> is an <span class=
+                              "green">Object</span>, it will be automatically converted to a <span class=
+                              "green">Buffer</span> using <code class="docutils literal notranslate"><span class=
+                              "pre">CBOR.encode()</span></code>. Note, when retrieved using <code class=
+                              "docutils literal notranslate"><span class="pre">txn.get</span></code> or <code class=
+                              "docutils literal notranslate"><span class="pre">txn.cursorGet</span></code>, a CBOR
+                              encoded value will not be automatically decoded.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                       </dl>
                     </div>
@@ -2241,40 +2296,18 @@
 "nx">key</span><span class="p">);</span>
 
 <span class="cm">/* delete item at cursor position */</span>
-<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class=
-"p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]);</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">();</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
-                      <p>
-                        Where:
-                      </p>
-                      <blockquote>
-                        <div>
-                          <ul class="simple">
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
-                            </li>
-                          </ul>
-                        </div>
-                      </blockquote>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
                         </dd>
                       </dl>
                     </div>
@@ -2309,7 +2342,6 @@
 <span class="cm">/* position the cursor at next item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
 "nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">([</span><span class=
-"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="p">[</span><span class=
 "nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class=
 "p">]</span> <span class="p">]);</span>
 
@@ -2324,44 +2356,30 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key_is_string</span></code>
+                              is a <span class="green">Boolean</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, the return
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> will be
+                              converted to a <span class="green">String</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code> (the default) the
+                              return <code class="docutils literal notranslate"><span class="pre">key</span></code>
+                              will be a <span class="green">Buffer</span>.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">true</span></code> the
-                                return <code class="docutils literal notranslate"><span class="pre">key</span></code>
-                                will be converted to a <span class="green">String</span>. If <code class=
-                                "docutils literal notranslate"><span class="pre">false</span></code> (the default) the
-                                return <code class="docutils literal notranslate"><span class="pre">key</span></code>
-                                will be a <span class="green">Buffer</span>.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">true</span></code> the
-                                returned <code class="docutils literal notranslate"><span class=
-                                "pre">value</span></code> will be converted to a <span class="green">String</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">false</span></code> (the
-                                default) <code class="docutils literal notranslate"><span class=
-                                "pre">value</span></code> will be a <span class="green">Buffer</span>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">val_is_string</span></code>
+                              is a <span class="green">Boolean</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, the returned
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> will be
+                              converted to a <span class="green">String</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code> (the default)
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> will be
+                              a <span class="green">Buffer</span>.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
                       <p>
-                        This operates identical to:
+                        This operates identically to:
                       </p>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">
@@ -2382,9 +2400,8 @@
 
 <span class="cm">/* position the cursor at next item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class=
-"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class=
-"p">.</span><span class="nx">op_next</span><span class="p">);</span>
+"nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class=
+"nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
 
 <span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
@@ -2412,8 +2429,8 @@
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class=
 "k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class=
-"p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class=
-"kc">false</span><span class="p">);</span>
+"p">(</span><span class="s2">"mydb"</span><span class="p">,</span> <span class="kc">false</span><span class=
+"p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
 
@@ -2433,17 +2450,15 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            Same as <a class="reference internal" href="#txn-cursorget">txn.cursorGet</a> (an
-                            <span class="green">Object</span>) unless the cursor is at the last item (in which case
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is
-                            returned).
-                          </p>
+                          Same as <a class="reference internal" href="#txn-cursorget">txn.cursorGet</a> (an
+                          <span class="green">Object</span>) unless the cursor is at the last item (in which case
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is
+                          returned).
                         </dd>
                       </dl>
                     </div>
@@ -2478,7 +2493,6 @@
 <span class="cm">/* position the cursor at previous item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
 "nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">([</span><span class=
-"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="p">[</span><span class=
 "nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class=
 "p">]</span> <span class="p">]);</span>
 
@@ -2493,44 +2507,30 @@
                         <div>
                           <ul class="simple">
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is a
-                                <code class="docutils literal notranslate"><span class="pre">dbi</span> <span class=
-                                "pre">object</span></code> returned from <a class="reference internal" href=
-                                "#opendb">openDb</a>. If the database does not exist, it will be created. If omitted,
-                                the database specified in <code class="docutils literal notranslate"><span class=
-                                "pre">new</span> <span class="pre">lmdb.transaction</span></code> will be used.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">key_is_string</span></code>
+                              is a <span class="green">Boolean</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, the return
+                              <code class="docutils literal notranslate"><span class="pre">key</span></code> will be
+                              converted to a <span class="green">String</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code> (the default) the
+                              return <code class="docutils literal notranslate"><span class="pre">key</span></code>
+                              will be a <span class="green">Buffer</span>.
                             </li>
                             <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">key_is_string</span></code> is a <span class="green">Boolean</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">true</span></code> the
-                                return <code class="docutils literal notranslate"><span class="pre">key</span></code>
-                                will be converted to a <span class="green">String</span>. If <code class=
-                                "docutils literal notranslate"><span class="pre">false</span></code> (the default) the
-                                return <code class="docutils literal notranslate"><span class="pre">key</span></code>
-                                will be a <span class="green">Buffer</span>.
-                              </p>
-                            </li>
-                            <li>
-                              <p>
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">val_is_string</span></code> is a <span class="green">Boolean</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">true</span></code> the
-                                returned <code class="docutils literal notranslate"><span class=
-                                "pre">value</span></code> will be converted to a <span class="green">String</span>. If
-                                <code class="docutils literal notranslate"><span class="pre">false</span></code> (the
-                                default) <code class="docutils literal notranslate"><span class=
-                                "pre">value</span></code> will be a <span class="green">Buffer</span>.
-                              </p>
+                              <code class="docutils literal notranslate"><span class="pre">val_is_string</span></code>
+                              is a <span class="green">Boolean</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, the returned
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> will be
+                              converted to a <span class="green">String</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">false</span></code> (the default)
+                              <code class="docutils literal notranslate"><span class="pre">value</span></code> will be
+                              a <span class="green">Buffer</span>.
                             </li>
                           </ul>
                         </div>
                       </blockquote>
                       <p>
-                        This operates identical to:
+                        This operates identically to:
                       </p>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">
@@ -2546,8 +2546,8 @@
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class=
 "k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class=
-"p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class=
-"kc">false</span><span class="p">);</span>
+"p">(</span><span class="s2">"mydb"</span><span class="p">,</span> <span class="kc">false</span><span class=
+"p">);</span>
 
 <span class="cm">/* position the cursor at previous item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
@@ -2581,7 +2581,7 @@
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class=
 "k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class=
-"p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="kc">false</span><span class=
+"p">(</span><span class="s2">"mydb"</span><span class="p">,</span> <span class="kc">false</span><span class=
 "p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span><span class="p">;</span>
@@ -2602,17 +2602,15 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            Same as <a class="reference internal" href="#txn-cursorget">txn.cursorGet</a> (an
-                            <span class="green">Object</span>) unless the cursor is at the first item (in which case
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is
-                            returned).
-                          </p>
+                          Same as <a class="reference internal" href="#txn-cursorget">txn.cursorGet</a> (an
+                          <span class="green">Object</span>) unless the cursor is at the first item (in which case
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code> is
+                          returned).
                         </dd>
                       </dl>
                     </div>
@@ -2649,14 +2647,12 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>
                         </dd>
                       </dl>
                     </div>
@@ -2694,14 +2690,12 @@
 </pre>
                         </div>
                       </div>
-                      <dl class="simple">
+                      <dl class="docutils">
                         <dt>
                           Return Value:
                         </dt>
                         <dd>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">undefined</span></code>
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">undefined</span></code>
                         </dd>
                       </dl>
                     </div>
@@ -2852,8 +2846,7 @@
 "nx">zip</span><span class="p">;</span>
     <span class="cm">/* since entry is an object, it will be converted to CBOR */</span>
     <span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class=
-"nx">dbi</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class=
-"nx">entry</span><span class="p">);</span>
+"nx">key</span><span class="p">,</span> <span class="nx">entry</span><span class="p">);</span>
 <span class="p">}</span>
 <span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 
@@ -2874,9 +2867,8 @@
 <span class="cm">/* get first entry, make the key a string, leave value as a buffer */</span>
 <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class=
 "nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class=
-"nx">dbi</span><span class="p">,</span> <span class="nx">lmdb</span><span class="p">.</span><span class=
-"nx">op_setRange</span><span class="p">,</span> <span class="s2">"Sofía"</span><span class="p">,</span> <span class=
-"kc">true</span><span class="p">);</span>
+"nx">lmdb</span><span class="p">.</span><span class="nx">op_setRange</span><span class="p">,</span> <span class=
+"s2">"Sofía"</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
 <span class="cm">/* process first entry and loop to get entries after */</span>
@@ -2908,7 +2900,7 @@
               <span class="p">);</span>
 <span class="p">}</span> <span class="k">while</span><span class="p">(</span><span class="nx">entry</span> <span class=
 "o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class=
-"p">(</span><span class="nx">dbi</span><span class="p">,</span> <span class="kc">true</span><span class="p">));</span>
+"p">(</span><span class="kc">true</span><span class="p">));</span>
 
 <span class="nx">printf</span><span class="p">(</span><span class=
 "s2">"There are %d Sofías out of %d entries in the database.\n"</span><span class="p">,</span> <span class=
@@ -2945,7 +2937,7 @@
               <hr>
               <div role="contentinfo">
                 <p>
-                  © Copyright 2022, Moat Crossing Systems.
+                  © Copyright 2026, Moat Crossing Systems.
                 </p>
               </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
               "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
@@ -2958,7 +2950,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -2970,7 +2962,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script> 
     <script type="text/javascript" src="_static/language_data.js"></script> 
     <script type="text/javascript" src=
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
     <script type="text/javascript" src="_static/js/theme.js"></script> 
     <script type="text/javascript">
 

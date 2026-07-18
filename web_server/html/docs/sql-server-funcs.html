@@ -7,46 +7,196 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      Server Functions — Rampart 0.1.0 documentation
+      Server Functions — Rampart 0.7.0 documentation
     </title>
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
     <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
     <link rel="stylesheet" href="_static/hacks.css" type="text/css">
     <link rel="index" title="Index" href="genindex.html">
     <link rel="search" title="Search" href="search.html">
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
     <link rel="up" title="The rampart-sql module" href="sqltoc.html">
     <link rel="next" title="Server Properties" href="sql-set.html">
     <link rel="prev" title="Preface" href="rampart-sql.html">
     <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
     <style>
-            .wy-nav-top,.wy-side-nav-search { background-color:black;}
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            dl:not(.docutils) dt {font-family: "Varela Round", Sans-Serif !important; font-size: 90% !important;}
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
             .autocomplete-group { padding: 2px 5px; }
-            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
-            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
-            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
-            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
             .expandBottom { bottom: 18px }
             .expandTop { top: 3px }
-            .expanded .fader { bottom : -15px }
+            .expanded .fader { bottom: -15px }
             .expanded .expandBottom { bottom: 38px; }
-            .wy-nav-content {max-width: 1600px;}
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
     </style>
   </head>
   <body class="wy-body-for-nav" role="document">
     <div class="wy-grid-for-nav">
       <nav data-toggle="wy-nav-shift" class="wy-nav-side">
         <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
           <div class="wy-side-nav-search">
-            <a href="/" class="icon icon-home">Rampart</a>
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
             <div role="search">
               <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
                 <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
@@ -65,6 +215,12 @@
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
               </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
               <li class="toctree-l1 current">
                 <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
                 <ul class="current">
@@ -79,7 +235,13 @@
                     <a class="reference internal" href="rampart-sql.html#database-functions">Database Functions</a>
                   </li>
                   <li class="toctree-l2">
+                    <a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a>
+                  </li>
+                  <li class="toctree-l2">
                     <a class="reference internal" href="rampart-sql.html#database-indexing">Database Indexing</a>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="rampart-sql.html#vector-search">Vector Search</a>
                   </li>
                   <li class="toctree-l2">
                     <a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a>
@@ -87,6 +249,26 @@
                   <li class="toctree-l2 current">
                     <a class="current reference internal" href="#">Server Functions</a>
                     <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#vector-function">Vector Function</a>
+                        <ul>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#vecdist">vecdist</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#embed">embed</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#chunkembed">chunkembed</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#chunkavg">chunkavg</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#chunkcoherence">chunkcoherence</a>
+                          </li>
+                        </ul>
+                      </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#general-functions">General Functions</a>
                         <ul>
@@ -306,6 +488,12 @@
                 <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
               </li>
               <li class="toctree-l1">
@@ -321,16 +509,46 @@
                 <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
               </li>
             </ul>
           </div>
@@ -374,6 +592,457 @@
                     statement. Arguments to a function can be either a single field name, another function or another
                     expression.
                   </p>
+                  <div class="section" id="vector-function">
+                    <h2>
+                      Vector Function<a class="headerlink" href="#vector-function" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="vecdist">
+                      <h3>
+                        vecdist<a class="headerlink" href="#vecdist" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Calculate the distance/score of two vectors.
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="n">vecdist</span><span class="p">(</span><span class=
+                          "n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class=
+                          "p">[,</span> <span class="n">metric</span> <span class="p">[,</span> <span class=
+                          "k">type</span><span class="p">]])</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        If not specified, default metric is <code class="docutils literal notranslate"><span class=
+                        "pre">dot</span></code> and default type is <code class=
+                        "docutils literal notranslate"><span class="pre">f16</span></code>
+                      </p>
+                      <p>
+                        Performs the same distance calculation as <span class="xref std std-ref">rampart-vector:Vector
+                        Distance Function</span> with the exception that <code class=
+                        "docutils literal notranslate"><span class="pre">type</span></code> must be a buffer type and
+                        cannot be <code class="docutils literal notranslate"><span class="pre">numbers</span></code>.
+                      </p>
+                      <p>
+                        With semantic embedding vectors, it can be used to rerank likep results.
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="cm">/*</span>
+<span class="cm">  do a likep search on query for 100 rows, rerank on the embedding vector of query (compvec).</span>
+<span class="cm">  1 is first selected column (score).</span>
+<span class="cm">  ORDER BY 1 DESC because higher dot product scores = more similar.</span>
+<span class="cm">*/</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
+"nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="sb">`select vecdist(VecCol, ?) score, Title, Text from mytable</span>
+<span class="sb">        where Text likep ? order by 1 DESC`</span><span class="p">,</span>
+    <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class=
+"mi">100</span><span class="p">},</span>
+    <span class="p">[</span><span class="nx">compvec</span><span class="p">,</span> <span class=
+"nx">query</span><span class="p">]</span>
+<span class="p">);</span>
+<span class="cm">/* display top 10 rows in res here */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="embed">
+                      <h3>
+                        embed<a class="headerlink" href="#embed" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Compute a semantic embedding vector for a piece of text using the connection’s currently-loaded
+                        embedding model (<a class="reference internal" href="sql-set.html#llamaembed"><span class=
+                        "std std-ref">llamaEmbed</span></a> — a <code class="docutils literal notranslate"><span class=
+                        "pre">llama.cpp</span></code> GGUF — or <a class="reference internal" href=
+                        "sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> — an ONNX model
+                        directory).
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="n">embed</span><span class="p">(</span><span class=
+                          "nb">text</span> <span class="p">[,</span> <span class="n">dtype</span><span class=
+                          "p">])</span>
+</pre>
+                        </div>
+                      </div>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">text</span></code> is a
+                          <span class="green">String</span> column, bound parameter, literal, or any expression that
+                          evaluates to text. <code class="docutils literal notranslate"><span class=
+                          "pre">NULL</span></code> and the empty string produce <code class=
+                          "docutils literal notranslate"><span class="pre">NULL</span></code>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is an
+                          optional <span class="green">String</span> naming the result vec dtype. One of <code class=
+                          "docutils literal notranslate"><span class="pre">'f16'</span></code> (default), <code class=
+                          "docutils literal notranslate"><span class="pre">'f32'</span></code>, <code class=
+                          "docutils literal notranslate"><span class="pre">'f64'</span></code>, or <code class=
+                          "docutils literal notranslate"><span class="pre">'bf16'</span></code>. <code class=
+                          "docutils literal notranslate"><span class="pre">''</span></code> and <code class=
+                          "docutils literal notranslate"><span class="pre">'auto'</span></code> are accepted
+                          placeholders for the default — useful in the three-argument <code class=
+                          "docutils literal notranslate"><span class="pre">chunkembed()</span></code>/<code class=
+                          "docutils literal notranslate"><span class="pre">chunkavg()</span></code> forms where a later
+                          argument follows the dtype. The named dtype propagates to the result column type:
+                          <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                          "pre">'f32')</span></code> returns a <code class="docutils literal notranslate"><span class=
+                          "pre">varvecF32</span></code>, <code class="docutils literal notranslate"><span class=
+                          "pre">embed(?)</span></code> returns a <code class=
+                          "docutils literal notranslate"><span class="pre">varvecF16</span></code>.
+                        </li>
+                      </ul>
+                      <p>
+                        The model is configured via <a class="reference internal" href=
+                        "sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> or <a class=
+                        "reference internal" href="sql-set.html#onnxembed"><span class=
+                        "std std-ref">onnxEmbed</span></a>; llama.cpp concurrency behavior is controlled by <a class=
+                        "reference internal" href="sql-set.html#llamaembedperthread"><span class=
+                        "std std-ref">llamaEmbedPerThread</span></a> (ONNX sessions are concurrent by nature). The
+                        output dimensionality is determined by the model — for example, <code class=
+                        "docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code> produces
+                        384-dim vectors; <code class="docutils literal notranslate"><span class=
+                        "pre">bge-m3</span></code> produces 1024-dim. Vectors are L2-normalized; norm ≈ 1.0 within
+                        dtype quantization noise.
+                      </p>
+                      <p>
+                        Long text is not truncated: the engine splits it into chunks (structure-aware, sized to the
+                        model’s token window), embeds every chunk, and returns the L2-normalized <strong>mean</strong>
+                        of the chunk vectors. To keep the individual chunk vectors instead, use <a class=
+                        "reference internal" href="#chunkembed"><span class="std std-ref">chunkembed()</span></a>
+                        below.
+                      </p>
+                      <p>
+                        Results are cached per model (see <a class="reference internal" href=
+                        "sql-set.html#likevcache"><span class="std std-ref">likevCache</span></a>): any of the
+                        embedding scalars applied to the same text — in one statement, across statements, or across
+                        threads — runs the model once.
+                      </p>
+                      <p>
+                        <code class="docutils literal notranslate"><span class="pre">embed()</span></code> requires the
+                        engine’s module (<code class="docutils literal notranslate"><span class=
+                        "pre">rampart-llamacpp</span></code> or <code class="docutils literal notranslate"><span class=
+                        "pre">rampart-onnx</span></code>) to be installed. <code class=
+                        "docutils literal notranslate"><span class="pre">rampart-sql</span></code> auto-loads it on the
+                        first <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span>
+                        <span class="pre">...})</span></code> / <code class="docutils literal notranslate"><span class=
+                        "pre">sql.set({onnxEmbed:</span> <span class="pre">...})</span></code> call (trying the
+                        canonical name, then <code class="docutils literal notranslate"><span class=
+                        "pre">_cuda</span></code>, then <code class="docutils literal notranslate"><span class=
+                        "pre">_cpu</span></code>). To force a specific variant, <code class=
+                        "docutils literal notranslate"><span class="pre">require()</span></code> it first. See
+                        <a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class=
+                        "std std-ref">Generating embeddings</span></a> for the full dependency and install notes.
+                      </p>
+                      <p>
+                        If no model has been loaded, <code class="docutils literal notranslate"><span class=
+                        "pre">embed()</span></code> raises a runtime error. If <code class=
+                        "docutils literal notranslate"><span class="pre">dtype</span></code> names something unknown
+                        (e.g. <code class="docutils literal notranslate"><span class="pre">'q4_0'</span></code>), the
+                        SQL prepare fails with a clear “Unknown dtype” message.
+                      </p>
+                      <p>
+                        Use in SELECT projections, INSERT values, or as the right-hand side of <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> / <code class=
+                        "docutils literal notranslate"><span class="pre">vecdist()</span></code>:
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span>-- Inline embedding at INSERT time
+INSERT INTO docs (id, text, v) VALUES (?, ?, embed(?));
+
+-- Top-K similarity search (a string on the right-hand side of LIKEV
+-- is also auto-coerced to embed())
+SELECT id, $rank FROM docs WHERE v LIKEV embed(?) ORDER BY 2 DESC;
+
+-- Distance/score projection, used to re-rank an index result
+SELECT id, vecdist(v, embed(?)) AS d
+  FROM docs WHERE v LIKEV embed(?)
+ ORDER BY 2 DESC;
+
+-- Standalone, useful for debugging / probing model output
+SELECT embed('chocolate cake recipe', 'f32');
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        See <a class="reference internal" href="rampart-sql.html#vector-search"><span class=
+                        "std std-ref">Vector Search</span></a> for the end-to-end pipeline (model setup → table schema
+                        → INSERT → vector index → <code class="docutils literal notranslate"><span class=
+                        "pre">LIKEV</span></code>).
+                      </p>
+                    </div>
+                    <div class="section" id="chunkembed">
+                      <h3>
+                        chunkembed<a class="headerlink" href="#chunkembed" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Embed a whole document, keeping <strong>all</strong> of its chunk vectors.
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="n">chunkembed</span><span class="p">(</span><span class=
+                          "nb">text</span> <span class="p">[,</span> <span class="n">dtype</span> <span class=
+                          "p">[,</span> <span class="k">prefix</span><span class="p">]])</span>
+<span class="n">chunkembed</span><span class="p">(</span><span class="n">textList</span> <span class=
+"p">[,</span> <span class="n">dtype</span> <span class="p">[,</span> <span class="k">prefix</span> <span class=
+"p">[,</span> <span class="n">spans</span><span class="p">]]])</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Like <a class="reference internal" href="#embed"><span class="std std-ref">embed()</span></a>,
+                        but where <code class="docutils literal notranslate"><span class="pre">embed()</span></code>
+                        returns the single combined (mean) vector, <code class=
+                        "docutils literal notranslate"><span class="pre">chunkembed()</span></code> returns the
+                        document’s per-chunk vectors concatenated back to back — a <code class=
+                        "docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span>
+                        <span class="pre">dim</span></code>-cell value in the same <code class=
+                        "docutils literal notranslate"><span class="pre">varvec*</span></code> types (dtype argument
+                        and default as in <code class="docutils literal notranslate"><span class=
+                        "pre">embed()</span></code>). The embedding engine does the chunking: paragraph boundaries
+                        first, then the model’s token window; a short text comes back as <code class=
+                        "docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span>
+                        <span class="pre">1</span></code>, byte-identical to a plain single vector.
+                      </p>
+                      <p>
+                        The optional third argument is a <strong>per-chunk prefix</strong> — typically the document’s
+                        title. It is prepended to every chunk’s <em>embedding input</em> (each chunk embeds as if it
+                        read <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;</span>
+                        <span class="pre">&lt;chunk</span> <span class="pre">text&gt;</span></code>), so name-seeking
+                        queries (“who plays X in Y?”) can match any chunk of the document by its name, not just chunks
+                        that happen to repeat it. The prefix never changes the chunk <strong>boundaries</strong>, the
+                        chunk <strong>count</strong>, or the text spans <a class="reference internal" href=
+                        "#abstract"><span class="std std-ref">abstract</span></a> computes — only what the model sees.
+                        (A chunk that already fills the model window gives up its last few tail tokens of embedding
+                        input to make room.)
+                      </p>
+                      <p>
+                        To pass a prefix without naming a dtype, use <code class=
+                        "docutils literal notranslate"><span class="pre">''</span></code> or <code class=
+                        "docutils literal notranslate"><span class="pre">'auto'</span></code> as the dtype placeholder
+                        (both mean “the default”):
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="c1">-- title-prefixed chunks, default dtype:</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class=
+"p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">title</span><span class=
+"p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class=
+"o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class=
+"n">chunkembed</span><span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class=
+"s1">''</span><span class="p">,</span> <span class="o">?</span><span class="p">));</span>   <span class=
+"c1">-- params: ..., doc, title</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Search-side queries need no change — the query string embeds without a prefix; the stored chunk
+                        vectors simply carry the document’s name in their semantics.
+                      </p>
+                      <p>
+                        Stored in a vector-indexed column, a chunked value gives <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> <em>best-chunk</em>
+                        ranking over long documents — every chunk is indexed under its row, and the row’s <code class=
+                        "docutils literal notranslate"><span class="pre">$rank</span></code> is its best chunk’s score.
+                        The vector index over a chunked column requires the <code class=
+                        "docutils literal notranslate"><span class="pre">vec_dim</span></code> WITH-option. See
+                        <a class="reference internal" href=
+                        "rampart-sql.html#chunked-documents-multi-vector-rows"><span class="std std-ref">Chunked
+                        documents (multi-vector rows)</span></a> for the full pattern, including best-chunk snippets
+                        via <a class="reference internal" href="#abstract"><span class=
+                        "std std-ref">abstract</span></a>.
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="c1">-- one row per document; k chunk vectors in v</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class=
+"p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">doc</span><span class=
+"p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">VALUES</span> <span class=
+"p">(</span><span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class=
+"p">,</span> <span class="n">chunkembed</span><span class="p">(</span><span class="o">?</span><span class=
+"p">));</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        <strong>Caller-supplied chunks.</strong> The first argument may instead be a <code class=
+                        "docutils literal notranslate"><span class="pre">strlst</span></code> — a list of strings, each
+                        of which becomes <strong>exactly one chunk</strong> in list order (N elements always produce N
+                        vectors, so the caller’s own chunk bookkeeping stays positional). An element that fits the
+                        model window gets its exact vector; an oversized element gets its <code class=
+                        "docutils literal notranslate"><span class="pre">embed()</span></code>-style <em>combined</em>
+                        vector — the normalized mean over its sub-window vectors — rather than extra vectors or a
+                        truncation. Empty elements are skipped. This replaces the built-in chunker with your own
+                        splitting, mirroring the <code class="docutils literal notranslate"><span class=
+                        "pre">split:</span> <span class="pre">function</span></code> option of the JavaScript embedding
+                        handles. From rampart, pass a <span class="green">Array</span> of <span class=
+                        "green">Strings</span> wrapped in <code class="docutils literal notranslate"><span class=
+                        "pre">Sql.list()</span></code> (a bare array parameter is bound as JSON text, not a list):
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">myChunks</span> <span class=
+                          "o">=</span> <span class="nx">mySplitter</span><span class="p">(</span><span class=
+                          "nx">docText</span><span class="p">);</span>    <span class=
+                          "c1">// -&gt; [ "chunk 1 ...", ... ]</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class=
+"s2">"insert into docs values (?, ?, chunkembed(?, 'f16'))"</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class=
+"nx">docText</span><span class="p">,</span> <span class="nx">Sql</span><span class="p">.</span><span class=
+"nx">list</span><span class="p">(</span><span class="nx">myChunks</span><span class="p">)]);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        The prefix argument still applies to every listed chunk.
+                      </p>
+                      <p>
+                        <strong>Spans (4th argument).</strong> A numeric list of <code class=
+                        "docutils literal notranslate"><span class="pre">{start,</span> <span class=
+                        "pre">end}</span></code> byte offsets into the stored document — two numbers per list element,
+                        in element order — tells <a class="reference internal" href="#abstract"><span class=
+                        "std std-ref">abstract</span></a> where each custom chunk came from, so the 5-argument vec form
+                        can seed <strong>best-chunk snippets for custom chunkings</strong> exactly as it does for the
+                        built-in chunker:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="c1">// splitter returns [{text, start, end}, ...]</span>
+<span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class=
+"nx">mySplitter</span><span class="p">(</span><span class="nx">docText</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class=
+"s2">"insert into docs values (?, ?, chunkembed(?, 'f16', ?, ?))"</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class=
+"nx">docText</span><span class="p">,</span> <span class="nx">Sql</span><span class="p">.</span><span class=
+"nx">list</span><span class="p">(</span><span class="nx">parts</span><span class="p">.</span><span class=
+"nx">map</span><span class="p">(</span><span class="nx">p</span> <span class="p">=&gt;</span> <span class=
+"nx">p</span><span class="p">.</span><span class="nx">text</span><span class="p">)),</span>
+          <span class="nx">title</span><span class="p">,</span> <span class="nx">Sql</span><span class=
+"p">.</span><span class="nx">list</span><span class="p">(</span><span class="nx">parts</span><span class=
+"p">.</span><span class="nx">flatMap</span><span class="p">(</span><span class="nx">p</span> <span class=
+"p">=&gt;</span> <span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class=
+"nx">start</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class=
+"nx">end</span><span class="p">]))]);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Without spans, custom-chunked rows still rank normally under <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code>; their abstracts fall back
+                        to plain keyword snippets.
+                      </p>
+                      <p>
+                        <strong>The value header.</strong> Every <code class=
+                        "docutils literal notranslate"><span class="pre">chunkembed()</span></code> result carries a
+                        small self-describing header ahead of its cells recording the chunk count, dimension, element
+                        type and (when known) the chunk spans — for the built-in chunker the spans are recorded
+                        automatically. The header is invisible in SQL and in rampart (a selected vector reports its
+                        true cell <code class="docutils literal notranslate"><span class="pre">dim</span></code>, plus
+                        a <code class="docutils literal notranslate"><span class="pre">chunkSpans</span></code>
+                        property when spans are present), survives storage in <code class=
+                        "docutils literal notranslate"><span class="pre">varbyte</span></code> columns, and is stripped
+                        by cell-converting <code class="docutils literal notranslate"><span class=
+                        "pre">convert()</span></code> calls. Values without a header (<code class=
+                        "docutils literal notranslate"><span class="pre">embed()</span></code>, user-computed vectors,
+                        pre-existing tables) behave exactly as before. Because the winning chunk’s span now travels
+                        <em>inside the value</em>, <code class="docutils literal notranslate"><span class=
+                        "pre">abstract()</span></code> no longer re-runs the chunker at query time, and the serving
+                        side needs no chunker/model agreement for snippets — only the query embedding still uses the
+                        model. Tables written with headers require correspondingly current binaries (older builds would
+                        misread the header bytes as cells).
+                      </p>
+                    </div>
+                    <div class="section" id="chunkavg">
+                      <h3>
+                        chunkavg<a class="headerlink" href="#chunkavg" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The document’s single combined vector, from the same model run as <code class=
+                        "docutils literal notranslate"><span class="pre">chunkembed()</span></code>.
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="n">chunkavg</span><span class="p">(</span><span class=
+                          "nb">text</span> <span class="p">[,</span> <span class="n">dtype</span> <span class=
+                          "p">[,</span> <span class="k">prefix</span><span class="p">]])</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Returns the L2-normalized mean of the document’s chunk vectors — the same value <code class=
+                        "docutils literal notranslate"><span class="pre">embed(text)</span></code> returns (when no
+                        prefix is given) — exposed as its own scalar so a table can store <strong>both</strong> the
+                        chunk array (<code class="docutils literal notranslate"><span class=
+                        "pre">chunkembed()</span></code>, fine per-passage ranking) and the combined vector
+                        (<code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code>, a
+                        second independently-indexable column for coarse first-stage search) from one model run:
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class=
+                          "c1">-- the shared result cache makes this ONE model run:</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class=
+"p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">avgv</span><span class=
+"p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">VALUES</span> <span class=
+"p">(</span><span class="o">?</span><span class="p">,</span> <span class="n">chunkavg</span><span class=
+"p">(</span><span class="o">?</span><span class="p">),</span> <span class="n">chunkembed</span><span class=
+"p">(</span><span class="o">?</span><span class="p">));</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        The optional <code class="docutils literal notranslate"><span class="pre">prefix</span></code>
+                        argument is the per-chunk prefix described under <code class=
+                        "docutils literal notranslate"><span class="pre">chunkembed()</span></code>; when storing
+                        prefixed chunk vectors, pass the <strong>same</strong> prefix to <code class=
+                        "docutils literal notranslate"><span class="pre">chunkavg()</span></code> (and <code class=
+                        "docutils literal notranslate"><span class="pre">chunkcoherence()</span></code>) — the trio
+                        then still shares one cached model run, and the average stays consistent with the chunks it
+                        summarizes.
+                      </p>
+                    </div>
+                    <div class="section" id="chunkcoherence">
+                      <h3>
+                        chunkcoherence<a class="headerlink" href="#chunkcoherence" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        How single-topic a document is, from its chunk vectors.
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="n">chunkcoherence</span><span class="p">(</span><span class=
+                          "nb">text</span> <span class="p">[,</span> <span class="k">prefix</span><span class=
+                          "p">])</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Returns a <span class="green">Number</span> (SQL <code class=
+                        "docutils literal notranslate"><span class="pre">double</span></code>) in <code class=
+                        "docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>:
+                        the average pairwise cosine similarity between the document’s chunk vectors. <code class=
+                        "docutils literal notranslate"><span class="pre">1.0</span></code> for a single-chunk document
+                        or one that stays tightly on topic; values near <code class=
+                        "docutils literal notranslate"><span class="pre">0</span></code> indicate a diffuse,
+                        multi-topic document. Useful as a stored signal for deciding whether a document’s combined
+                        vector (<code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code>)
+                        is a faithful summary or whether per-chunk search (<code class=
+                        "docutils literal notranslate"><span class="pre">chunkembed()</span></code>) is needed.
+                      </p>
+                      <p>
+                        Shares the model run with the other embedding scalars via the result cache (<a class=
+                        "reference internal" href="sql-set.html#likevcache"><span class=
+                        "std std-ref">likevCache</span></a>).
+                      </p>
+                    </div>
+                  </div>
                   <div class="section" id="general-functions">
                     <h2>
                       General Functions<a class="headerlink" href="#general-functions" title=
@@ -440,67 +1109,46 @@
 </pre>
                         </div>
                       </div>
-                      <dl>
+                      <dl class="docutils">
                         <dt>
                           query
                         </dt>
                         <dd>
-                          <p>
-                            Query should be a string containing a Metamorph query.
-                          </p>
+                          Query should be a string containing a Metamorph query.
                         </dd>
                         <dt>
                           data
                         </dt>
                         <dd>
-                          <p>
-                            The text to search. May be literal data or a field from the table.
-                          </p>
+                          The text to search. May be literal data or a field from the table.
                         </dd>
                         <dt>
                           nhits
                         </dt>
                         <dd>
-                          <p>
-                            The maximum number of hits to return. If it is 0, which is the default, you will get all
-                            the hits.
-                          </p>
+                          The maximum number of hits to return. If it is 0, which is the default, you will get all the
+                          hits.
                         </dd>
                         <dt>
                           msgs
                         </dt>
                         <dd>
-                          <p>
+                          <p class="first">
                             An integer; controls what information is returned. A bit-wise OR of any combination of the
                             following values:
                           </p>
                           <ul class="simple">
-                            <li>
-                              <p>
-                                1 to get matches and offset/length information
-                              </p>
+                            <li>1 to get matches and offset/length information
                             </li>
-                            <li>
-                              <p>
-                                2 to suppress text from <code class="docutils literal notranslate"><span class=
-                                "pre">data</span></code> which matches; printed by default
-                              </p>
+                            <li>2 to suppress text from <code class="docutils literal notranslate"><span class=
+                            "pre">data</span></code> which matches; printed by default
                             </li>
-                            <li>
-                              <p>
-                                4 to get a count of hits (up to <code class="docutils literal notranslate"><span class=
-                                "pre">nhits</span></code>)
-                              </p>
+                            <li>4 to get a count of hits (up to <code class=
+                              "docutils literal notranslate"><span class="pre">nhits</span></code>)
                             </li>
-                            <li>
-                              <p>
-                                8 to get the hit count in a numeric parseable format
-                              </p>
+                            <li>8 to get the hit count in a numeric parseable format
                             </li>
-                            <li>
-                              <p>
-                                16 to get the offset/length in the original query of each search set
-                              </p>
+                            <li>16 to get the offset/length in the original query of each search set
                             </li>
                           </ul>
                           <p>
@@ -543,32 +1191,17 @@
                             Where:
                           </p>
                           <ul class="simple">
-                            <li>
-                              <p>
-                                offset is the offset within the data of the overall hit context (sentence, paragraph,
-                                etc…)
-                              </p>
+                            <li>offset is the offset within the data of the overall hit context (sentence, paragraph,
+                            etc…)
                             </li>
-                            <li>
-                              <p>
-                                length is the length of the overall hit context
-                              </p>
+                            <li>length is the length of the overall hit context
                             </li>
-                            <li>
-                              <p>
-                                suboff is the offset within the hit of a matching term
-                              </p>
+                            <li>suboff is the offset within the hit of a matching term
                             </li>
-                            <li>
-                              <p>
-                                sublen is the length of the matching term
-                              </p>
+                            <li>sublen is the length of the matching term
                             </li>
-                            <li>
-                              <p>
-                                suboff and sublen will be repeated for as many terms as are required to satisfy the
-                                query.
-                              </p>
+                            <li>suboff and sublen will be repeated for as many terms as are required to satisfy the
+                            query.
                             </li>
                           </ul>
                           <p>
@@ -587,7 +1220,7 @@
 </pre>
                             </div>
                           </div>
-                          <p>
+                          <p class="last">
                             Would give a result similar to the following:
                           </p>
                         </dd>
@@ -647,7 +1280,7 @@
                       </p>
                       <ul>
                         <li>
-                          <p>
+                          <p class="first">
                             The display format for a different format is more useful. For example you might want to
                             convert a field of type COUNTER to a DATE field, so you can see when the record was
                             inserted, for example:
@@ -675,41 +1308,32 @@
                         </li>
                       </ul>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            If you have an application which is expecting data in a particular type you can use convert
-                            to make sure you will receive the correct type.
-                          </p>
+                        <li>If you have an application which is expecting data in a particular type you can use convert
+                        to make sure you will receive the correct type.
                         </li>
-                        <li>
-                          <p>
-                            The optional third argument given to <code class=
-                            "docutils literal notranslate"><span class="pre">convert()</span></code> is a <a class=
-                            "reference internal" href="sql-set.html#varchartostrlstmode"><span class=
-                            "std std-ref">varcharToStrlstMode</span></a> mode value. This third argument may only be
-                            supplied when converting to type <code class="docutils literal notranslate"><span class=
-                            "pre">strlst</span></code> or <code class="docutils literal notranslate"><span class=
-                            "pre">varstrlst</span></code>. It allows the separator character or mode to be conveniently
-                            specified locally to the conversion, instead of having to alter the global <a class=
-                            "reference internal" href="sql-set.html#varchartostrlstmode"><span class=
-                            "std std-ref">varcharToStrlstMode</span></a> mode.
-                          </p>
+                        <li>The optional third argument given to <code class=
+                          "docutils literal notranslate"><span class="pre">convert()</span></code> is a <a class=
+                          "reference internal" href="sql-set.html#varchartostrlstmode"><span class=
+                          "std std-ref">varcharToStrlstMode</span></a> mode value. This third argument may only be
+                          supplied when converting to type <code class="docutils literal notranslate"><span class=
+                          "pre">strlst</span></code> or <code class="docutils literal notranslate"><span class=
+                          "pre">varstrlst</span></code>. It allows the separator character or mode to be conveniently
+                          specified locally to the conversion, instead of having to alter the global <a class=
+                          "reference internal" href="sql-set.html#varchartostrlstmode"><span class=
+                          "std std-ref">varcharToStrlstMode</span></a> mode.
                         </li>
-                        <li>
-                          <p>
-                            Note that <code class="docutils literal notranslate"><span class=
-                            "pre">convert()</span></code>ing data from/to <code class=
-                            "docutils literal notranslate"><span class="pre">varbyte</span></code>/<code class=
-                            "docutils literal notranslate"><span class="pre">varchar</span></code> does not convert the
-                            data to/from hexadecimal by default in programs other than <code class=
-                            "docutils literal notranslate"><span class="pre">tsql</span></code>; it is preserved as-is
-                            (though truncated at nul for <code class="docutils literal notranslate"><span class=
-                            "pre">varchar</span></code>). See the <a class="reference internal" href=
-                            "#bintohex">bintohex</a>() and <a class="reference internal" href=
-                            "#hextobin">hextobin</a>() functions for hexadecimal conversion, and the <a class=
-                            "reference internal" href="sql-set.html#hexifybytes"><span class=
-                            "std std-ref">hexifyBytes</span></a> SQL property for controlling automatic hex conversion.
-                          </p>
+                        <li>Note that <code class="docutils literal notranslate"><span class=
+                        "pre">convert()</span></code>ing data from/to <code class=
+                        "docutils literal notranslate"><span class="pre">varbyte</span></code>/<code class=
+                        "docutils literal notranslate"><span class="pre">varchar</span></code> does not convert the
+                        data to/from hexadecimal by default in programs other than <code class=
+                        "docutils literal notranslate"><span class="pre">tsql</span></code>; it is preserved as-is
+                        (though truncated at nul for <code class="docutils literal notranslate"><span class=
+                        "pre">varchar</span></code>). See the <a class="reference internal" href=
+                        "#bintohex">bintohex</a>() and <a class="reference internal" href="#hextobin">hextobin</a>()
+                        functions for hexadecimal conversion, and the <a class="reference internal" href=
+                        "sql-set.html#hexifybytes"><span class="std std-ref">hexifyBytes</span></a> SQL property for
+                        controlling automatic hex conversion.
                         </li>
                       </ul>
                     </div>
@@ -894,17 +1518,13 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">stream</span></code>: Use the
-                            default output mode: a continuous stream of hexadecimal bytes.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">stream</span></code>: Use the
+                          default output mode: a continuous stream of hexadecimal bytes.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Return a
-                            “pretty” version of the data: print 16 byte per line, space-separate the hexadecimal bytes,
-                            and print an ASCII dump on the right side.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Return a
+                          “pretty” version of the data: print 16 bytes per line, space-separate the hexadecimal bytes,
+                          and print an ASCII dump on the right side.
                         </li>
                       </ul>
                     </div>
@@ -932,27 +1552,22 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">stream</span></code>: Only
-                            accept the <code class="docutils literal notranslate"><span class=
-                            "pre">stream</span></code> format of <code class=
-                            "docutils literal notranslate"><span class="pre">bintohex()</span></code>, i.e. a stream of
-                            hexadecimal bytes, the same format that <code class=
-                            "docutils literal notranslate"><span class="pre">bintohex(varbyteData,</span> <span class=
-                            "pre">'stream')</span></code> returns. Whitespace is acceptable, but only between (not
-                            within) hexadecimal bytes. Case-insensitive. Non-conforming data will result in an error
-                            message and the function failing.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">stream</span></code>: Only
+                          accept the <code class="docutils literal notranslate"><span class="pre">stream</span></code>
+                          format of <code class="docutils literal notranslate"><span class=
+                          "pre">bintohex()</span></code>, i.e. a stream of hexadecimal bytes, the same format that
+                          <code class="docutils literal notranslate"><span class="pre">bintohex(varbyteData,</span>
+                          <span class="pre">'stream')</span></code> returns. Whitespace is acceptable, but only between
+                          (not within) hexadecimal bytes. Case-insensitive. Non-conforming data will result in an error
+                          message and the function failing.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Accept
-                            either <code class="docutils literal notranslate"><span class="pre">stream</span></code> or
-                            <code class="docutils literal notranslate"><span class="pre">pretty</span></code> <a class=
-                            "reference internal" href="#bintohex">bintohex</a> formatted data; if the latter, only the
-                            hexadecimal bytes are parsed (e.g. ASCII column is ignored). Parsing is more liberal, but
-                            may be confused if the data deviates significantly from either format.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">pretty</span></code>: Accept
+                          either <code class="docutils literal notranslate"><span class="pre">stream</span></code> or
+                          <code class="docutils literal notranslate"><span class="pre">pretty</span></code> <a class=
+                          "reference internal" href="#bintohex">bintohex</a> formatted data; if the latter, only the
+                          hexadecimal bytes are parsed (e.g. ASCII column is ignored). Parsing is more liberal, but may
+                          be confused if the data deviates significantly from either format.
                         </li>
                       </ul>
                     </div>
@@ -1012,11 +1627,11 @@
                           "s2">"rampart-sql"</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class=
-"k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class=
+"k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class=
 "p">(</span><span class="s2">"./testdb"</span><span class="p">,</span> <span class="kc">true</span><span class=
 "p">);</span>
 
-<span class="c1">// ignore error if table doesn't exists</span>
+<span class="c1">// ignore error if table doesn't exist</span>
 <span class="k">try</span> <span class="p">{</span>
    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class=
 "s2">"drop table idtext;"</span><span class="p">);</span>
@@ -1254,10 +1869,10 @@
                           "s2">"rampart-sql"</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">sql</span><span class="o">=</span><span class="k">new</span> <span class=
-"nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class=
+"nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class=
 "s2">"./testdb"</span><span class="p">);</span>
 
-<span class="c1">// ignore error if table doesn't exists</span>
+<span class="c1">// ignore error if table doesn't exist</span>
 <span class="k">try</span> <span class="p">{</span>
    <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class=
 "s2">"drop table Products;"</span><span class="p">);</span>
@@ -1360,26 +1975,20 @@
                         Note that:
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            In the <code class="docutils literal notranslate"><span class="pre">tsql</span></code>
-                            example, the trailing commas in the <code class="docutils literal notranslate"><span class=
-                            "pre">PriceRange</span></code> values are used to converted to <code class=
-                            "docutils literal notranslate"><span class="pre">strlst</span></code> values via the
-                            <code class="docutils literal notranslate"><span class="pre">convert(..,</span>
-                            <span class="pre">..,</span> <span class="pre">'lastchar')</span></code> function. In the
-                            Rampart JavaScript version, the array of strings are converted into a <code class=
-                            "docutils literal notranslate"><span class="pre">strlst</span></code> using <code class=
-                            "docutils literal notranslate"><span class="pre">convert(..,</span> <span class=
-                            "pre">..,</span> <span class="pre">'json')</span></code> function. See <a class=
-                            "reference internal" href="#convert">convert</a> () mode above for details.
-                          </p>
+                        <li>In the <code class="docutils literal notranslate"><span class="pre">tsql</span></code>
+                        example, the trailing commas in the <code class="docutils literal notranslate"><span class=
+                        "pre">PriceRange</span></code> values are used to converted to <code class=
+                        "docutils literal notranslate"><span class="pre">strlst</span></code> values via the
+                        <code class="docutils literal notranslate"><span class="pre">convert(..,</span> <span class=
+                        "pre">..,</span> <span class="pre">'lastchar')</span></code> function. In the Rampart
+                        JavaScript version, the array of strings are converted into a <code class=
+                        "docutils literal notranslate"><span class="pre">strlst</span></code> using <code class=
+                        "docutils literal notranslate"><span class="pre">convert(..,</span> <span class=
+                        "pre">..,</span> <span class="pre">'json')</span></code> function. See <a class=
+                        "reference internal" href="#convert">convert</a> () mode above for details.
                         </li>
-                        <li>
-                          <p>
-                            The empty PriceRange for the fourth row: the -2 Price matched no ranges, and hence an empty
-                            PriceRange was returned for it.
-                          </p>
+                        <li>The empty PriceRange for the fourth row: the -2 Price matched no ranges, and hence an empty
+                        PriceRange was returned for it.
                         </li>
                       </ul>
                       <p>
@@ -1459,11 +2068,8 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class=
-                            "pre">lowerInclusivity</span></code>: Returns the inclusive/exclusive operator for the
-                            lower bound, e.g. “{” or “”
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">lowerInclusivity</span></code>:
+                          Returns the inclusive/exclusive operator for the lower bound, e.g. “{” or “”
                         </li>
                       </ul>
                       <p>
@@ -1684,7 +2290,7 @@
                         changes to <code class="docutils literal notranslate"><span class="pre">srcfile</span></code>
                         will not be reflected in the database, unless the table row’s <code class=
                         "docutils literal notranslate"><span class="pre">indirect</span></code> column is modified
-                        (even to the save value, this just tells Texis to re-index it).
+                        (even to the same value, this just tells Texis to re-index it).
                       </p>
                     </div>
                     <div class="section" id="canonpath">
@@ -1898,7 +2504,8 @@
                           <pre><span></span><span class="n">abstract</span><span class="p">(</span><span class=
                           "nb">text</span><span class="p">[,</span> <span class="n">maxsize</span><span class=
                           "p">[,</span> <span class="n">style</span><span class="p">[,</span> <span class=
-                          "n">query</span><span class="p">]]])</span>
+                          "n">query</span><span class="p">[,</span> <span class="n">vecColumn</span><span class=
+                          "p">]]]])</span>
 </pre>
                         </div>
                       </div>
@@ -1917,46 +2524,36 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">dumb</span></code> (0) - Start
-                            the abstract at the top of the document.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">dumb</span></code> (0) - Start
+                          the abstract at the top of the document.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">smart</span></code> (1) - This
-                            style will look for the first meaningful chunk of text, skipping over any headers at the
-                            top of the text. This is the default if neither <code class=
-                            "docutils literal notranslate"><span class="pre">style</span></code> nor <code class=
-                            "docutils literal notranslate"><span class="pre">query</span></code> is given.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">smart</span></code> (1) - This
+                          style will look for the first meaningful chunk of text, skipping over any headers at the top
+                          of the text. This is the default if neither <code class=
+                          "docutils literal notranslate"><span class="pre">style</span></code> nor <code class=
+                          "docutils literal notranslate"><span class="pre">query</span></code> is given.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">querysingle</span></code> (2)
-                            - Center the abstract contiguously on the best occurence of <code class=
-                            "docutils literal notranslate"><span class="pre">query</span></code> in the document.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">querysingle</span></code> (2) -
+                          Center the abstract contiguously on the best occurrence of <code class=
+                          "docutils literal notranslate"><span class="pre">query</span></code> in the document.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">querymultiple</span></code>
-                            (3) - Like <code class="docutils literal notranslate"><span class=
-                            "pre">querysingle</span></code>, but also break up the abstract into multiple sections
-                            (separated with “<code class="docutils literal notranslate"><span class=
-                            "pre">...</span></code>”) if needed to help ensure all terms are visible. Also take care
-                            with URLs to try to show the start and end.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">querymultiple</span></code> (3)
+                          - Like <code class="docutils literal notranslate"><span class=
+                          "pre">querysingle</span></code>, but also break up the abstract into multiple sections
+                          (separated with “<code class="docutils literal notranslate"><span class=
+                          "pre">...</span></code>”) if needed to help ensure all terms are visible. Also take care with
+                          URLs to try to show the start and end.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">querybest</span></code> - An
-                            alias for the best available query-based style; currently the same as <code class=
-                            "docutils literal notranslate"><span class="pre">querymultiple</span></code>. Using
-                            <code class="docutils literal notranslate"><span class="pre">querybest</span></code> in a
-                            script ensures that if improved styles become available in future releases, the script will
-                            automatically “upgrade” to the best style.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">querybest</span></code> - An
+                          alias for the best available query-based style; currently the same as <code class=
+                          "docutils literal notranslate"><span class="pre">querymultiple</span></code>. Using
+                          <code class="docutils literal notranslate"><span class="pre">querybest</span></code> in a
+                          script ensures that if improved styles become available in future releases, the script will
+                          automatically “upgrade” to the best style.
                         </li>
                       </ul>
                       <p>
@@ -1988,6 +2585,36 @@
 </pre>
                         </div>
                       </div>
+                      <p>
+                        <strong>Vector (best-chunk) snippets</strong> — the optional 5th argument names the row’s
+                        vector column. In a query whose <code class="docutils literal notranslate"><span class=
+                        "pre">WHERE</span></code> clause contains <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> on that column, and where
+                        the column holds <em>chunked</em> values (<a class="reference internal" href=
+                        "#chunkembed"><span class="std std-ref">chunkembed()</span></a>), the abstract is seeded from
+                        the text span of the row’s <strong>best-matching chunk</strong> — the same chunk that produced
+                        the row’s <code class="docutils literal notranslate"><span class="pre">$rank</span></code>:
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span>SELECT Title, abstract(Doc, 200, 'smart', ?, Vec) snip, $rank
+  FROM docs
+ WHERE Vec LIKEV ? ;
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        With an empty <code class="docutils literal notranslate"><span class="pre">query</span></code>
+                        string (<code class="docutils literal notranslate"><span class="pre">''</span></code>) the
+                        snippet is centered purely on the winning chunk; with a real query string, keyword hits are
+                        merged with the chunk span (hybrid). The chunk’s byte span is recomputed from the text by the
+                        loaded embedding model’s chunker, so the same engine (<a class="reference internal" href=
+                        "sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> / <a class=
+                        "reference internal" href="sql-set.html#onnxembed"><span class=
+                        "std std-ref">onnxEmbed</span></a>) must be set at query time. See <a class=
+                        "reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows"><span class=
+                        "std std-ref">Chunked documents (multi-vector rows)</span></a>.
+                      </p>
                       <p>
                         See also the Rampart JavaScript <a class="reference internal" href=
                         "rampart-sql.html#abstract"><span class="std std-ref">abstract()</span></a> function.
@@ -2179,7 +2806,7 @@
                         argument is a string-folding mode. If <code class="docutils literal notranslate"><span class=
                         "pre">mode</span></code> is unspecified, the current apicp <a class="reference internal" href=
                         "sql-set.html#stringcomparemode"><span class="std std-ref">stringCompareMode</span></a> setting
-                        – with “+lowercase” aded – is used.
+                        – with “+lowercase” added – is used.
                       </p>
                     </div>
                     <div class="section" id="upper">
@@ -2187,7 +2814,7 @@
                         upper<a class="headerlink" href="#upper" title="Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        Returns the text expression with all letters in upper-case. The sytax is
+                        Returns the text expression with all letters in upper-case. The syntax is
                       </p>
                       <div class="highlight-sql notranslate">
                         <div class="highlight">
@@ -2469,16 +3096,14 @@
                     </p>
                     <ul class="simple">
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">isNaN(x)</span></code> Returns 1
-                          if <code class="docutils literal notranslate"><span class="pre">x</span></code> is a float or
-                          double NaN (Not a Number) value, 0 if not. This function should be used to test for NaN,
-                          rather than using the equality operator (e.g. <code class=
-                          "docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span>
-                          <span class="pre">'NaN'</span></code>), because the IEEE standard defines <code class=
-                          "docutils literal notranslate"><span class="pre">NaN</span> <span class="pre">==</span>
-                          <span class="pre">NaN</span></code> to be false, not true as might be expected.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">isNaN(x)</span></code> Returns 1
+                        if <code class="docutils literal notranslate"><span class="pre">x</span></code> is a float or
+                        double NaN (Not a Number) value, 0 if not. This function should be used to test for NaN, rather
+                        than using the equality operator (e.g. <code class="docutils literal notranslate"><span class=
+                        "pre">x</span> <span class="pre">=</span> <span class="pre">'NaN'</span></code>), because the
+                        IEEE standard defines <code class="docutils literal notranslate"><span class="pre">NaN</span>
+                        <span class="pre">==</span> <span class="pre">NaN</span></code> to be false, not true as might
+                        be expected.
                       </li>
                     </ul>
                   </div>
@@ -2549,152 +3174,120 @@
                     </p>
                     <ul class="simple">
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitand(a,</span> <span class=
-                          "pre">b)</span></code> Returns the bit-wise AND of <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> and <code class=
-                          "docutils literal notranslate"><span class="pre">b</span></code>. If one argument is shorter
-                          than the other, it will be expanded with 0-value integers.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitand(a,</span> <span class=
+                        "pre">b)</span></code> Returns the bit-wise AND of <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">b</span></code>. If one argument is shorter
+                        than the other, it will be expanded with 0-value integers.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitor(a,</span> <span class=
-                          "pre">b)</span></code> Returns the bit-wise OR of <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> and <code class=
-                          "docutils literal notranslate"><span class="pre">b</span></code>. If one argument is shorter
-                          than the other, it will be expanded with 0-value integers.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitor(a,</span> <span class=
+                        "pre">b)</span></code> Returns the bit-wise OR of <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">b</span></code>. If one argument is shorter
+                        than the other, it will be expanded with 0-value integers.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitxor(a,</span> <span class=
-                          "pre">b)</span></code> Returns the bit-wise XOR (exclusive OR) of <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> and <code class=
-                          "docutils literal notranslate"><span class="pre">b</span></code>. If one argument is shorter
-                          than the other, it will be expanded with 0-value integers.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitxor(a,</span> <span class=
+                        "pre">b)</span></code> Returns the bit-wise XOR (exclusive OR) of <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">b</span></code>. If one argument is shorter
+                        than the other, it will be expanded with 0-value integers.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitnot(a)</span></code> Returns
-                          the bit-wise NOT of <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code>.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitnot(a)</span></code> Returns
+                        the bit-wise NOT of <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code>.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitsize(a)</span></code> Returns
-                          the total number of bits in <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code>, i.e. the highest bit number plus 1.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitsize(a)</span></code> Returns
+                        the total number of bits in <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code>, i.e. the highest bit number plus 1.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitcount(a)</span></code>
-                          Returns the number of bits in <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> that are set to 1.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitcount(a)</span></code> Returns
+                        the number of bits in <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> that are set to 1.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitmin(a)</span></code> Returns
-                          the lowest bit number in <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> that is set to 1. If none are set to 1, returns -1.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitmin(a)</span></code> Returns
+                        the lowest bit number in <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> that is set to 1. If none are set to 1, returns -1.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitmax(a)</span></code> Returns
-                          the highest bit number in <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> that is set to 1. If none are set to 1, returns -1.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitmax(a)</span></code> Returns
+                        the highest bit number in <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> that is set to 1. If none are set to 1, returns -1.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitlist(a)</span></code> Returns
-                          the list of bit numbers of <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code>, in ascending order, that are set to 1, as a <code class=
-                          "docutils literal notranslate"><span class="pre">varint</span></code>. Returns a single -1 if
-                          no bits are set to 1.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitlist(a)</span></code> Returns
+                        the list of bit numbers of <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code>, in ascending order, that are set to 1, as a <code class=
+                        "docutils literal notranslate"><span class="pre">varint</span></code>. Returns a single -1 if
+                        no bits are set to 1.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitshiftleft(a,</span>
-                          <span class="pre">n)</span></code> Returns <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> shifted <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> bits to the left, with 0s
-                          padded for bits on the right. If <code class="docutils literal notranslate"><span class=
-                          "pre">n</span></code> is negative, shifts right instead.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitshiftleft(a,</span>
+                        <span class="pre">n)</span></code> Returns <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> shifted <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> bits to the left, with 0s
+                        padded for bits on the right. If <code class="docutils literal notranslate"><span class=
+                        "pre">n</span></code> is negative, shifts right instead.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitshiftright(a,</span>
-                          <span class="pre">n)</span></code> Returns <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> shifted <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> bits to the right, with 0s
-                          padded for bits on the left (i.e. an unsigned shift). If <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> is negative, shifts left
-                          instead.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitshiftright(a,</span>
+                        <span class="pre">n)</span></code> Returns <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> shifted <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> bits to the right, with 0s
+                        padded for bits on the left (i.e. an unsigned shift). If <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> is negative, shifts left
+                        instead.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitrotateleft(a,</span>
-                          <span class="pre">n)</span></code> Returns <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> rotated <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> bits to the left, with left
-                          (most-significant) bits wrapping around to the right. If <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> is negative, rotates right
-                          instead.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitrotateleft(a,</span>
+                        <span class="pre">n)</span></code> Returns <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> rotated <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> bits to the left, with left
+                        (most-significant) bits wrapping around to the right. If <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> is negative, rotates right
+                        instead.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitrotateright(a,</span>
-                          <span class="pre">n)</span></code> Returns <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code> rotated <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> bits to the right, with
-                          right (least-significant) bits wrapping around to the left. If <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> is negative, rotates left
-                          instead.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitrotateright(a,</span>
+                        <span class="pre">n)</span></code> Returns <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code> rotated <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> bits to the right, with right
+                        (least-significant) bits wrapping around to the left. If <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> is negative, rotates left
+                        instead.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitset(a,</span> <span class=
-                          "pre">n)</span></code> Returns <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> with bit number <code class="docutils literal notranslate"><span class=
-                          "pre">n</span></code> set to 1. <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> will be padded with 0-value integers if needed to reach <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> (e.g. <code class=
-                          "docutils literal notranslate"><span class="pre">bitset(5,</span> <span class=
-                          "pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class=
-                          "pre">varint(2)</span></code>).
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitset(a,</span> <span class=
+                        "pre">n)</span></code> Returns <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> with bit number <code class="docutils literal notranslate"><span class=
+                        "pre">n</span></code> set to 1. <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> will be padded with 0-value integers if needed to reach <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> (e.g. <code class=
+                        "docutils literal notranslate"><span class="pre">bitset(5,</span> <span class=
+                        "pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class=
+                        "pre">varint(2)</span></code>).
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitclear(a,</span> <span class=
-                          "pre">n)</span></code> Returns <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> with bit number <code class="docutils literal notranslate"><span class=
-                          "pre">n</span></code> set to 0. <code class="docutils literal notranslate"><span class=
-                          "pre">a</span></code> will be padded with 0-value integers if needed to reach <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> (e.g. <code class=
-                          "docutils literal notranslate"><span class="pre">bitclear(5,</span> <span class=
-                          "pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class=
-                          "pre">varint(2)</span></code>).
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitclear(a,</span> <span class=
+                        "pre">n)</span></code> Returns <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> with bit number <code class="docutils literal notranslate"><span class=
+                        "pre">n</span></code> set to 0. <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> will be padded with 0-value integers if needed to reach <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> (e.g. <code class=
+                        "docutils literal notranslate"><span class="pre">bitclear(5,</span> <span class=
+                        "pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class=
+                        "pre">varint(2)</span></code>).
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">bitisset(a,</span> <span class=
-                          "pre">n)</span></code> Returns 1 if bit number <code class=
-                          "docutils literal notranslate"><span class="pre">n</span></code> is set to 1 in <code class=
-                          "docutils literal notranslate"><span class="pre">a</span></code>, 0 if not.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">bitisset(a,</span> <span class=
+                        "pre">n)</span></code> Returns 1 if bit number <code class=
+                        "docutils literal notranslate"><span class="pre">n</span></code> is set to 1 in <code class=
+                        "docutils literal notranslate"><span class="pre">a</span></code>, 0 if not.
                       </li>
                     </ul>
                   </div>
@@ -2739,104 +3332,78 @@
                     </p>
                     <ul class="simple">
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inetabbrev(inet)</span></code>
-                          Returns a possibly shorter-than-canonical representation of <code class=
-                          "docutils literal notranslate"><span class="pre">$inet</span></code>, where trailing zero
-                          byte(s) of an IPv4 address may be omitted. All bytes of the network, and leading non-zero
-                          bytes of the host, will be included. E.g. returns 192.100.0/24. The /<span class=
-                          "math notranslate nohighlight">\(B\)</span> netmask is included, except if the network is
-                          host-only (i.e.netmask is the full size of the IP address). Empty string is returned on
-                          error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetabbrev(inet)</span></code>
+                        Returns a possibly shorter-than-canonical representation of <code class=
+                        "docutils literal notranslate"><span class="pre">$inet</span></code>, where trailing zero
+                        byte(s) of an IPv4 address may be omitted. All bytes of the network, and leading non-zero bytes
+                        of the host, will be included. E.g. returns 192.100.0/24. The /<span class=
+                        "math notranslate nohighlight">\(B\)</span> netmask is included, except if the network is
+                        host-only (i.e.netmask is the full size of the IP address). Empty string is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inetcanon(inet)</span></code>
-                          Returns canonical representation of <code class="docutils literal notranslate"><span class=
-                          "pre">$inet</span></code>. For IPv4, this is dotted-decimal with all 4 bytes. The
-                          /<span class="math notranslate nohighlight">\(B\)</span> netmask is included, except if the
-                          network is host-only (i.e. netmask is the full size of the IP address). Empty string is
-                          returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetcanon(inet)</span></code>
+                        Returns canonical representation of <code class="docutils literal notranslate"><span class=
+                        "pre">$inet</span></code>. For IPv4, this is dotted-decimal with all 4 bytes. The /<span class=
+                        "math notranslate nohighlight">\(B\)</span> netmask is included, except if the network is
+                        host-only (i.e. netmask is the full size of the IP address). Empty string is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inetnetwork(inet)</span></code>
-                          Returns string IP address with the network bits of <code class=
-                          "docutils literal notranslate"><span class="pre">inet</span></code>, and the host bits set to
-                          0. Empty string is returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetnetwork(inet)</span></code>
+                        Returns string IP address with the network bits of <code class=
+                        "docutils literal notranslate"><span class="pre">inet</span></code>, and the host bits set to
+                        0. Empty string is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inethost(inet)</span></code>
-                          Returns string IP address with the host bits of <code class=
-                          "docutils literal notranslate"><span class="pre">inet</span></code>, and the network bits set
-                          to 0. Empty string is returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inethost(inet)</span></code>
+                        Returns string IP address with the host bits of <code class=
+                        "docutils literal notranslate"><span class="pre">inet</span></code>, and the network bits set
+                        to 0. Empty string is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class=
-                          "pre">inetbroadcast(inet)</span></code> Returns string IP broadcast address for <code class=
-                          "docutils literal notranslate"><span class="pre">inet</span></code>, i.e. with the network
-                          bits, and host bits set to 1. Empty string is returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetbroadcast(inet)</span></code>
+                        Returns string IP broadcast address for <code class="docutils literal notranslate"><span class=
+                        "pre">inet</span></code>, i.e. with the network bits, and host bits set to 1. Empty string is
+                        returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inetnetmask(inet)</span></code>
-                          Returns string IP netmask for <code class="docutils literal notranslate"><span class=
-                          "pre">inet</span></code>, i.e. with the network bits set to 1, and host bits set to 0. Empty
-                          string is returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetnetmask(inet)</span></code>
+                        Returns string IP netmask for <code class="docutils literal notranslate"><span class=
+                        "pre">inet</span></code>, i.e. with the network bits set to 1, and host bits set to 0. Empty
+                        string is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class=
-                          "pre">inetnetmasklen(inet)</span></code> Returns integer netmask length of <code class=
-                          "docutils literal notranslate"><span class="pre">inet</span></code>. -1 is returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetnetmasklen(inet)</span></code>
+                        Returns integer netmask length of <code class="docutils literal notranslate"><span class=
+                        "pre">inet</span></code>. -1 is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inetcontains(inetA,</span>
-                          <span class="pre">inetB)</span></code> Returns 1 if <code class=
-                          "docutils literal notranslate"><span class="pre">inetA</span></code> contains <code class=
-                          "docutils literal notranslate"><span class="pre">inetB</span></code>, i.e. every address in
-                          <code class="docutils literal notranslate"><span class="pre">inetB</span></code> occurs
-                          within the <code class="docutils literal notranslate"><span class="pre">inetA</span></code>
-                          network. 0 is returned if not, or -1 on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetcontains(inetA,</span>
+                        <span class="pre">inetB)</span></code> Returns 1 if <code class=
+                        "docutils literal notranslate"><span class="pre">inetA</span></code> contains <code class=
+                        "docutils literal notranslate"><span class="pre">inetB</span></code>, i.e. every address in
+                        <code class="docutils literal notranslate"><span class="pre">inetB</span></code> occurs within
+                        the <code class="docutils literal notranslate"><span class="pre">inetA</span></code> network. 0
+                        is returned if not, or -1 on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inetclass(inet)</span></code>
-                          Returns class of <code class="docutils literal notranslate"><span class=
-                          "pre">inet</span></code>, e.g. A, B, C, D, E or classless if a different netmask is used (or
-                          the address is IPv6). Empty string is returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inetclass(inet)</span></code>
+                        Returns class of <code class="docutils literal notranslate"><span class=
+                        "pre">inet</span></code>, e.g. A, B, C, D, E or classless if a different netmask is used (or
+                        the address is IPv6). Empty string is returned on error.
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">inet2int(inet)</span></code>
-                          Returns integer representation of IP network/host bits of <code class=
-                          "docutils literal notranslate"><span class="pre">$inet</span></code> (i.e. without netmask);
-                          useful for compact storage of address as integer(s) instead of string. Returns -1 is returned
-                          on error (note that -1 may also be returned for an all-ones IP address, e.g.
-                          255.255.255.255).
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">inet2int(inet)</span></code>
+                        Returns integer representation of IP network/host bits of <code class=
+                        "docutils literal notranslate"><span class="pre">$inet</span></code> (i.e. without netmask);
+                        useful for compact storage of address as integer(s) instead of string. Returns -1 is returned
+                        on error (note that -1 may also be returned for an all-ones IP address, e.g. 255.255.255.255).
                       </li>
                       <li>
-                        <p>
-                          <code class="docutils literal notranslate"><span class="pre">int2inet(i)</span></code>
-                          Returns <code class="docutils literal notranslate"><span class="pre">inet</span></code>
-                          string for 1- or 4-value varint <code class="docutils literal notranslate"><span class=
-                          "pre">$i</span></code> taken as an IP address. Since no netmask can be stored in the integer
-                          form of an IP address, the returned IP string will not have a netmask. Empty string is
-                          returned on error.
-                        </p>
+                        <code class="docutils literal notranslate"><span class="pre">int2inet(i)</span></code> Returns
+                        <code class="docutils literal notranslate"><span class="pre">inet</span></code> string for 1-
+                        or 4-value varint <code class="docutils literal notranslate"><span class="pre">$i</span></code>
+                        taken as an IP address. Since no netmask can be stored in the integer form of an IP address,
+                        the returned IP string will not have a netmask. Empty string is returned on error.
                       </li>
                     </ul>
                     <div class="section" id="urlcanonicalize">
@@ -2862,68 +3429,49 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">lowerProtocol</span></code>
-                            Lower-cases the protocol.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">lowerProtocol</span></code>
+                          Lower-cases the protocol.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">lowerHost</span></code>
-                            Lower-cases the hostname.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">lowerHost</span></code>
+                          Lower-cases the hostname.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class=
-                            "pre">removeTrailingDot</span></code> Removes trailing dot(s) in hostname.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">removeTrailingDot</span></code>
+                          Removes trailing dot(s) in hostname.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">reverseHost</span></code>
-                            Reverse the host/domains in the hostname. E.g. <a class="reference external" href=
-                            "http://host.example.com/">http://host.example.com/</a> becomes <a class=
-                            "reference external" href="http://com.example.host/">http://com.example.host/</a>. This can
-                            be used to put the most-significant part of the hostname leftmost.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">reverseHost</span></code>
+                          Reverse the host/domains in the hostname. E.g. <a class="reference external" href=
+                          "http://host.example.com/">http://host.example.com/</a> becomes <a class="reference external"
+                          href="http://com.example.host/">http://com.example.host/</a>. This can be used to put the
+                          most-significant part of the hostname leftmost.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class=
-                            "pre">removeStandardPort</span></code> Remove the port number if it is the standard port
-                            for the protocol.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">removeStandardPort</span></code>
+                          Remove the port number if it is the standard port for the protocol.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">decodeSafeBytes</span></code>
-                            URL-decode safe bytes, where semantics are unlikely to change. E.g. “<code class=
-                            "docutils literal notranslate"><span class="pre">%41</span></code>” becomes “<code class=
-                            "docutils literal notranslate"><span class="pre">A</span></code>”, but “<code class=
-                            "docutils literal notranslate"><span class="pre">%2F</span></code>” remains encoded,
-                            because it would decode to “<code class="docutils literal notranslate"><span class=
-                            "pre">/</span></code>”.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">decodeSafeBytes</span></code>
+                          URL-decode safe bytes, where semantics are unlikely to change. E.g. “<code class=
+                          "docutils literal notranslate"><span class="pre">%41</span></code>” becomes “<code class=
+                          "docutils literal notranslate"><span class="pre">A</span></code>”, but “<code class=
+                          "docutils literal notranslate"><span class="pre">%2F</span></code>” remains encoded, because
+                          it would decode to “<code class="docutils literal notranslate"><span class=
+                          "pre">/</span></code>”.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">upperEncoded</span></code>
-                            Upper-case the hex characters of encoded bytes.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">upperEncoded</span></code>
+                          Upper-case the hex characters of encoded bytes.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">lowerPath</span></code>
-                            Lower-case the (non-encoded) characters in the path. May be used for URLs known to point to
-                            case-insensitive filesystems, e.g. Windows.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">lowerPath</span></code>
+                          Lower-case the (non-encoded) characters in the path. May be used for URLs known to point to
+                          case-insensitive filesystems, e.g. Windows.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">addTrailingSlash</span></code>
-                            Adds a trailing slash to the path, if no path is present.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">addTrailingSlash</span></code>
+                          Adds a trailing slash to the path, if no path is present.
                         </li>
                       </ul>
                       <p>
@@ -2980,28 +3528,20 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">1</span></code> - Only the
-                            four cardinal directions are used (N, E, S, W)
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">1</span></code> - Only the four
+                          cardinal directions are used (N, E, S, W)
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">2</span></code> <em>(default)
-                            - Inter-cardinal directions (N, NE, E, etc.)</em>
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">2</span></code> <em>(default) -
+                          Inter-cardinal directions (N, NE, E, etc.)</em>
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">3</span></code> - In-between
-                            inter-cardinal directions (N, NNE, NE, ENE, E, etc.)
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">3</span></code> - In-between
+                          inter-cardinal directions (N, NNE, NE, ENE, E, etc.)
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">4</span></code> - “by” values
-                            (N, NbE, NNE, NEbN, NE, NEbE, ENE, EbN, E, etc.)
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">4</span></code> - “by” values
+                          (N, NbE, NNE, NEbN, NE, NEbE, ENE, EbN, E, etc.)
                         </li>
                       </ul>
                       <p>
@@ -3010,16 +3550,12 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">1</span></code> <em>(default)
-                            - Use initials for direction values (N, NbE, NNE, etc.)</em>
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">1</span></code> <em>(default) -
+                          Use initials for direction values (N, NbE, NNE, etc.)</em>
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">2</span></code> - Use full
-                            text for direction values (North, North by east, North-northeast, etc.)
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">2</span></code> - Use full text
+                          for direction values (North, North by east, North-northeast, etc.)
                         </li>
                       </ul>
                       <p>
@@ -3073,21 +3609,17 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">greatcircle</span></code>
-                            <em>(default)</em> - The “Great Circle” method is a highly accurate tool for calculating
-                            distances and directions on a sphere. It is used by default.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">greatcircle</span></code>
+                          <em>(default)</em> - The “Great Circle” method is a highly accurate tool for calculating
+                          distances and directions on a sphere. It is used by default.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> -
-                            Calculations based on the Pythagorean method can also be used. They’re faster, but less
-                            accurate as the core formulas don’t take the curvature of the earth into consideration.
-                            Some internal adjustments are made, but the values are less accurate than the <code class=
-                            "docutils literal notranslate"><span class="pre">greatcircle</span></code> method,
-                            especially over long distances and with paths that approach the poles.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> -
+                          Calculations based on the Pythagorean method can also be used. They’re faster, but less
+                          accurate as the core formulas don’t take the curvature of the earth into consideration. Some
+                          internal adjustments are made, but the values are less accurate than the <code class=
+                          "docutils literal notranslate"><span class="pre">greatcircle</span></code> method, especially
+                          over long distances and with paths that approach the poles.
                         </li>
                       </ul>
                     </div>
@@ -3120,21 +3652,17 @@
                       </p>
                       <ul class="simple">
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">greatcircle</span></code>
-                            <em>(default)</em> - The “Great Circle” method is a highly accurate tool for calculating
-                            distances and directions on a sphere. It is used by default.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">greatcircle</span></code>
+                          <em>(default)</em> - The “Great Circle” method is a highly accurate tool for calculating
+                          distances and directions on a sphere. It is used by default.
                         </li>
                         <li>
-                          <p>
-                            <code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> -
-                            Calculations based on the Pythagorean method can also be used. They’re faster, but less
-                            accurate as the core formulas don’t take the curvature of the earth into consideration.
-                            Some internal adjustments are made, but the values are less accurate than the <code class=
-                            "docutils literal notranslate"><span class="pre">greatcircle</span></code> method,
-                            especially over long distances and with paths that approach the poles.
-                          </p>
+                          <code class="docutils literal notranslate"><span class="pre">pythagorean</span></code> -
+                          Calculations based on the Pythagorean method can also be used. They’re faster, but less
+                          accurate as the core formulas don’t take the curvature of the earth into consideration. Some
+                          internal adjustments are made, but the values are less accurate than the <code class=
+                          "docutils literal notranslate"><span class="pre">greatcircle</span></code> method, especially
+                          over long distances and with paths that approach the poles.
                         </li>
                       </ul>
                     </div>
@@ -3200,20 +3728,11 @@
                         For example:
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            New York (JFK) to Cleveland (CLE), the Pythagorean method is off by .8 miles (.1%)
-                          </p>
+                        <li>New York (JFK) to Cleveland (CLE), the Pythagorean method is off by .8 miles (.1%)
                         </li>
-                        <li>
-                          <p>
-                            New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by 22.2 miles (.8%)
-                          </p>
+                        <li>New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by 22.2 miles (.8%)
                         </li>
-                        <li>
-                          <p>
-                            New York (JFK) to South Africa (PLZ), the Pythagorean method is off by 430 miles (5.2%)
-                          </p>
+                        <li>New York (JFK) to South Africa (PLZ), the Pythagorean method is off by 430 miles (5.2%)
                         </li>
                       </ul>
                       <p>
@@ -3250,20 +3769,11 @@
                         For example:
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            New York (JFK) to Cleveland (CLE), the Pythagorean method is off by .8 miles (.1%)
-                          </p>
+                        <li>New York (JFK) to Cleveland (CLE), the Pythagorean method is off by .8 miles (.1%)
                         </li>
-                        <li>
-                          <p>
-                            New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by 22.2 miles (.8%)
-                          </p>
+                        <li>New York (JFK) to Los Angeles (LAX), the Pythagorean method is off by 22.2 miles (.8%)
                         </li>
-                        <li>
-                          <p>
-                            New York (JFK) to South Africa (PLZ), the Pythagorean method is off by 430 miles (5.2%)
-                          </p>
+                        <li>New York (JFK) to South Africa (PLZ), the Pythagorean method is off by 430 miles (5.2%)
                         </li>
                       </ul>
                       <p>
@@ -3495,30 +4005,23 @@
                         parts in square brackets):
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            [<span class="math notranslate nohighlight">\(H\)</span>] <span class=
-                            "math notranslate nohighlight">\(nnn\)</span> [<span class=
-                            "math notranslate nohighlight">\(U\)</span>] [:] [<span class=
-                            "math notranslate nohighlight">\(H\)</span>] [<span class=
-                            "math notranslate nohighlight">\(nnn\)</span> [<span class=
-                            "math notranslate nohighlight">\(U\)</span>] [:] [<span class=
-                            "math notranslate nohighlight">\(nnn\)</span> [<span class=
-                            "math notranslate nohighlight">\(U\)</span>]]] [<span class=
-                            "math notranslate nohighlight">\(H\)</span>]
-                          </p>
+                        <li>[<span class="math notranslate nohighlight">\(H\)</span>] <span class=
+                        "math notranslate nohighlight">\(nnn\)</span> [<span class=
+                        "math notranslate nohighlight">\(U\)</span>] [:] [<span class=
+                        "math notranslate nohighlight">\(H\)</span>] [<span class=
+                        "math notranslate nohighlight">\(nnn\)</span> [<span class=
+                        "math notranslate nohighlight">\(U\)</span>] [:] [<span class=
+                        "math notranslate nohighlight">\(nnn\)</span> [<span class=
+                        "math notranslate nohighlight">\(U\)</span>]]] [<span class=
+                        "math notranslate nohighlight">\(H\)</span>]
                         </li>
                         <li>
-                          <p>
-                            <span class="math notranslate nohighlight">\(DDMM\)</span>[<span class=
-                            "math notranslate nohighlight">\(.MMM\)</span>…]
-                          </p>
+                          <span class="math notranslate nohighlight">\(DDMM\)</span>[<span class=
+                          "math notranslate nohighlight">\(.MMM\)</span>…]
                         </li>
                         <li>
-                          <p>
-                            <span class="math notranslate nohighlight">\(DDMMSS\)</span>[<span class=
-                            "math notranslate nohighlight">\(.SSS\)</span>…]
-                          </p>
+                          <span class="math notranslate nohighlight">\(DDMMSS\)</span>[<span class=
+                          "math notranslate nohighlight">\(.SSS\)</span>…]
                         </li>
                       </ul>
                       <p>
@@ -3526,7 +4029,7 @@
                       </p>
                       <ul>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(nnn\)</span> A number (integer or decimal)
                             with optional plus/minus sign. Only the first number may be negative, in which case it is a
                             south latitude or west longitude. Note that this is true even for <span class=
@@ -3535,91 +4038,60 @@
                           </p>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(U\)</span> A unit (case-insensitive):
                           </p>
                           <blockquote>
                             <div>
                               <ul class="simple">
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">d</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">d</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">deg</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">deg</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">deg.</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">deg.</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">degrees</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">degrees</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">'</span></code>
-                                    (single quote) for minutes
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">'</span></code> (single
+                                  quote) for minutes
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">m</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">m</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">min</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">min</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">min.</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">min.</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">minutes</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">minutes</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">"</span></code>
-                                    (double quote) for seconds
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">"</span></code> (double
+                                  quote) for seconds
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">s</span></code> (iff
-                                    <code class="docutils literal notranslate"><span class=
-                                    "pre">d</span></code>/<code class="docutils literal notranslate"><span class=
-                                    "pre">m</span></code> also used for degrees/minutes)
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">s</span></code> (iff
+                                  <code class="docutils literal notranslate"><span class=
+                                  "pre">d</span></code>/<code class="docutils literal notranslate"><span class=
+                                  "pre">m</span></code> also used for degrees/minutes)
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">sec</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">sec</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">sec.</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">sec.</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">seconds</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">seconds</span></code>
                                 </li>
-                                <li>
-                                  <p>
-                                    Unicode degree-sign (U+00B0), in ISO-8559-1 or UTF-8
-                                  </p>
+                                <li>Unicode degree-sign (U+00B0), in ISO-8559-1 or UTF-8
                                 </li>
                               </ul>
                               <p>
@@ -3635,51 +4107,35 @@
                           </blockquote>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(H\)</span> A hemisphere (case-insensitive):
                           </p>
                           <blockquote>
                             <div>
                               <ul class="simple">
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">N</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">N</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">north</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">north</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">S</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">S</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">south</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">south</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">E</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">E</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">east</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">east</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">W</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">W</span></code>
                                 </li>
                                 <li>
-                                  <p>
-                                    <code class="docutils literal notranslate"><span class="pre">west</span></code>
-                                  </p>
+                                  <code class="docutils literal notranslate"><span class="pre">west</span></code>
                                 </li>
                               </ul>
                               <p>
@@ -3689,32 +4145,32 @@
                           </blockquote>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(DD\)</span> A two- or three-digit degree
                             value, with optional sign. Note that longitudes are east-positive ala ISO 6709, not
                             west-positive like the deprecated Texis standard.
                           </p>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(MM\)</span> A two-digit minutes value, with
                             leading zero if needed to make two digits.
                           </p>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(.MMM\)</span>… A zero or more digit fractional
                             minute value.
                           </p>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(SS\)</span> A two-digit seconds value, with
                             leading zero if needed to make two digits.
                           </p>
                         </li>
                         <li>
-                          <p>
+                          <p class="first">
                             <span class="math notranslate nohighlight">\(.SSS\)</span>… A zero or more digit fractional
                             seconds value.
                           </p>
@@ -3845,46 +4301,25 @@
                         are:
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            COMPACT - remove all unnecessary whitespace
-                          </p>
+                        <li>COMPACT - remove all unnecessary whitespace
                         </li>
-                        <li>
-                          <p>
-                            INDENT(N) - print the JSON with each object or array member on a new line, indented by N
-                            spaces to show structure
-                          </p>
+                        <li>INDENT(N) - print the JSON with each object or array member on a new line, indented by N
+                        spaces to show structure
                         </li>
-                        <li>
-                          <p>
-                            SORT-KEYS - sort the keys in the object. By default the order is preserved
-                          </p>
+                        <li>SORT-KEYS - sort the keys in the object. By default the order is preserved
                         </li>
-                        <li>
-                          <p>
-                            EMBED - omit the enclosing <code class="docutils literal notranslate"><span class=
-                            "pre">{}</span></code> or <code class="docutils literal notranslate"><span class=
-                            "pre">[]</span></code> is using the snippet in another object
-                          </p>
+                        <li>EMBED - omit the enclosing <code class="docutils literal notranslate"><span class=
+                        "pre">{}</span></code> or <code class="docutils literal notranslate"><span class=
+                        "pre">[]</span></code> is using the snippet in another object
                         </li>
-                        <li>
-                          <p>
-                            ENSURE_ASCII - encode all Unicode characters outside the ASCII range
-                          </p>
+                        <li>ENSURE_ASCII - encode all Unicode characters outside the ASCII range
                         </li>
-                        <li>
-                          <p>
-                            ENCODE_ANY - if not a valid JSON document then encode into a JSON literal, e.g. to encode a
-                            string.
-                          </p>
+                        <li>ENCODE_ANY - if not a valid JSON document then encode into a JSON literal, e.g. to encode a
+                        string.
                         </li>
-                        <li>
-                          <p>
-                            ESCAPE_SLASH - escape forward slash <code class="docutils literal notranslate"><span class=
-                            "pre">/</span></code> as <code class="docutils literal notranslate"><span class=
-                            "pre">\/</span></code>
-                          </p>
+                        <li>ESCAPE_SLASH - escape forward slash <code class=
+                          "docutils literal notranslate"><span class="pre">/</span></code> as <code class=
+                          "docutils literal notranslate"><span class="pre">\/</span></code>
                         </li>
                       </ul>
                     </div>
@@ -3904,40 +4339,19 @@
                         function returns the type of the JSON object or element. Valid responses are:
                       </p>
                       <ul class="simple">
-                        <li>
-                          <p>
-                            OBJECT
-                          </p>
+                        <li>OBJECT
                         </li>
-                        <li>
-                          <p>
-                            ARRAY
-                          </p>
+                        <li>ARRAY
                         </li>
-                        <li>
-                          <p>
-                            STRING
-                          </p>
+                        <li>STRING
                         </li>
-                        <li>
-                          <p>
-                            INTEGER
-                          </p>
+                        <li>INTEGER
                         </li>
-                        <li>
-                          <p>
-                            DOUBLE
-                          </p>
+                        <li>DOUBLE
                         </li>
-                        <li>
-                          <p>
-                            NULL
-                          </p>
+                        <li>NULL
                         </li>
-                        <li>
-                          <p>
-                            BOOLEAN
-                          </p>
+                        <li>BOOLEAN
                         </li>
                       </ul>
                       <p>
@@ -4282,7 +4696,7 @@ json_merge_patch('[1,2]', '{"a":"b", "c":null}')
 
 <span class="cm">/* create database if it does not exist */</span>
 <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class=
-"k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class=
+"k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class=
 "p">(</span><span class="s2">"./mytestdb"</span><span class="p">,</span><span class="kc">true</span><span class=
 "p">);</span>
 
@@ -4609,6 +5023,10 @@ json_merge_patch('[1,2]', '{"a":"b", "c":null}')
                         However, when the table may need to accomodate future fields, or where fields vary per row,
                         using JSON fields can allow for greater flexibility.
                       </p>
+                      <p>
+                        Note also that any index made on a JSON virtual field will be treated as text or a <span class=
+                        "green">String</span>. Numbers will not sort properly or be selectable based on range.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -4623,7 +5041,7 @@ json_merge_patch('[1,2]', '{"a":"b", "c":null}')
               <hr>
               <div role="contentinfo">
                 <p>
-                  © Copyright 2022, Moat Crossing Systems.
+                  © Copyright 2026, Moat Crossing Systems.
                 </p>
               </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
               "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
@@ -4636,7 +5054,7 @@ json_merge_patch('[1,2]', '{"a":"b", "c":null}')
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -4648,7 +5066,7 @@ json_merge_patch('[1,2]', '{"a":"b", "c":null}')
     <script type="text/javascript" src="_static/doctools.js"></script> 
     <script type="text/javascript" src="_static/language_data.js"></script> 
     <script type="text/javascript" src=
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
     <script type="text/javascript" src="_static/js/theme.js"></script> 
     <script type="text/javascript">
 

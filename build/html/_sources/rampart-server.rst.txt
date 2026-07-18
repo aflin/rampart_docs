@@ -240,6 +240,27 @@ Each option below is tagged with its *scope*:
   might be ``"/etc/letsencrypt/live/example.com/fullchain.pem"``.  This
   setting has no effect unless ``secure`` is ``true``.
 
+* ``sslKey`` *(per-listener)* - A :green:`String` or :green:`Buffer`,
+  the PEM-encoded private key itself, as an in-memory alternative to
+  ``sslKeyFile``.  Useful when the key lives somewhere the unprivileged
+  ``user`` cannot read - for example a `letsencrypt
+  <https://letsencrypt.org/>`_ key under ``/etc/letsencrypt/live/``,
+  which is a ``root``-only directory: read the file in JavaScript while
+  still ``root`` (before ``server.start()``) and pass its contents here.
+  Takes precedence over ``sslKeyFile`` if both are given.  No effect
+  unless ``secure`` is ``true``.
+
+* ``sslCert`` *(per-listener)* - A :green:`String` or :green:`Buffer`,
+  the PEM-encoded certificate (chain) itself, the in-memory equivalent
+  of ``sslCertFile``.  See ``sslKey`` above.  Takes precedence over
+  ``sslCertFile`` if both are given.  No effect unless ``secure`` is
+  ``true``.
+
+  Note: ``sslKeyFile`` / ``sslCertFile`` are also read into memory while
+  still privileged (before the drop to ``user``), so they too work with
+  ``root``-only ``letsencrypt`` files; ``sslKey`` / ``sslCert`` simply
+  let the script supply the PEM directly.
+
 * ``sslMinVersion`` *(top-level)* - A :green:`String`, the minimum
   SSL/TLS version to use.  Possible values are ``ssl3``, ``tls1``,
   ``tls1.1`` or ``tls1.2``.  The default is ``tls1.2``.  Applies to
@@ -344,7 +365,19 @@ Each option below is tagged with its *scope*:
 
 * ``postForkFunc`` *(top-level)* - A :green:`Function`.  Function to be
   executed after the server forks but before server threads are created,
-  if ``daemon`` is ``true``.
+  if ``daemon`` is ``true``.  It runs *before* privileges are dropped, so
+  when started as ``root`` it runs as ``root``.
+
+* ``preThreadFunc`` *(top-level)* - A :green:`Function`.  Function to be
+  executed after privileges are dropped (see ``user``) but before the
+  server threads are created.  It runs in the main script context, so any
+  global variables it sets are copied into every server thread (and are
+  therefore visible to callback functions).  Unlike ``postForkFunc``,
+  which runs as ``root`` before the drop, ``preThreadFunc`` runs as the
+  unprivileged ``user`` - use it for initialization that must not run as
+  ``root`` (for example, loading a model whose GPU/Metal driver is
+  unavailable to ``root``, or opening files that should be owned by
+  ``user``).  Runs in both ``daemon`` and non-daemon mode.
 
 **Routing and request hooks**
 
@@ -1140,7 +1173,7 @@ Posting Form Data
 Posting Multipart Form Data
 """""""""""""""""""""""""""
 
-    Multipart form data will also be returned in the property ``formData``
+    Multipart form data will also be returned in the property ``postData``
     and will have the ``Content-Type`` property set to
     ``"multipart/form-data"``.  The ``content`` property will contain an
     array of objects, one object for each "part" of the form data.  The key

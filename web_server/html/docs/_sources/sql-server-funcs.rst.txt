@@ -9,6 +9,279 @@ The functions below may be called anywhere that a field or an expression
 normally occurs in a SQL statement.  Arguments to a function can be either a
 single field name, another function or another expression.
 
+Vector Function
+~~~~~~~~~~~~~~~
+
+vecdist
+"""""""
+
+Calculate the distance/score of two vectors.
+
+.. code-block:: sql
+
+    vecdist(vec1, vec2[, metric [, type]])
+
+
+If not specified, default metric is ``dot`` and default type is ``f16``
+
+Performs the same distance calculation as :ref:`rampart-vector:Vector Distance Function`
+with the exception that ``type`` must be a buffer type and cannot be ``numbers``.
+
+With semantic embedding vectors, it can be used to rerank likep results.
+
+.. code-block:: javascript
+
+    /*
+      do a likep search on query for 100 rows, rerank on the embedding vector of query (compvec).
+      1 is first selected column (score).
+      ORDER BY 1 DESC because higher dot product scores = more similar.
+    */
+    var res = sql.exec(
+        `select vecdist(VecCol, ?) score, Title, Text from mytable
+            where Text likep ? order by 1 DESC`,
+        {maxRows: 100},
+        [compvec, query]
+    );
+    /* display top 10 rows in res here */
+
+embed
+"""""
+
+Compute a semantic embedding vector for a piece of text using the
+connection's currently-loaded embedding model
+(:ref:`llamaEmbed <sql-set:llamaEmbed>` — a ``llama.cpp`` GGUF — or
+:ref:`onnxEmbed <sql-set:onnxEmbed>` — an ONNX model directory).
+
+.. code-block:: sql
+
+    embed(text [, dtype])
+
+* ``text`` is a :green:`String` column, bound parameter, literal, or any
+  expression that evaluates to text.  ``NULL`` and the empty string
+  produce ``NULL``.
+* ``dtype`` is an optional :green:`String` naming the result vec dtype.
+  One of ``'f16'`` (default), ``'f32'``, ``'f64'``, or ``'bf16'``.
+  ``''`` and ``'auto'`` are accepted placeholders for the default —
+  useful in the three-argument ``chunkembed()``/``chunkavg()`` forms
+  where a later argument follows the dtype.  The
+  named dtype propagates to the result column type: ``embed(?, 'f32')``
+  returns a ``varvecF32``, ``embed(?)`` returns a ``varvecF16``.
+
+The model is configured via :ref:`llamaEmbed <sql-set:llamaEmbed>` or
+:ref:`onnxEmbed <sql-set:onnxEmbed>`; llama.cpp concurrency behavior is
+controlled by :ref:`llamaEmbedPerThread <sql-set:llamaEmbedPerThread>`
+(ONNX sessions are concurrent by nature).  The output dimensionality is
+determined by the model — for example, ``all-MiniLM-L6-v2`` produces
+384-dim vectors; ``bge-m3`` produces 1024-dim.  Vectors are
+L2-normalized; norm ≈ 1.0 within dtype quantization noise.
+
+Long text is not truncated: the engine splits it into chunks
+(structure-aware, sized to the model's token window), embeds every
+chunk, and returns the L2-normalized **mean** of the chunk vectors.  To
+keep the individual chunk vectors instead, use
+:ref:`chunkembed() <sql-server-funcs:chunkembed>` below.
+
+Results are cached per model (see
+:ref:`likevCache <sql-set:likevCache>`): any of the embedding scalars
+applied to the same text — in one statement, across statements, or
+across threads — runs the model once.
+
+``embed()`` requires the engine's module (``rampart-llamacpp`` or
+``rampart-onnx``) to be installed.  ``rampart-sql`` auto-loads it on the
+first ``sql.set({llamaEmbed: ...})`` / ``sql.set({onnxEmbed: ...})``
+call (trying the canonical name, then ``_cuda``, then ``_cpu``).  To
+force a specific variant, ``require()`` it first.  See
+:ref:`Generating embeddings <rampart-sql:Generating embeddings>` for
+the full dependency and install notes.
+
+If no model has been loaded, ``embed()`` raises a runtime error.  If
+``dtype`` names something unknown (e.g. ``'q4_0'``), the SQL prepare
+fails with a clear "Unknown dtype" message.
+
+Use in SELECT projections, INSERT values, or as the right-hand side of
+``LIKEV`` / ``vecdist()``:
+
+.. code-block:: sql
+
+    -- Inline embedding at INSERT time
+    INSERT INTO docs (id, text, v) VALUES (?, ?, embed(?));
+
+    -- Top-K similarity search (a string on the right-hand side of LIKEV
+    -- is also auto-coerced to embed())
+    SELECT id, $rank FROM docs WHERE v LIKEV embed(?) ORDER BY 2 DESC;
+
+    -- Distance/score projection, used to re-rank an index result
+    SELECT id, vecdist(v, embed(?)) AS d
+      FROM docs WHERE v LIKEV embed(?)
+     ORDER BY 2 DESC;
+
+    -- Standalone, useful for debugging / probing model output
+    SELECT embed('chocolate cake recipe', 'f32');
+
+See :ref:`Vector Search <rampart-sql:Vector Search>` for the end-to-end
+pipeline (model setup → table schema → INSERT → vector index →
+``LIKEV``).
+
+chunkembed
+""""""""""
+
+Embed a whole document, keeping **all** of its chunk vectors.
+
+.. code-block:: sql
+
+    chunkembed(text [, dtype [, prefix]])
+    chunkembed(textList [, dtype [, prefix [, spans]]])
+
+Like :ref:`embed() <sql-server-funcs:embed>`, but where ``embed()``
+returns the single combined (mean) vector, ``chunkembed()`` returns the
+document's per-chunk vectors concatenated back to back — a
+``k × dim``-cell value in the same ``varvec*`` types (dtype argument and
+default as in ``embed()``).  The embedding engine does the chunking:
+paragraph boundaries first, then the model's token window; a short text
+comes back as ``k = 1``, byte-identical to a plain single vector.
+
+The optional third argument is a **per-chunk prefix** — typically the
+document's title.  It is prepended to every chunk's *embedding input*
+(each chunk embeds as if it read ``<prefix> <chunk text>``), so
+name-seeking queries ("who plays X in Y?") can match any chunk of the
+document by its name, not just chunks that happen to repeat it.  The
+prefix never changes the chunk **boundaries**, the chunk **count**, or
+the text spans :ref:`abstract <sql-server-funcs:abstract>` computes —
+only what the model sees.  (A chunk that already fills the model window
+gives up its last few tail tokens of embedding input to make room.)
+
+To pass a prefix without naming a dtype, use ``''`` or ``'auto'`` as
+the dtype placeholder (both mean "the default"):
+
+.. code-block:: sql
+
+    -- title-prefixed chunks, default dtype:
+    INSERT INTO docs (id, title, doc, v)
+        VALUES (?, ?, ?, chunkembed(?, '', ?));   -- params: ..., doc, title
+
+Search-side queries need no change — the query string embeds without a
+prefix; the stored chunk vectors simply carry the document's name in
+their semantics.
+
+Stored in a vector-indexed column, a chunked value gives ``LIKEV``
+*best-chunk* ranking over long documents — every chunk is indexed under
+its row, and the row's ``$rank`` is its best chunk's score.  The vector
+index over a chunked column requires the ``vec_dim`` WITH-option.  See
+:ref:`Chunked documents (multi-vector rows)
+<rampart-sql:Chunked documents (multi-vector rows)>` for the full
+pattern, including best-chunk snippets via
+:ref:`abstract <sql-server-funcs:abstract>`.
+
+.. code-block:: sql
+
+    -- one row per document; k chunk vectors in v
+    INSERT INTO docs (id, doc, v) VALUES (?, ?, chunkembed(?));
+
+**Caller-supplied chunks.**  The first argument may instead be a
+``strlst`` — a list of strings, each of which becomes **exactly one
+chunk** in list order (N elements always produce N vectors, so the
+caller's own chunk bookkeeping stays positional).  An element that
+fits the model window gets its exact vector; an oversized element
+gets its ``embed()``-style *combined* vector — the normalized mean
+over its sub-window vectors — rather than extra vectors or a
+truncation.  Empty elements are skipped.  This replaces the
+built-in chunker with your own splitting, mirroring the
+``split: function`` option of the JavaScript embedding handles.  From
+rampart, pass a :green:`Array` of :green:`Strings` wrapped in
+``Sql.list()`` (a bare array parameter is bound as JSON text, not a
+list):
+
+.. code-block:: javascript
+
+    var myChunks = mySplitter(docText);    // -> [ "chunk 1 ...", ... ]
+    sql.exec("insert into docs values (?, ?, chunkembed(?, 'f16'))",
+             [id, docText, Sql.list(myChunks)]);
+
+The prefix argument still applies to every listed chunk.
+
+**Spans (4th argument).**  A numeric list of ``{start, end}`` byte
+offsets into the stored document — two numbers per list element, in
+element order — tells :ref:`abstract <sql-server-funcs:abstract>`
+where each custom chunk came from, so the 5-argument vec form can
+seed **best-chunk snippets for custom chunkings** exactly as it does
+for the built-in chunker:
+
+.. code-block:: javascript
+
+    // splitter returns [{text, start, end}, ...]
+    var parts = mySplitter(docText);
+    sql.exec("insert into docs values (?, ?, chunkembed(?, 'f16', ?, ?))",
+             [id, docText, Sql.list(parts.map(p => p.text)),
+              title, Sql.list(parts.flatMap(p => [p.start, p.end]))]);
+
+Without spans, custom-chunked rows still rank normally under
+``LIKEV``; their abstracts fall back to plain keyword snippets.
+
+**The value header.**  Every ``chunkembed()`` result carries a small
+self-describing header ahead of its cells recording the chunk count,
+dimension, element type and (when known) the chunk spans — for the
+built-in chunker the spans are recorded automatically.  The header
+is invisible in SQL and in rampart (a selected vector reports its
+true cell ``dim``, plus a ``chunkSpans`` property when spans are
+present), survives storage in ``varbyte`` columns, and is stripped
+by cell-converting ``convert()`` calls.  Values without a header
+(``embed()``, user-computed vectors, pre-existing tables) behave
+exactly as before.  Because the winning chunk's span now travels
+*inside the value*, ``abstract()`` no longer re-runs the chunker at
+query time, and the serving side needs no chunker/model agreement
+for snippets — only the query embedding still uses the model.
+Tables written with headers require correspondingly current
+binaries (older builds would misread the header bytes as cells).
+
+chunkavg
+""""""""
+
+The document's single combined vector, from the same model run as
+``chunkembed()``.
+
+.. code-block:: sql
+
+    chunkavg(text [, dtype [, prefix]])
+
+Returns the L2-normalized mean of the document's chunk vectors — the
+same value ``embed(text)`` returns (when no prefix is given) — exposed
+as its own scalar so a
+table can store **both** the chunk array (``chunkembed()``, fine
+per-passage ranking) and the combined vector (``chunkavg()``, a second
+independently-indexable column for coarse first-stage search) from one
+model run:
+
+.. code-block:: sql
+
+    -- the shared result cache makes this ONE model run:
+    INSERT INTO docs (id, avgv, v) VALUES (?, chunkavg(?), chunkembed(?));
+
+The optional ``prefix`` argument is the per-chunk prefix described under
+``chunkembed()``; when storing prefixed chunk vectors, pass the **same**
+prefix to ``chunkavg()`` (and ``chunkcoherence()``) — the trio then still
+shares one cached model run, and the average stays consistent with the
+chunks it summarizes.
+
+chunkcoherence
+""""""""""""""
+
+How single-topic a document is, from its chunk vectors.
+
+.. code-block:: sql
+
+    chunkcoherence(text [, prefix])
+
+Returns a :green:`Number` (SQL ``double``) in ``[0, 1]``: the average
+pairwise cosine similarity between the document's chunk vectors.  ``1.0``
+for a single-chunk document or one that stays tightly on topic; values
+near ``0`` indicate a diffuse, multi-topic document.  Useful as a stored
+signal for deciding whether a document's combined vector
+(``chunkavg()``) is a faithful summary or whether per-chunk search
+(``chunkembed()``) is needed.
+
+Shares the model run with the other embedding scalars via the result
+cache (:ref:`likevCache <sql-set:likevCache>`).
+
 
 General Functions
 ~~~~~~~~~~~~~~~~~
@@ -311,7 +584,7 @@ argument is one of the following flags:
 -  ``stream``: Use the default output mode: a continuous stream of
    hexadecimal bytes.
 
--  ``pretty``: Return a “pretty” version of the data: print 16 byte per
+-  ``pretty``: Return a “pretty” version of the data: print 16 bytes per
    line, space-separate the hexadecimal bytes, and print an ASCII dump
    on the right side.
 
@@ -396,9 +669,9 @@ Example:
 
    var Sql = require("rampart-sql");
 
-   var sql = new Sql.init("./testdb", true);
+   var sql = new Sql.connection("./testdb", true);
 
-   // ignore error if table doesn't exists
+   // ignore error if table doesn't exist
    try {
       sql.exec("drop table idtext;");
    } catch(e){}
@@ -569,9 +842,9 @@ Full example in Rampart JavaScript:
 
    var Sql=require("rampart-sql");
 
-   var sql=new Sql.init("./testdb");
+   var sql=new Sql.connection("./testdb");
 
-   // ignore error if table doesn't exists
+   // ignore error if table doesn't exist
    try {
       sql.exec("drop table Products;");
    } catch(e){}
@@ -935,7 +1208,7 @@ The database will now contain a pointer to a copy of ``srcfile``, which
 will remain searchable even if the original is changed or removed. An
 important point to note is that any changes to ``srcfile`` will not be
 reflected in the database, unless the table row’s ``indirect`` column is
-modified (even to the save value, this just tells Texis to re-index it).
+modified (even to the same value, this just tells Texis to re-index it).
 
 
 canonpath
@@ -1089,7 +1362,7 @@ Generate an abstract of a given portion of text. The syntax is
 
 .. code-block:: sql
 
-       abstract(text[, maxsize[, style[, query]]])
+       abstract(text[, maxsize[, style[, query[, vecColumn]]]])
 
 The abstract will be less than ``maxsize`` characters long, and will
 attempt to end at a word boundary. If ``maxsize`` is not specified (or
@@ -1108,7 +1381,7 @@ Metamorph query to look for:
   is the default if neither ``style`` nor ``query`` is given.
 
 * ``querysingle`` (2) -
-  Center the abstract contiguously on the best occurence of ``query``
+  Center the abstract contiguously on the best occurrence of ``query``
   in the document.
 
 * ``querymultiple`` (3) -
@@ -1135,6 +1408,28 @@ that it more closely reflects an index-obtained hit.
          SELECT     abstract(STORY, 0, 1, 'power struggle')
          FROM       ARTICLES
          WHERE      ARTID = 'JT09115' ;
+
+**Vector (best-chunk) snippets** — the optional 5th argument names the
+row's vector column.  In a query whose ``WHERE`` clause contains
+``LIKEV`` on that column, and where the column holds *chunked* values
+(:ref:`chunkembed() <sql-server-funcs:chunkembed>`), the abstract is
+seeded from the text span of the row's **best-matching chunk** — the
+same chunk that produced the row's ``$rank``:
+
+.. code-block:: sql
+
+    SELECT Title, abstract(Doc, 200, 'smart', ?, Vec) snip, $rank
+      FROM docs
+     WHERE Vec LIKEV ? ;
+
+With an empty ``query`` string (``''``) the snippet is centered purely
+on the winning chunk; with a real query string, keyword hits are merged
+with the chunk span (hybrid).  The chunk's byte span is recomputed from
+the text by the loaded embedding model's chunker, so the same engine
+(:ref:`llamaEmbed <sql-set:llamaEmbed>` /
+:ref:`onnxEmbed <sql-set:onnxEmbed>`) must be set at query time.  See
+:ref:`Chunked documents (multi-vector rows)
+<rampart-sql:Chunked documents (multi-vector rows)>`.
 
 See also the Rampart JavaScript :ref:`rampart-sql:abstract()` function.
 
@@ -1259,12 +1554,12 @@ The results are:
 
 The optional ``mode`` argument is a string-folding mode.
 If ``mode`` is unspecified, the current apicp :ref:`sql-set:stringCompareMode` 
-setting – with “+lowercase” aded – is used.
+setting – with "+lowercase" added – is used.
 
 upper
 """""
 
-Returns the text expression with all letters in upper-case. The sytax is
+Returns the text expression with all letters in upper-case. The syntax is
 
 .. code-block:: sql
 
@@ -2433,7 +2728,7 @@ varchar field in the place of multiple columns:
     var Sql = require("rampart-sql");
 
     /* create database if it does not exist */
-    var sql = new Sql.init("./mytestdb",true);
+    var sql = new Sql.connection("./mytestdb",true);
 
     /* check if table exists */
     var res = sql.exec(
@@ -2692,3 +2987,6 @@ Note that it is more efficient and less cumbersome to place values in
 dedicated columns.  However, when the table may need to accomodate future
 fields, or where fields vary per row, using JSON fields can allow for
 greater flexibility.
+
+Note also that any index made on a JSON virtual field will be treated as
+text or a :green:`String`.  Numbers will not sort properly or be selectable based on range.

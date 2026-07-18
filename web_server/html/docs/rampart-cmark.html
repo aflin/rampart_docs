@@ -7,45 +7,195 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      The rampart-cmark module — Rampart 0.1.0 documentation
+      The rampart-cmark module — Rampart 0.7.0 documentation
     </title>
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
     <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
     <link rel="stylesheet" href="_static/hacks.css" type="text/css">
     <link rel="index" title="Index" href="genindex.html">
     <link rel="search" title="Search" href="search.html">
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html">
-    <link rel="next" title="The rampart-url module" href="rampart-url.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
+    <link rel="next" title="The rampart-treesitter module" href="rampart-treesitter.html">
     <link rel="prev" title="The rampart-robots module" href="rampart-robots.html">
     <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
     <style>
-            .wy-nav-top,.wy-side-nav-search { background-color:black;}
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            dl:not(.docutils) dt {font-family: "Varela Round", Sans-Serif !important; font-size: 90% !important;}
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
             .autocomplete-group { padding: 2px 5px; }
-            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
-            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
-            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
-            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
             .expandBottom { bottom: 18px }
             .expandTop { top: 3px }
-            .expanded .fader { bottom : -15px }
+            .expanded .fader { bottom: -15px }
             .expanded .expandBottom { bottom: 38px; }
-            .wy-nav-content {max-width: 1600px;}
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
     </style>
   </head>
   <body class="wy-body-for-nav" role="document">
     <div class="wy-grid-for-nav">
       <nav data-toggle="wy-nav-shift" class="wy-nav-side">
         <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
           <div class="wy-side-nav-search">
-            <a href="/" class="icon icon-home">Rampart</a>
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
             <div role="search">
               <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
                 <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
@@ -65,10 +215,22 @@
                 <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
@@ -84,6 +246,12 @@
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
@@ -125,15 +293,71 @@
                     </ul>
                   </li>
                   <li class="toctree-l2">
-                    <a class="reference internal" href="#example">Example</a>
+                    <a class="reference internal" href="#examples">Examples</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#basic-commonmark">Basic CommonMark</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#github-flavored-markdown-extensions">GitHub Flavored
+                        Markdown Extensions</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#client-side-rendering">Client-Side Rendering</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#math-rendering-mathjax">Math Rendering — MathJax</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#syntax-highlighting-highlight-js">Syntax Highlighting —
+                        highlight.js</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#github-style-alerts">GitHub-Style Alerts</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href=
+                        "#tables-and-general-github-styling-github-markdown-css">Tables and General GitHub Styling —
+                        github-markdown-css</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#full-minimal-page">Full Minimal Page</a>
+                      </li>
+                    </ul>
                   </li>
                 </ul>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
               </li>
             </ul>
           </div>
@@ -175,10 +399,12 @@
                         "Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        The rampart-cmark module uses <a class="reference external" href=
-                        "https://github.com/commonmark/cmark">cmark library</a> The authors of Rampart extend our
-                        thanks to <a class="reference external" href=
-                        "https://github.com/commonmark/cmark/graphs/contributors">the authors and contributors</a> to
+                        The rampart-cmark module uses the <a class="reference external" href=
+                        "https://github.com/github/cmark-gfm">cmark-gfm library</a>, GitHub’s fork of the <a class=
+                        "reference external" href="https://github.com/commonmark/cmark">cmark library</a> that adds
+                        support for GitHub Flavored Markdown (GFM) extensions. The authors of Rampart extend our thanks
+                        to <a class="reference external" href=
+                        "https://github.com/github/cmark-gfm/graphs/contributors">the authors and contributors</a> to
                         this library.
                       </p>
                     </div>
@@ -187,8 +413,8 @@
                         License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        The cmark library is licensed under a <a class="reference external" href=
-                        "https://github.com/commonmark/cmark/blob/master/COPYING">2-clause BSD License</a> and includes
+                        The cmark-gfm library is licensed under a <a class="reference external" href=
+                        "https://github.com/github/cmark-gfm/blob/master/COPYING">2-clause BSD License</a> and includes
                         other licenses therein.
                       </p>
                       <p>
@@ -202,7 +428,13 @@
                       </h3>
                       <p>
                         The rampart-cmark module processes <a class="reference external" href=
-                        "https://commonmark.org/">CommonMark Markdown</a> and converts it to HTML.
+                        "https://commonmark.org/">CommonMark Markdown</a> and converts it to HTML. As of Rampart
+                        v0.6.3, the module uses the <a class="reference external" href=
+                        "https://github.com/github/cmark-gfm">cmark-gfm</a> library and supports <a class=
+                        "reference external" href="https://github.github.com/gfm/">GitHub Flavored Markdown</a>
+                        extensions including tables, strikethrough, autolinks, task lists, and tag filtering. Rampart
+                        v0.6.2 and earlier use the original <a class="reference external" href=
+                        "https://github.com/commonmark/cmark">cmark</a> library without GFM extensions.
                       </p>
                     </div>
                     <div class="section" id="how-does-it-work">
@@ -278,138 +510,511 @@
                           </p>
                           <ul>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">markdown</span></code> is
                                 a <span class="green">String</span>, the text formatted in CommonMark Markdown.
                               </p>
                             </li>
                             <li>
-                              <p>
+                              <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">options</span></code> is
-                                an <span class="green">Object</span> with the following optional properties (all
-                                properties default to <code class="docutils literal notranslate"><span class=
-                                "pre">false</span></code> if not set):
+                                an <span class="green">Object</span> with the following optional properties:
                               </p>
                               <blockquote>
                                 <div>
+                                  <p>
+                                    <strong>Rendering Options</strong> (default to <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code>):
+                                  </p>
                                   <ul class="simple">
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">hardBreaks</span></code> - A <span class="green">Boolean</span>. If
-                                        <code class="docutils literal notranslate"><span class="pre">true</span></code>
-                                        render softbreak elements as hard line breaks.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">hardBreaks</span></code> - A <span class="green">Boolean</span>. If
+                                      <code class="docutils literal notranslate"><span class="pre">true</span></code>
+                                      render softbreak elements as hard line breaks.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">unsafe</span></code> - A <span class="green">Boolean</span>. If
-                                        <code class="docutils literal notranslate"><span class="pre">true</span></code>
-                                        render raw HTML and unsafe links (javascript:, vbscript:, file:, and data:,
-                                        except for image/png, image/gif, image/jpeg, or image/webp mime types). By
-                                        default, raw HTML is replaced by a placeholder HTML comment. Unsafe links are
-                                        replaced by empty strings.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class="pre">unsafe</span></code>
+                                      - A <span class="green">Boolean</span>. If <code class=
+                                      "docutils literal notranslate"><span class="pre">true</span></code> render raw
+                                      HTML and unsafe links (javascript:, vbscript:, file:, and data:, except for
+                                      image/png, image/gif, image/jpeg, or image/webp mime types). By default, raw HTML
+                                      is replaced by a placeholder HTML comment. Unsafe links are replaced by empty
+                                      strings.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">noBreaks</span></code> - A <span class="green">Boolean</span>. If
-                                        <code class="docutils literal notranslate"><span class="pre">true</span></code>
-                                        render softbreak elements as spaces.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">noBreaks</span></code> - A <span class="green">Boolean</span>. If
+                                      <code class="docutils literal notranslate"><span class="pre">true</span></code>
+                                      render softbreak elements as spaces.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">smart</span></code> - A <span class="green">Boolean</span>. If
-                                        <code class="docutils literal notranslate"><span class="pre">true</span></code>
-                                        convert straight quotes to curly, <code class=
-                                        "docutils literal notranslate"><span class="pre">---</span></code> to em
-                                        dashes, <code class="docutils literal notranslate"><span class=
-                                        "pre">--</span></code> to en dashes.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class="pre">smart</span></code>
+                                      - A <span class="green">Boolean</span>. If <code class=
+                                      "docutils literal notranslate"><span class="pre">true</span></code> convert
+                                      straight quotes to curly, <code class="docutils literal notranslate"><span class=
+                                      "pre">---</span></code> to em dashes, <code class=
+                                      "docutils literal notranslate"><span class="pre">--</span></code> to en dashes.
                                     </li>
                                     <li>
-                                      <p>
-                                        <code class="docutils literal notranslate"><span class=
-                                        "pre">sourcePos</span></code> - A <span class="green">Boolean</span>. If
-                                        <code class="docutils literal notranslate"><span class="pre">true</span></code>
-                                        embed source position information in tags as attributes named <code class=
-                                        "docutils literal notranslate"><span class="pre">data-sourcepos</span></code>.
-                                      </p>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">sourcePos</span></code> - A <span class="green">Boolean</span>. If
+                                      <code class="docutils literal notranslate"><span class="pre">true</span></code>
+                                      embed source position information in tags as attributes named <code class=
+                                      "docutils literal notranslate"><span class="pre">data-sourcepos</span></code>.
+                                    </li>
+                                  </ul>
+                                  <p>
+                                    <strong>GitHub Flavored Markdown Extensions</strong> (default to <code class=
+                                    "docutils literal notranslate"><span class="pre">true</span></code>):
+                                  </p>
+                                  <p>
+                                    All GFM extensions are enabled by default. Set any extension to <code class=
+                                    "docutils literal notranslate"><span class="pre">false</span></code> to disable it.
+                                  </p>
+                                  <ul class="simple">
+                                    <li>
+                                      <code class="docutils literal notranslate"><span class="pre">table</span></code>
+                                      - A <span class="green">Boolean</span>. Enables <a class="reference external"
+                                      href="https://github.github.com/gfm/#tables-extension-">GFM table syntax</a>.
+                                      Pipe-delimited tables with a header separator row are rendered as HTML
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">&lt;table&gt;</span></code> elements with column alignment support.
+                                    </li>
+                                    <li>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">strikethrough</span></code> - A <span class="green">Boolean</span>. Enables
+                                      GFM strikethrough. Text wrapped in <code class=
+                                      "docutils literal notranslate"><span class="pre">~~double</span> <span class=
+                                      "pre">tildes~~</span></code> is rendered as <code class=
+                                      "docutils literal notranslate"><span class="pre">&lt;del&gt;</span></code>
+                                      elements.
+                                    </li>
+                                    <li>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">autolink</span></code> - A <span class="green">Boolean</span>. Enables GFM
+                                      autolinks. Bare URLs and email addresses in the text are automatically converted
+                                      to hyperlinks.
+                                    </li>
+                                    <li>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">tagfilter</span></code> - A <span class="green">Boolean</span>. Enables GFM
+                                      tag filtering. Certain raw HTML tags that are potentially dangerous (such as
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">&lt;textarea&gt;</span></code>, <code class=
+                                      "docutils literal notranslate"><span class="pre">&lt;style&gt;</span></code>,
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">&lt;xmp&gt;</span></code>, <code class=
+                                      "docutils literal notranslate"><span class="pre">&lt;iframe&gt;</span></code>,
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">&lt;noembed&gt;</span></code>, <code class=
+                                      "docutils literal notranslate"><span class="pre">&lt;noframes&gt;</span></code>,
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">&lt;script&gt;</span></code>, <code class=
+                                      "docutils literal notranslate"><span class="pre">&lt;plaintext&gt;</span></code>)
+                                      are escaped in the output even when <code class=
+                                      "docutils literal notranslate"><span class="pre">unsafe</span></code> is enabled.
+                                    </li>
+                                    <li>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">tasklist</span></code> - A <span class="green">Boolean</span>. Enables GFM
+                                      task lists. List items beginning with <code class=
+                                      "docutils literal notranslate"><span class="pre">[</span> <span class=
+                                      "pre">]</span></code> or <code class="docutils literal notranslate"><span class=
+                                      "pre">[x]</span></code> are rendered with HTML checkbox inputs.
                                     </li>
                                   </ul>
                                 </div>
                               </blockquote>
                             </li>
                           </ul>
-                          <dl class="simple">
+                          <dl class="docutils">
                             <dt>
                               Return Value:
                             </dt>
                             <dd>
-                              <p>
-                                A <span class="green">String</span> - The document converted to HTML.
-                              </p>
+                              A <span class="green">String</span> - The document converted to HTML.
                             </dd>
                           </dl>
                         </div>
                       </blockquote>
                     </div>
                   </div>
-                  <div class="section" id="example">
+                  <div class="section" id="examples">
                     <h2>
-                      Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a>
+                      Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a>
                     </h2>
-                    <div class="highlight-javascript notranslate">
-                      <div class="highlight">
-                        <pre><span></span><span class="kd">var</span> <span class="nx">cmark</span> <span class=
-                        "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
-                        "s2">"rampart-cmark"</span><span class="p">);</span>
+                    <div class="section" id="basic-commonmark">
+                      <h3>
+                        Basic CommonMark<a class="headerlink" href="#basic-commonmark" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span>var cmark = require(“rampart-cmark”);
 
-<span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class=
-"nx">cmark</span><span class="p">.</span><span class="nx">toHtml</span><span class="p">(</span><span class=
-"sb">`</span>
-<span class="sb">This is an H1</span>
-<span class="sb">=============</span>
+var out = cmark.toHtml(`
+This is an H1
+=============
 
-<span class="sb">This is an H2</span>
-<span class="sb">-------------</span>
+This is an H2
+-------------
 
-<span class="sb">&gt; This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet,</span>
-<span class="sb">&gt; consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.</span>
-<span class="sb">&gt; Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.</span>
-<span class="sb">&gt;</span>
-<span class="sb">&gt; Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse</span>
-<span class="sb">&gt; id -- sem "consectetuer" libero luctus adipiscing.</span>
-<span class="sb">`</span><span class="p">,</span>
-    <span class="p">{</span>
-        <span class="nx">sourcePos</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">hardBreaks</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">smart</span><span class="o">:</span> <span class="kc">true</span>
-    <span class="p">}</span>
-<span class="p">);</span>
+&gt; This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet,
+&gt; consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.
+&gt; Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.
+&gt;
+&gt; Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse
+&gt; id -- sem “consectetuer” libero luctus adipiscing.
+`,
+    {
+        sourcePos: true,
+        hardBreaks: true,
+        smart: true
+    }
+);
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class=
-"nx">out</span><span class="p">);</span>
+console.log(out);
 
-<span class="cm">/* expected output</span>
-<span class="cm">&lt;h1 data-sourcepos="2:1-4:0"&gt;This is an H1&lt;/h1&gt;</span>
-<span class="cm">&lt;h2 data-sourcepos="5:1-7:71"&gt;This is an H2&lt;/h2&gt;</span>
-<span class="cm">&lt;blockquote data-sourcepos="7:1-12:52"&gt;</span>
-<span class="cm">&lt;p data-sourcepos="7:3-9:72"&gt;This is a blockquote with two paragraphs. Lorem</span>
-<span class="cm">ipsum dolor sit amet,&lt;br /&gt;</span>
-<span class="cm">consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.&lt;br /&gt;</span>
-<span class="cm">Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.&lt;/p&gt;</span>
-<span class="cm">&lt;p data-sourcepos="11:3-12:52"&gt;Donec sit amet nisl. Aliquam semper ipsum sit</span>
-<span class="cm">amet velit. Suspendisse&lt;br /&gt;</span>
-<span class="cm">id – sem “consectetuer” libero luctus adipiscing.&lt;/p&gt;</span>
-<span class="cm">&lt;/blockquote&gt;</span>
-<span class="cm">*/</span>
+/* expected output
+&lt;h1 data-sourcepos=”2:1-4:0”&gt;This is an H1&lt;/h1&gt;
+&lt;h2 data-sourcepos=”5:1-7:71”&gt;This is an H2&lt;/h2&gt;
+&lt;blockquote data-sourcepos=”7:1-12:52”&gt;
+&lt;p data-sourcepos=”7:3-9:72”&gt;This is a blockquote with two paragraphs. Lorem
+ipsum dolor sit amet,&lt;br /&gt;
+consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.&lt;br /&gt;
+Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.&lt;/p&gt;
+&lt;p data-sourcepos=”11:3-12:52”&gt;Donec sit amet nisl. Aliquam semper ipsum sit
+amet velit. Suspendisse&lt;br /&gt;
+id – sem “consectetuer” libero luctus adipiscing.&lt;/p&gt;
+&lt;/blockquote&gt;
+*/
 </pre>
+                        </div>
                       </div>
+                    </div>
+                    <div class="section" id="github-flavored-markdown-extensions">
+                      <h3>
+                        GitHub Flavored Markdown Extensions<a class="headerlink" href=
+                        "#github-flavored-markdown-extensions" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span>var cmark = require(“rampart-cmark”);
+
+var out = cmark.toHtml(`
+# Project Status
+
+| Task          | Status  |
+|---------------|---------|
+| ~~Old task~~  | Done    |
+| New task      | Pending |
+
+## Checklist
+
+- [x] Write the code
+- [x] Review changes
+- [ ] Deploy to production
+
+Visit https://example.com for details.
+`,
+    {
+        table: true,
+        strikethrough: true,
+        autolink: true,
+        tasklist: true,
+        smart: true
+    }
+);
+
+console.log(out);
+
+/* expected output:
+&lt;h1&gt;Project Status&lt;/h1&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Task&lt;/th&gt;
+&lt;th&gt;Status&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;del&gt;Old task&lt;/del&gt;&lt;/td&gt;
+&lt;td&gt;Done&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;New task&lt;/td&gt;
+&lt;td&gt;Pending&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;Checklist&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;input type=”checkbox” checked=”” disabled=”” /&gt; Write the code&lt;/li&gt;
+&lt;li&gt;&lt;input type=”checkbox” checked=”” disabled=”” /&gt; Review changes&lt;/li&gt;
+&lt;li&gt;&lt;input type=”checkbox” disabled=”” /&gt; Deploy to production&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Visit &lt;a href=”https://example.com”&gt;https://example.com&lt;/a&gt; for details.&lt;/p&gt;
+*/
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section" id="client-side-rendering">
+                    <h2>
+                      Client-Side Rendering<a class="headerlink" href="#client-side-rendering" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <p>
+                      The <code class="docutils literal notranslate"><span class="pre">rampart-cmark</span></code>
+                      module handles server-side Markdown-to-HTML conversion. For full client-side rendering comparable
+                      to GitHub’s appearance, you may wish to include additional libraries for features that are
+                      handled in the browser rather than by the Markdown parser itself.
+                    </p>
+                    <div class="section" id="math-rendering-mathjax">
+                      <h3>
+                        Math Rendering — MathJax<a class="headerlink" href="#math-rendering-mathjax" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        <a class="reference external" href="https://www.mathjax.org/">MathJax</a> is what GitHub uses
+                        for rendering LaTeX math expressions. By default MathJax 3 only recognizes <code class=
+                        "docutils literal notranslate"><span class="pre">\(...\)</span></code> for inline math. To also
+                        enable <code class="docutils literal notranslate"><span class="pre">$...$</span></code>
+                        (single-dollar) inline math, add a configuration block before loading the library:
+                      </p>
+                      <div class="highlight-html notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="p">&lt;</span><span class="nt">script</span><span class=
+                          "p">&gt;</span>
+    <span class="nx">MathJax</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">tex</span><span class="o">:</span> <span class="p">{</span> <span class=
+"nx">inlineMath</span><span class="o">:</span> <span class="p">[[</span><span class="s1">'$'</span><span class=
+"p">,</span> <span class="s1">'$'</span><span class="p">],</span> <span class="p">[</span><span class=
+"s1">'\\('</span><span class="p">,</span> <span class="s1">'\\)'</span><span class="p">]]</span> <span class=
+"p">}</span>
+    <span class="p">};</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class=
+"o">=</span><span class="s">”https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js”</span><span class=
+"p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Display math using <code class="docutils literal notranslate"><span class=
+                        "pre">$$...$$</span></code> works without any extra configuration.
+                      </p>
+                    </div>
+                    <div class="section" id="syntax-highlighting-highlight-js">
+                      <h3>
+                        Syntax Highlighting — highlight.js<a class="headerlink" href=
+                        "#syntax-highlighting-highlight-js" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        <a class="reference external" href="https://highlightjs.org/">highlight.js</a> provides
+                        automatic syntax highlighting for fenced code blocks. The <code class=
+                        "docutils literal notranslate"><span class="pre">github.min.css</span></code> theme closely
+                        matches GitHub’s appearance (<code class="docutils literal notranslate"><span class=
+                        "pre">github-dark.min.css</span></code> is available for dark mode).
+                      </p>
+                      <div class="highlight-html notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class=
+                          "na">rel</span><span class="o">=</span><span class="s">”stylesheet”</span>
+  <span class="na">href</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css”</span><span class=
+"p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span>
+  <span class="na">src</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js”</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span><span class=
+"nx">hljs</span><span class="p">.</span><span class="nx">highlightAll</span><span class="p">();&lt;/</span><span class=
+"nt">script</span><span class="p">&gt;</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="github-style-alerts">
+                      <h3>
+                        GitHub-Style Alerts<a class="headerlink" href="#github-style-alerts" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        GitHub-style alerts (<code class="docutils literal notranslate"><span class=
+                        "pre">[!NOTE]</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">[!TIP]</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">[!IMPORTANT]</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">[!WARNING]</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">[!CAUTION]</span></code>) are not part of any standard and no CDN library exists for
+                        them. A small client-side snippet can replicate the behavior:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nb">document</span><span class="p">.</span><span class=
+                          "nx">querySelectorAll</span><span class="p">(</span><span class=
+                          "s1">'blockquote'</span><span class="p">).</span><span class="nx">forEach</span><span class=
+                          "p">(</span><span class="kd">function</span><span class="p">(</span><span class=
+                          "nx">bq</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class=
+"nx">bq</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class=
+"s1">'p:first-child'</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">first</span><span class=
+"p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">match</span> <span class="o">=</span> <span class=
+"nx">first</span><span class="p">.</span><span class="nx">textContent</span><span class="p">.</span><span class=
+"nx">match</span><span class="p">(</span>
+        <span class="sr">/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/</span>
+    <span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">match</span><span class=
+"p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">kind</span> <span class="o">=</span> <span class=
+"nx">match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class=
+"nx">toLowerCase</span><span class="p">();</span>
+    <span class="nx">bq</span><span class="p">.</span><span class="nx">className</span> <span class=
+"o">+=</span> <span class="s1">' markdown-alert markdown-alert-'</span> <span class="o">+</span> <span class=
+"nx">kind</span><span class="p">;</span>
+    <span class="nx">first</span><span class="p">.</span><span class="nx">className</span> <span class=
+"o">+=</span> <span class="s1">' markdown-alert-title'</span><span class="p">;</span>
+    <span class="nx">first</span><span class="p">.</span><span class="nx">textContent</span> <span class=
+"o">=</span> <span class="nx">kind</span><span class="p">.</span><span class="nx">charAt</span><span class=
+"p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toUpperCase</span><span class=
+"p">()</span> <span class="o">+</span> <span class="nx">kind</span><span class="p">.</span><span class=
+"nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">});</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Style with CSS to match GitHub’s colors for each alert type.
+                      </p>
+                    </div>
+                    <div class="section" id="tables-and-general-github-styling-github-markdown-css">
+                      <h3>
+                        Tables and General GitHub Styling — github-markdown-css<a class="headerlink" href=
+                        "#tables-and-general-github-styling-github-markdown-css" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        <a class="reference external" href=
+                        "https://github.com/sindresorhus/github-markdown-css">github-markdown-css</a> is a
+                        community-maintained stylesheet that closely replicates GitHub’s Markdown rendering appearance,
+                        including tables, code blocks, blockquotes, and more. Wrap your content in a <code class=
+                        "docutils literal notranslate"><span class="pre">&lt;div</span> <span class=
+                        "pre">class=”markdown-body”&gt;</span></code> for it to apply.
+                      </p>
+                      <div class="highlight-html notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class=
+                          "na">rel</span><span class="o">=</span><span class="s">”stylesheet”</span>
+  <span class="na">href</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css”</span><span class="p">&gt;</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="full-minimal-page">
+                      <h3>
+                        Full Minimal Page<a class="headerlink" href="#full-minimal-page" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Putting it all together, a minimal page that renders <code class=
+                        "docutils literal notranslate"><span class="pre">cmark-gfm</span></code> output with
+                        GitHub-like styling:
+                      </p>
+                      <div class="highlight-html notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class=
+"o">=</span><span class="s">”stylesheet”</span>
+      <span class="na">href</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css”</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class=
+"o">=</span><span class="s">”stylesheet”</span>
+      <span class="na">href</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css”</span><span class=
+"p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">script</span>
+      <span class="na">src</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js”</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+        <span class="nx">MathJax</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">tex</span><span class="o">:</span> <span class="p">{</span> <span class=
+"nx">inlineMath</span><span class="o">:</span> <span class="p">[[</span><span class="s1">'$'</span><span class=
+"p">,</span> <span class="s1">'$'</span><span class="p">],</span> <span class="p">[</span><span class=
+"s1">'\\('</span><span class="p">,</span> <span class="s1">'\\)'</span><span class="p">]]</span> <span class=
+"p">}</span>
+        <span class="p">};</span>
+    <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">script</span>
+      <span class="na">src</span><span class="o">=</span><span class=
+"s">”https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js”</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">addEventListener</span><span class=
+"p">(</span><span class="s1">'DOMContentLoaded'</span><span class="p">,</span> <span class=
+"kd">function</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">hljs</span><span class="p">.</span><span class="nx">highlightAll</span><span class=
+"p">();</span>
+            <span class="c1">// GitHub-style alerts</span>
+            <span class="nb">document</span><span class="p">.</span><span class=
+"nx">querySelectorAll</span><span class="p">(</span><span class="s1">'blockquote'</span><span class=
+"p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class=
+"p">(</span><span class="nx">bq</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class=
+"nx">bq</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class=
+"s1">'p:first-child'</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class=
+"nx">first</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+                <span class="kd">var</span> <span class="nx">match</span> <span class="o">=</span> <span class=
+"nx">first</span><span class="p">.</span><span class="nx">textContent</span><span class="p">.</span><span class=
+"nx">match</span><span class="p">(</span>
+                    <span class="sr">/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/</span>
+                <span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class=
+"nx">match</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+                <span class="kd">var</span> <span class="nx">kind</span> <span class="o">=</span> <span class=
+"nx">match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class=
+"nx">toLowerCase</span><span class="p">();</span>
+                <span class="nx">bq</span><span class="p">.</span><span class="nx">className</span> <span class=
+"o">+=</span> <span class="s1">' markdown-alert markdown-alert-'</span> <span class="o">+</span> <span class=
+"nx">kind</span><span class="p">;</span>
+                <span class="nx">first</span><span class="p">.</span><span class="nx">className</span> <span class=
+"o">+=</span> <span class="s1">' markdown-alert-title'</span><span class="p">;</span>
+                <span class="nx">first</span><span class="p">.</span><span class="nx">textContent</span> <span class=
+"o">=</span>
+                    <span class="nx">kind</span><span class="p">.</span><span class="nx">charAt</span><span class=
+"p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toUpperCase</span><span class=
+"p">()</span> <span class="o">+</span> <span class="nx">kind</span><span class="p">.</span><span class=
+"nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class=
+"o">=</span><span class="s">”markdown-body”</span><span class="p">&gt;</span>
+        <span class="c">&lt;!-- your cmark-gfm HTML output here --&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        This covers the vast majority of what GitHub renders, with no server-side processing beyond the
+                        <code class="docutils literal notranslate"><span class="pre">cmark-gfm</span></code> HTML
+                        output from <code class="docutils literal notranslate"><span class=
+                        "pre">toHtml()</span></code>.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -417,15 +1022,15 @@
             </div>
             <footer>
               <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-                <a href="rampart-url.html" class="btn btn-neutral float-right" title="The rampart-url module"
-                accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-robots.html"
-                class="btn btn-neutral" title="The rampart-robots module" accesskey="p"><span class=
-                "fa fa-arrow-circle-left"></span> Previous</a>
+                <a href="rampart-treesitter.html" class="btn btn-neutral float-right" title=
+                "The rampart-treesitter module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+                <a href="rampart-robots.html" class="btn btn-neutral" title="The rampart-robots module" accesskey=
+                "p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
               </div>
               <hr>
               <div role="contentinfo">
                 <p>
-                  © Copyright 2022, Moat Crossing Systems.
+                  © Copyright 2026, Moat Crossing Systems.
                 </p>
               </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
               "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
@@ -438,7 +1043,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -450,7 +1055,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script> 
     <script type="text/javascript" src="_static/language_data.js"></script> 
     <script type="text/javascript" src=
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
     <script type="text/javascript" src="_static/js/theme.js"></script> 
     <script type="text/javascript">
 

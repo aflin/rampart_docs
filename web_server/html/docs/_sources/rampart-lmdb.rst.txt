@@ -56,9 +56,13 @@ Terminology
 
 Within LMDB, a "database environment" is a single file which lives in its own
 directory, and has an accompanying lock file.  Within that file, data may be
-partitioned into "databases".  Thus an LMDB "database environment" is
+partitioned into "databases".  Thus, an LMDB "database environment" is
 organizationally similar to a SQL database and an LMDB "database" is similar
 to a SQL table.
+
+Note that LMDB has the concept of a default database.  However it is unused
+in Rampart except to retrieve the names of other named LMDB databases.  In
+Rampart, the *default* database is an LMDB database named ``"default"``.
 
 Main Function (init)
 --------------------
@@ -78,7 +82,7 @@ Where:
     *  ``create`` is a :green:`Boolean`, whether to create a new database
        environment, if it doesn't exist.
 
-    * ``options`` is a :green:`Object`, a list of options for opening a new 
+    * ``options`` is an :green:`Object`, a list of options for opening a new 
       database environment.  Options include:
 
         * ``mapSize`` - a :green:`Number`, an integer to set the size of the memory map
@@ -103,13 +107,13 @@ Where:
             (`get`_\ ) will be a :green:`String`.  If the output value
             includes NULL characters, the :green:`String` will be truncated.
 
-          * ``JSON`` - Input values (`put`_\ ) can be any type 
+          * ``JSON`` - Input values (`put`_\ ) can be any type, 
             except a :green:`Buffer` or an :green:`Object` that contains a
             :green:`Buffer`.  Output values (`get`_\ ) will be the same as
             the input value.
 
           * ``CBOR`` - Input values
-            (`put`_\ ) can be any type including a :green:`Buffer` or
+            (`put`_\ ) can be any type, including a :green:`Buffer` or
             :green:`Objects` that contains a :green:`Buffers`.  Output
             values (`get`_\ ) will be the same as the input value. See
             `CBOR encoding description <https://duktape.org/guide.html#builtin-cbor>`_
@@ -126,7 +130,7 @@ Where:
           the last transactions if buffers are not yet flushed to disk.  The
           risk is governed by how often the system flushes dirty buffers to
           disk and how often `sync`_ is manually called.  However, if the
-          filesystem preserves write order and the ``writeMap`` setting
+          file system preserves write order and the ``writeMap`` setting
           below is not set or set ``false``, transactions exhibit ACI
           (atomicity, consistency, isolation) properties and only lose D
           (durability).  This means database integrity is maintained, but a
@@ -145,7 +149,7 @@ Where:
           the last transactions. Calling `sync`_ below ensures on-disk
           database integrity.
 
-        * ``noReadAhead`` - a :green:`Boolean`, whether LMDB should Turn off
+        * ``noReadAhead`` - a :green:`Boolean`, whether LMDB should turn off
           readahead. Most operating systems perform readahead on read
           requests by default. This option turns it off if the OS supports
           it. Turning it off may help random read performance when the DB is
@@ -156,9 +160,25 @@ Where:
           and uses fewer mallocs, but loses protection from application bugs
           like wild pointer writes and other bad updates into the database. 
 
+	* ``growOnPut`` - a :green:`Boolean`, whether to automatically close
+	  and reopen the database with a larger ``mapSize`` when a ``lmdb.put`` 
+	  would otherwise throw a ``MAP_FULL`` error.  The database will be
+	  reopened with a map 1.5 times its previous size.  This setting has
+	  no effect on `LMDB Transaction Functions`_ below and
+	  ``txn.put``/``txn.commit`` will throw an error if the database 
+	  environment is full. Default is ``false``.
+
 Return Value:
         A set of functions to operate on the database environment.  See below.
         
+Caveat:
+	The LMDB library only allows one open handle to any *database
+	environment*.  Calling ``new Lmdb.init()`` again in another function
+	or thread will return the previously opened handle, and newly set ``options``
+	from above will be ignored.  In order to apply new settings, the 
+	*database environment* must first be closed (see ``lmdb.close``
+	below).
+
 LMDB Easy Functions
 -------------------
 
@@ -200,8 +220,8 @@ Usage:
 Where:
 
     ``dbase`` is a :green:`String`, the name of the database to be accessed. 
-    If ``undefined`` or ``null``, the lmdb default database for the database
-    envirnoment will be opened.
+    If ``undefined`` or ``null``, the *default* database for the database
+    environment will be opened.
 
     ``create`` is a :green:`Boolean`, if ``true`` openDb will be 
     a write transaction which creates the database, if it does not
@@ -237,12 +257,15 @@ Usage:
 
 Where:
 
-    * ``dbase`` is ``dbi object`` returned from `openDb`_ or a 
+    * ``dbase`` is ``dbi object`` returned from `openDb`_\ , a ``null``
+      (to open the *default* database) or a 
       :green:`String`, the name of the database to be accessed.  If the
       database does not exist, an error will be thrown.
 
     * ``key`` is a :green:`String`, the name of the key whose data
-      will be retrieved.
+      will be retrieved.  If ``endkey`` or ``nKeys`` below is set,
+      ``key`` may be an empty string (``""``) to start with the first
+      entry in the database.
       
     * ``nKeys`` is an optional :green:`Number`, the total number of keys to 
       retrieve.  If a positive number, the ``key`` will be returned
@@ -293,7 +316,8 @@ Usage:
 
 Where:
 
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_ or a 
+    * ``dbase`` is ``dbi object`` returned from `openDb`_\ , a ``null``
+      (to open the *default* database) or a 
       :green:`String`, the name of the database to be accessed.  If the
       database does not exist, it will be created.
 
@@ -348,11 +372,12 @@ items in the database along with the database itself.
 
 Where:
 
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_ or a
+    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ , a ``null``
+      (to select the default database) or a
       :green:`String`, the name of the database to be dropped.
 
-      To drop the default database, pass an empty string or ``null``:
-      ``lmdb.drop(null);``. 
+      To drop the *default* database, pass an empty string or ``null``:
+      ``lmdb.drop(null);``.
 
 
 Return Value:
@@ -364,9 +389,8 @@ Note:
     may be recreated calling ``openDb(dbname, true)`` again.
 
 Note:
-    Dropping the default database will delete the its contents, 
-    however it will not be removed and the named database metadata
-    will remain.
+    Dropping the *default* database will delete its contents, 
+    however it will not be removed.
 
 sync
 ~~~~
@@ -403,10 +427,10 @@ Usage:
 
 Where:
 
-    ``dbase`` is ``dbi object`` returned from `openDb`_ or a 
+    ``dbase`` is ``dbi object`` returned from `openDb`_\ , a ``null``
+    (to open the *default* database) or a 
     :green:`String`, the name of the database to be accessed.  If the
     database does not exist, an error will be thrown.
-
 
 Return Value:
     A :green:`Number`, the number of items in the database.
@@ -429,16 +453,10 @@ Return Value:
     An :green:`Array` of :green:`Strings`, the names
     of all named databases.
 
-Note:  
-    The names of named databases are stored in the default database.  To
-    retrieve the names, every item in the default database must be scanned. 
-    When using named databases, the best practice is to not store data in
-    the default database.
-
 close
 ~~~~~
 
-Close the database envirnoment.  After closing, all transaction
+Close the database environment.  After closing, all transaction
 handles, database handles and all functions using the previously 
 opened environment will throw errors if used again.
 
@@ -575,7 +593,7 @@ code in order to insert all of the records in a single transaction:
     /* insert all at once */
     lmdb.put(dbi, insertobj);
 
-In order to conserver memory and to insert in a single transaction, see the
+In order to conserve memory and to insert in a single transaction, see the
 `Transaction Functions Full Example`_ below.
     
 
@@ -636,16 +654,16 @@ Where:
     * ``dbase`` is a ``dbi object`` returned from `openDb`_ or a 
       :green:`String`, the name of the database to be accessed.  If the
       database does not exist, it will be created.  If omitted, the 
-      lmdb default database for the current database environment will
-      be use.  This database will be the default for all operations
+      lmdb *default* database for the current database environment will
+      be used.  This database will be the default for all operations
       below.  However, more than one database may be used per transaction.
 
-    * ``open_rw`` is an :green:`Boolean`, if ``true``, open the transaction
+    * ``open_rw`` is a :green:`Boolean`, if ``true``, open the transaction
       for read/write.  This is needed if any data will be added or deleted
       from a database.  If ``false`` (the default), the transaction will be
       read only.
 
-    * ``commit_by_default`` is an :green:`Boolean`.  When a transaction is
+    * ``commit_by_default`` is a :green:`Boolean`.  When a transaction is
       opened, it must be eventually closed using either `txn.commit`_ or
       `txn.abort`_\ .  If the script exits or ``var txn`` goes out of
       scope (e.g. the function in which ``var txn`` was declared returns) without
@@ -694,16 +712,12 @@ Usage:
     /* open read only if only reading in this transaction */
     var txn = new lmdb.transaction([dbase, ] false);
 
-    var res = txn.get([dbase ,] key [, return_string]);
+    var res = txn.get(key [, return_string]);
 
     tnx.commit();
 
 Where:
     
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
-
     * ``key`` is a :green:`String` or :green:`Buffer`, the key of the item
       to be retrieved.
 
@@ -730,7 +744,7 @@ Usage:
     /* open read only if only reading in this transaction */
     var txn = new lmdb.transaction([dbase, ] false);
 
-    var res = txn.getRef([dbase ,] key);
+    var res = txn.getRef(key);
 
     /* use res here */
 
@@ -740,10 +754,6 @@ Usage:
 
 Where:
     
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
-
     * ``key`` is a :green:`String` or :green:`Buffer`, the key of the item
       to be retrieved.
 
@@ -804,19 +814,15 @@ Usage:
     /* open read write */
     var txn = new lmdb.transaction([dbase, ] true);
 
-    txn.put([dbase, ] kvpairs);
+    txn.put(kvpairs);
 
     /* or */
 
-    txn.put([dbase, ] key, value);
+    txn.put(key, value);
 
     tnx.commit();
 
 Where:
-
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
 
     * ``kvpairs`` is an :green:`Object` with each :green:`Object` key
       corresponding to a database key to be used and each :green:`Object`
@@ -836,7 +842,7 @@ Return Value:
 txn.del
 ~~~~~~~
 
-Delete an the item with the given key.
+Delete an item with the given key.
 
 Usage:
 
@@ -849,15 +855,11 @@ Usage:
     /* open read write */
     var txn = new lmdb.transaction([dbase, ] true);
 
-    txn.del([dbase, ] key);
+    var ret = txn.del(key);
 
     tnx.commit();
 
 Where:
-
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
 
     * ``key`` is the key of the item to be deleted.
 
@@ -893,16 +895,12 @@ Usage:
     /* open read only if only reading in this transaction */
     var txn = new lmdb.transaction([dbase, ] false);
 
-    var res = txn.cursorGet([dbase ,] op [, key] [, key_is_string [, val_is_string] ]);
+    var res = txn.cursorGet(op [, key] [, key_is_string [, val_is_string] ]);
 
     tnx.commit();
 
 Where:
     
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
-
     * ``op`` is a flag, which specifies the operation mode and is one of the following:
 
         * ``lmdb.op_set`` - Position the cursor at the item with the key
@@ -946,8 +944,8 @@ Return Value:
 txn.cursorPut
 ~~~~~~~~~~~~~
 
-Put (store) value in a given into a database, indexed
-by the the given key.  Move cursor to the items location.
+Put (store) a value into a database, indexed
+by the given key.  Move cursor to the item's location.
 
 Usage:
 
@@ -960,15 +958,11 @@ Usage:
     /* open read write */
     var txn = new lmdb.transaction([dbase, ] true);
 
-    txn.cursorPut([dbase, ] key, value);
+    txn.cursorPut(key, value);
 
     tnx.commit();
 
 Where:
-
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
 
     * ``key`` is a :green:`String` or :green:`Buffer`, the key of a single key:value pair.
     
@@ -1001,15 +995,9 @@ Usage:
     txn.cursorGet([dbase, ] lmdb.op_set, key);
 
     /* delete item at cursor position */
-    txn.cursorDel([dbase, ]);
+    txn.cursorDel();
 
     tnx.commit();
-
-Where:
-
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
 
 Return Value:
     ``undefined``.
@@ -1031,25 +1019,21 @@ Usage:
     var txn = new lmdb.transaction([dbase, ] false);
 
     /* position the cursor at next item*/
-    var res = txn.cursorNext([dbase, ] [key_is_string [, val_is_string] ]);
+    var res = txn.cursorNext([key_is_string [, val_is_string] ]);
 
     tnx.commit();
 
 Where:
 
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
-
-    * ``key_is_string`` is a :green:`Boolean`. If ``true``
+    * ``key_is_string`` is a :green:`Boolean`. If ``true``,
       the return ``key`` will be converted to a :green:`String`.
       If ``false`` (the default) the return ``key`` will be a :green:`Buffer`.
 
-    * ``val_is_string`` is a :green:`Boolean`. If ``true`` the returned
+    * ``val_is_string`` is a :green:`Boolean`. If ``true``, the returned
       ``value`` will be converted to a :green:`String`.  If ``false``
       (the default) ``value`` will be a :green:`Buffer`.
 
-This operates identical to:
+This operates identically to:
 
 .. code-block:: javascript
 
@@ -1061,7 +1045,7 @@ This operates identical to:
     var txn = new lmdb.transaction([dbase, ] false);
 
     /* position the cursor at next item*/
-    var res = txn.cursorGet([dbase, ] lmdb.op_next);
+    var res = txn.cursorGet(lmdb.op_next);
 
     tnx.commit();
 
@@ -1077,7 +1061,7 @@ It allows the following:
     var lmdb = new Lmdb.init(path,create,options);
 
     /* open read only if only reading in this transaction */
-    var txn = new lmdb.transaction([dbase, ] false);
+    var txn = new lmdb.transaction("mydb", false);
 
     var res;
 
@@ -1114,27 +1098,23 @@ Usage:
     var txn = new lmdb.transaction([dbase, ] false);
 
     /* position the cursor at previous item*/
-    var res = txn.cursorPrev([dbase, ] [key_is_string [, val_is_string] ]);
+    var res = txn.cursorPrev([key_is_string [, val_is_string] ]);
 
     tnx.commit();
 
 Where:
 
-    * ``dbase`` is a ``dbi object`` returned from `openDb`_\ . If the
-      database does not exist, it will be created.  If omitted, the 
-      database specified in ``new lmdb.transaction`` will be used.
-
-    * ``key_is_string`` is a :green:`Boolean`. If ``true`` 
+    * ``key_is_string`` is a :green:`Boolean`. If ``true``, 
       the return ``key`` will be converted to a :green:`String`.
       If ``false`` (the default) the return ``key`` will be a :green:`Buffer`.
 
-    * ``val_is_string`` is a :green:`Boolean`. If ``true`` the returned
+    * ``val_is_string`` is a :green:`Boolean`. If ``true``, the returned
       ``value`` will be converted to a :green:`String`.  If ``false``
       (the default) ``value`` will be a :green:`Buffer`.
 
 
 
-This operates identical to:
+This operates identically to:
 
 .. code-block:: javascript
 
@@ -1143,7 +1123,7 @@ This operates identical to:
     var lmdb = new Lmdb.init(path,create,options);
 
     /* open read only if only reading in this transaction */
-    var txn = new lmdb.transaction([dbase, ] false);
+    var txn = new lmdb.transaction("mydb", false);
 
     /* position the cursor at previous item*/
     var res = txn.cursorGet([dbase, ] lmdb.op_prev);
@@ -1162,7 +1142,7 @@ It allows the following:
     var lmdb = new Lmdb.init(path,create,options);
 
     /* open read only if only reading in this transaction */
-    var txn = new lmdb.transaction([dbase], false);
+    var txn = new lmdb.transaction("mydb", false);
 
     var res;
 
@@ -1302,7 +1282,7 @@ significantly improved.
         entry = makeAddr(entry);
         var key = entry.full + " from " + entry.zip;
         /* since entry is an object, it will be converted to CBOR */
-        txn.put(dbi, key, entry); 
+        txn.put(key, entry); 
     }
     txn.commit();
 
@@ -1316,7 +1296,7 @@ significantly improved.
     txn = new lmdb.transaction(dbi,false); //read only
 
     /* get first entry, make the key a string, leave value as a buffer */
-    var entry = txn.cursorGet(dbi, lmdb.op_setRange, "Sofía", true);
+    var entry = txn.cursorGet(lmdb.op_setRange, "Sofía", true);
     i=0;
 
     /* process first entry and loop to get entries after */
@@ -1334,7 +1314,7 @@ significantly improved.
                     entry.value.streetno,
                     entry.value.street
                   );
-    } while(entry = txn.cursorNext(dbi, true));
+    } while(entry = txn.cursorNext(true));
 
     printf("There are %d Sofías out of %d entries in the database.\n", i, total);
 

@@ -7,45 +7,195 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      The rampart-sql module — Rampart 0.1.0 documentation
+      The rampart-sql module — Rampart 0.7.0 documentation
     </title>
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
     <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
     <link rel="stylesheet" href="_static/hacks.css" type="text/css">
     <link rel="index" title="Index" href="genindex.html">
     <link rel="search" title="Search" href="search.html">
-    <link rel="top" title="Rampart 0.1.0 documentation" href="index.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
     <link rel="next" title="Preface" href="rampart-sql.html">
-    <link rel="prev" title="rampart.utils" href="rampart-utils.html">
+    <link rel="prev" title="Rampart Vector Functions" href="rampart-vector.html">
     <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
     <style>
-            .wy-nav-top,.wy-side-nav-search { background-color:black;}
-            body,h1,h2,h3,h4,h5,h6 {font-family: "Varela Round", Sans-Serif;}
-            dl:not(.docutils) dt {font-family: "Varela Round", Sans-Serif !important; font-size: 90% !important;}
-            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; width: auto !important; padding-right:5px;}
-            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
-            .autocomplete-selected { background: #F0F0F0; }
-            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
             .autocomplete-group { padding: 2px 5px; }
-            .autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
-            .searchsect {max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative;}
-            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px;}
-            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px;}
-            .fader {position: absolute;bottom: 0px;height: 2em; left:-5px; right:0px; background-color: #fcfcfc;}
-            .expand {cursor:pointer; background-color: #eee; padding: 3px; font-family:monospace; position: absolute; right: 15px}
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
             .expandBottom { bottom: 18px }
             .expandTop { top: 3px }
-            .expanded .fader { bottom : -15px }
+            .expanded .fader { bottom: -15px }
             .expanded .expandBottom { bottom: 38px; }
-            .wy-nav-content {max-width: 1600px;}
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
     </style>
   </head>
   <body class="wy-body-for-nav" role="document">
     <div class="wy-grid-for-nav">
       <nav data-toggle="wy-nav-shift" class="wy-nav-side">
         <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
           <div class="wy-side-nav-search">
-            <a href="/" class="icon icon-home">Rampart</a>
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
             <div role="search">
               <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
                 <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
@@ -64,6 +214,12 @@
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
               </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
               <li class="toctree-l1 current">
                 <a class="current reference internal" href="#">The rampart-sql module</a>
                 <ul>
@@ -78,7 +234,13 @@
                     <a class="reference internal" href="rampart-sql.html#database-functions">Database Functions</a>
                   </li>
                   <li class="toctree-l2">
+                    <a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a>
+                  </li>
+                  <li class="toctree-l2">
                     <a class="reference internal" href="rampart-sql.html#database-indexing">Database Indexing</a>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="rampart-sql.html#vector-search">Vector Search</a>
                   </li>
                   <li class="toctree-l2">
                     <a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a>
@@ -98,6 +260,12 @@
                 <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
               </li>
               <li class="toctree-l1">
@@ -113,16 +281,46 @@
                 <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
               </li>
               <li class="toctree-l1">
                 <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
               </li>
               <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
                 <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
               </li>
             </ul>
           </div>
@@ -169,6 +367,10 @@
                             <a class="reference internal" href="rampart-sql.html#license">License</a>
                           </li>
                           <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#vector-index-acknowledgment">Vector
+                            Index Acknowledgment</a>
+                          </li>
+                          <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#what-does-it-do">What does it do?</a>
                           </li>
                           <li class="toctree-l2">
@@ -192,13 +394,29 @@
                             constructor</a>
                           </li>
                           <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#connection-constructor">connection()
+                            constructor</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#connect">connect()</a>
+                          </li>
+                          <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#exec">exec()</a>
                             <ul>
                               <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#exec-full-example">Exec Full
-                                Example</a>
+                                <a class="reference internal" href=
+                                "rampart-sql.html#sql-list-in-list-parameters">Sql.list() - IN-list parameters</a>
+                                <ul>
+                                  <li class="toctree-l4">
+                                    <a class="reference internal" href="rampart-sql.html#exec-full-example">Exec Full
+                                    Example</a>
+                                  </li>
+                                </ul>
                               </li>
                             </ul>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#query">query()</a>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#one">one()</a>
@@ -218,6 +436,42 @@
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#close">close()</a>
                           </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#addtable">addTable()</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li class="toctree-l1">
+                        <a class="reference internal" href="rampart-sql.html#column-data-types">Column Data Types</a>
+                        <ul>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#a-note-on-the-var-prefix">A note on
+                            the <code class="docutils literal notranslate"><span class="pre">var</span></code>
+                            prefix</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#character-and-text">Character and
+                            text</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#binary-and-blob">Binary and blob</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#integer">Integer</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#floating-point">Floating point</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#date-and-time">Date and time</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#identifier-and-special">Identifier and
+                            special</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#vector">Vector</a>
+                          </li>
                         </ul>
                       </li>
                       <li class="toctree-l1">
@@ -225,46 +479,15 @@
                         <ul>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#regular-indexes">Regular Indexes</a>
-                            <ul>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#non-unique-index">Non-Unique
-                                Index</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#unique-index">Unique Index</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#inverted-index">Inverted Index</a>
-                              </li>
-                            </ul>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#fulltext-indexes">Fulltext Indexes</a>
-                            <ul>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href=
-                                "rampart-sql.html#creating-a-fulltext-index">Creating A Fulltext Index</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href=
-                                "rampart-sql.html#variations-of-fulltext-indexes">Variations of Fulltext Indexes</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href=
-                                "rampart-sql.html#updating-a-fulltext-index">Updating A Fulltext Index</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#word-expressions">Word
-                                Expressions</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#automatic-maintenance">Automatic
-                                Maintenance</a>
-                              </li>
-                            </ul>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#compound-indexes">Compound Indexes</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#vector-indexes">Vector Indexes</a>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#removing-indexes">Removing Indexes</a>
@@ -275,72 +498,52 @@
                         </ul>
                       </li>
                       <li class="toctree-l1">
+                        <a class="reference internal" href="rampart-sql.html#vector-search">Vector Search</a>
+                        <ul>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#overview">Overview</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#storage">Storage</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#generating-embeddings">Generating
+                            embeddings</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href=
+                            "rampart-sql.html#chunked-documents-multi-vector-rows">Chunked documents (multi-vector
+                            rows)</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#querying">Querying</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#indexing">Indexing</a>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#migrating-between-dtypes">Migrating
+                            between dtypes</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li class="toctree-l1">
                         <a class="reference internal" href="rampart-sql.html#string-functions">String Functions</a>
                         <ul>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#stringformat">stringFormat()</a>
-                            <ul>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#escape-sequences">Escape
-                                Sequences</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#standard-formats">Standard
-                                Formats</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#standard-flags">Standard Flags</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href=
-                                "rampart-sql.html#printing-date-time-values">Printing Date/Time Values</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href=
-                                "rampart-sql.html#latitude-longitude-and-location">Latitude, Longitude and Location</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#other-format-codes">Other Format
-                                Codes</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#extended-flags">Extended Flags</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#metamorph-hit-mark-up">Metamorph
-                                Hit Mark-up</a>
-                              </li>
-                            </ul>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#abstract">abstract()</a>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#sandr">sandr()</a>
-                            <ul>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#replacement-strings">Replacement
-                                Strings:</a>
-                              </li>
-                            </ul>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#sandr2">sandr2()</a>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#rex">rex()</a>
-                            <ul>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#expressions">Expressions</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#repetition-operators">Repetition
-                                Operators</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="rampart-sql.html#discussion">Discussion</a>
-                              </li>
-                            </ul>
                           </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#re2">re2()</a>
@@ -354,11 +557,36 @@
                           <li class="toctree-l2">
                             <a class="reference internal" href="rampart-sql.html#searchfile">searchFile()</a>
                           </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="rampart-sql.html#searchtext">searchText()</a>
+                          </li>
                         </ul>
                       </li>
                       <li class="toctree-l1">
                         <a class="reference internal" href="sql-server-funcs.html">Server Functions</a>
                         <ul>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="sql-server-funcs.html#vector-function">Vector
+                            Function</a>
+                            <ul>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-server-funcs.html#vecdist">vecdist</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-server-funcs.html#embed">embed</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-server-funcs.html#chunkembed">chunkembed</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-server-funcs.html#chunkavg">chunkavg</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href=
+                                "sql-server-funcs.html#chunkcoherence">chunkcoherence</a>
+                              </li>
+                            </ul>
+                          </li>
                           <li class="toctree-l2">
                             <a class="reference internal" href="sql-server-funcs.html#general-functions">General
                             Functions</a>
@@ -669,9 +897,6 @@
                                 <a class="reference internal" href=
                                 "sql-set.html#metamorphstrlstmode">metamorphStrlstMode</a>
                               </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="sql-set.html#groupbymem">groupbymem</a>
-                              </li>
                             </ul>
                           </li>
                           <li class="toctree-l2">
@@ -695,6 +920,9 @@
                               </li>
                               <li class="toctree-l3">
                                 <a class="reference internal" href="sql-set.html#useequiv">useEquiv</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#usederivations">useDerivations</a>
                               </li>
                               <li class="toctree-l3">
                                 <a class="reference internal" href="sql-set.html#intersects">intersects</a>
@@ -750,9 +978,6 @@
                               <li class="toctree-l3">
                                 <a class="reference internal" href="sql-set.html#ueqprefix">uEqPrefix</a>
                               </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href="sql-set.html#withinproc">withinProc</a>
-                              </li>
                             </ul>
                           </li>
                           <li class="toctree-l2">
@@ -797,6 +1022,40 @@
                               </li>
                               <li class="toctree-l3">
                                 <a class="reference internal" href="sql-set.html#likepindexthresh">likepIndexThresh</a>
+                              </li>
+                            </ul>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="sql-set.html#vector-index-properties">Vector Index
+                            Properties</a>
+                            <ul>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#likevrows">likevRows</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#likevef">likevEf</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#likevpqnprobe">likevPqNprobe</a>
+                              </li>
+                            </ul>
+                          </li>
+                          <li class="toctree-l2">
+                            <a class="reference internal" href="sql-set.html#embedding-properties">Embedding
+                            Properties</a>
+                            <ul>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#llamaembed">llamaEmbed</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href=
+                                "sql-set.html#llamaembedperthread">llamaEmbedPerThread</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#onnxembed">onnxEmbed</a>
+                              </li>
+                              <li class="toctree-l3">
+                                <a class="reference internal" href="sql-set.html#likevcache">likevCache</a>
                               </li>
                             </ul>
                           </li>
@@ -915,10 +1174,6 @@
                               </li>
                               <li class="toctree-l3">
                                 <a class="reference internal" href="sql-set.html#paramchk">paramChk</a>
-                              </li>
-                              <li class="toctree-l3">
-                                <a class="reference internal" href=
-                                "sql-set.html#message-nomessage">message,nomessage</a>
                               </li>
                               <li class="toctree-l3">
                                 <a class="reference internal" href=
@@ -1044,13 +1299,14 @@
             <footer>
               <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
                 <a href="rampart-sql.html" class="btn btn-neutral float-right" title="Preface" accesskey="n">Next
-                <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-utils.html" class="btn btn-neutral"
-                title="rampart.utils" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+                <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-vector.html" class=
+                "btn btn-neutral" title="Rampart Vector Functions" accesskey="p"><span class=
+                "fa fa-arrow-circle-left"></span> Previous</a>
               </div>
               <hr>
               <div role="contentinfo">
                 <p>
-                  © Copyright 2022, Moat Crossing Systems.
+                  © Copyright 2026, Moat Crossing Systems.
                 </p>
               </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
               "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
@@ -1063,7 +1319,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.7.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -1075,7 +1331,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script> 
     <script type="text/javascript" src="_static/language_data.js"></script> 
     <script type="text/javascript" src=
-    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
     <script type="text/javascript" src="_static/js/theme.js"></script> 
     <script type="text/javascript">
 

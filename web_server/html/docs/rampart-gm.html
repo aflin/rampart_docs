@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en">
+  <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+      The rampart-gm module — Rampart 0.7.0 documentation
+    </title>
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css">
+    <link rel="index" title="Index" href="genindex.html">
+    <link rel="search" title="Search" href="search.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
+    <link rel="next" title="The rampart-webview module" href="rampart-webview.html">
+    <link rel="prev" title="The rampart-url module" href="rampart-url.html">
+    <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
+    <style>
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
+            .autocomplete-group { padding: 2px 5px; }
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
+            .expandBottom { bottom: 18px }
+            .expandTop { top: 3px }
+            .expanded .fader { bottom: -15px }
+            .expanded .expandBottom { bottom: 38px; }
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
+    </style>
+  </head>
+  <body class="wy-body-for-nav" role="document">
+    <div class="wy-grid-for-nav">
+      <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+        <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
+          <div class="wy-side-nav-search">
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+            <div role="search">
+              <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
+                <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
+                value="yes"> <input type="hidden" name="area" value="default">
+              </form>
+            </div>
+          </div>
+          <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+            <p class="caption">
+              <span class="caption-text">Contents:</span>
+            </p>
+            <ul class="current">
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-main.html">Rampart JavaScript</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-curl.html">The rampart-curl module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
+              </li>
+              <li class="toctree-l1 current">
+                <a class="current reference internal" href="#">The rampart-gm module</a>
+                <ul>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#preface">Preface</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#acknowledgment">Acknowledgment</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#license">License</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#what-does-it-do">What does it do?</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#how-does-it-work">How does it work?</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#prerequisites">Prerequisites</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#loading-and-using-the-module">Loading and Using the Module</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#loading">Loading</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#gm-object-functions">gm Object Functions</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#open">open()</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#image-object-methods">Image Object Methods</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#add">add()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#mogrify">mogrify()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#save">save()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#tobuffer">toBuffer()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#select">select()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#list">list()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#getcount">getCount()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#gm-identify">identify()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#close">close()</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#example-creating-an-animated-gif">Example: Creating an
+                    Animated GIF</a>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#example-thumbnail-server">Example: Thumbnail Server</a>
+                  </li>
+                </ul>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+        <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i> <a href="index.html">Rampart</a>
+        </nav>
+        <div class="wy-nav-content">
+          <div class="rst-content">
+            <div role="navigation" aria-label="breadcrumbs navigation">
+              <ul class="wy-breadcrumbs">
+                <li>
+                  <a href="/">Home</a> »
+                </li>
+                <li>
+                  <a href="index.html">Docs</a> »
+                </li>
+                <li>The rampart-gm module
+                </li>
+              </ul>
+              <hr>
+            </div>
+            <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <div itemprop="articleBody">
+                <div class="section" id="the-rampart-gm-module">
+                  <h1>
+                    The rampart-gm module<a class="headerlink" href="#the-rampart-gm-module" title=
+                    "Permalink to this headline">¶</a>
+                  </h1>
+                  <div class="section" id="preface">
+                    <h2>
+                      Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="acknowledgment">
+                      <h3>
+                        Acknowledgment<a class="headerlink" href="#acknowledgment" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The rampart-gm module uses the <a class="reference external" href=
+                        "http://www.graphicsmagick.org/">GraphicsMagick</a> library. The authors of Rampart extend our
+                        thanks to <a class="reference external" href="http://www.graphicsmagick.org/authors.html">the
+                        authors and contributors</a> of this library.
+                      </p>
+                    </div>
+                    <div class="section" id="license">
+                      <h3>
+                        License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The GraphicsMagick library is distributed under the <a class="reference external" href=
+                        "http://www.graphicsmagick.org/Copyright.html">MIT License</a>.
+                      </p>
+                      <p>
+                        The rampart-gm module is released under the MIT license.
+                      </p>
+                    </div>
+                    <div class="section" id="what-does-it-do">
+                      <h3>
+                        What does it do?<a class="headerlink" href="#what-does-it-do" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The rampart-gm module provides image processing capabilities using the GraphicsMagick library.
+                        It supports opening, manipulating, converting, and saving images in a wide variety of formats.
+                        Operations include resizing, cropping, blurring, rotating, color adjustments, and many other
+                        transformations available through GraphicsMagick’s mogrify interface. Multiple images may be
+                        combined to produce animated GIFs or other multi-image documents.
+                      </p>
+                    </div>
+                    <div class="section" id="how-does-it-work">
+                      <h3>
+                        How does it work?<a class="headerlink" href="#how-does-it-work" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The rampart-gm module provides a single <code class="docutils literal notranslate"><span class=
+                        "pre">open()</span></code> function which returns an <em>Image Object</em>. That object
+                        contains methods for manipulating images, adding images, selecting images, saving to files or
+                        buffers, and querying image properties. All mogrify operations supported by GraphicsMagick are
+                        available.
+                      </p>
+                    </div>
+                    <div class="section" id="prerequisites">
+                      <h3>
+                        Prerequisites<a class="headerlink" href="#prerequisites" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The GraphicsMagick shared libraries must be installed on the system in order to use this
+                        module.
+                      </p>
+                      <ul class="simple">
+                        <li>Debian/Ubuntu: <code class="docutils literal notranslate"><span class="pre">sudo</span>
+                        <span class="pre">apt</span> <span class="pre">install</span> <span class=
+                        "pre">libgraphicsmagick-q16-3</span></code>
+                        </li>
+                        <li>macOS: <code class="docutils literal notranslate"><span class="pre">brew</span>
+                          <span class="pre">install</span> <span class="pre">graphicsmagick</span></code>
+                        </li>
+                        <li>FreeBSD: <code class="docutils literal notranslate"><span class="pre">pkg</span>
+                        <span class="pre">install</span> <span class="pre">GraphicsMagick</span></code>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="section" id="loading-and-using-the-module">
+                    <h2>
+                      Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="loading">
+                      <h3>
+                        Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Loading the module is a simple matter of using the <code class=
+                        "docutils literal notranslate"><span class="pre">require()</span></code> function:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-gm"</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        If the GraphicsMagick libraries are not installed, an error will be thrown with a message
+                        indicating that the libraries are missing.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="section" id="gm-object-functions">
+                    <h2>
+                      gm Object Functions<a class="headerlink" href="#gm-object-functions" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="open">
+                      <h3>
+                        open()<a class="headerlink" href="#open" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Open one or more image files and return an <em>Image Object</em>.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">images</span> <span class=
+                              "o">=</span> <span class="nx">gm</span><span class="p">.</span><span class=
+                              "nx">open</span><span class="p">(</span><span class="nx">path</span><span class=
+                              "p">);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">path</span></code> is a
+                              <span class="green">String</span> or <span class="green">Array</span> of <span class=
+                              "green">Strings</span>, the path(s) to image file(s) to open.
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              An <em>Image Object</em> with the methods described below.
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+
+<span class="c1">// open a single image</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/image.jpg"</span><span class="p">);</span>
+
+<span class="c1">// open multiple images into a single image object</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">([</span><span class=
+"s2">"/path/to/image1.jpg"</span><span class="p">,</span> <span class="s2">"/path/to/image2.jpg"</span><span class=
+"p">]);</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                  </div>
+                  <div class="section" id="image-object-methods">
+                    <h2>
+                      Image Object Methods<a class="headerlink" href="#image-object-methods" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <p>
+                      The <em>Image Object</em> returned by <a class="reference internal" href="#open">open()</a>
+                      contains the following methods. Unless otherwise noted, methods that do not return a specific
+                      value return the <em>Image Object</em> itself, allowing calls to be chained.
+                    </p>
+                    <div class="section" id="add">
+                      <span id="gm-add"></span>
+                      <h3>
+                        add()<a class="headerlink" href="#add" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Add one or more images to the current <em>Image Object</em>.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">add</span><span class="p">(</span><span class="nx">source</span><span class=
+                              "p">);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">source</span></code> is a
+                              <span class="green">String</span> (file path), an <em>Image Object</em> (as returned from
+                              <a class="reference internal" href="#open">open()</a>), a <span class=
+                              "green">Buffer</span> (as returned from <a class="reference internal" href=
+                              "#tobuffer">toBuffer()</a>), or an <span class="green">Array</span> containing any
+                              combination of the above.
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              The <em>Image Object</em> (chainable).
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/image1.jpg"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">image2</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/image2.jpg"</span><span class="p">);</span>
+
+<span class="c1">// add by path</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class=
+"s2">"/path/to/image3.jpg"</span><span class="p">);</span>
+
+<span class="c1">// add by image object</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class=
+"nx">image2</span><span class="p">);</span>
+
+<span class="c1">// add by buffer</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class=
+"nx">image2</span><span class="p">.</span><span class="nx">toBuffer</span><span class="p">(</span><span class=
+"s2">"JPG"</span><span class="p">));</span>
+
+<span class="c1">// add multiple at once</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">add</span><span class="p">([</span><span class=
+"nx">image2</span><span class="p">,</span> <span class="s2">"/path/to/image4.jpg"</span><span class="p">]);</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="mogrify">
+                      <span id="gm-mogrify"></span>
+                      <h3>
+                        mogrify()<a class="headerlink" href="#mogrify" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Apply one or more GraphicsMagick transformations to all images in the <em>Image
+                            Object</em>. See the <a class="reference external" href=
+                            "http://www.graphicsmagick.org/mogrify.html">GraphicsMagick documentation</a> for a
+                            complete list of available options.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">mogrify</span><span class="p">(</span><span class="nx">options</span><span class=
+                              "p">[,</span> <span class="nx">value</span><span class="p">]);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            The function accepts several calling conventions:
+                          </p>
+                          <ul class="simple">
+                            <li>A single <span class="green">String</span> containing one or more options and their
+                            values, separated by spaces.
+                            </li>
+                            <li>Two <span class="green">String</span> arguments: the option name and its value. The
+                            leading <code class="docutils literal notranslate"><span class="pre">-</span></code> on the
+                            option name is optional.
+                            </li>
+                            <li>An <span class="green">Object</span> where each key is an option name and each value is
+                            the corresponding option value. Options that take no value should be set to <code class=
+                            "docutils literal notranslate"><span class="pre">true</span></code>. Setting an option to
+                            <code class="docutils literal notranslate"><span class="pre">false</span></code> causes it
+                            to be skipped. Options that use the <code class=
+                              "docutils literal notranslate"><span class="pre">+</span></code> prefix (to disable a
+                              feature) should include the <code class="docutils literal notranslate"><span class=
+                              "pre">+</span></code> in the key name.
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              The <em>Image Object</em> (chainable).
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/image.jpg"</span><span class="p">);</span>
+
+<span class="c1">// single string with options and values</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class=
+"p">(</span><span class="s2">"-blur 20x30 -auto-orient +contrast"</span><span class="p">);</span>
+
+<span class="c1">// option and value as separate arguments</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class=
+"p">(</span><span class="s2">"-blur"</span><span class="p">,</span> <span class="s2">"20x30"</span><span class=
+"p">);</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class=
+"p">(</span><span class="s2">"blur"</span><span class="p">,</span> <span class="s2">"20x30"</span><span class=
+"p">);</span>   <span class="c1">// leading "-" is optional</span>
+
+<span class="c1">// object form</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class="p">({</span>
+    <span class="nx">blur</span><span class="o">:</span> <span class="s2">"20x30"</span><span class="p">,</span>
+    <span class="s2">"auto-orient"</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s2">"+contrast"</span><span class="o">:</span> <span class="kc">true</span>
+<span class="p">});</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="save">
+                      <span id="gm-save"></span>
+                      <h3>
+                        save()<a class="headerlink" href="#save" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Save the image(s) to a file. The output format is determined by the file extension. If the
+                            <em>Image Object</em> contains multiple images and the output format does not support
+                            multi-image documents (such as GIF), use <a class="reference internal" href=
+                            "#select">select()</a> to choose a single image before saving.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">save</span><span class="p">(</span><span class="nx">path</span><span class=
+                              "p">);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">path</span></code> is a
+                              <span class="green">String</span>, the file path to save the image to.
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              The <em>Image Object</em> (chainable).
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/image.jpg"</span><span class="p">);</span>
+
+<span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class=
+"p">({</span><span class="nx">blur</span><span class="o">:</span> <span class="s2">"20x30"</span><span class=
+"p">});</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class=
+"s2">"/path/to/output.png"</span><span class="p">);</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="tobuffer">
+                      <span id="gm-tobuffer"></span>
+                      <h3>
+                        toBuffer()<a class="headerlink" href="#tobuffer" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Convert the image(s) to a <span class="green">Buffer</span> in the specified format. This
+                            is useful for serving images directly from a web server without writing to disk.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">buf</span> <span class=
+                              "o">=</span> <span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">toBuffer</span><span class="p">(</span><span class="nx">format</span><span class=
+                              "p">);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">format</span></code> is a
+                              <span class="green">String</span>, the output format (e.g. <code class=
+                              "docutils literal notranslate"><span class="pre">"JPG"</span></code>, <code class=
+                              "docutils literal notranslate"><span class="pre">"PNG"</span></code>, <code class=
+                              "docutils literal notranslate"><span class="pre">"GIF"</span></code>). The format name is
+                              case-insensitive.
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              A <span class="green">Buffer</span> containing the image data in the specified format.
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/image.jpg"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class=
+"nx">images</span><span class="p">.</span><span class="nx">toBuffer</span><span class="p">(</span><span class=
+"s2">"PNG"</span><span class="p">);</span>
+
+<span class="c1">// write the buffer to a file</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class=
+"s2">"/path/to/output.png"</span><span class="p">,</span> <span class="s2">"%s"</span><span class=
+"p">,</span> <span class="nx">buf</span><span class="p">);</span>
+
+<span class="c1">// or return from a rampart-server callback</span>
+<span class="k">return</span> <span class="p">{</span><span class="nx">png</span><span class="o">:</span> <span class=
+"nx">buf</span><span class="p">};</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="select">
+                      <span id="gm-select"></span>
+                      <h3>
+                        select()<a class="headerlink" href="#select" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Select a single image from a multi-<em>Image Object</em> by index. This is useful when
+                            saving to a format that does not support multiple images.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">select</span><span class="p">(</span><span class="nx">index</span><span class=
+                              "p">);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">index</span></code> is a
+                              <span class="green">Number</span>, the zero-based index of the image to select. Negative
+                              indices count from the end (e.g. <code class="docutils literal notranslate"><span class=
+                              "pre">-1</span></code> selects the last image).
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              The <em>Image Object</em> (chainable).
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">([</span><span class=
+"s2">"/path/to/image1.jpg"</span><span class="p">,</span> <span class="s2">"/path/to/image2.jpg"</span><span class=
+"p">]);</span>
+
+<span class="c1">// select and save the second image</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">select</span><span class=
+"p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">save</span><span class=
+"p">(</span><span class="s2">"/path/to/output.jpg"</span><span class="p">);</span>
+
+<span class="c1">// select the last image</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">select</span><span class=
+"p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">).</span><span class=
+"nx">save</span><span class="p">(</span><span class="s2">"/path/to/last.jpg"</span><span class="p">);</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="list">
+                      <span id="gm-list"></span>
+                      <h3>
+                        list()<a class="headerlink" href="#list" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Return a list of images in the <em>Image Object</em>.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">info</span> <span class=
+                              "o">=</span> <span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">list</span><span class="p">();</span>
+</pre>
+                            </div>
+                          </div>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              An <span class="green">Array</span> of <span class="green">Objects</span> describing each
+                              image in the <em>Image Object</em>.
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">([</span><span class=
+"s2">"/path/to/image1.jpg"</span><span class="p">,</span> <span class="s2">"/path/to/image2.jpg"</span><span class=
+"p">]);</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">images</span><span class="p">.</span><span class="nx">list</span><span class=
+"p">());</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="getcount">
+                      <span id="gm-getcount"></span>
+                      <h3>
+                        getCount()<a class="headerlink" href="#getcount" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Return the number of images in the <em>Image Object</em>.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">count</span> <span class=
+                              "o">=</span> <span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">getCount</span><span class="p">();</span>
+</pre>
+                            </div>
+                          </div>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              A <span class="green">Number</span>, the count of images in the <em>Image Object</em>.
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">([</span><span class=
+"s2">"/path/to/image1.jpg"</span><span class="p">,</span> <span class="s2">"/path/to/image2.jpg"</span><span class=
+"p">]);</span>
+
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">printf</span><span class="p">(</span><span class=
+"s2">"we have %d images\n"</span><span class="p">,</span> <span class="nx">images</span><span class=
+"p">.</span><span class="nx">getCount</span><span class="p">());</span>
+<span class="c1">// output: "we have 2 images"</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="gm-identify">
+                      <span id="identify"></span>
+                      <h3>
+                        identify()<a class="headerlink" href="#gm-identify" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Return descriptive information about the currently selected image, similar to the
+                            <code class="docutils literal notranslate"><span class="pre">gm</span> <span class=
+                            "pre">identify</span></code> command-line tool.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">info</span> <span class=
+                              "o">=</span> <span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">identify</span><span class="p">([</span><span class="nx">verbose</span><span class=
+                              "p">]);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">verbose</span></code> is an
+                              optional <span class="green">Boolean</span>. If <code class=
+                              "docutils literal notranslate"><span class="pre">true</span></code>, return detailed
+                              information including EXIF data, color profiles, and image statistics. Default is
+                              <code class="docutils literal notranslate"><span class="pre">false</span></code>.
+                            </li>
+                          </ul>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              <p class="first">
+                                An <span class="green">Object</span> containing image properties. At a minimum, the
+                                returned <span class="green">Object</span> includes:
+                              </p>
+                              <ul class="simple">
+                                <li>
+                                  <code class="docutils literal notranslate"><span class="pre">filename</span></code> -
+                                  a <span class="green">String</span>, the original file name.
+                                </li>
+                                <li>
+                                  <code class="docutils literal notranslate"><span class="pre">magick</span></code> - a
+                                  <span class="green">String</span>, the image format (e.g. <code class=
+                                  "docutils literal notranslate"><span class="pre">"JPEG"</span></code>).
+                                </li>
+                                <li>
+                                  <code class="docutils literal notranslate"><span class="pre">width</span></code> - a
+                                  <span class="green">Number</span>, the image width in pixels.
+                                </li>
+                                <li>
+                                  <code class="docutils literal notranslate"><span class="pre">height</span></code> - a
+                                  <span class="green">Number</span>, the image height in pixels.
+                                </li>
+                              </ul>
+                              <p class="last">
+                                When <code class="docutils literal notranslate"><span class="pre">verbose</span></code>
+                                is <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+                                additional properties are returned including color depth, channel statistics, EXIF
+                                metadata, IPTC profiles, and other format-specific details.
+                              </p>
+                            </dd>
+                          </dl>
+                          <p>
+                            Example:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-gm"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/photo.jpg"</span><span class="p">);</span>
+
+<span class="c1">// basic info</span>
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class=
+"nx">images</span><span class="p">.</span><span class="nx">identify</span><span class="p">();</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">printf</span><span class="p">(</span><span class=
+"s2">"Format: %s, Size: %dx%d\n"</span><span class="p">,</span>
+    <span class="nx">info</span><span class="p">.</span><span class="nx">magick</span><span class=
+"p">,</span> <span class="nx">info</span><span class="p">.</span><span class="nx">width</span><span class=
+"p">,</span> <span class="nx">info</span><span class="p">.</span><span class="nx">height</span><span class=
+"p">);</span>
+
+<span class="c1">// verbose info with EXIF data</span>
+<span class="kd">var</span> <span class="nx">detail</span> <span class="o">=</span> <span class=
+"nx">images</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class=
+"kc">true</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
+"p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">detail</span><span class="p">);</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="close">
+                      <span id="gm-close"></span>
+                      <h3>
+                        close()<a class="headerlink" href="#close" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Close the <em>Image Object</em> and free associated resources. This is optional; resources
+                            are automatically freed when the variable goes out of scope.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">images</span><span class="p">.</span><span class=
+                              "nx">close</span><span class="p">();</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                  </div>
+                  <div class="section" id="example-creating-an-animated-gif">
+                    <h2>
+                      Example: Creating an Animated GIF<a class="headerlink" href="#example-creating-an-animated-gif"
+                      title="Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="highlight-javascript notranslate">
+                      <div class="highlight">
+                        <pre><span></span><span class="kd">var</span> <span class="nx">gm</span> <span class=
+                        "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                        "s2">"rampart-gm"</span><span class="p">);</span>
+
+<span class="c1">// open and configure the first frame</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"image1.jpg"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">mogrify</span><span class="p">({</span><span class=
+"s2">"auto-orient"</span><span class="o">:</span> <span class="kc">true</span><span class="p">})</span>
+    <span class="p">.</span><span class="nx">mogrify</span><span class="p">({</span><span class=
+"nx">delay</span><span class="o">:</span> <span class="mi">20</span><span class="p">});</span>   <span class=
+"c1">// 200ms per frame</span>
+
+<span class="c1">// open and configure the second frame</span>
+<span class="kd">var</span> <span class="nx">image2</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"image2.jpg"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">mogrify</span><span class="p">({</span>
+        <span class="s2">"auto-orient"</span><span class="o">:</span> <span class="kc">true</span><span class=
+"p">,</span>
+        <span class="nx">delay</span><span class="o">:</span> <span class="mi">60</span>            <span class=
+"c1">// 600ms for this frame</span>
+    <span class="p">});</span>
+
+<span class="c1">// combine and save</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class=
+"nx">image2</span><span class="p">);</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class=
+"p">({</span><span class="nx">loop</span><span class="o">:</span> <span class="mi">5</span><span class=
+"p">});</span>   <span class="c1">// stop after 5 loops</span>
+<span class="nx">images</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class=
+"s2">"animated.gif"</span><span class="p">);</span>
+</pre>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section" id="example-thumbnail-server">
+                    <h2>
+                      Example: Thumbnail Server<a class="headerlink" href="#example-thumbnail-server" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="highlight-javascript notranslate">
+                      <div class="highlight">
+                        <pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class=
+                        "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                        "s2">"rampart-server"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">gm</span> <span class="o">=</span> <span class=
+"nx">require</span><span class="p">(</span><span class="s2">"rampart-gm"</span><span class="p">);</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
+    <span class="nx">bind</span><span class="o">:</span> <span class="s2">"0.0.0.0:8080"</span><span class="p">,</span>
+    <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">"/thumbnail"</span><span class="o">:</span> <span class="kd">function</span><span class=
+"p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"nx">gm</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class=
+"s2">"/path/to/photos/"</span> <span class="o">+</span> <span class="nx">req</span><span class="p">.</span><span class=
+"nx">params</span><span class="p">.</span><span class="nx">file</span><span class="p">);</span>
+            <span class="nx">images</span><span class="p">.</span><span class="nx">mogrify</span><span class=
+"p">({</span>
+                <span class="nx">thumbnail</span><span class="o">:</span> <span class="s2">"256x256"</span><span class=
+"p">,</span>
+                <span class="s2">"auto-orient"</span><span class="o">:</span> <span class="kc">true</span><span class=
+"p">,</span>
+                <span class="nx">quality</span><span class="o">:</span> <span class="s2">"80"</span>
+            <span class="p">});</span>
+            <span class="k">return</span> <span class="p">{</span><span class="nx">jpg</span><span class=
+"o">:</span> <span class="nx">images</span><span class="p">.</span><span class="nx">toBuffer</span><span class=
+"p">(</span><span class="s2">"JPG"</span><span class="p">)};</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <footer>
+              <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+                <a href="rampart-webview.html" class="btn btn-neutral float-right" title="The rampart-webview module"
+                accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-url.html" class=
+                "btn btn-neutral" title="The rampart-url module" accesskey="p"><span class=
+                "fa fa-arrow-circle-left"></span> Previous</a>
+              </div>
+              <hr>
+              <div role="contentinfo">
+                <p>
+                  © Copyright 2026, Moat Crossing Systems.
+                </p>
+              </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
+              "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
+              Docs</a>.
+            </footer>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script> 
+    <script type="text/javascript" src="_static/jquery.js"></script> 
+    <script type="text/javascript" src="_static/underscore.js"></script> 
+    <script type="text/javascript" src="_static/doctools.js"></script> 
+    <script type="text/javascript" src="_static/language_data.js"></script> 
+    <script type="text/javascript" src=
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    <script type="text/javascript" src="_static/js/theme.js"></script> 
+    <script type="text/javascript">
+
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+    </script>
+    <script src=
+    "https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>
+    <script id="rampart-search" src="_static/client_search.js"></script>
+  </body>
+</html>

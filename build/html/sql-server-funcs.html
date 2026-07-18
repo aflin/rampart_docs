@@ -101,6 +101,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#vector-function">Vector Function</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#vecdist">vecdist</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#embed">embed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chunkembed">chunkembed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chunkavg">chunkavg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#chunkcoherence">chunkcoherence</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#general-functions">General Functions</a><ul>
@@ -201,6 +204,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -307,8 +311,10 @@ with the exception that <code class="docutils literal notranslate"><span class="
 <div class="section" id="embed">
 <h3>embed<a class="headerlink" href="#embed" title="Permalink to this headline">¶</a></h3>
 <p>Compute a semantic embedding vector for a piece of text using the
-currently-loaded llama.cpp model.</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">embed</span><span class="p">(</span><span class="nb">text</span> <span class="p">[,</span> <span class="n">dtype</span><span class="p">])</span>
+connection’s currently-loaded embedding model
+(<a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> — a <code class="docutils literal notranslate"><span class="pre">llama.cpp</span></code> GGUF — or
+<a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> — an ONNX model directory).</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">embed</span><span class="p">(</span><span class="nb">text</span> <span class="p">[,</span> <span class="n">dtype</span><span class="p">]</span> <span class="p">[,</span> <span class="n">kind</span> <span class="p">[,</span> <span class="n">title</span><span class="p">]])</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -316,22 +322,50 @@ currently-loaded llama.cpp model.</p>
 expression that evaluates to text.  <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and the empty string
 produce <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">dtype</span></code> is an optional <span class="green">String</span> naming the result vec dtype.
-One of <code class="docutils literal notranslate"><span class="pre">'f16'</span></code> (default), <code class="docutils literal notranslate"><span class="pre">'f32'</span></code>, <code class="docutils literal notranslate"><span class="pre">'f64'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'bf16'</span></code>.  The
+One of <code class="docutils literal notranslate"><span class="pre">'f16'</span></code> (default), <code class="docutils literal notranslate"><span class="pre">'f32'</span></code>, <code class="docutils literal notranslate"><span class="pre">'f64'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'bf16'</span></code>.
+<code class="docutils literal notranslate"><span class="pre">''</span></code> and <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> are accepted placeholders for the default —
+useful in the three-argument <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>/<code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code> forms
+where a later argument follows the dtype.  The
 named dtype propagates to the result column type: <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'f32')</span></code>
 returns a <code class="docutils literal notranslate"><span class="pre">varvecF32</span></code>, <code class="docutils literal notranslate"><span class="pre">embed(?)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">varvecF16</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">kind</span></code> is an optional <span class="green">String</span> prompt kind for models with
+asymmetric retrieval prompts (see
+<a class="reference internal" href="sql-set.html#retrieval-prompts"><span class="std std-ref">Retrieval prompts</span></a>): <code class="docutils literal notranslate"><span class="pre">'query'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'document'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'raw'</span></code>.  It may be given directly as the second
+argument (<code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'query')</span></code>) or after a dtype
+(<code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'f32',</span> <span class="pre">'query')</span></code>).  <code class="docutils literal notranslate"><span class="pre">embed(text)</span></code> embeds verbatim —
+exactly as before prompts existed; with no prompts configured, every
+kind embeds verbatim.</li>
+<li><code class="docutils literal notranslate"><span class="pre">title</span></code> is an optional <span class="green">String</span>, valid only with
+<code class="docutils literal notranslate"><span class="pre">'document'</span></code>: <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'document',</span> <span class="pre">?)</span></code> folds the title into the
+document prompt (models whose prompt has a title slot use it; others
+get prompt + title + newline + text).</li>
 </ul>
-<p>The model is configured process-wide via
-<a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a>; concurrency behavior is
-controlled by <a class="reference internal" href="sql-set.html#llamaembedperthread"><span class="std std-ref">llamaEmbedPerThread</span></a>.
-The output dimensionality is determined by the model — for example,
-<code class="docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code> produces 384-dim vectors; <code class="docutils literal notranslate"><span class="pre">BGE-base</span></code> produces
-768-dim.  Vectors are L2-normalized; norm ≈ 1.0 within dtype
-quantization noise.</p>
-<p><code class="docutils literal notranslate"><span class="pre">embed()</span></code> requires the <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> module to be installed.
-<code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> auto-loads it on the first <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code>
-call (trying <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code>, then <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp_cuda</span></code>,
-then <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp_cpu</span></code>).  To force a specific variant, call
-<code class="docutils literal notranslate"><span class="pre">require('rampart-llamacpp_cpu')</span></code> (or <code class="docutils literal notranslate"><span class="pre">_cuda</span></code>, etc.) first.  See
+<p>With an asymmetric model loaded, single-vector inserts should use
+<code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'document')</span></code> so stored vectors match the query side —
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> with a string automatically applies the query prompt, and
+<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> automatically applies the document prompt.</p>
+<p>The model is configured via <a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> or
+<a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a>; llama.cpp concurrency behavior is
+controlled by <a class="reference internal" href="sql-set.html#llamaembedperthread"><span class="std std-ref">llamaEmbedPerThread</span></a>
+(ONNX sessions are concurrent by nature).  The output dimensionality is
+determined by the model — for example, <code class="docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code> produces
+384-dim vectors; <code class="docutils literal notranslate"><span class="pre">bge-m3</span></code> produces 1024-dim.  Vectors are
+L2-normalized; norm ≈ 1.0 within dtype quantization noise.</p>
+<p>Long text is not truncated: the engine splits it into chunks
+(structure-aware, sized to the model’s token window), embeds every
+chunk, and returns the L2-normalized <strong>mean</strong> of the chunk vectors.  To
+keep the individual chunk vectors instead, use
+<a class="reference internal" href="#chunkembed"><span class="std std-ref">chunkembed()</span></a> below.</p>
+<p>Results are cached per model (see
+<a class="reference internal" href="sql-set.html#likevcache"><span class="std std-ref">likevCache</span></a>): any of the embedding scalars
+applied to the same text — in one statement, across statements, or
+across threads — runs the model once.</p>
+<p><code class="docutils literal notranslate"><span class="pre">embed()</span></code> requires the engine’s module (<code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> or
+<code class="docutils literal notranslate"><span class="pre">rampart-onnx</span></code>) to be installed.  <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> auto-loads it on the
+first <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code> / <code class="docutils literal notranslate"><span class="pre">sql.set({onnxEmbed:</span> <span class="pre">...})</span></code>
+call (trying the canonical name, then <code class="docutils literal notranslate"><span class="pre">_cuda</span></code>, then <code class="docutils literal notranslate"><span class="pre">_cpu</span></code>).  To
+force a specific variant, <code class="docutils literal notranslate"><span class="pre">require()</span></code> it first.  See
 <a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class="std std-ref">Generating embeddings</span></a> for
 the full dependency and install notes.</p>
 <p>If no model has been loaded, <code class="docutils literal notranslate"><span class="pre">embed()</span></code> raises a runtime error.  If
@@ -358,6 +392,154 @@ SELECT embed(&#39;chocolate cake recipe&#39;, &#39;f32&#39;);
 <p>See <a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> for the end-to-end
 pipeline (model setup → table schema → INSERT → vector index →
 <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>).</p>
+</div>
+<div class="section" id="chunkembed">
+<h3>chunkembed<a class="headerlink" href="#chunkembed" title="Permalink to this headline">¶</a></h3>
+<p>Embed a whole document, keeping <strong>all</strong> of its chunk vectors.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">chunkembed</span><span class="p">(</span><span class="nb">text</span> <span class="p">[,</span> <span class="n">dtype</span> <span class="p">[,</span> <span class="k">prefix</span><span class="p">]])</span>
+<span class="n">chunkembed</span><span class="p">(</span><span class="n">textList</span> <span class="p">[,</span> <span class="n">dtype</span> <span class="p">[,</span> <span class="k">prefix</span> <span class="p">[,</span> <span class="n">spans</span><span class="p">]]])</span>
+</pre></div>
+</div>
+<p>Like <a class="reference internal" href="#embed"><span class="std std-ref">embed()</span></a>, but where <code class="docutils literal notranslate"><span class="pre">embed()</span></code>
+returns the single combined (mean) vector, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> returns the
+document’s per-chunk vectors concatenated back to back — a
+<code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">dim</span></code>-cell value in the same <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> types (dtype argument and
+default as in <code class="docutils literal notranslate"><span class="pre">embed()</span></code>).  The embedding engine does the chunking:
+paragraph boundaries first, then the model’s token window; a short text
+comes back as <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">1</span></code>, byte-identical to a plain single vector.</p>
+<p>The optional third argument is a <strong>per-chunk prefix</strong> — typically the
+document’s title.  It is prepended to every chunk’s <em>embedding input</em>
+(each chunk embeds as if it read <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;</span> <span class="pre">&lt;chunk</span> <span class="pre">text&gt;</span></code>), so
+name-seeking queries (“who plays X in Y?”) can match any chunk of the
+document by its name, not just chunks that happen to repeat it.  The
+prefix never changes the chunk <strong>boundaries</strong>, the chunk <strong>count</strong>, or
+the text spans <a class="reference internal" href="#abstract"><span class="std std-ref">abstract</span></a> computes —
+only what the model sees.  (A chunk that already fills the model window
+gives up its last few tail tokens of embedding input to make room.)</p>
+<p>To pass a prefix without naming a dtype, use <code class="docutils literal notranslate"><span class="pre">''</span></code> or <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> as
+the dtype placeholder (both mean “the default”):</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- title-prefixed chunks, default dtype:</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="n">chunkembed</span><span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">?</span><span class="p">));</span>   <span class="c1">-- params: ..., doc, title</span>
+</pre></div>
+</div>
+<p>Search-side queries need no change — the query string embeds without a
+title; the stored chunk vectors simply carry the document’s name in
+their semantics.</p>
+<p>With an asymmetric model’s <a class="reference internal" href="sql-set.html#retrieval-prompts"><span class="std std-ref">retrieval prompts</span></a> in effect, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> folds the
+model’s <strong>document</strong> prompt around this title automatically — a model
+whose prompt has a <code class="docutils literal notranslate"><span class="pre">{title}</span></code> slot fills it, others get
+<code class="docutils literal notranslate"><span class="pre">&lt;document</span> <span class="pre">prompt&gt;&lt;title&gt;</span></code> as the per-chunk prefix — and <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s
+string auto-embedding applies the <strong>query</strong> prompt.  Both sides stay
+consistent with no change to the SQL.</p>
+<p>Stored in a vector-indexed column, a chunked value gives <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>
+<em>best-chunk</em> ranking over long documents — every chunk is indexed under
+its row, and the row’s <code class="docutils literal notranslate"><span class="pre">$rank</span></code> is its best chunk’s score.  The vector
+index over a chunked column requires the <code class="docutils literal notranslate"><span class="pre">vec_dim</span></code> WITH-option.  See
+<a class="reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows"><span class="std std-ref">Chunked documents (multi-vector rows)</span></a> for the full
+pattern, including best-chunk snippets via
+<a class="reference internal" href="#abstract"><span class="std std-ref">abstract</span></a>.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- one row per document; k chunk vectors in v</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="n">chunkembed</span><span class="p">(</span><span class="o">?</span><span class="p">));</span>
+</pre></div>
+</div>
+<p><strong>Caller-supplied chunks.</strong>  The first argument may instead be a
+<code class="docutils literal notranslate"><span class="pre">strlst</span></code> — a list of strings, each of which becomes <strong>exactly one
+chunk</strong> in list order (N elements always produce N vectors, so the
+caller’s own chunk bookkeeping stays positional).  An element that
+fits the model window gets its exact vector; an oversized element
+gets its <code class="docutils literal notranslate"><span class="pre">embed()</span></code>-style <em>combined</em> vector — the normalized mean
+over its sub-window vectors — rather than extra vectors or a
+truncation.  Empty elements are skipped.  This replaces the
+built-in chunker with your own splitting, mirroring the
+<code class="docutils literal notranslate"><span class="pre">split:</span> <span class="pre">function</span></code> option of the JavaScript embedding handles.  From
+rampart, pass a <span class="green">Array</span> of <span class="green">Strings</span> wrapped in
+<code class="docutils literal notranslate"><span class="pre">Sql.list()</span></code> (a bare array parameter is bound as JSON text, not a
+list):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">myChunks</span> <span class="o">=</span> <span class="nx">mySplitter</span><span class="p">(</span><span class="nx">docText</span><span class="p">);</span>    <span class="c1">// -&gt; [ &quot;chunk 1 ...&quot;, ... ]</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into docs values (?, ?, chunkembed(?, &#39;f16&#39;))&quot;</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class="nx">docText</span><span class="p">,</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">list</span><span class="p">(</span><span class="nx">myChunks</span><span class="p">)]);</span>
+</pre></div>
+</div>
+<p>The prefix argument still applies to every listed chunk.</p>
+<p><strong>Spans (4th argument).</strong>  A numeric list of <code class="docutils literal notranslate"><span class="pre">{start,</span> <span class="pre">end}</span></code> byte
+offsets into the stored document — two numbers per list element, in
+element order — tells <a class="reference internal" href="#abstract"><span class="std std-ref">abstract</span></a>
+where each custom chunk came from, so the 5-argument vec form can
+seed <strong>best-chunk snippets for custom chunkings</strong> exactly as it does
+for the built-in chunker:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// splitter returns [{text, start, end}, ...]</span>
+<span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class="nx">mySplitter</span><span class="p">(</span><span class="nx">docText</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into docs values (?, ?, chunkembed(?, &#39;f16&#39;, ?, ?))&quot;</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class="nx">docText</span><span class="p">,</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">list</span><span class="p">(</span><span class="nx">parts</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">p</span> <span class="p">=&gt;</span> <span class="nx">p</span><span class="p">.</span><span class="nx">text</span><span class="p">)),</span>
+          <span class="nx">title</span><span class="p">,</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">list</span><span class="p">(</span><span class="nx">parts</span><span class="p">.</span><span class="nx">flatMap</span><span class="p">(</span><span class="nx">p</span> <span class="p">=&gt;</span> <span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">start</span><span class="p">,</span> <span class="nx">p</span><span class="p">.</span><span class="nx">end</span><span class="p">]))]);</span>
+</pre></div>
+</div>
+<p>The offsets are UTF-8 <strong>bytes</strong>, not JavaScript string indices.  A JS
+string position counts <em>characters</em>, so offsets taken from
+<code class="docutils literal notranslate"><span class="pre">.indexOf()</span></code>/<code class="docutils literal notranslate"><span class="pre">.length</span></code> arithmetic are only correct for pure-ASCII
+documents and silently drift on any multi-byte text.  Compute byte
+positions instead (e.g. sum the UTF-8 byte lengths of the pieces).
+Mis-computed spans never error: <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> clamps them to the text
+and aligns its cuts to whole UTF-8 characters — the snippet simply
+comes from the wrong part of the document.</p>
+<p>Without spans, custom-chunked rows still rank normally under
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>; their abstracts fall back to plain keyword snippets.</p>
+<p><strong>The value header.</strong>  Every <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> result carries a small
+self-describing header ahead of its cells recording the chunk count,
+dimension, element type and (when known) the chunk spans — for the
+built-in chunker the spans are recorded automatically.  The header
+is invisible in SQL and in rampart (a selected vector reports its
+true cell <code class="docutils literal notranslate"><span class="pre">dim</span></code>, plus a <code class="docutils literal notranslate"><span class="pre">chunkSpans</span></code> property when spans are
+present), survives storage in <code class="docutils literal notranslate"><span class="pre">varbyte</span></code> columns, and is stripped
+by cell-converting <code class="docutils literal notranslate"><span class="pre">convert()</span></code> calls.  Values without a header
+(<code class="docutils literal notranslate"><span class="pre">embed()</span></code>, user-computed vectors, pre-existing tables) behave
+exactly as before.  Because the winning chunk’s span now travels
+<em>inside the value</em>, <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> no longer re-runs the chunker at
+query time, and the serving side needs no chunker/model agreement
+for snippets — only the query embedding still uses the model.
+Tables written with headers require correspondingly current
+binaries (older builds would misread the header bytes as cells).</p>
+</div>
+<div class="section" id="chunkavg">
+<h3>chunkavg<a class="headerlink" href="#chunkavg" title="Permalink to this headline">¶</a></h3>
+<p>The document’s single combined vector, from the same model run as
+<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">chunkavg</span><span class="p">(</span><span class="nb">text</span> <span class="p">[,</span> <span class="n">dtype</span> <span class="p">[,</span> <span class="k">prefix</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Returns the L2-normalized mean of the document’s chunk vectors — the
+same value <code class="docutils literal notranslate"><span class="pre">embed(text)</span></code> returns (when no prefix is given) — exposed
+as its own scalar so a
+table can store <strong>both</strong> the chunk array (<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>, fine
+per-passage ranking) and the combined vector (<code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code>, a second
+independently-indexable column for coarse first-stage search) from one
+model run:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- the shared result cache makes this ONE model run:</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">docs</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">avgv</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class="n">chunkavg</span><span class="p">(</span><span class="o">?</span><span class="p">),</span> <span class="n">chunkembed</span><span class="p">(</span><span class="o">?</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>The optional <code class="docutils literal notranslate"><span class="pre">prefix</span></code> argument is the per-chunk prefix described under
+<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>; when storing prefixed chunk vectors, pass the <strong>same</strong>
+prefix to <code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code> (and <code class="docutils literal notranslate"><span class="pre">chunkcoherence()</span></code>) — the trio then still
+shares one cached model run, and the average stays consistent with the
+chunks it summarizes.</p>
+</div>
+<div class="section" id="chunkcoherence">
+<h3>chunkcoherence<a class="headerlink" href="#chunkcoherence" title="Permalink to this headline">¶</a></h3>
+<p>How single-topic a document is, from its chunk vectors.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">chunkcoherence</span><span class="p">(</span><span class="nb">text</span> <span class="p">[,</span> <span class="k">prefix</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Returns a <span class="green">Number</span> (SQL <code class="docutils literal notranslate"><span class="pre">double</span></code>) in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>: the average
+pairwise cosine similarity between the document’s chunk vectors.  <code class="docutils literal notranslate"><span class="pre">1.0</span></code>
+for a single-chunk document or one that stays tightly on topic; values
+near <code class="docutils literal notranslate"><span class="pre">0</span></code> indicate a diffuse, multi-topic document.  Useful as a stored
+signal for deciding whether a document’s combined vector
+(<code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code>) is a faithful summary or whether per-chunk search
+(<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>) is needed.</p>
+<p>Shares the model run with the other embedding scalars via the result
+cache (<a class="reference internal" href="sql-set.html#likevcache"><span class="std std-ref">likevCache</span></a>).</p>
 </div>
 </div>
 <div class="section" id="general-functions">
@@ -1122,13 +1304,14 @@ components removed.</p>
 <div class="section" id="abstract">
 <h3>abstract<a class="headerlink" href="#abstract" title="Permalink to this headline">¶</a></h3>
 <p>Generate an abstract of a given portion of text. The syntax is</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">abstract</span><span class="p">(</span><span class="nb">text</span><span class="p">[,</span> <span class="n">maxsize</span><span class="p">[,</span> <span class="n">style</span><span class="p">[,</span> <span class="n">query</span><span class="p">]]])</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">abstract</span><span class="p">(</span><span class="nb">text</span><span class="p">[,</span> <span class="n">maxsize</span><span class="p">[,</span> <span class="n">style</span><span class="p">[,</span> <span class="n">query</span><span class="p">[,</span> <span class="n">vecColumn</span><span class="p">]]]])</span>
 </pre></div>
 </div>
-<p>The abstract will be less than <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> characters long, and will
-attempt to end at a word boundary. If <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> is not specified (or
-is less than or equal to 0) then a default size of 230 characters is
-used.</p>
+<p>The abstract will be less than <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> bytes long, and will
+attempt to end at a word boundary (a multi-byte UTF-8 character is
+never split, so the cut always falls on a whole character). If
+<code class="docutils literal notranslate"><span class="pre">maxsize</span></code> is not specified (or is less than or equal to 0) then a
+default size of 230 bytes is used.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">style</span></code> argument is a string or integer, and allows a choice
 between several different ways of creating the abstract. Note that some
 of these styles require the <code class="docutils literal notranslate"><span class="pre">query</span></code> argument as well, which is a
@@ -1163,6 +1346,41 @@ that it more closely reflects an index-obtained hit.</p>
 <span class="k">WHERE</span>      <span class="n">ARTID</span> <span class="o">=</span> <span class="s1">&#39;JT09115&#39;</span> <span class="p">;</span>
 </pre></div>
 </div>
+<p><strong>Vector (best-chunk) snippets</strong> — the optional 5th argument names the
+row’s vector column.  When the column holds <em>chunked</em> values
+(<a class="reference internal" href="#chunkembed"><span class="std std-ref">chunkembed()</span></a>), the abstract is
+seeded from the text span of the row’s <strong>best-matching chunk</strong>: with a
+non-empty <code class="docutils literal notranslate"><span class="pre">query</span></code> string, <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> embeds the query itself
+(a cache hit when the surrounding query’s <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> used the same
+string) and scores the row’s chunks with the same scorer <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>
+uses — so it works in any query shape, including per-row <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">=</span> <span class="pre">?</span></code>
+lookups with no <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> at all.  With an empty <code class="docutils literal notranslate"><span class="pre">query</span></code> string it
+instead uses the winning chunk recorded by a <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> in the same
+query’s <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT Title, abstract(Doc, 200, &#39;smart&#39;, ?, Vec) snip, $rank
+  FROM docs
+ WHERE Vec LIKEV ? ;
+</pre></div>
+</div>
+<p>With an empty <code class="docutils literal notranslate"><span class="pre">query</span></code> string (<code class="docutils literal notranslate"><span class="pre">''</span></code>) the snippet is centered purely
+on the winning chunk; with a real query string, keyword hits are merged
+with the chunk span (hybrid).  The winning chunk’s byte span is read
+directly from the vector value: <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> records the spans in
+the value’s header — automatically for the built-in chunker, and from
+the caller-supplied 4th argument for custom chunkings — so no chunker
+runs at query time and any embedding engine may serve the query.  Only
+for older, <em>headerless</em> values is the span recomputed from the text by
+the loaded embedding model’s chunker; for those rows the same engine
+(<a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> /
+<a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a>) must be set at query time.  See
+<a class="reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows"><span class="std std-ref">Chunked documents (multi-vector rows)</span></a>.</p>
+<p>The vec form works directly in a hybrid rank-fused query
+(<code class="docutils literal notranslate"><span class="pre">Doc</span> <span class="pre">LIKEP</span> <span class="pre">?</span> <span class="pre">OR</span> <span class="pre">Vec</span> <span class="pre">LIKEV</span> <span class="pre">?</span></code> — see <span class="xref std std-ref">Hybrid keyword + vector
+queries (rank fusion)</span>), where
+best-chunk snippets seed normally even for rows only the keyword side
+contributed (abstract scores that row’s chunks itself).  Do not add an
+<code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> to such a query — see the performance note in the hybrid
+section.</p>
 <p>See also the Rampart JavaScript <a class="reference internal" href="rampart-sql.html#abstract"><span class="std std-ref">abstract()</span></a> function.</p>
 </div>
 <div class="section" id="text2mm">

@@ -243,6 +243,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -517,6 +518,25 @@ if using <a class="reference external" href="https://letsencrypt.org/">letsencry
 might be <code class="docutils literal notranslate"><span class="pre">&quot;/etc/letsencrypt/live/example.com/fullchain.pem&quot;</span></code>.  This
 setting has no effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslKey</span></code> <em>(per-listener)</em> - A <span class="green">String</span> or <span class="green">Buffer</span>,
+the PEM-encoded private key itself, as an in-memory alternative to
+<code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code>.  Useful when the key lives somewhere the unprivileged
+<code class="docutils literal notranslate"><span class="pre">user</span></code> cannot read - for example a <a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> key under <code class="docutils literal notranslate"><span class="pre">/etc/letsencrypt/live/</span></code>,
+which is a <code class="docutils literal notranslate"><span class="pre">root</span></code>-only directory: read the file in JavaScript while
+still <code class="docutils literal notranslate"><span class="pre">root</span></code> (before <code class="docutils literal notranslate"><span class="pre">server.start()</span></code>) and pass its contents here.
+Takes precedence over <code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> if both are given.  No effect
+unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslCert</span></code> <em>(per-listener)</em> - A <span class="green">String</span> or <span class="green">Buffer</span>,
+the PEM-encoded certificate (chain) itself, the in-memory equivalent
+of <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code>.  See <code class="docutils literal notranslate"><span class="pre">sslKey</span></code> above.  Takes precedence over
+<code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> if both are given.  No effect unless <code class="docutils literal notranslate"><span class="pre">secure</span></code> is
+<code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<p>Note: <code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> / <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> are also read into memory while
+still privileged (before the drop to <code class="docutils literal notranslate"><span class="pre">user</span></code>), so they too work with
+<code class="docutils literal notranslate"><span class="pre">root</span></code>-only <code class="docutils literal notranslate"><span class="pre">letsencrypt</span></code> files; <code class="docutils literal notranslate"><span class="pre">sslKey</span></code> / <code class="docutils literal notranslate"><span class="pre">sslCert</span></code> simply
+let the script supply the PEM directly.</p>
+</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">sslMinVersion</span></code> <em>(top-level)</em> - A <span class="green">String</span>, the minimum
 SSL/TLS version to use.  Possible values are <code class="docutils literal notranslate"><span class="pre">ssl3</span></code>, <code class="docutils literal notranslate"><span class="pre">tls1</span></code>,
 <code class="docutils literal notranslate"><span class="pre">tls1.1</span></code> or <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>.  The default is <code class="docutils literal notranslate"><span class="pre">tls1.2</span></code>.  Applies to
@@ -611,7 +631,18 @@ ip address and port number of the server.  The default if not
 specified is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span>.  Function to be
 executed after the server forks but before server threads are created,
-if <code class="docutils literal notranslate"><span class="pre">daemon</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+if <code class="docutils literal notranslate"><span class="pre">daemon</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.  It runs <em>before</em> privileges are dropped, so
+when started as <code class="docutils literal notranslate"><span class="pre">root</span></code> it runs as <code class="docutils literal notranslate"><span class="pre">root</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">preThreadFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span>.  Function to be
+executed after privileges are dropped (see <code class="docutils literal notranslate"><span class="pre">user</span></code>) but before the
+server threads are created.  It runs in the main script context, so any
+global variables it sets are copied into every server thread (and are
+therefore visible to callback functions).  Unlike <code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code>,
+which runs as <code class="docutils literal notranslate"><span class="pre">root</span></code> before the drop, <code class="docutils literal notranslate"><span class="pre">preThreadFunc</span></code> runs as the
+unprivileged <code class="docutils literal notranslate"><span class="pre">user</span></code> - use it for initialization that must not run as
+<code class="docutils literal notranslate"><span class="pre">root</span></code> (for example, loading a model whose GPU/Metal driver is
+unavailable to <code class="docutils literal notranslate"><span class="pre">root</span></code>, or opening files that should be owned by
+<code class="docutils literal notranslate"><span class="pre">user</span></code>).  Runs in both <code class="docutils literal notranslate"><span class="pre">daemon</span></code> and non-daemon mode.</li>
 </ul>
 <p><strong>Routing and request hooks</strong></p>
 <ul>
@@ -1362,7 +1393,7 @@ property <code class="docutils literal notranslate"><span class="pre">body</span
 <div class="section" id="posting-multipart-form-data">
 <h4>Posting Multipart Form Data<a class="headerlink" href="#posting-multipart-form-data" title="Permalink to this headline">¶</a></h4>
 <blockquote>
-<div><p>Multipart form data will also be returned in the property <code class="docutils literal notranslate"><span class="pre">formData</span></code>
+<div><p>Multipart form data will also be returned in the property <code class="docutils literal notranslate"><span class="pre">postData</span></code>
 and will have the <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> property set to
 <code class="docutils literal notranslate"><span class="pre">&quot;multipart/form-data&quot;</span></code>.  The <code class="docutils literal notranslate"><span class="pre">content</span></code> property will contain an
 array of objects, one object for each “part” of the form data.  The key

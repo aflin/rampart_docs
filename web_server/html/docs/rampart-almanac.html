@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en">
+  <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+      The rampart-almanac module — Rampart 0.7.0 documentation
+    </title>
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css">
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css">
+    <link rel="stylesheet" href="_static/hacks.css" type="text/css">
+    <link rel="index" title="Index" href="genindex.html">
+    <link rel="search" title="Search" href="search.html">
+    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html">
+    <link rel="next" title="The rampart-url module" href="rampart-url.html">
+    <link rel="prev" title="The rampart-langtools modules" href="rampart-langtools.html">
+    <script src="_static/js/modernizr.min.js"></script>
+    <script>
+    (function(){var c=document.cookie.match(/(?:^|; )theme=([^;]*)/);if(c&&c[1]==='dark')document.documentElement.setAttribute('data-theme','dark');})()
+    </script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href=
+    "https://fonts.googleapis.com/css2?family=Varela+Round&amp;family=Fira+Code:wght@400;600&amp;display=swap" rel=
+    "stylesheet">
+    <style>
+            /* ---- Light theme (default) to match rampart.dev site ---- */
+            :root {
+              --rp-dark: #e2e8f0;
+              --rp-darker: #f8fafc;
+              --rp-accent: #16a34a;
+              --rp-accent-dim: #15803d;
+              --rp-slate: #e2e8f0;
+              --rp-slate-light: #cbd5e1;
+              --rp-text: #1e293b;
+              --rp-text-dim: #475569;
+              --rp-card-heading: #0f172a;
+              --rp-shadow: rgba(0,0,0,0.08);
+            }
+
+            [data-theme="dark"] {
+              --rp-dark: #0f172a;
+              --rp-darker: #020617;
+              --rp-accent: #22c55e;
+              --rp-accent-dim: #16a34a;
+              --rp-slate: #1e293b;
+              --rp-slate-light: #334155;
+              --rp-text: #e2e8f0;
+              --rp-text-dim: #94a3b8;
+              --rp-card-heading: #fff;
+              --rp-shadow: rgba(0,0,0,0.3);
+            }
+
+            body, .wy-body-for-nav { background: var(--rp-darker) !important; color: var(--rp-text); }
+            body, h1, h2, h3, h4, h5, h6 { font-family: "Varela Round", sans-serif; color: var(--rp-text); }
+            h1 { color: var(--rp-card-heading); }
+            dl:not(.docutils) dt { font-family: "Varela Round", sans-serif !important; font-size: 90% !important; background: var(--rp-slate) !important; color: var(--rp-text) !important; border-top: 3px solid var(--rp-accent) !important; }
+            p, li, dd, td, th, .rst-content { color: var(--rp-text-dim); }
+
+            /* Sidebar */
+            .wy-nav-side { background: var(--rp-dark) !important; }
+            .wy-side-nav-search { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+            .wy-side-nav-search input[type=text] { background: var(--rp-slate) !important; border: 1px solid var(--rp-slate-light) !important; color: var(--rp-text) !important; border-radius: 6px; }
+            .wy-menu-vertical a { color: var(--rp-text-dim) !important; }
+            .wy-menu-vertical a:hover { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; }
+            .wy-menu-vertical li.current > a { background: var(--rp-slate) !important; color: var(--rp-card-heading) !important; border: none !important; }
+            .wy-menu-vertical li.current { background: var(--rp-slate) !important; }
+            .wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l3.current > a { background: var(--rp-slate-light) !important; }
+            .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a { background: var(--rp-dark) !important; }
+            .wy-menu-vertical p.caption { color: var(--rp-accent) !important; }
+
+            /* Mobile nav */
+            /* Mobile nav */
+            .wy-nav-top { background: var(--rp-dark) !important; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Overlay sidebar instead of push */
+            @media screen and (max-width: 768px) {
+              .wy-nav-side.shift { z-index: 9999; position: fixed; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+              .wy-nav-content-wrap.shift { position: static !important; left: auto !important; min-width: auto !important; }
+            }
+            #rp-close-sidebar { display: none; background: none; border: none; cursor: pointer; color: var(--rp-card-heading) !important; font-size: 30px; padding: 0.095em 0.46em; line-height: 50px; float: left; }
+            #rp-close-sidebar:hover { color: var(--rp-card-heading) !important; }
+            .wy-nav-side.shift #rp-close-sidebar { display: block; }
+
+            /* Main content area */
+            .wy-nav-content-wrap { background: var(--rp-darker) !important; }
+            .wy-nav-content { max-width: 1600px; background: var(--rp-darker) !important; }
+
+            /* Links */
+            a { color: var(--rp-accent) !important; }
+            a:hover { color: #15803d !important; }
+            [data-theme="dark"] a:hover { color: #4ade80 !important; }
+            a.headerlink { color: var(--rp-slate-light) !important; }
+            a.headerlink:hover { color: var(--rp-accent) !important; }
+
+            /* Breadcrumbs */
+            .wy-breadcrumbs li a { color: var(--rp-accent) !important; }
+            .wy-breadcrumbs li { color: var(--rp-text-dim); }
+            .wy-breadcrumbs { border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Code blocks */
+            .highlight { background: var(--rp-dark) !important; border: 1px solid var(--rp-slate-light); border-radius: 6px; }
+            .highlight pre { color: var(--rp-text); }
+            code, .rst-content tt, .rst-content code { background: var(--rp-slate) !important; color: var(--rp-text) !important; border: 1px solid var(--rp-slate-light) !important; }
+            .rst-content pre.literal-block, .rst-content div[class^="highlight"] pre { background: var(--rp-dark) !important; color: var(--rp-text); }
+
+            /* Tables */
+            .wy-table thead, .rst-content table.docutils thead { background: var(--rp-slate) !important; }
+            .wy-table thead th, .rst-content table.docutils thead th { color: var(--rp-card-heading); border-bottom: 2px solid var(--rp-accent) !important; }
+            .wy-table td, .rst-content table.docutils td, .wy-table th, .rst-content table.docutils th { border: 1px solid var(--rp-slate-light) !important; background: transparent !important; }
+            .wy-table-responsive table tr:nth-child(2n-1) td { background: var(--rp-slate) !important; }
+
+            /* Admonitions / notes / warnings */
+            .rst-content .note, .rst-content .seealso { background: var(--rp-slate) !important; }
+            .rst-content .note .admonition-title, .rst-content .seealso .admonition-title { background: var(--rp-slate-light) !important; color: var(--rp-card-heading); }
+            .rst-content .warning { background: rgba(234,97,83,0.1) !important; }
+            .rst-content .warning .admonition-title { background: #E74C3C !important; }
+            .rst-content .hint, .rst-content .tip, .rst-content .important { background: rgba(34,197,94,0.1) !important; }
+            .rst-content .hint .admonition-title, .rst-content .tip .admonition-title, .rst-content .important .admonition-title { background: var(--rp-accent-dim) !important; }
+            .rst-content .attention, .rst-content .caution { background: rgba(230,126,34,0.1) !important; }
+            .rst-content .attention .admonition-title, .rst-content .caution .admonition-title { background: #E67E22 !important; }
+            .rst-content .admonition-todo { background: var(--rp-slate) !important; }
+            .rst-content .admonition-todo .admonition-title { background: var(--rp-slate-light) !important; }
+
+            /* Footer / versions */
+            footer { background: var(--rp-dark) !important; border-top: 1px solid var(--rp-slate-light); }
+            footer p { color: var(--rp-text-dim); }
+            footer hr { margin: 5px; }
+            .rst-footer-buttons a { color: var(--rp-card-heading) !important; background: var(--rp-slate) !important;  margin: 5px 5px 0 5px;}
+            .rst-footer-buttons a:hover { background: var(--rp-accent) !important; }
+            .rst-versions { background: var(--rp-dark) !important; color: var(--rp-text-dim); }
+
+            /* Scrollbar */
+            .wy-side-scroll::-webkit-scrollbar { width: 6px; }
+            .wy-side-scroll::-webkit-scrollbar-track { background: var(--rp-dark); }
+            .wy-side-scroll::-webkit-scrollbar-thumb { background: var(--rp-slate-light); border-radius: 3px; }
+
+            /* HR */
+            hr { border-color: var(--rp-slate-light); }
+
+            /* Theme toggle */
+            #rp-theme-toggle { background: none; border: 1px solid var(--rp-slate-light); border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--rp-text-dim); line-height: 1; display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+            #rp-theme-toggle:hover { border-color: var(--rp-accent); color: var(--rp-accent); }
+            #rp-theme-toggle svg { width: 16px; height: 16px; }
+            #rp-theme-toggle .icon-moon { display: none; }
+            [data-theme="dark"] #rp-theme-toggle .icon-moon { display: inline; }
+            [data-theme="dark"] #rp-theme-toggle .icon-sun { display: none; }
+
+            /* Autocomplete */
+            .autocomplete-suggestions { border: 1px solid var(--rp-slate-light); background: var(--rp-slate); overflow: auto; width: auto !important; padding-right:5px; border-radius: 6px; box-shadow: 0 8px 24px var(--rp-shadow); }
+            .autocomplete-suggestion { padding: 6px 10px; white-space: nowrap; overflow: hidden; color: var(--rp-text-dim); }
+            .autocomplete-selected { background: var(--rp-slate-light); color: var(--rp-card-heading); }
+            .autocomplete-suggestions strong { font-weight: normal; color: var(--rp-accent); }
+            .autocomplete-group { padding: 2px 5px; }
+            .autocomplete-group strong { display: block; border-bottom: 1px solid var(--rp-slate-light); }
+
+            /* Search results */
+            .searchsect { max-height: 250px; overflow:hidden; padding-left:5px; padding-bottom: 15px; position: relative; }
+            .linked { font-size: 1.1em; display: inline-block; position: relative; margin-top: 20px; }
+            .slink { font-size: 1rem; margin-top:0px; margin-bottom:5px; }
+            .fader { position: absolute; bottom: 0px; height: 2em; left:-5px; right:0px; background: linear-gradient(transparent, var(--rp-darker)); }
+            .expand { cursor:pointer; background: var(--rp-slate); color: var(--rp-accent); padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem; border-radius: 4px; position: absolute; right: 15px; }
+            .expand:hover { background: var(--rp-slate-light); }
+            .expandBottom { bottom: 18px }
+            .expandTop { top: 3px }
+            .expanded .fader { bottom: -15px }
+            .expanded .expandBottom { bottom: 38px; }
+
+            /* Misc */
+            .wy-side-nav-search > a.icon { color: var(--rp-card-heading) !important; display: inline-block !important; margin-bottom: 0 !important; vertical-align: middle; }
+            .wy-side-nav-search div[role="search"] { margin-top: 10px; }
+            .wy-side-nav-search > #rp-theme-toggle { vertical-align: middle; }
+            .rst-content .section ul li { color: var(--rp-text-dim); }
+    </style>
+  </head>
+  <body class="wy-body-for-nav" role="document">
+    <div class="wy-grid-for-nav">
+      <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+        <div class="wy-side-scroll">
+          <button type="button" id="rp-close-sidebar"><span class="fa fa-bars">&nbsp;</span></button>
+          <div class="wy-side-nav-search">
+            <a href="/" class="icon icon-home">Rampart</a><button type="button" id="rp-theme-toggle" title=
+            "Toggle light/dark theme"><svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24"
+            fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" xmlns=
+            "http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+            <div role="search">
+              <form id="rtd-search-form" class="wy-form" action="search.html" method="get" name="rtd-search-form">
+                <input type="text" name="q" placeholder="Search docs"> <input type="hidden" name="check_keywords"
+                value="yes"> <input type="hidden" name="area" value="default">
+              </form>
+            </div>
+          </div>
+          <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+            <p class="caption">
+              <span class="caption-text">Contents:</span>
+            </p>
+            <ul class="current">
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-main.html">Rampart JavaScript</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-utils.html">Rampart Utility Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-thread.html">Rampart Thread Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-vector.html">Rampart Vector Functions</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="sqltoc.html">The rampart-sql module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-server.html">The rampart-server module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-auth.html">The rampart-auth module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-net.html">The rampart-net module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-html.html">The rampart-html module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-crypto.html">The rampart-crypto module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-curl.html">The rampart-curl module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-lmdb.html">The rampart-lmdb module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-redis.html">The rampart-redis module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-totext.html">The rampart-totext module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-python.html">The rampart-python module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-robots.html">The rampart-robots module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-cmark.html">The rampart-cmark module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-treesitter.html">The rampart-treesitter module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-langtools.html">The rampart-langtools modules</a>
+              </li>
+              <li class="toctree-l1 current">
+                <a class="current reference internal" href="#">The rampart-almanac module</a>
+                <ul>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#preface">Preface</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#acknowledgment">Acknowledgment</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#license">License</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#what-does-it-do">What does it do?</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#loading-and-using-the-module">Loading and Using the Module</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#loading">Loading</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#celestial-positions">Celestial Positions</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-suntimes">almanac.suntimes()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-moontimes">almanac.moontimes()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-celestials">almanac.celestials()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-seasons">almanac.seasons()</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#holidays">Holidays</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#new-almanac-holiday">new almanac.Holiday()</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#weather">Weather</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-configure">almanac.weather.configure()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-search">almanac.weather.search()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-current">almanac.weather.current()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-forecast">almanac.weather.forecast()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-history">almanac.weather.history()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href=
+                        "#almanac-weather-airquality">almanac.weather.airQuality()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-marine">almanac.weather.marine()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#almanac-weather-weatherat">almanac.weather.weatherAt()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href=
+                        "#almanac-weather-clearcache">almanac.weather.clearCache()</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href=
+                        "#almanac-weather-weathercodes">almanac.weather.weatherCodes</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#async-callbacks">Async Callbacks</a>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-url.html">The rampart-url module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-gm.html">The rampart-gm module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-webview.html">The rampart-webview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="rampart-extras.html">Extras</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="tutorialtoc.html">Tutorials</a>
+              </li>
+              <li class="toctree-l1">
+                <a class="reference internal" href="faq.html">FAQ</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+        <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i> <a href="index.html">Rampart</a>
+        </nav>
+        <div class="wy-nav-content">
+          <div class="rst-content">
+            <div role="navigation" aria-label="breadcrumbs navigation">
+              <ul class="wy-breadcrumbs">
+                <li>
+                  <a href="/">Home</a> »
+                </li>
+                <li>
+                  <a href="index.html">Docs</a> »
+                </li>
+                <li>The rampart-almanac module
+                </li>
+              </ul>
+              <hr>
+            </div>
+            <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <div itemprop="articleBody">
+                <div class="section" id="the-rampart-almanac-module">
+                  <h1>
+                    The rampart-almanac module<a class="headerlink" href="#the-rampart-almanac-module" title=
+                    "Permalink to this headline">¶</a>
+                  </h1>
+                  <div class="section" id="preface">
+                    <h2>
+                      Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="acknowledgment">
+                      <h3>
+                        Acknowledgment<a class="headerlink" href="#acknowledgment" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The rampart-almanac module uses <a class="reference external" href=
+                        "https://github.com/cosinekitty/astronomy">astronomy.c library</a> and the <a class=
+                        "reference external" href="https://github.com/commenthol/date-holidays">date-holidays
+                        JavaScript module</a> The authors of Rampart extend our thanks to authors of these libraries.
+                      </p>
+                    </div>
+                    <div class="section" id="license">
+                      <h3>
+                        License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The astronomy.c library is licensed under the <a class="reference external" href=
+                        "https://github.com/cosinekitty/astronomy/blob/master/LICENSE">MIT license</a>. The
+                        date-holidays Javascript module is licensed under an <a class="reference external" href=
+                        "https://github.com/commenthol/date-holidays/blob/master/LICENSE">ISC license</a> and includes
+                        other licenses therein.
+                      </p>
+                    </div>
+                    <div class="section" id="what-does-it-do">
+                      <h3>
+                        What does it do?<a class="headerlink" href="#what-does-it-do" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The rampart-astronomy module calculates Sun, Moon and Planet rise, set and positions given a
+                        date and time, and latitude and longitude, and seasons given a year. It also includes
+                        rampart-date-holidays.js which calculates holidays for a particular locale and year.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="section" id="loading-and-using-the-module">
+                    <h2>
+                      Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="loading">
+                      <h3>
+                        Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Loading the module is a simple matter of using the <code class=
+                        "docutils literal notranslate"><span class="pre">require()</span></code> function:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section" id="celestial-positions">
+                    <h2>
+                      Celestial Positions<a class="headerlink" href="#celestial-positions" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="almanac-suntimes">
+                      <h3>
+                        almanac.suntimes()<a class="headerlink" href="#almanac-suntimes" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Calculate sun position times for a given day, longitude and latitude.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">suntimes</span><span class="p">(</span><span class=
+"nx">date</span><span class="p">,</span> <span class="nx">latitude</span><span class="p">,</span> <span class=
+"nx">longitude</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">date</span></code> is a
+                          JavaScript <span class="green">Date</span> or a <span class="green">String</span> (which is
+                          converted using <a class="reference internal" href=
+                          "rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                          <span class="green">Number</span> (negative for south).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                          <span class="green">Number</span> (negative for west).
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> with the relevant information.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">suntimes</span><span class="p">(</span><span class=
+"s2">"2024-01-01 -0700"</span><span class="p">,</span> <span class="mf">37.77</span><span class=
+"p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="cm">/* times =</span>
+<span class="cm">   {</span>
+<span class="cm">       "daylightHours": 9.605555555555556,</span>
+<span class="cm">       "civilTwilightHours": 10.580555555555556,</span>
+<span class="cm">       "nauticalTwilightHours": 11.674444444444445,</span>
+<span class="cm">       "astronomicalTwilightHours": 12.7375,</span>
+<span class="cm">       "solarNoon": "2024-01-01T20:13:08.000Z",</span>
+<span class="cm">       "sunrise": "2024-01-01T15:25:03.000Z",</span>
+<span class="cm">       "sunset": "2024-01-02T01:01:23.000Z",</span>
+<span class="cm">       "civilTwilightStart": "2024-01-01T14:55:47.000Z",</span>
+<span class="cm">       "civilTwilightEnd": "2024-01-02T01:30:37.000Z",</span>
+<span class="cm">       "nauticalTwilightStart": "2024-01-01T14:22:59.000Z",</span>
+<span class="cm">       "nauticalTwilightEnd": "2024-01-02T02:03:27.000Z",</span>
+<span class="cm">       "astronomicalTwilightStart": "2024-01-01T13:51:05.000Z",</span>
+<span class="cm">       "astronomicalTwilightEnd": "2024-01-02T02:35:18.000Z",</span>
+<span class="cm">       "sunriseAzimuth": 118.89538324193013,</span>
+<span class="cm">       "sunsetAzimuth": 241.1489255497421</span>
+<span class="cm">   }</span>
+<span class="cm">*/</span>
+<span class="cm">/* get sunrise as a local time by using '%z' */</span>
+<span class="kd">var</span> <span class="nx">sunrise</span> <span class="o">=</span> <span class=
+"nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
+"nx">dateFmt</span><span class="p">(</span><span class="s2">"%c %z\n"</span><span class="p">,</span> <span class=
+"nx">times</span><span class="p">.</span><span class="nx">sunrise</span><span class="p">);</span>
+<span class="cm">/* sunrise = "Mon Jan  1 07:25:03 2024 -0800" */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-moontimes">
+                      <h3>
+                        almanac.moontimes()<a class="headerlink" href="#almanac-moontimes" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Calculate the next moon rise and set times from the given date/time, for a given longitude and
+                        latitude. Also return dates of the next moon phases.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">moontimes</span><span class="p">(</span><span class=
+"nx">date</span><span class="p">,</span> <span class="nx">latitude</span><span class="p">,</span> <span class=
+"nx">longitude</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">date</span></code> is a
+                          JavaScript <span class="green">Date</span> or a <span class="green">String</span> (which is
+                          converted using <a class="reference internal" href=
+                          "rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>). The
+                          next moonrise and moonset occurring after this date/time are returned. To get times for a
+                          specific day, pass local midnight (e.g. <code class=
+                          "docutils literal notranslate"><span class="pre">"2024-01-01</span> <span class=
+                          "pre">00:00:00</span> <span class="pre">-0700"</span></code>).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                          <span class="green">Number</span> (negative for south).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                          <span class="green">Number</span> (negative for west).
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> with the relevant information.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">moontimes</span><span class="p">(</span><span class=
+"s2">"2024-01-01 00:00:00 -0700"</span><span class="p">,</span> <span class="mf">37.77</span><span class=
+"p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="cm">/*  times =</span>
+<span class="cm">    {</span>
+<span class="cm">       "moonrise": "2024-01-02T06:37:25.000Z",</span>
+<span class="cm">       "moonset": "2024-01-01T19:02:43.000Z",</span>
+<span class="cm">       "newMoon": "2024-01-11T11:57:55.000Z",</span>
+<span class="cm">       "firstQuarter": "2024-01-18T03:53:10.000Z",</span>
+<span class="cm">       "fullMoon": "2024-01-25T17:54:42.000Z",</span>
+<span class="cm">       "lastQuarter": "2024-01-04T03:31:09.000Z",</span>
+<span class="cm">       "moonriseAzimuth": 82.64960233180054,</span>
+<span class="cm">       "moonsetAzimuth": 280.67746349893633,</span>
+<span class="cm">       "moonPhase": 0.6641758156156009,</span>
+<span class="cm">       "moonIllumination": 0.7567459628710032</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+<span class="cm">/* Note: moonset may be before moonrise if the moon is</span>
+<span class="cm">   already up at the given time. */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-celestials">
+                      <h3>
+                        almanac.celestials()<a class="headerlink" href="#almanac-celestials" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Calculate the next rise and set times for the sun, moon and planets from the given date/time,
+                        for a given longitude and latitude. Also return current position data (right ascension,
+                        declination, azimuth and altitude).
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">celestials</span><span class="p">(</span><span class=
+"nx">date</span><span class="p">,</span> <span class="nx">latitude</span><span class="p">,</span> <span class=
+"nx">longitude</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">date</span></code> is a
+                          JavaScript <span class="green">Date</span> or a <span class="green">String</span> (which is
+                          converted using <a class="reference internal" href=
+                          "rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                          <span class="green">Number</span> (negative for south).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                          <span class="green">Number</span> (negative for west).
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> with the relevant information.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">celestials</span><span class="p">(</span><span class=
+"s2">"2024-01-01"</span><span class="p">,</span> <span class="mf">37.77</span><span class="p">,</span> <span class=
+"o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="cm">/*  times =</span>
+<span class="cm">    {</span>
+<span class="cm">       "sun": {</span>
+<span class="cm">          "currentRightAscension": 18.70381774294387,</span>
+<span class="cm">          "currentDeclination": -23.082972736894366,</span>
+<span class="cm">          "currentAzimuth": 231.2447789386162,</span>
+<span class="cm">          "currentAltitude": 9.200955835755252,</span>
+<span class="cm">          "nextRise": "2024-01-01T15:25:03.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-02T01:01:23.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "moon": {</span>
+<span class="cm">          "currentRightAscension": 10.585655630489418,</span>
+<span class="cm">          "currentDeclination": 12.06431630189065,</span>
+<span class="cm">          "currentAzimuth": 358.2427660196457,</span>
+<span class="cm">          "currentAltitude": -39.911128386544675,</span>
+<span class="cm">          "nextRise": "2024-01-01T05:39:21.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-01T19:02:42.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "mercury": {</span>
+<span class="cm">          "currentRightAscension": 17.42857713438222,</span>
+<span class="cm">          "currentDeclination": -20.134230004864982,</span>
+<span class="cm">          "currentAzimuth": 245.65820797921364,</span>
+<span class="cm">          "currentAltitude": -1.1285066854169088,</span>
+<span class="cm">          "nextRise": "2024-01-01T13:56:35.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-01T23:48:43.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "venus": {</span>
+<span class="cm">          "currentRightAscension": 16.04024593585745,</span>
+<span class="cm">          "currentDeclination": -18.703696660954833,</span>
+<span class="cm">          "currentAzimuth": 258.8170836590166,</span>
+<span class="cm">          "currentAltitude": -16.054068589788287,</span>
+<span class="cm">          "nextRise": "2024-01-01T12:31:52.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-01T22:35:04.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "mars": {</span>
+<span class="cm">          "currentRightAscension": 17.77925369534947,</span>
+<span class="cm">          "currentDeclination": -23.951999465047503,</span>
+<span class="cm">          "currentAzimuth": 239.58535957726625,</span>
+<span class="cm">          "currentAltitude": 0.013586371580359469,</span>
+<span class="cm">          "nextRise": "2024-01-01T14:34:09.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-01T23:59:15.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "jupiter": {</span>
+<span class="cm">          "currentRightAscension": 2.224206624688085,</span>
+<span class="cm">          "currentDeclination": 12.150270854695547,</span>
+<span class="cm">          "currentAzimuth": 101.66782757086347,</span>
+<span class="cm">          "currentAltitude": 34.25711749414994,</span>
+<span class="cm">          "nextRise": "2024-01-01T20:58:35.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-02T10:19:59.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "saturn": {</span>
+<span class="cm">          "currentRightAscension": 22.363992244102082,</span>
+<span class="cm">          "currentDeclination": -11.961562816580198,</span>
+<span class="cm">          "currentAzimuth": 182.50892699669285,</span>
+<span class="cm">          "currentAltitude": 40.37470253011248,</span>
+<span class="cm">          "nextRise": "2024-01-01T18:23:44.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-02T05:13:29.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "uranus": {</span>
+<span class="cm">          "currentRightAscension": 3.1122566235436486,</span>
+<span class="cm">          "currentDeclination": 17.187443780343074,</span>
+<span class="cm">          "currentAzimuth": 88.20667075806635,</span>
+<span class="cm">          "currentAltitude": 26.70533930046701,</span>
+<span class="cm">          "nextRise": "2024-01-01T21:34:37.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-02T11:30:03.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "neptune": {</span>
+<span class="cm">          "currentRightAscension": 23.711146313700397,</span>
+<span class="cm">          "currentDeclination": -3.221011807290628,</span>
+<span class="cm">          "currentAzimuth": 153.3716388125294,</span>
+<span class="cm">          "currentAltitude": 45.795412016162715,</span>
+<span class="cm">          "nextRise": "2024-01-01T19:16:31.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-02T07:01:13.000Z"</span>
+<span class="cm">       },</span>
+<span class="cm">       "pluto": {</span>
+<span class="cm">          "currentRightAscension": 20.118773598789403,</span>
+<span class="cm">          "currentDeclination": -23.058689775023026,</span>
+<span class="cm">          "currentAzimuth": 214.92988354299945,</span>
+<span class="cm">          "currentAltitude": 20.68436892218172,</span>
+<span class="cm">          "nextRise": "2024-01-01T16:48:25.000Z",</span>
+<span class="cm">          "nextSet": "2024-01-02T02:19:56.000Z"</span>
+<span class="cm">       }</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-seasons">
+                      <h3>
+                        almanac.seasons()<a class="headerlink" href="#almanac-seasons" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Calculate the start of seasons for a given year.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">times</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">seasons</span><span class="p">(</span><span class=
+"nx">year</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">date</span></code> is a
+                          <span class="green">Number</span>, the year to calculate.
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> with dates for each season.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">seasons</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">seasons</span><span class="p">(</span><span class=
+"mi">2025</span><span class="p">);</span>
+<span class="cm">/*  seasons =</span>
+<span class="cm">    {</span>
+<span class="cm">       "spring": "2025-03-20T09:01:26.000Z",</span>
+<span class="cm">       "summer": "2025-06-21T02:42:17.000Z",</span>
+<span class="cm">       "autumn": "2025-09-22T18:19:33.000Z",</span>
+<span class="cm">       "winter": "2025-12-21T15:03:03.000Z"</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class=
+"nx">dateFmt</span><span class="p">(</span><span class="s2">"Happy Nowruz! %c %z"</span><span class=
+"p">,</span> <span class="nx">seasons</span><span class="p">.</span><span class="nx">spring</span><span class=
+"p">)</span> <span class="p">);</span>
+    <span class="cm">/* Happy Nowruz! Thu Mar 20 02:01:26 2025 -0700 */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section" id="holidays">
+                    <h2>
+                      Holidays<a class="headerlink" href="#holidays" title="Permalink to this headline">¶</a>
+                    </h2>
+                    <div class="section" id="new-almanac-holiday">
+                      <h3>
+                        new almanac.Holiday()<a class="headerlink" href="#new-almanac-holiday" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Create a new <code class="docutils literal notranslate"><span class=
+                        "pre">Holidays</span></code> object.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">hd</span> <span class="o">=</span> <span class="k">new</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">Holidays</span><span class="p">();</span>
+
+<span class="cm">/* or */</span>
+
+<span class="kd">var</span> <span class="nx">hd</span> <span class="o">=</span> <span class="k">new</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">Holidays</span><span class="p">(</span><span class=
+"nx">countryCode</span> <span class="p">[,</span> <span class="nx">LocaleCode</span> <span class=
+"p">[,</span> <span class="nx">LocaleCode</span><span class="p">]]);</span>
+
+<span class="nx">hd</span><span class="p">.</span><span class="nx">getHolidays</span><span class=
+"p">(</span><span class="nx">year</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        More information, and this example (slightly modified) can be found <a class=
+                        "reference external" href="https://www.npmjs.com/package/date-holidays#Usage">here</a>:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s1">'rampart-almanac'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Holidays</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">holidays</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">printf</span> <span class="o">=</span> <span class=
+"nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
+"nx">printf</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">hd</span> <span class="o">=</span> <span class="k">new</span> <span class=
+"nx">Holidays</span><span class="p">();</span>
+
+<span class="c1">// get supported countries</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class=
+"p">.</span><span class="nx">getCountries</span><span class="p">();</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       "AD": "Andorra",</span>
+<span class="cm">       "AE": "دولة الإمارات العربية المتحدة",</span>
+<span class="cm">       "AG": "Antigua & Barbuda",</span>
+<span class="cm">        ...</span>
+<span class="cm">       "ZM": "Zambia",</span>
+<span class="cm">       "ZW": "Zimbabwe"</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// get supported states e.g. for US</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class=
+"p">.</span><span class="nx">getStates</span><span class="p">(</span><span class="s1">'US'</span><span class=
+"p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       AL: 'Alabama',</span>
+<span class="cm">       ...</span>
+<span class="cm">       WY: 'Wyoming'</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// get supported regions e.g. for US, Louisiana</span>
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class=
+"nx">getRegions</span><span class="p">(</span><span class="s1">'US'</span><span class="p">,</span> <span class=
+"s1">'LA'</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       "NO": "New Orleans"</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// initialize holidays for US, Louisiana, New Orleans</span>
+<span class="nx">hd</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class=
+"s1">'US'</span><span class="p">,</span> <span class="s1">'LA'</span><span class="p">,</span> <span class=
+"s1">'NO'</span><span class="p">);</span>
+
+<span class="cm">/* or using a new instance */</span>
+<span class="c1">//hd = new Holidays('US', 'la', 'no');</span>
+
+<span class="c1">// get all holidays for the year 2016</span>
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class=
+"nx">getHolidays</span><span class="p">(</span><span class="mi">2016</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    {</span>
+<span class="cm">       "date": "2016-01-01 00:00:00",</span>
+<span class="cm">       "start": "2016-01-01T06:00:00.000Z",</span>
+<span class="cm">       "end": "2016-01-02T06:00:00.000Z",</span>
+<span class="cm">       "name": "New Year's Day",</span>
+<span class="cm">       "type": "public",</span>
+<span class="cm">       "rule": "01-01 and if sunday then next monday if saturday then previous friday"</span>
+<span class="cm">    },</span>
+<span class="cm">    {</span>
+<span class="cm">       "date": "2016-01-18 00:00:00",</span>
+<span class="cm">       "start": "2016-01-18T06:00:00.000Z",</span>
+<span class="cm">       "end": "2016-01-19T06:00:00.000Z",</span>
+<span class="cm">       "name": "Martin Luther King Jr. Day",</span>
+<span class="cm">       "type": "public",</span>
+<span class="cm">       "rule": "3rd monday in January"</span>
+<span class="cm">    },</span>
+<span class="cm">    ...</span>
+<span class="cm">    {</span>
+<span class="cm">       "date": "2016-12-31 00:00:00",</span>
+<span class="cm">       "start": "2016-12-31T06:00:00.000Z",</span>
+<span class="cm">       "end": "2017-01-01T06:00:00.000Z",</span>
+<span class="cm">       "name": "New Year's Eve",</span>
+<span class="cm">       "type": "observance",</span>
+<span class="cm">       "rule": "12-31"</span>
+<span class="cm">    }</span>
+<span class="cm">*/</span>
+
+<span class="c1">// check if date is a holiday while respecting timezones</span>
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class=
+"nx">isHoliday</span><span class="p">(</span><span class="k">new</span> <span class="nb">Date</span><span class=
+"p">(</span><span class="s1">'2016-02-09 00:00:00'</span><span class="p">));</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="c1">// res = false</span>
+
+<span class="nx">res</span> <span class="o">=</span> <span class="nx">hd</span><span class="p">.</span><span class=
+"nx">isHoliday</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class=
+"nx">utils</span><span class="p">.</span><span class="nx">autoScanDate</span><span class="p">(</span><span class=
+"s1">'2016-02-09 00:00:00 -0600'</span><span class="p">).</span><span class="nx">date</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%3J\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">);</span>
+<span class="cm">/*  res =</span>
+<span class="cm">    [</span>
+<span class="cm">       {</span>
+<span class="cm">          "date": "2016-02-09 00:00:00",</span>
+<span class="cm">          "start": "2016-02-09T06:00:00.000Z",</span>
+<span class="cm">          "end": "2016-02-10T06:00:00.000Z",</span>
+<span class="cm">          "name": "Mardi Gras",</span>
+<span class="cm">          "type": "public"</span>
+<span class="cm">       }</span>
+<span class="cm">    ]</span>
+<span class="cm">*/</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="section" id="weather">
+                    <h2>
+                      Weather<a class="headerlink" href="#weather" title="Permalink to this headline">¶</a>
+                    </h2>
+                    <p>
+                      The weather sub-module provides access to weather data from <a class="reference external" href=
+                      "https://open-meteo.com/">Open-Meteo</a>, a free weather API for non-commercial use. Commercial
+                      use requires a paid API subscription. It is available as <code class=
+                      "docutils literal notranslate"><span class="pre">almanac.weather</span></code> and includes
+                      geocoding, current conditions, forecasts, historical data, air quality and marine weather.
+                      Results are cached in an LMDB database to minimize API calls.
+                    </p>
+                    <p>
+                      Weather data from Open-Meteo is licensed under <a class="reference external" href=
+                      "https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, which requires attribution. Any
+                      application that displays Open-Meteo data should include an attribution notice such as:
+                    </p>
+                    <blockquote>
+                      <div>
+                        Weather data by <a class="reference external" href="https://open-meteo.com/">Open-Meteo.com</a>
+                        (<a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">CC BY
+                        4.0</a>)
+                      </div>
+                    </blockquote>
+                    <div class="section" id="almanac-weather-configure">
+                      <h3>
+                        almanac.weather.configure()<a class="headerlink" href="#almanac-weather-configure" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Configure the weather module.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">almanac</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-almanac"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">weather</span> <span class="o">=</span> <span class=
+"nx">almanac</span><span class="p">.</span><span class="nx">weather</span><span class="p">;</span>
+
+<span class="nx">weather</span><span class="p">.</span><span class="nx">configure</span><span class=
+"p">(</span><span class="nx">options</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                        <span class="green">Object</span> which may contain any of the following:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">lmdbCache</span></code> -
+                          <span class="green">String</span> or <code class="docutils literal notranslate"><span class=
+                          "pre">null</span></code>. Path to the LMDB cache directory. If not set, defaults to
+                          <code class="docutils literal notranslate"><span class=
+                          "pre">/tmp/rampart-open-meteo-cache</span></code>. If set to <code class=
+                          "docutils literal notranslate"><span class="pre">null</span></code>, caching is disabled
+                          entirely.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">units</span></code> -
+                          <span class="green">String</span>. Set to <code class=
+                          "docutils literal notranslate"><span class="pre">"imperial"</span></code> for Fahrenheit, mph
+                          and inches, or <code class="docutils literal notranslate"><span class=
+                          "pre">"metric"</span></code> for Celsius, km/h and mm.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">temperature_unit</span></code> -
+                          <span class="green">String</span>. <code class="docutils literal notranslate"><span class=
+                          "pre">"celsius"</span></code> (default) or <code class=
+                          "docutils literal notranslate"><span class="pre">"fahrenheit"</span></code>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">wind_speed_unit</span></code> -
+                          <span class="green">String</span>. <code class="docutils literal notranslate"><span class=
+                          "pre">"kmh"</span></code> (default), <code class="docutils literal notranslate"><span class=
+                          "pre">"mph"</span></code>, <code class="docutils literal notranslate"><span class=
+                          "pre">"ms"</span></code> or <code class="docutils literal notranslate"><span class=
+                          "pre">"kn"</span></code>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">precipitation_unit</span></code>
+                          - <span class="green">String</span>. <code class="docutils literal notranslate"><span class=
+                          "pre">"mm"</span></code> (default) or <code class="docutils literal notranslate"><span class=
+                          "pre">"inch"</span></code>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">timezone</span></code> -
+                          <span class="green">String</span>. IANA timezone or <code class=
+                          "docutils literal notranslate"><span class="pre">"auto"</span></code> (default).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">maxTime</span></code> -
+                          <span class="green">Number</span>. Maximum seconds per HTTP request (default <code class=
+                          "docutils literal notranslate"><span class="pre">10</span></code>).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">retries</span></code> -
+                          <span class="green">Number</span>. Number of retries on failure (default <code class=
+                          "docutils literal notranslate"><span class="pre">2</span></code>).
+                        </li>
+                      </ul>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">configure</span><span class="p">({</span> <span class="nx">units</span><span class=
+                          "o">:</span> <span class="s1">'imperial'</span><span class="p">,</span> <span class=
+                          "nx">lmdbCache</span><span class="o">:</span> <span class=
+                          "s1">'/var/data/weather-cache'</span> <span class="p">});</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-search">
+                      <h3>
+                        almanac.weather.search()<a class="headerlink" href="#almanac-weather-search" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Search for a place by name using the Open-Meteo geocoding API.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">results</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">search</span><span class="p">(</span><span class="nx">name</span> <span class=
+                          "p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">searchAsync</span><span class=
+"p">(</span><span class="nx">name</span> <span class="p">[,</span> <span class="nx">options</span><span class=
+"p">],</span> <span class="nx">callback</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">name</span></code> is a
+                          <span class="green">String</span>, the place name to search for.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                          optional <span class="green">Object</span> with:
+                          <ul>
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">count</span></code> -
+                              <span class="green">Number</span> (default <code class=
+                              "docutils literal notranslate"><span class="pre">10</span></code>). Maximum results.
+                            </li>
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">language</span></code> -
+                              <span class="green">String</span>. ISO-639 language code.
+                            </li>
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">countryCode</span></code> -
+                              <span class="green">String</span>. ISO-3166-1 alpha-2 country code filter.
+                            </li>
+                          </ul>
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Array</span> of <span class="green">Objects</span>, each
+                        containing <code class="docutils literal notranslate"><span class="pre">name</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">latitude</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">longitude</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">country</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">country_code</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">admin1</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">timezone</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">population</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">elevation</span></code>.
+                      </p>
+                      <p>
+                        Results are cached for 30 days.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">places</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">search</span><span class="p">(</span><span class="s1">'San Francisco'</span><span class=
+                          "p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%s: %.4f, %.4f\n"</span><span class=
+"p">,</span> <span class="nx">places</span><span class="p">[</span><span class="mi">0</span><span class=
+"p">].</span><span class="nx">name</span><span class="p">,</span> <span class="nx">places</span><span class=
+"p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">latitude</span><span class=
+"p">,</span> <span class="nx">places</span><span class="p">[</span><span class="mi">0</span><span class=
+"p">].</span><span class="nx">longitude</span><span class="p">);</span>
+<span class="cm">/* San Francisco: 37.7749, -122.4194 */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-current">
+                      <h3>
+                        almanac.weather.current()<a class="headerlink" href="#almanac-weather-current" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Get current weather conditions for a location.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">current</span><span class="p">(</span><span class="nx">latitude</span><span class=
+                          "p">,</span> <span class="nx">longitude</span> <span class="p">[,</span> <span class=
+                          "nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">currentAsync</span><span class=
+"p">(</span><span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span> <span class=
+"p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class=
+"p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                            optional <span class="green">Object</span> with:
+                          </p>
+                          <ul>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">variables</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span>. Variables to
+                                request. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class=
+                                  "s1">'temperature_2m'</span><span class="p">,</span> <span class=
+                                  "s1">'relative_humidity_2m'</span><span class="p">,</span> <span class=
+                                  "s1">'apparent_temperature'</span><span class="p">,</span>
+ <span class="s1">'weather_code'</span><span class="p">,</span> <span class="s1">'wind_speed_10m'</span><span class=
+"p">,</span> <span class="s1">'wind_direction_10m'</span><span class="p">,</span>
+ <span class="s1">'precipitation'</span><span class="p">,</span> <span class="s1">'cloud_cover'</span><span class=
+"p">,</span> <span class="s1">'cloud_cover_low'</span><span class="p">,</span>
+ <span class="s1">'cloud_cover_mid'</span><span class="p">,</span> <span class=
+"s1">'cloud_cover_high'</span><span class="p">,</span> <span class="s1">'surface_pressure'</span><span class=
+"p">]</span>
+</pre>
+                                </div>
+                              </div>
+                            </li>
+                            <li>
+                              <p class="first">
+                                Unit overrides (see <a class="reference internal" href=
+                                "#almanac-weather-configure">almanac.weather.configure()</a>).
+                              </p>
+                            </li>
+                          </ul>
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> containing <code class=
+                        "docutils literal notranslate"><span class="pre">current</span></code> (with the requested
+                        variables), <code class="docutils literal notranslate"><span class=
+                        "pre">current_units</span></code> and a <code class="docutils literal notranslate"><span class=
+                        "pre">weather_code_description</span></code> <span class="green">String</span>.
+                      </p>
+                      <p>
+                        Results are cached for 15 minutes.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">current</span><span class="p">(</span><span class="mf">37.77</span><span class=
+                          "p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"Temperature: %s %s\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">current</span><span class=
+"p">.</span><span class="nx">temperature_2m</span><span class="p">,</span> <span class="nx">res</span><span class=
+"p">.</span><span class="nx">current_units</span><span class="p">.</span><span class=
+"nx">temperature_2m</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"Conditions: %s\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">current</span><span class=
+"p">.</span><span class="nx">weather_code_description</span><span class="p">);</span>
+<span class="cm">/* Temperature: 18.5 °C */</span>
+<span class="cm">/* Conditions: Partly cloudy */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-forecast">
+                      <h3>
+                        almanac.weather.forecast()<a class="headerlink" href="#almanac-weather-forecast" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Get weather forecast (current conditions, hourly and daily data).
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">forecast</span><span class="p">(</span><span class="nx">latitude</span><span class=
+                          "p">,</span> <span class="nx">longitude</span> <span class="p">[,</span> <span class=
+                          "nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">forecastAsync</span><span class=
+"p">(</span><span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span> <span class=
+"p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class=
+"p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                            optional <span class="green">Object</span> with:
+                          </p>
+                          <ul>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">days</span></code> -
+                                <span class="green">Number</span> (default <code class=
+                                "docutils literal notranslate"><span class="pre">7</span></code>, max <code class=
+                                "docutils literal notranslate"><span class="pre">16</span></code>). Forecast days.
+                              </p>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">hourly</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span> or <code class=
+                                "docutils literal notranslate"><span class="pre">false</span></code>. Hourly variables
+                                to request. Set to <code class="docutils literal notranslate"><span class=
+                                "pre">false</span></code> to omit hourly data. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class=
+                                  "s1">'temperature_2m'</span><span class="p">,</span> <span class=
+                                  "s1">'precipitation'</span><span class="p">,</span> <span class=
+                                  "s1">'relative_humidity_2m'</span><span class="p">,</span>
+ <span class="s1">'wind_speed_10m'</span><span class="p">,</span> <span class="s1">'cloud_cover'</span><span class=
+"p">,</span> <span class="s1">'weather_code'</span><span class="p">]</span>
+</pre>
+                                </div>
+                              </div>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">daily</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span> or <code class=
+                                "docutils literal notranslate"><span class="pre">false</span></code>. Daily variables
+                                to request. Set to <code class="docutils literal notranslate"><span class=
+                                "pre">false</span></code> to omit daily data. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class=
+                                  "s1">'temperature_2m_max'</span><span class="p">,</span> <span class=
+                                  "s1">'temperature_2m_min'</span><span class="p">,</span> <span class=
+                                  "s1">'precipitation_sum'</span><span class="p">,</span>
+ <span class="s1">'sunrise'</span><span class="p">,</span> <span class="s1">'sunset'</span><span class=
+"p">,</span> <span class="s1">'wind_speed_10m_max'</span><span class="p">,</span> <span class=
+"s1">'weather_code'</span><span class="p">]</span>
+</pre>
+                                </div>
+                              </div>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">current</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span> or <code class=
+                                "docutils literal notranslate"><span class="pre">false</span></code>. Current condition
+                                variables. Set to <code class="docutils literal notranslate"><span class=
+                                "pre">false</span></code> to omit. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class=
+                                  "s1">'temperature_2m'</span><span class="p">,</span> <span class=
+                                  "s1">'relative_humidity_2m'</span><span class="p">,</span> <span class=
+                                  "s1">'apparent_temperature'</span><span class="p">,</span>
+ <span class="s1">'weather_code'</span><span class="p">,</span> <span class="s1">'wind_speed_10m'</span><span class=
+"p">,</span> <span class="s1">'wind_direction_10m'</span><span class="p">,</span>
+ <span class="s1">'precipitation'</span><span class="p">,</span> <span class="s1">'cloud_cover'</span><span class=
+"p">,</span> <span class="s1">'cloud_cover_low'</span><span class="p">,</span>
+ <span class="s1">'cloud_cover_mid'</span><span class="p">,</span> <span class=
+"s1">'cloud_cover_high'</span><span class="p">,</span> <span class="s1">'surface_pressure'</span><span class=
+"p">]</span>
+</pre>
+                                </div>
+                              </div>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">past_days</span></code> -
+                                <span class="green">Number</span> (<code class=
+                                "docutils literal notranslate"><span class="pre">0</span></code>-<code class=
+                                "docutils literal notranslate"><span class="pre">92</span></code>). Include past days.
+                              </p>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">timezone</span></code> -
+                                <span class="green">String</span>. IANA timezone or <code class=
+                                "docutils literal notranslate"><span class="pre">"auto"</span></code>.
+                              </p>
+                            </li>
+                            <li>
+                              <p class="first">
+                                Unit overrides (see <a class="reference internal" href=
+                                "#almanac-weather-configure">almanac.weather.configure()</a>).
+                              </p>
+                            </li>
+                          </ul>
+                          <p>
+                            The full list of available variables can be found in the <a class="reference external"
+                            href="https://open-meteo.com/en/docs">Open-Meteo forecast API documentation</a>.
+                          </p>
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> containing <code class=
+                        "docutils literal notranslate"><span class="pre">current</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">hourly</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">daily</span></code>, their corresponding
+                        <code class="docutils literal notranslate"><span class="pre">*_units</span></code> <span class=
+                        "green">Objects</span>, and <code class="docutils literal notranslate"><span class=
+                        "pre">weather_code_description</span></code> <span class="green">Arrays</span> for weather
+                        codes.
+                      </p>
+                      <p>
+                        Results are cached for 1 hour.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">forecast</span><span class="p">(</span><span class="mf">37.77</span><span class=
+                          "p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class=
+                          "p">,</span> <span class="p">{</span> <span class="nx">days</span><span class=
+                          "o">:</span> <span class="mi">3</span> <span class="p">});</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class=
+"o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class=
+"o">&lt;</span> <span class="nx">res</span><span class="p">.</span><span class="nx">daily</span><span class=
+"p">.</span><span class="nx">time</span><span class="p">.</span><span class="nx">length</span><span class=
+"p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">"%s: %s/%s %s\n"</span><span class=
+"p">,</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">daily</span><span class=
+"p">.</span><span class="nx">time</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">daily</span><span class=
+"p">.</span><span class="nx">temperature_2m_max</span><span class="p">[</span><span class="nx">i</span><span class=
+"p">],</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">daily</span><span class=
+"p">.</span><span class="nx">temperature_2m_min</span><span class="p">[</span><span class="nx">i</span><span class=
+"p">],</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">daily</span><span class=
+"p">.</span><span class="nx">weather_code_description</span><span class="p">[</span><span class=
+"nx">i</span><span class="p">]);</span>
+<span class="p">}</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-history">
+                      <h3>
+                        almanac.weather.history()<a class="headerlink" href="#almanac-weather-history" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Get historical weather data (from 1940 to present).
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">history</span><span class="p">(</span><span class="nx">latitude</span><span class=
+                          "p">,</span> <span class="nx">longitude</span><span class="p">,</span> <span class=
+                          "nx">startDate</span><span class="p">,</span> <span class="nx">endDate</span> <span class=
+                          "p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">historyAsync</span><span class=
+"p">(</span><span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span><span class=
+"p">,</span> <span class="nx">startDate</span><span class="p">,</span> <span class="nx">endDate</span> <span class=
+"p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class=
+"p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                          <span class="green">Number</span>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                          <span class="green">Number</span>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">startDate</span></code> is a
+                          <span class="green">String</span> (parsed by <a class="reference internal" href=
+                          "rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>), a
+                          JavaScript <span class="green">Date</span>, or a <span class="green">Number</span> (epoch
+                          seconds).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">endDate</span></code> is a
+                          <span class="green">String</span> (parsed by <a class="reference internal" href=
+                          "rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>), a
+                          JavaScript <span class="green">Date</span>, or a <span class="green">Number</span> (epoch
+                          seconds).
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                          optional <span class="green">Object</span> with <code class=
+                          "docutils literal notranslate"><span class="pre">hourly</span></code>, <code class=
+                          "docutils literal notranslate"><span class="pre">daily</span></code>, <code class=
+                          "docutils literal notranslate"><span class="pre">timezone</span></code> and unit overrides.
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: Same shape as <a class="reference internal" href=
+                        "#almanac-weather-forecast">almanac.weather.forecast()</a>.
+                      </p>
+                      <p>
+                        Results are cached for 7 days.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">history</span><span class="p">(</span><span class="mf">37.77</span><span class=
+                          "p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class=
+                          "p">,</span> <span class="s1">'2024-01-01'</span><span class="p">,</span> <span class=
+                          "s1">'2024-01-07'</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"High on Jan 1: %s\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">daily</span><span class=
+"p">.</span><span class="nx">temperature_2m_max</span><span class="p">[</span><span class="mi">0</span><span class=
+"p">]);</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-airquality">
+                      <h3>
+                        almanac.weather.airQuality()<a class="headerlink" href="#almanac-weather-airquality" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Get air quality data.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">airQuality</span><span class="p">(</span><span class="nx">latitude</span><span class=
+                          "p">,</span> <span class="nx">longitude</span> <span class="p">[,</span> <span class=
+                          "nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">airQualityAsync</span><span class=
+"p">(</span><span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span> <span class=
+"p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class=
+"p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                            optional <span class="green">Object</span> with:
+                          </p>
+                          <ul>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">hourly</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span>. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class="s1">'pm10'</span><span class=
+                                  "p">,</span> <span class="s1">'pm2_5'</span><span class="p">,</span> <span class=
+                                  "s1">'us_aqi'</span><span class="p">,</span> <span class=
+                                  "s1">'european_aqi'</span><span class="p">,</span> <span class=
+                                  "s1">'uv_index'</span><span class="p">]</span>
+</pre>
+                                </div>
+                              </div>
+                              <p>
+                                See the <a class="reference external" href=
+                                "https://open-meteo.com/en/docs/air-quality-api">Open-Meteo air quality API
+                                documentation</a> for all available variables.
+                              </p>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class=
+                                "pre">forecast_days</span></code> - <span class="green">Number</span>.
+                              </p>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">past_days</span></code> -
+                                <span class="green">Number</span>.
+                              </p>
+                            </li>
+                          </ul>
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> containing <code class=
+                        "docutils literal notranslate"><span class="pre">hourly</span></code> data with time, pollutant
+                        concentrations and air quality indices.
+                      </p>
+                      <p>
+                        Results are cached for 1 hour.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">airQuality</span><span class="p">(</span><span class="mf">37.77</span><span class=
+                          "p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"PM2.5: %s\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">hourly</span><span class=
+"p">.</span><span class="nx">pm2_5</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"US AQI: %s\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">hourly</span><span class=
+"p">.</span><span class="nx">us_aqi</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-marine">
+                      <h3>
+                        almanac.weather.marine()<a class="headerlink" href="#almanac-weather-marine" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Get marine/ocean weather data.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">marine</span><span class="p">(</span><span class="nx">latitude</span><span class=
+                          "p">,</span> <span class="nx">longitude</span> <span class="p">[,</span> <span class=
+                          "nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">marineAsync</span><span class=
+"p">(</span><span class="nx">latitude</span><span class="p">,</span> <span class="nx">longitude</span> <span class=
+"p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class=
+"p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">latitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">longitude</span></code> is a
+                            <span class="green">Number</span>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                            optional <span class="green">Object</span> with:
+                          </p>
+                          <ul>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">hourly</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span>. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class=
+                                  "s1">'wave_height'</span><span class="p">,</span> <span class=
+                                  "s1">'wave_direction'</span><span class="p">,</span> <span class=
+                                  "s1">'wave_period'</span><span class="p">,</span>
+ <span class="s1">'sea_surface_temperature'</span><span class="p">]</span>
+</pre>
+                                </div>
+                              </div>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">daily</span></code> -
+                                <span class="green">Array</span> of <span class="green">Strings</span>. Default:
+                              </p>
+                              <div class="highlight-javascript notranslate">
+                                <div class="highlight">
+                                  <pre><span></span><span class="p">[</span><span class=
+                                  "s1">'wave_height_max'</span><span class="p">,</span> <span class=
+                                  "s1">'wave_direction_dominant'</span><span class="p">,</span> <span class=
+                                  "s1">'wave_period_max'</span><span class="p">]</span>
+</pre>
+                                </div>
+                              </div>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class=
+                                "pre">forecast_days</span></code> - <span class="green">Number</span>.
+                              </p>
+                            </li>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">past_days</span></code> -
+                                <span class="green">Number</span>.
+                              </p>
+                            </li>
+                          </ul>
+                          <p>
+                            See the <a class="reference external" href=
+                            "https://open-meteo.com/en/docs/marine-weather-api">Open-Meteo marine API documentation</a>
+                            for all available variables.
+                          </p>
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> containing <code class=
+                        "docutils literal notranslate"><span class="pre">hourly</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">daily</span></code> data with the requested
+                        variables.
+                      </p>
+                      <p>
+                        Results are cached for 1 hour.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">marine</span><span class="p">(</span><span class="mf">36.95</span><span class=
+                          "p">,</span> <span class="o">-</span><span class="mf">122.02</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"Wave height: %s m\n"</span><span class=
+"p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">hourly</span><span class=
+"p">.</span><span class="nx">wave_height</span><span class="p">[</span><span class="mi">0</span><span class=
+"p">]);</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-weatherat">
+                      <h3>
+                        almanac.weather.weatherAt()<a class="headerlink" href="#almanac-weather-weatherat" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Convenience function: geocode a place name and fetch the full forecast in a single call.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">weatherAt</span><span class="p">(</span><span class="nx">placeName</span> <span class=
+                          "p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+
+<span class="cm">/* async version */</span>
+<span class="nx">weather</span><span class="p">.</span><span class="nx">weatherAtAsync</span><span class=
+"p">(</span><span class="nx">placeName</span> <span class="p">[,</span> <span class="nx">options</span><span class=
+"p">],</span> <span class="nx">callback</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Where:
+                      </p>
+                      <ul class="simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">placeName</span></code> is a
+                          <span class="green">String</span>. Supports <code class=
+                          "docutils literal notranslate"><span class="pre">"City"</span></code>, <code class=
+                          "docutils literal notranslate"><span class="pre">"City,</span> <span class=
+                          "pre">CC"</span></code> (two-letter country code) and common aliases like <code class=
+                          "docutils literal notranslate"><span class="pre">"UK"</span></code> for <code class=
+                          "docutils literal notranslate"><span class="pre">"GB"</span></code> and <code class=
+                          "docutils literal notranslate"><span class="pre">"USA"</span></code> for <code class=
+                          "docutils literal notranslate"><span class="pre">"US"</span></code>.
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+                          optional <span class="green">Object</span> with the same options as <a class=
+                          "reference internal" href="#almanac-weather-forecast">almanac.weather.forecast()</a>.
+                        </li>
+                      </ul>
+                      <p>
+                        Return Value: An <span class="green">Object</span> containing <code class=
+                        "docutils literal notranslate"><span class="pre">location</span></code> (with name, country,
+                        latitude, longitude, timezone), <code class="docutils literal notranslate"><span class=
+                        "pre">current</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">hourly</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">daily</span></code> and their units.
+                      </p>
+                      <p>
+                        Example:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class=
+                          "o">=</span> <span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">weatherAt</span><span class="p">(</span><span class="s1">'London, UK'</span><span class=
+                          "p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%s, %s: %s°C %s\n"</span><span class=
+"p">,</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">location</span><span class=
+"p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">res</span><span class=
+"p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">country</span><span class=
+"p">,</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">current</span><span class=
+"p">.</span><span class="nx">temperature_2m</span><span class="p">,</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">current</span><span class=
+"p">.</span><span class="nx">weather_code_description</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-clearcache">
+                      <h3>
+                        almanac.weather.clearCache()<a class="headerlink" href="#almanac-weather-clearcache" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        Delete the LMDB cache database. The cache will be recreated automatically on the next API call.
+                      </p>
+                      <p>
+                        Usage:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">clearCache</span><span class="p">();</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="almanac-weather-weathercodes">
+                      <h3>
+                        almanac.weather.weatherCodes<a class="headerlink" href="#almanac-weather-weathercodes" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        An <span class="green">Object</span> mapping WMO weather codes to human-readable descriptions.
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nx">printf</span><span class="p">(</span><span class=
+                          "s2">"%s\n"</span><span class="p">,</span> <span class="nx">weather</span><span class=
+                          "p">.</span><span class="nx">weatherCodes</span><span class="p">[</span><span class=
+                          "mi">0</span><span class="p">]);</span>   <span class="cm">/* "Clear sky" */</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%s\n"</span><span class=
+"p">,</span> <span class="nx">weather</span><span class="p">.</span><span class="nx">weatherCodes</span><span class=
+"p">[</span><span class="mi">61</span><span class="p">]);</span>  <span class="cm">/* "Rain: slight" */</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%s\n"</span><span class=
+"p">,</span> <span class="nx">weather</span><span class="p">.</span><span class="nx">weatherCodes</span><span class=
+"p">[</span><span class="mi">95</span><span class="p">]);</span>  <span class=
+"cm">/* "Thunderstorm: slight or moderate" */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="async-callbacks">
+                      <h3>
+                        Async Callbacks<a class="headerlink" href="#async-callbacks" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        All async methods (<code class="docutils literal notranslate"><span class=
+                        "pre">searchAsync</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">currentAsync</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">forecastAsync</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">historyAsync</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">airQualityAsync</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">marineAsync</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">weatherAtAsync</span></code>) take a callback as the last argument with the signature
+                        <code class="docutils literal notranslate"><span class="pre">function(error,</span>
+                        <span class="pre">data)</span></code>.
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nx">weather</span><span class="p">.</span><span class=
+                          "nx">weatherAtAsync</span><span class="p">(</span><span class="s1">'Tokyo'</span><span class=
+                          "p">,</span> <span class="kd">function</span><span class="p">(</span><span class=
+                          "nx">err</span><span class="p">,</span> <span class="nx">data</span><span class=
+                          "p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class=
+"p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">"Error: %s\n"</span><span class=
+"p">,</span> <span class="nx">err</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">printf</span><span class="p">(</span><span class=
+"s2">"Temperature in %s: %s°C\n"</span><span class="p">,</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">location</span><span class=
+"p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">data</span><span class=
+"p">.</span><span class="nx">current</span><span class="p">.</span><span class="nx">temperature_2m</span><span class=
+"p">);</span>
+<span class="p">});</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <footer>
+              <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+                <a href="rampart-url.html" class="btn btn-neutral float-right" title="The rampart-url module"
+                accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a> <a href="rampart-langtools.html"
+                class="btn btn-neutral" title="The rampart-langtools modules" accesskey="p"><span class=
+                "fa fa-arrow-circle-left"></span> Previous</a>
+              </div>
+              <hr>
+              <div role="contentinfo">
+                <p>
+                  © Copyright 2026, Moat Crossing Systems.
+                </p>
+              </div>Built with <a href="http://sphinx-doc.org/">Sphinx</a> and ❤️ using a custom <a href=
+              "https://github.com/LinxiFan/Sphinx-theme">theme</a> based on <a href="https://readthedocs.org">Read the
+              Docs</a>.
+            </footer>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script> 
+    <script type="text/javascript" src="_static/jquery.js"></script> 
+    <script type="text/javascript" src="_static/underscore.js"></script> 
+    <script type="text/javascript" src="_static/doctools.js"></script> 
+    <script type="text/javascript" src="_static/language_data.js"></script> 
+    <script type="text/javascript" src=
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script> 
+    <script type="text/javascript" src="_static/js/theme.js"></script> 
+    <script type="text/javascript">
+
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+    </script>
+    <script src=
+    "https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>
+    <script id="rampart-search" src="_static/client_search.js"></script>
+  </body>
+</html>

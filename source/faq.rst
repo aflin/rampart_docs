@@ -158,7 +158,7 @@ in template literals:
     var name = "<b>world</b>";
     console.log(`Hello ${%H:name}`);
     // equivalent to: console.log("Hello " + sprintf("%H", name));
-    // output: Hello &lt;b&gt;world&lt;/b&gt;
+    // output: Hello &lt;b&gt;world&lt;&#47;b&gt;
 
 **Triple-backtick unescaped strings** — backslashes are treated as
 literal characters:

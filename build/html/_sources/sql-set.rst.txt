@@ -1411,9 +1411,15 @@ likevPqNprobe
 Embedding Properties
 ~~~~~~~~~~~~~~~~~~~~
 
-These settings configure the in-process ``llama.cpp`` embedding model
-used by the :ref:`embed() <sql-server-funcs:embed>` SQL function and by
-``LIKEV``'s auto-coercion of string parameters to vectors.  See
+These settings configure the in-process embedding model — either a
+``llama.cpp`` ``.gguf`` (``llamaEmbed``) or an ONNX model directory
+(``onnxEmbed``) — used by the SQL functions
+:ref:`embed() <sql-server-funcs:embed>`,
+:ref:`chunkembed() <sql-server-funcs:chunkembed>`,
+:ref:`chunkavg() <sql-server-funcs:chunkavg>` and
+:ref:`chunkcoherence() <sql-server-funcs:chunkcoherence>`, and by
+``LIKEV``'s auto-coercion of string parameters to vectors.  A connection
+uses whichever engine was set most recently.  See
 :ref:`Vector Search <rampart-sql:Vector Search>` for the end-to-end
 pipeline these settings fit into.
 
@@ -1432,6 +1438,21 @@ llamaEmbed
     .. code-block:: javascript
 
         sql.set({llamaEmbed: '/models/all-minilm-l6-v2_f16.gguf'});
+
+    An :green:`Object` form is also accepted for models that need
+    retrieval prompts (see :ref:`Retrieval prompts
+    <sql-set:Retrieval prompts>` below):
+
+    .. code-block:: javascript
+
+        sql.set({llamaEmbed: {
+            model:          '/models/nomic-embed-text-v1.5.Q8_0.gguf',
+            // optional -- normally discovered from the model's sidecar:
+            queryPrompt:    'search_query: ',
+            documentPrompt: 'search_document: ',
+            // documentTitlePrompt: 'title: {title} | text: ',
+            // prompts: false,     // disable prompts entirely
+        }});
 
     Loading requires the ``rampart-llamacpp`` module to be installed.
     If no llamacpp module is already loaded, this ``set`` call
@@ -1494,6 +1515,157 @@ llamaEmbedPerThread
     embed calls are in flight is safe — already-issued calls run to
     completion under their current mode; the new mode takes effect on
     the next call.
+
+    llama.cpp only — ONNX sessions (``onnxEmbed``) run concurrently
+    across threads by nature and ignore this setting.
+
+
+onnxEmbed
+"""""""""
+    Load an ONNX embedding model as the connection's embedding engine —
+    an alternative to ``llamaEmbed``.  Takes an :green:`Object` whose
+    ``model`` property names an ONNX model **directory** (containing
+    ``model.onnx`` or ``onnx/model.onnx``, a tokenizer — ``tokenizer.json``
+    or ``*vocab.txt`` — and the usual config files, as downloaded from a
+    Hugging Face model repository).  The directory self-configures the
+    tokenizer, pooling, special tokens and normalization.
+
+    .. code-block:: javascript
+
+        sql.set({onnxEmbed: {model: '/models/all-minilm-l6-v2'}});
+
+    Optional properties of the object (rarely needed in directory mode):
+    ``tokenizer`` (path, for a bare ``.onnx`` file instead of a
+    directory), ``maxTokens``, ``pooling`` (``'auto'`` | ``'mean'`` |
+    ``'cls'``), ``normalize`` (:green:`Boolean`), and the token ids
+    ``bosId`` / ``eosId`` / ``padId`` / ``idOffset``.  The retrieval
+    prompt keys ``queryPrompt`` / ``documentPrompt`` /
+    ``documentTitlePrompt`` / ``prompts: false`` are accepted exactly as
+    in ``llamaEmbed``'s object form (see :ref:`Retrieval prompts
+    <sql-set:Retrieval prompts>` below); the older engine-level
+    ``queryPrefix`` / ``passagePrefix`` strings are still honored, and
+    their presence disables sidecar prompts so the two mechanisms never
+    stack.
+
+    Chunker options, mirroring ``initEmbed``'s (see
+    :ref:`rampart-langtools <rampart-langtools:initEmbed>` for full
+    descriptions): ``split`` (``'auto'`` | ``'window'``),
+    ``minTokens``, ``packParagraphs``, and ``sentenceSplit``
+    (sentence-boundary packing of oversized paragraphs; multi-script,
+    default ``false``).  These change ``chunkembed()``'s chunk
+    boundaries: a table's build settings and any HEADERLESS serving
+    must agree — values written by current ``chunkembed()`` carry
+    their spans in-band and don't depend on this agreement.
+
+    Module resolution mirrors ``llamaEmbed``: on first use,
+    ``rampart-sql`` tries ``require('rampart-onnx')``, then
+    ``rampart-onnx_cuda``, then ``rampart-onnx_cpu``; an explicitly
+    ``require()``\ d variant takes precedence.  ``rampart-onnx`` ships
+    separately in ``rampart-langtools``.
+
+    A connection has **one** embedding engine: whichever of
+    ``llamaEmbed`` / ``onnxEmbed`` was set most recently serves its
+    ``embed()`` / ``chunkembed()`` / ``chunkavg()`` /
+    ``chunkcoherence()`` calls and its ``LIKEV`` string coercion.
+    Different connections may use different engines (or different
+    models) at the same time.  A given model directory (with a given
+    option set) is loaded once per process and shared across all
+    threads and connections that name it.
+
+    ONNX sessions support concurrent inference across threads with no
+    per-thread setup — ``llamaEmbedPerThread`` does not apply.
+
+
+Retrieval prompts
+"""""""""""""""""
+    Many recent embedding models are **asymmetric**: they expect a
+    prompt prefixed to search queries and (for some) documents — e.g.
+    nomic's ``search_query: `` / ``search_document: ``, bge's
+    ``Represent this sentence for searching relevant passages: ``,
+    e5's ``query: `` / ``passage: ``.  Skipping the prompts, or applying
+    them on only one side, measurably degrades retrieval quality.
+
+    When an embed model is bound to a connection, ``rampart-sql`` looks
+    for the prompts **once** — next to the model on disk:
+
+    1. ``<model-path>.prompts.json`` — written automatically by
+       ``rampart-models`` when it downloads a model whose catalog entry
+       carries prompts (works for ``.gguf`` files and ONNX model
+       directories alike);
+    2. for ONNX directories, the repo's own
+       ``config_sentence_transformers.json`` when it publishes a
+       ``prompts`` dict.
+
+    The file format is HuggingFace's:
+    ``{"prompts": {"query": "...", "document": "...",
+    "documentWithTitle": "... {title} ..."}}``
+    (``"passage"`` is accepted as an alias for ``"document"``;
+    ``documentWithTitle`` is a rampart extension for models whose
+    document prompt has a title slot).  A hand-downloaded model gains
+    prompt support by writing this sidecar next to it.
+
+    Once loaded, the prompts are applied automatically — a plain string
+    prepend before the model runs, never file I/O on the query path:
+
+    * ``LIKEV`` with a :green:`String` right-hand side, and the query
+      embedding inside ``abstract(...'querybest'...)``, get the
+      **query** prompt;
+    * ``chunkembed()`` gets the **document** prompt, folded around its
+      title argument when one is given;
+    * ``embed()`` embeds verbatim unless told otherwise:
+      ``embed(?, 'query')`` / ``embed(?, 'document'[, title])`` — see
+      :ref:`embed() <sql-server-funcs:embed>`.
+
+    With no sidecar (e.g. ``all-MiniLM-L6-v2``, which is symmetric),
+    everything embeds verbatim — behavior is byte-identical to older
+    releases.
+
+    Explicit ``queryPrompt`` / ``documentPrompt`` /
+    ``documentTitlePrompt`` keys in the ``llamaEmbed`` / ``onnxEmbed``
+    object override the sidecar **wholesale** (unlisted kinds get no
+    prompt), and ``prompts: false`` disables prompts entirely.
+
+    **Consistency matters**: the same document prompt must be in effect
+    at index build time and afterwards, and stored vectors must have
+    been embedded with the document prompt for query-prompted searches
+    to score correctly.  With an asymmetric model, insert single
+    vectors via ``embed(?, 'document')`` (``chunkembed()`` is automatic)
+    and rebuild the index if you change a model's prompts.
+
+
+likevCache
+""""""""""
+    Size, in documents, of the per-model embedding result cache.
+    Default ``10``; ``0`` disables.  Also accepted as
+    ``likevCacheSize``.
+
+    .. code-block:: javascript
+
+        sql.set({onnxEmbed: {model: '/models/all-minilm-l6-v2'},
+                 likevCache: 50});
+
+    Each loaded embedding model keeps an LRU cache of complete
+    document-embedding results, keyed on the input text.  All of the
+    embedding scalars — ``embed()``, ``chunkembed()``, ``chunkavg()``,
+    ``chunkcoherence()`` — and ``LIKEV``'s auto-embedding of string
+    parameters share it, so any of them applied to the *same text* runs
+    the model **once**, regardless of call order, across statements and
+    across threads.  Two common wins:
+
+    .. code-block:: sql
+
+        -- one model run, not two:
+        INSERT INTO docs VALUES (?, chunkavg(?), chunkembed(?));
+
+        -- a repeated search string embeds once; the second query's
+        -- embedding cost is ~zero:
+        SELECT id, $rank FROM docs WHERE v LIKEV ?;
+
+    The cache belongs to the *model* (all connections and threads using
+    a model share its cache), sized per this setting on a connection
+    bound to that model — set it together with (or after) the
+    ``llamaEmbed`` / ``onnxEmbed`` key.  Distinct models have
+    independent caches.
 
 
 Indexing properties
@@ -2614,6 +2786,13 @@ alLinear
    generally be resolved quickly, if the "anchor" term limits the linear search
    to a tiny fraction of the table. The error message "Query would require
    linear search" may be generated by linear queries if allinear is off.
+
+   ``LIKEV`` follows the same policy: a vector search on a column with
+   no usable vector index is a full-table scan (every row scored) and
+   is refused with the same "would require linear search" message
+   unless ``allinear`` is ``true``.  Rows added after a vector index
+   was created (or last optimized) are scanned as part of the indexed
+   search and do not need ``allinear``.
 
    Note that an otherwise indexable query like "rocket" may become linear if
    there is no text index on its field, or if an index for another part of

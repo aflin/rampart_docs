@@ -1483,9 +1483,24 @@ Vector types store an ordered sequence of numeric elements. They power
      - Reserved; indexing not yet enabled.
 
 A vector value can also be stored in a ``byte(N)`` or ``varbyte(N)``
-column as raw bytes; in that case ``CREATE VECTOR INDEX`` requires
-``WITH vec_dtype '<dtype>'`` so the index knows how to interpret the
-bytes.
+column as raw bytes.  This is supported for compatibility with existing
+tables and for code that produces raw byte buffers, but **a typed
+``varvec*`` column is preferred wherever possible**: storage is
+byte-identical, and the column itself declares the element type.  A
+``varbyte`` column does not — its dtype lives only in a vector index's
+parameters (``CREATE VECTOR INDEX`` on it requires
+``WITH vec_dtype '<dtype>'``) — with several consequences:
+
+* Inserts are unchecked: any blob is accepted, and a wrong-dtype or
+  wrong-dimension vector only surfaces at query time as a silently
+  non-matching row.
+* The bytes are ambiguous on their own (768 bytes are 384 f16 cells or
+  192 f32 cells), so nothing reading the column can interpret a value
+  without consulting the index.
+* An *unindexed* ``varbyte`` column cannot auto-embed a string
+  ``LIKEV`` parameter at all — there is nowhere to learn the element
+  type from.  A typed column supports index-less (linear-scan)
+  ``LIKEV`` with string parameters.
 
 Database Indexing
 -----------------
@@ -1994,8 +2009,8 @@ Quick start
         [query_vec, query_vec], 10);
 
 The supported column types for the vector data are listed in
-`Column Data Types`_.  Typed ``varvec*`` columns auto-detect their
-dimensionality; ``byte`` and ``varbyte`` columns require
+`Column Data Types`_.  Typed ``varvec*`` columns (preferred) auto-detect
+their dimensionality; ``byte`` and ``varbyte`` columns require
 ``WITH vec_dtype '<dtype>'``.
 
 Choosing a backend
@@ -2049,6 +2064,28 @@ existing index of the same table+column is silently treated as
 ``ALTER INDEX … OPTIMIZE`` (mirroring fulltext); WITH options other
 than ``indexmeter`` are ignored on re-CREATE.
 
+Index creation is **non-blocking**: the table stays fully readable
+*and writable* while the index builds.  Rows inserted, updated or
+deleted during the build are tracked live and are searchable the
+moment the index goes live — nothing is missed and no follow-up
+``OPTIMIZE`` is required.  (Fulltext index creation is also
+non-blocking, but rows added *during* a fulltext CREATE or REBUILD
+only become searchable at the next ``ALTER INDEX … OPTIMIZE``; the
+vector index has no such blind spot.)  Searches issued while the
+build is still running do not yet use the index (an index-less
+``LIKEV`` at that point follows the ``allinear`` policy above).
+
+An HNSW index may be created on an **empty table** if ``vec_dim`` is
+given (there is no row to infer the dimension from); rows inserted
+afterwards are tracked as usual.  IVFPQ cannot: its product-quantizer
+training needs data — at least ``256 × vec_pq_min_points_per_centroid``
+vectors (the coarse/PQ k-means floor).
+
+``ALTER TABLE … COMPACT`` is refused while a table has vector
+indexes, because compaction moves row ids that the sealed index
+stores: ``DROP`` the vector index(es) first, compact, then
+re-``CREATE``.
+
 Common options (both backends):
 
 .. list-table::
@@ -2074,6 +2111,19 @@ Common options (both backends):
      - Required on ``byte``/``varbyte`` columns.  On typed
        ``varvec*`` columns it overrides the column's element type
        (HNSW only — IVFPQ uses its own PQ quantization regardless).
+   * - ``vec_dim``
+     - positive integer
+     - auto from first row
+     - Per-vector dimensionality.  Usually **optional**: the first
+       usable row decides it — from the self-describing header
+       :ref:`chunkembed() <sql-server-funcs:chunkembed>` writes into
+       each value (which records ``dim`` even for ``k × dim``-cell
+       chunked rows), or, for plain headerless values, from the row's
+       cell count.  Required only when no row can reveal it: CREATE on
+       an **empty table**, or *headerless* multi-vector data (raw
+       ``k × dim`` concatenations not made by ``chunkembed()``).  An
+       explicit ``vec_dim`` always wins; rows whose header disagrees
+       with the index dim are warned about and skipped.
    * - ``indexmeter``
      - ``'on'``, ``'off'``, ``'always'``, ...
      - process default
@@ -2140,6 +2190,26 @@ IVFPQ-only options:
      - Lower values let the index build on smaller tables (each
        centroid trains on fewer points; recall suffers).  Mostly a
        test knob.
+   * - ``vec_encode_batch``
+     - integer in ``[1, 1048576]``
+     - auto from :ref:`indexMem <sql-set:indexMem>`, clamped to
+       ``[16384, 262144]``
+     - Vectors accumulated per encoding call during the build.  Larger
+       batches let the encoder use the whole machine (blocked BLAS +
+       all cores); the buffer costs ``dim × 4`` bytes per vector.  A
+       build-performance knob only — the resulting index is identical.
+   * - ``vec_encode_gpu``
+     - ``'auto'``, ``'on'``, ``'off'``
+     - ``'auto'``
+     - Run the encode stage's coarse assignment on a GPU when a
+       CUDA-enabled ``rampart-faiss`` module is installed and a device
+       is present (one message reports it; any GPU problem falls back
+       to CPU with a warning).  ``'auto'`` also skips the GPU for
+       small jobs — e.g. a routine ``ALTER INDEX ... OPTIMIZE`` over a
+       few thousand inserts — where one-time GPU startup would cost
+       more than it saves.  ``'on'`` always uses the GPU and fails
+       the build if it can't; ``'off'`` never tries.  The index is
+       identical either way.
 
 Examples:
 
@@ -2200,15 +2270,44 @@ Basic top-K:
 
     SELECT id, $rank
       FROM emb
-     WHERE v LIKEV ?
-     ORDER BY 2 DESC;
+     WHERE v LIKEV ?;
 
+* ``LIKEV`` returns rows **automatically ordered by rank**, best
+  first (like ``LIKEP``) — no ``ORDER BY`` needed.  This is true with
+  and without a vector index: a linear (index-less) search produces
+  the **identical** result — same rows, same ``$rank`` values, same
+  order, same ``likevRows`` cap — just slower, because every row is
+  scored.  If it is too slow, build the index.
+* Like ``LIKEP``, an index-less ``LIKEV`` requires opting in to the
+  full table scan: without ``allinear`` set the query is refused
+  ("would require linear search") and returns zero rows.  Enable it
+  per connection with ``sql.set({allinear: true})`` (or per statement
+  batch with ``SET allinear=1;``).  This applies only when there is
+  **no usable vector index** — the incremental scan of rows added
+  after the index was created (or last optimized) is part of the
+  indexed search and never needs ``allinear``.
 * ``$rank`` is the per-row score, scaled to ``[-100000, 100000]``.
   With unit-norm vectors the practical range is ``[0, 100000]``.
 * Use the ``maxRows`` parameter of ``exec()`` to retrieve top-K.
-* If the planner can't use the index — wrong column type, dimension
-  mismatch, or no index present — it falls back to brute force.
-  Results are identical, just slower.
+* If the index exists but can't serve the query — wrong column type,
+  dimension mismatch, unreadable index files — ``LIKEV`` falls back to
+  the same linear scan (subject to the ``allinear`` policy above).
+  A **query-dimension mismatch** additionally warns explicitly —
+  "*query vector has N cells but the index dim is D — embedding model
+  mismatch for this table?*" — since querying with a different
+  embedding model than the table was built with is almost always the
+  cause.  (The linear scan warns the same way when the query vector is
+  size-incompatible with every row.)  In a hybrid ``OR`` the keyword
+  side still serves, so a wrong-model query degrades to keyword-only
+  results with both messages in the error text.
+* A bare **string** right-hand side auto-embeds with or without an
+  index (typed ``varvec*`` columns; an unindexed ``varbyte`` column
+  cannot auto-embed, since the element type is only recorded in a
+  vector index's parameters).
+* On a *chunked* (multi-vector) row — see
+  `Chunked documents (multi-vector rows)`_ — ``$rank`` is the row's
+  **best-matching chunk's** score (max over the row's chunks), on both
+  the index path and the brute-force/re-score path.
 * ``$rank`` **is exact at the column's stored precision** for both
   HNSW and IVFPQ.  The index returns a candidate pool (up to
   :ref:`likevRows <sql-set:likevRows>` rows, default 1000) ordered by
@@ -2228,6 +2327,95 @@ Basic top-K:
   :ref:`likevRows <sql-set:likevRows>` (both backends), or, for
   IVFPQ, raise :ref:`likevPqNprobe <sql-set:likevPqNprobe>` — these
   surface more candidates that ``$rank`` will then exact-score.
+
+Hybrid keyword + vector queries (rank fusion)
+"""""""""""""""""""""""""""""""""""""""""""""
+
+A single ``OR`` combines a full-text (``LIKEP``) and a vector
+(``LIKEV``) search into one hybrid query, ranked by **Reciprocal Rank
+Fusion** — the standard method for merging retrievers whose scores
+live on incomparable scales (metamorph proximity vs scaled cosine):
+
+.. code-block:: sql
+
+    SELECT id, title, $rank
+      FROM docs
+     WHERE doc LIKEP ? OR v LIKEV ?;
+
+When **both** columns are indexed (a metamorph index on ``doc``, a
+vector index on ``v``), the engine takes each side's ranked candidate
+list — the keyword list capped by :ref:`likeprows <sql-set:likeprows>`,
+the vector list capped by :ref:`likevRows <sql-set:likevRows>` and
+already re-scored by exact distance — and fuses them by list
+*position*:
+
+.. code-block:: text
+
+    $rank  =  sum over lists of   1000000 / (60 + position)
+
+so no score calibration between the two retrievers is needed, and a
+document found by **both** gets additive credit: a row ranked #1 by
+both sides scores 32787, always beating a row that is merely #1 in
+one list.  The fused ``$rank``'s practical range is about
+``[3000, 32787]``.
+
+Rows are returned **automatically ordered by the fused rank**, best
+first — no ``ORDER BY`` needed, exactly as a single ``LIKEP`` or
+``LIKEV`` returns rank-ordered rows on its own.  This holds with or
+without the vector index: a missing index only makes the vector side
+a (slower) linear scan producing the same ranked candidate list, so
+results are identical — if they arrive too slowly, build the index.
+
+Notes:
+
+* The vector side fuses **with or without its index**, but the
+  index-less case is subject to the same ``allinear`` policy as
+  ``LIKEP``: with ``allinear`` set, the vector side's ranked list is
+  built by linear scan and fused results are identical (slower);
+  without it that side is refused and contributes nothing (a
+  ``LIKEP``-indexed OR then returns keyword results only).  A missing
+  metamorph index degrades the same way: without its index and
+  without ``allinear`` the keyword side has no ranked list.
+* The two list depths are the fusion pool knobs: ``likeprows``
+  (default 100) and ``likevRows`` (default 1000) bound what each
+  retriever contributes.
+* **Performance — do not add** ``ORDER BY $rank DESC``.  Output is
+  already fused-rank-ordered.  Without an ORDER BY the SELECT list is
+  evaluated *lazily* — only for the rows ``maxRows`` actually returns
+  — so even an expensive function like
+  :ref:`abstract() <sql-server-funcs:abstract>` in the select list
+  costs only ``maxRows`` evaluations.  An explicit ORDER BY destroys
+  both properties: the engine materializes every fused candidate (up
+  to ``likeprows + likevRows`` rows) and runs the full select list on
+  each before sorting what was already in order — on a large table
+  with an in-query abstract that is the difference between
+  milliseconds and minutes.
+* The 5-argument vec form of
+  :ref:`abstract() <sql-server-funcs:abstract>` works directly in the
+  fused query — the complete hybrid search is one statement::
+
+      SELECT $rank score, id, title,
+             abstract(doc, 400, 'querybest', ?, v) snip
+        FROM docs
+       WHERE doc LIKEP ? OR v LIKEV ?;
+
+  ``abstract()`` selects the winning chunk itself: it embeds its
+  query argument (a cache hit — ``LIKEV`` just embedded the same
+  string) and scores the row's chunks with the same scorer ``LIKEV``
+  uses, so best-chunk seeding is deterministic in any query shape —
+  fused, plain ``LIKEV``, or a per-row ``id = ?`` lookup — and never
+  depends on what the surrounding query evaluated.  (Only when the
+  abstract query argument is empty does it fall back to the
+  surrounding ``LIKEV``'s per-row scoring state, e.g. vector-literal
+  queries with no text.)
+
+* An ``AND`` of the two predicates is a **filter**, not a fusion:
+  "must match the keywords, ranked by vector similarity" (e.g. an
+  exact product code plus semantic ordering).  Its ``$rank`` derives
+  from the branch ranks and is not a calibrated hybrid score — use
+  the ``OR`` form when ranking quality is the goal.
+* ``OR`` of two ``LIKEP`` predicates (or two ``LIKEV`` predicates) is
+  unchanged — fusion applies only to the mixed keyword/vector shape.
 
 When to use vecdist()
 """""""""""""""""""""
@@ -2383,9 +2571,11 @@ Overview
 A *semantic vector* (also called an *embedding*) is a fixed-length array of
 floats that represents a piece of text in a continuous space, such that two
 texts with similar meaning have vectors that are close together.  Embeddings
-are produced by a model (typically loaded once into the SQL engine via
-``sql.set({llamaEmbed:'/path/to/model.gguf'});``); similarity is measured by dot
-product or L2 distance and reported by ``LIKEV`` and ``vecdist()``.
+are produced by a model, loaded once into the SQL engine via
+``sql.set({llamaEmbed:'/path/to/model.gguf'})`` (a ``llama.cpp`` GGUF
+model) or ``sql.set({onnxEmbed:{model:'/path/to/model-dir'}})`` (an ONNX
+model directory); similarity is measured by dot product or L2 distance
+and reported by ``LIKEV`` and ``vecdist()``.
 
 The typical end-to-end pipeline:
 
@@ -2411,9 +2601,10 @@ The typical end-to-end pipeline:
     sql.exec("create vector index docs_vec on docs (v) with backend 'hnsw';");
 
     // 5. Query.  A string on the right-hand side of LIKEV is auto-coerced
-    //    to embed(?).
+    //    to embed(?).  Rows arrive rank-ordered (best first) with or
+    //    without the index -- the index only makes it fast.
     var hits = sql.exec(
-        "select id, text, $rank from docs where v likev ? order by 3 desc",
+        "select id, text, $rank from docs where v likev ?",
         ["chocolate cake recipe"],
         {maxRows: 10}
     );
@@ -2439,11 +2630,15 @@ each.  In short:
   storage only — direct indexing is not yet enabled, but HNSW i8/u8
   *quantized indexes over varvecF\* columns* are supported via
   ``WITH vec_dtype 'i8'``).
-* ``byte(N)`` / ``varbyte(N)`` — opaque bytes, used when the same
-  column needs to hold vectors of more than one dtype or when integrating
-  with code that produces raw byte buffers.  An index over a ``varbyte``
-  column requires ``WITH vec_dtype '<dtype>'`` so the index knows how to
-  interpret the bytes.
+* ``byte(N)`` / ``varbyte(N)`` — opaque bytes, supported for
+  compatibility: pre-existing tables, code that produces raw byte
+  buffers, or a column that must hold vectors of more than one dtype.
+  **Prefer a typed ``varvec*`` column** — a ``varbyte`` column cannot
+  carry the element type, so inserts are unchecked, values are
+  ambiguous without the index (which requires
+  ``WITH vec_dtype '<dtype>'``), and string ``LIKEV`` parameters only
+  work once that index exists.  See the caveat list under
+  :ref:`Vector <rampart-sql:Vector>` in "Column Data Types".
 
 The column dimensionality of a typed ``varvec*`` is auto-detected from the
 first inserted vector.  Subsequent inserts must match.
@@ -2451,13 +2646,50 @@ first inserted vector.  Subsequent inserts must match.
 Generating embeddings
 ~~~~~~~~~~~~~~~~~~~~~
 
-Embedding generation runs inside the SQL engine via a loaded ``llama.cpp``
-model.
+Embedding generation runs inside the SQL engine via a loaded embedding
+model.  Two engines are available; a connection uses whichever was set
+most recently:
+
+* :ref:`llamaEmbed <sql-set:llamaEmbed>` — a ``llama.cpp`` ``.gguf``
+  model file (module ``rampart-llamacpp``).
+* :ref:`onnxEmbed <sql-set:onnxEmbed>` — an ONNX model *directory*
+  (module ``rampart-onnx``); the directory self-configures tokenizer,
+  pooling and special tokens.  ONNX sessions run concurrently across
+  threads with no per-thread setup.
+
+.. rubric:: Which engine?
+
+Both engines produce equivalent vectors from the same underlying model
+(most embedding models are published in both GGUF and ONNX form), so the
+choice is about hardware and model availability, not accuracy:
+
+* **Linux with an NVIDIA GPU** — use ``onnxEmbed``.  The CUDA-enabled
+  install uses the GPU automatically, and it is the fastest path for
+  bulk ingestion (``chunkembed()`` over millions of rows).
+
+* **CPU-only Linux, and macOS** — use ``llamaEmbed``.  llama.cpp's CPU
+  kernels are 2–3× faster than ONNX Runtime at every model size we
+  measured (x86 and ARM), and on Apple Silicon its Metal backend is an
+  order of magnitude faster again on large models.  (Apple's CoreML
+  path gains little for text encoders and is not the answer there.)
+
+* **Model only published as ONNX** — use ``onnxEmbed`` on any hardware;
+  it also reproduces HuggingFace tokenizer behavior exactly, which
+  matters for models with unusual tokenizers.
+
+Vectors are interchangeable: a table built with one engine can be
+queried with the other, provided the *model* is the same — results
+stay correct and relevant.  They are not byte-identical, though:
+published GGUF and ONNX files of the same model differ in weight
+precision (f16 vs f32), which shifts near-tie rankings and which
+chunk of a document wins (measured: ~80% identical top results,
+~84% identical snippets).  For reproducible output, serve with the
+same engine and weight file the table was built with.
 
 .. note::
 
-    Embedding requires the ``rampart-llamacpp`` module to be installed
-    and loadable.
+    Embedding requires the corresponding module (``rampart-llamacpp`` or
+    ``rampart-onnx``) to be installed and loadable.
 
     On the first ``sql.set({llamaEmbed: ...})`` call, if no llamacpp
     module is already loaded, ``rampart-sql`` automatically tries
@@ -2490,7 +2722,7 @@ model.
     ``rampart-langtools``; see its module documentation for build
     variants and install instructions.
 
-Two settings configure it, both documented in detail under
+The settings below configure it, all documented in detail under
 :ref:`sql-set:Embedding Properties`:
 
 * :ref:`llamaEmbed <sql-set:llamaEmbed>` — the path to a ``.gguf`` embedding
@@ -2501,7 +2733,16 @@ Two settings configure it, both documented in detail under
   (the default), each worker thread keeps its own ``llama_context`` over
   the shared model, so concurrent ``embed()`` calls run in parallel on GPU
   or multi-core CPU.  Set to ``false`` to serialize through a single
-  context (lower memory, lower throughput).
+  context (lower memory, lower throughput).  (llama.cpp only — ONNX
+  sessions are concurrent by nature.)
+* :ref:`onnxEmbed <sql-set:onnxEmbed>` — load an ONNX model directory as
+  the connection's embedding engine instead of a GGUF.
+* :ref:`likevCache <sql-set:likevCache>` — size of the per-model
+  document-embedding result cache (default 10 documents; ``0``
+  disables).  Any of ``embed()`` / ``chunkembed()`` / ``chunkavg()`` /
+  ``chunkcoherence()`` — or a repeated ``LIKEV`` search string — on the
+  *same text* is served from it, so the model runs once per distinct
+  text.
 
 Once a model is loaded, :ref:`embed() <sql-server-funcs:embed>` produces a
 typed vec for use in SELECT projections, INSERT values, or on the
@@ -2523,6 +2764,107 @@ type, so ``select embed(?, 'f32')`` returns a ``varvecF32``, not a
 ``varvecF16``.  The text argument is typically a column or a bound
 parameter; a literal string is also accepted.
 
+Chunked documents (multi-vector rows)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``embed()`` reduces a whole document to *one* vector — fine for short
+texts, but a long document's meaning gets averaged away.
+:ref:`chunkembed() <sql-server-funcs:chunkembed>` instead has the
+embedding engine split the document into chunks (structure-aware:
+paragraph boundaries first, then the model's token window) and returns
+**all** of the chunk vectors concatenated — a ``k × dim``-cell value
+stored in the ordinary ``varvec*`` column types.  No new column type, no
+separate chunk table: one document, one row.
+
+.. code-block:: javascript
+
+    sql.exec("create table docs (id int, doc varchar(16000), v varvecF16);");
+
+    // one row per document; k chunk vectors land in v.  The title as
+    // the per-chunk PREFIX ('' = default dtype): every chunk embeds as
+    // "<title> <chunk text>", so name-seeking queries match any chunk
+    // of the document by its name.
+    sql.exec("insert into docs values (?, ?, chunkembed(?, '', ?))",
+             [id, doc, doc, title]);
+
+    // no vec_dim needed: chunkembed()'s value header records the
+    // per-chunk dim, and the first row's header sets the index
+    sql.exec("create vector index docs_vec on docs (v);");
+
+    // rank by each document's best-matching chunk; snip is the text of
+    // the chunk that won
+    var hits = sql.exec(
+        "select id, abstract(doc, 200, 'smart', ?, v) snip, $rank " +
+        "from docs where v likev ?",
+        [q, q], {maxRows: 10});
+
+How the pieces behave with chunked rows:
+
+* **Index / LIKEV** — every chunk is indexed under its row; a row's
+  ``$rank`` is its best chunk's score (max over chunks).  A row whose
+  cell count is a multiple of the query dimension is treated as chunked;
+  a single-vector row is simply ``k = 1``, so chunked and plain rows mix
+  freely in one column.
+* **Dimension mismatches** — ``varvec*`` columns do not enforce a
+  dimension (the declared size is a hint), so an INSERT whose vector
+  doesn't fit the index always **succeeds at the table level**; what
+  varies is how the index treats it:
+
+  - a value **with a chunkembed() header** whose recorded ``dim``
+    disagrees with the index dim is definitively wrong (a different
+    embedding model, or corruption) — it is warned about and skipped
+    at INSERT time and during CREATE/REBUILD scans, *even when* its
+    total cell count happens to be a multiple of the index dim.  One
+    bad row never fails a build; it is skipped and the rest proceed.
+  - a **headerless** cell count that is a multiple of the index dim is
+    indistinguishable from a legitimate chunked row and is silently
+    indexed as ``k`` chunks — inserting a bare 1024-cell vector into a
+    512-dim index makes a 2-chunk row, searchable by either half.
+    Nothing can detect this case; keep your writers honest.
+  - a cell count that is **not a multiple** of the index dim can never
+    be served: the row is stored but is invisible to ``LIKEV``, and the
+    engine warns at every point it notices — at INSERT time
+    ("*inserted vector has N cells, not a multiple of the index dim
+    D; the row is stored but will not be searchable via LIKEV*") and
+    during a CREATE/REBUILD table scan.  The index itself is never
+    corrupted — every reader validates before touching vector bytes.
+  - NULL/empty vectors are legal, stored, and quietly non-matching.
+
+  One caveat: rows written *while* the index is still being built
+  can't be dimension-checked at INSERT time (the in-progress index
+  doesn't expose its dim yet); a non-multiple row that slips in during
+  that window is still harmless and invisible, just without the
+  INSERT-time warning.
+* **abstract()** — pass the vector column as a 5th argument
+  (``abstract(doc, size, style, query, v)``) in a query whose ``WHERE``
+  contains ``LIKEV`` on that column, and the snippet is seeded from the
+  text span of the winning chunk.  An empty ``query`` string gives a
+  pure vector snippet; a real query merges keyword hits with the chunk
+  span.  See :ref:`abstract <sql-server-funcs:abstract>`.
+* **Companion scalars** —
+  :ref:`chunkavg() <sql-server-funcs:chunkavg>` returns the document's
+  single combined vector (identical to ``embed()`` of the same text)
+  for a separate coarse-search column, and
+  :ref:`chunkcoherence() <sql-server-funcs:chunkcoherence>` returns a
+  0-to-1 "how single-topic is this document" signal.  All of the
+  embedding scalars share a per-model result cache
+  (:ref:`likevCache <sql-set:likevCache>`), so
+
+  .. code-block:: sql
+
+      INSERT INTO docs VALUES (?, ?, chunkavg(?), chunkembed(?));
+
+  embeds the document **once**, regardless of argument order.  (When
+  using the per-chunk prefix, pass the *same* prefix to every scalar —
+  ``chunkavg(?, '', ?title)`` etc. — the prefix is part of the cache
+  key.)
+* **UPDATE / DELETE** — the standard paths work; an updated row's old
+  chunks are retired and the new ones indexed.
+* **JavaScript** — a selected chunked value is a normal
+  `Vector Object` with ``dim == k × 384``; use
+  :ref:`split() <rampart-vector:Utility Functions>` to recover the
+  individual chunk vectors: ``row.v.split(384)``.
+
 Querying
 ~~~~~~~~
 
@@ -2534,16 +2876,15 @@ authoritative reference; a brief overview:
 
     SELECT id, $rank
       FROM docs
-     WHERE v LIKEV ?
-     ORDER BY 2 DESC;
+     WHERE v LIKEV ?;
 
 * The right-hand side of ``LIKEV`` is a vector.  A :green:`String` literal
   or bound :green:`String` parameter is auto-coerced via ``embed()`` using
   the currently-loaded model — so ``v LIKEV 'chocolate cake recipe'`` is
   equivalent to ``v LIKEV embed('chocolate cake recipe')``.
 * ``$rank`` is the per-row score, scaled to ``[-100000, 100000]``.  With
-  unit-norm vectors the practical range is ``[0, 100000]``; sort
-  ``ORDER BY ... DESC``.
+  unit-norm vectors the practical range is ``[0, 100000]``.  Indexed
+  ``LIKEV`` returns rows rank-ordered automatically.
 * Use the ``maxRows`` parameter of ``exec()`` to retrieve top-K.
 * ``$rank`` **is exact at the column's stored precision** — the value is
   computed per-row by ``rp_vector_distance`` on the actual stored column
@@ -3496,7 +3837,7 @@ The abstract function generates an abstract of a given portion of text.
 +========+==================+===================================================+
 |text    |:green:`String`   | The text from which an abstract will be generated.|
 +--------+------------------+---------------------------------------------------+
-|max     |:green:`Number`   | Maximum length in characters of the abstract.     |
+|max     |:green:`Number`   | Maximum length in bytes of the abstract.          |
 +--------+------------------+---------------------------------------------------+
 |style   |:green:`String`   | Method used to generate the abstract.             |
 +--------+------------------+---------------------------------------------------+
@@ -3510,9 +3851,10 @@ The abstract function generates an abstract of a given portion of text.
 Return Value:
    :green:`String`. The abstract text.
 
-The abstract will be less than ``max`` characters long, and will attempt to
-end at a word boundary.  If ``max`` is not specified (or is less than or
-equal to 0) then a default size of 230 characters is used.
+The abstract will be less than ``max`` bytes long, and will attempt to
+end at a word boundary (a multi-byte UTF-8 character is never split).
+If ``max`` is not specified (or is less than or equal to 0) then a
+default size of 230 bytes is used.
 
 The ``style`` argument allows a choice between several different ways of
 creating the abstract.  Note that some of these styles require the ``query``

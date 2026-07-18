@@ -7,9 +7,10 @@ Preface
 Acknowledgement
 """""""""""""""
 
-Rampart uses the `Duktape JavaScript Engine <https://duktape.org>`_. Duktape is an 
+Rampart uses a `modified <https://github.com/aflin/duktape>`_ version of the
+`Duktape JavaScript Engine <https://duktape.org>`_. Duktape is an
 embeddable JavaScript engine, with a focus on portability and compact footprint.
-The developers of Rampart are extremely grateful for the excellent api and
+The developers of Rampart are extremely grateful for the excellent API and
 ease of use of this library.
 
 License
@@ -27,14 +28,16 @@ for the excellent code.
 
 What does it do?
 """"""""""""""""
+
 Rampart uses a low memory footprint JavaScript interpreter to bring together
-several high performance tools and useful utilities for use in Web
-and information management applications.  At its core is the Duktape
-JavaScript library and added to it is a SQL database, full text search
-engine, a fast and innovative NOSQL Mmap database, a fast multi-threaded 
-webserver, client functionality via the Curl and crypto functions via
-OpenSSL.  It attempts to provide performance, maximum flexibility and 
-ease of use through the marriage of C code and JavaScript scripting.
+several high performance tools and useful utilities for use in Web and
+information management applications.  At its core is the Duktape JavaScript
+library and added to it is a SQL database, full text and vector (semantic)
+search engines, a memory map NOSQL database, a fast multi-threaded
+webserver, client functionality
+via the Curl, crypto functions via OpenSSL and more.  It attempts to provide
+performance, maximum flexibility and ease of use through the marriage of C
+code and JavaScript scripting.
 
 
 
@@ -70,16 +73,27 @@ following:
 
 * File and C-functions utilities such as ``printf``, ``fseek``, and ``exec``.
 
-* Included ``C`` modules (``rampart-sql``, ``rampart-server``, ``rampart-curl``, 
-  ``rampart-crypto``, ``rampart-html``, ``rampart-lmdb``, ``rampart-redis``, 
-  ``rampart-cmark`` and ``rampart-robots``).
+* Included ``C`` modules (``rampart-sql``, ``rampart-server``, ``rampart-curl``,
+  ``rampart-crypto``, ``rampart-html``, ``rampart-lmdb``, ``rampart-redis``,
+  ``rampart-cmark``, ``rampart-net``, ``rampart-python``, ``rampart-robots``,
+  ``rampart-almanac``, ``rampart-auth``, ``rampart-totext``, ``rampart-faiss``,
+  ``rampart-llamacpp``, ``rampart-iroh``, ``rampart-webview`` and
+  ``rampart-gm``).
+
+* Included ``JavaScript`` modules (``rampart-chromeview``,
+  ``rampart-cmodule``, ``rampart-date-holidays``, ``rampart-email``,
+  ``rampart-llm``, ``rampart-open-meteo``, ``rampart-sqlUpdate`` and
+  ``rampart-webserver``).
 
 * Event loop using ``libevent2``.
 
-* ECMA 2015, 2016, 2017 and 2018 support using the `Babel <https://babeljs.io/>`_
-  JavaScript transpiler.
+* ECMA 2015 (ES6) and later language support via the built-in
+  `transpiler <ECMAScript 2015+ with transpiler>`_ or
+  `Babel <ECMAScript 2015+ and Babel.js>`_.
 
-* Full Text Search and SQL databasing via ``rampart-sql``.
+* Full Text Search, Vector (semantic) Search and SQL databasing via ``rampart-sql``.
+
+* Generic threading, locking and variable sharing via ``rampart.thread``.
 
 * Multi-threaded http(s) server from libevhtp_ws via ``rampart-server``.
 
@@ -87,31 +101,61 @@ following:
 
 * Cryptography functions from OpenSSL via ``rampart-crypto``.
 
-* HTML parsing and and error correcting via ``rampart-html``. 
+* HTML parsing and error correcting via ``rampart-html``. 
 
 * Fast NOSQL database via ``rampart-lmdb``.
 
 * Redis Client via ``rampart-redis``.
 
-* Simple Event functions via `rampart.event`_\ .
+* Asynchronous networking and socket functions via ``rampart-net``.
+
+* Python interpreter, running python functions and sharing variables via
+  ``rampart-python``
+
+* Simple, cross-thread Event functions via `rampart.event`_\ .
 
 * `Extra JavaScript Functionality`_\ .
+
+* Lazy-loaded **Intl** (ECMA-402) support — full surface
+  (``DateTimeFormat``, ``NumberFormat``, ``Collator``, ``Segmenter``,
+  etc.) backed by vendored ICU4C; ``rampart-intl.so`` is only loaded on
+  first access.  See :ref:`Intl <rampart-main:Intl>`.
+
+* Lazy-loaded **WHATWG / W3C Web Platform APIs** (experimental) —
+  ``fetch``, ``URL``, ``Headers``/``Request``/``Response``,
+  ``Blob``/``File``, the ``ReadableStream`` family, ``WebSocket``,
+  ``XMLHttpRequest``, ``crypto`` (Web Crypto), ``structuredClone``,
+  ``EventTarget``, and more, via ``rampart-whatwg.so``.  Partial
+  conformance — strongest where no browser DOM is required.  See
+  :ref:`WHATWG / W3C Web Platform APIs (experimental) <rampart-main:WHATWG / W3C Web Platform APIs (experimental)>`.
+
+* Optional **Node.js compatibility shim** (experimental) — a subset of
+  node's core modules (``fs``, ``path``, ``util``, ``events``, ``url``,
+  ``crypto``, ``stream``, ``buffer``, ``process`` extras, etc.) via
+  ``require('rampart-nodeshim')``, for porting node-style code.  Prefer
+  rampart's native modules for new code.  See
+  :ref:`rampart-nodeshim Module <rampart-extras:rampart-nodeshim Module>`.
 
 Rampart philosophy 
 ~~~~~~~~~~~~~~~~~~ 
 
-Though Rampart supports ``setTimeout()``, `Events <rampart.events>`_ (and
-other async functions via, e.g., :ref:`websockets <rampart-server:websockets>`, 
-:ref:`rampart-redis <rampart-redis:The rampart-redis module>`, Babel, etc), 
-all functions included in the `Duktape <https://duktape.org>`_ JavaScript
-engine (as well as most of the functions added to Rampart) are synchronous.  Raw 
-JavaScript execution is more memory efficient, but far slower than with, e.g., 
-node.js.  However, the functionality and speed of the available C functions provide 
-comparable efficacy, excellent performance and are a viable alternative to 
-`LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_, 
-`MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_ or other stacks, all
-in a single product, while consuming considerably less resources than the
-aforementioned.
+Rampart treats JavaScript as a thin orchestration layer over high
+performance functions written in C.  The heavy lifting — SQL, full text
+and vector (semantic) search, the HTTP(S) server, cryptography,
+compression, and document processing — happens in native code, so the
+speed of the interpreter itself rarely matters to overall throughput.
+Duktape is chosen for exactly this role: it is far more memory efficient
+than engines such as V8, and wherever its slower interpretation would
+otherwise be a bottleneck, the work has already been handed off to C.
+
+The result is a single, self-contained product — no separate database
+server, search cluster, or application tier to deploy and operate.  It is
+a viable alternative to stacks such as
+`LAMP <https://en.wikipedia.org/wiki/LAMP_(software_bundle)>`_,
+`MEAN <https://en.wikipedia.org/wiki/MEAN_(solution_stack)>`_, or a
+`Node <https://en.wikipedia.org/wiki/Node.js>`_\ /\ `Express <https://en.wikipedia.org/wiki/Express.js>`_
+application paired with a separate search engine, while consuming
+considerably fewer resources than any of them.
 
 Rampart Global Variable and Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,23 +202,91 @@ Example:
   rampart.globalize(rampart.utils, ["printf"]);
   printf("only printf is a global var\n");
 
+rampart.localize
+""""""""""""""""
+
+Put all or named properties of an :green:`Object` into the local scope
+of the calling function.  Localized names are accessible as if they were
+local variables, but do not pollute the global namespace.  When called
+from the global scope, the behavior is identical to `rampart.globalize`_.
+
+.. code-block:: javascript
+
+    rampart.localize(var_obj [, filterOrIgnore [, ignoreConflicts]]);
+
++------------------+------------------+------------------------------------------------------------+
+|Argument          |Type              |Description                                                 |
++==================+==================+============================================================+
+|var_obj           |:green:`Object`   | The :green:`Object` with the properties to be localized.   |
++------------------+------------------+------------------------------------------------------------+
+|filterOrIgnore    |:green:`Array` or | If an :green:`Array`, only the named properties will be    |
+|                  |:green:`Boolean`  | copied (same convention as ``rampart.globalize``).         |
+|                  |                  +------------------------------------------------------------+
+|                  |                  | If a :green:`Boolean` set ``true``, silently skip          |
+|                  |                  | properties that conflict with local variable               |
+|                  |                  | declarations.  Default is ``false`` (throw a               |
+|                  |                  | ``TypeError`` on conflict).                                |
++------------------+------------------+------------------------------------------------------------+
+|ignoreConflicts   |:green:`Boolean`  | When ``filterOrIgnore`` is an :green:`Array`, this         |
+|                  |                  | optional third argument controls conflict behavior.        |
+|                  |                  | If ``true``, silently skip conflicts.  Default is          |
+|                  |                  | ``false`` (throw a ``TypeError``).                         |
++------------------+------------------+------------------------------------------------------------+
+
+Return value:
+   ``undefined``.
+
+Note:
+   Names that are declared with ``var`` in the calling function are
+   register-bound at compile time and cannot be overridden by ``localize``.
+   By default, attempting to localize a name that conflicts with a ``var``
+   declaration throws a ``TypeError``.  Setting ``ignoreConflicts`` to
+   ``true`` causes the conflicting name to be silently skipped while
+   still copying non-conflicting names.
+
+Example:
+
+.. code-block:: javascript
+
+   function handleRequest() {
+       rampart.localize(rampart.utils);
+       printf("rampart.utils.* are now local to this function!\n");
+   }
+
+   /* with a filter */
+   function handleRequest2() {
+       rampart.localize(rampart.utils, ["printf", "sprintf"]);
+       printf("only printf and sprintf are local\n");
+   }
+
+   /* with ignore conflicts */
+   function myFunc() {
+       var printf = null; /* local var declaration */
+       rampart.localize(rampart.utils, true);
+       /* printf stays null (conflict skipped), other utils are localized */
+       sprintf("this works: %s\n", "yes");
+   }
+
 rampart.utils
 """""""""""""
 
 A collection of utility functions.  
-See :ref:`this page<rampart-utils:rampart.utils>` 
+See :ref:`Rampart Utility Functions <rampart-utils:rampart.utils>` 
 for full description of functions.
 
 rampart.event
 """""""""""""
 
 Rampart can execute functions from within its event loop using its own
-event-on-trigger syntax.
+event-on-trigger syntax.  When used across 
+:ref:`threads <rampart-thread:rampart thread functions>`, a
+registered function is executed in the thread in which it was registered and
+may be triggered from any thread.
 
 rampart.event.on()
 ''''''''''''''''''
 
-Insert a named function to be run upon triggering a named event.  If the named
+Register a named function to be run upon triggering a named event.  If the named
 event does not exist, it will be created.
 
 Usage:
@@ -186,7 +298,8 @@ Usage:
 Where:
 
    * ``eventName`` is an arbitrary :green:`String` used to identify, trigger
-     and remove the event using the `rampart.event.remove()`_ function below.
+     and remove the event using the `rampart.event.trigger()`_ and 
+     `rampart.event.remove()`_ function below.
 
    * ``funcName`` is an arbitrary :green:`String` used to identify and remove
      the callback function using the `rampart.event.off()`_ function below.
@@ -217,7 +330,8 @@ Where:
      can be serialized using `CBOR <https://duktape.org/guide.html#builtin-cbor>`_\ .
      Because this function may trigger events that span several threads and Duktape stacks, when
      used with the :ref:`rampart-server <rampart-server:The rampart-server HTTP module>`
-     module, special variables such as ``req`` (see: 
+     or :ref:`rampart-thread <rampart-thread:Rampart Thread Functions>`
+     modules, special variables such as ``req`` (see: 
      :ref:`The Request Object <rampart-server:The Request Object>`) may contain
      functions and hidden state variables which cannot be moved from stack
      to stack.  In most cases, it will not be limiting since each callback is run on its own thread/stack
@@ -234,16 +348,16 @@ Remove a named function from the list of functions for the given event.
 
 Where:
 
-   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.utils.on()`
+   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.event.on()`
      function above.
 
-   * ``funcName`` is a :green:`String`, the ``funcName`` passed to the `rampart.utils.on()`
+   * ``funcName`` is a :green:`String`, the ``funcName`` passed to the `rampart.event.on()`
      function above.
 
 rampart.event.remove()
 ''''''''''''''''''''''
 
-Remove all function from the list of functions for the given event. This effectively
+Remove all functions from the list of functions for the given event. This effectively
 removes the event.
 
 .. code-block:: javascript
@@ -252,7 +366,7 @@ removes the event.
 
 Where:
 
-   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.utils.on()`
+   * ``eventName`` is a :green:`String`, the ``eventName`` passed to the `rampart.event.on()`
      function above.
 
 rampart.event.scopeToModule()
@@ -323,7 +437,7 @@ Usage:
 
 Where ``jsfile`` is the path of the script to be included.  
 
-If ``jsfile`` is not a absolute path name it will be searched for in the same
+If ``jsfile`` is not an absolute path name it will be searched for in the same
 manner as with `Module Search Path`_ except that in addition to the 
 current directory and the ``process.scriptPath`` directory, it will search in
 ``/usr/local/rampart/includes/`` and ``~/.rampart/includes/`` rather than the
@@ -417,7 +531,7 @@ options:
         ``"object"``): Whether to
         return an :green:`Array` or an :green:`Object` for each row.
 
-      * ``hasHeaderRow`` - -  :green:`Boolean` (default ``false``): Whether
+      * ``hasHeaderRow`` -  :green:`Boolean` (default ``false``): Whether
         to treat the first row as column names. If ``false``, the first row
         is imported as csv data and the column names will
         default to ``col_1, col_2, ..., col_n``.
@@ -442,7 +556,7 @@ options:
         ``3`` for column 0 second pass, etc.).  The variable ``i`` is the current row number.
 
       * ``progressStep`` :green:`Number`: Where number is ``n``, execute
-        ``progresFunc`` callback, if provided, for every nth row in each stage.
+        ``progressFunc`` callback, if provided, for every nth row in each stage.
         
 
 callback:
@@ -607,8 +721,8 @@ installPath
 
 The value of ``process.installPath`` is a :green:`String` containing the
 canonical path (directory) of the rampart install directory. It is derived
-from the path of the rampart executable, removing '/bin' from the end of the 
-path if exists.  Example: if ``/usr/local/bin/rampart`` is run (and is the
+from the path of the rampart executable, removing '/bin' from the end of the
+path if it exists.  Example: if ``/usr/local/bin/rampart`` is run (and is the
 actual location of the executable and not a symlink), ``process.installPath``
 will be ``/usr/local``.  However if the executable is in a path that does
 not end in ``bin/`` (e.g. ``~/mytestfiles/rampart``), ``process.installPath`` 
@@ -621,6 +735,13 @@ installPathBin
 
 The value of ``process.installPathBin`` is a :green:`String` containing the
 canonical path of the directory containing the rampart executable.
+
+modulesPath
+"""""""""""
+
+The value of ``process.modulesPath`` is a :green:`String` containing the
+canonical path (directory) in which the standard installed modules can 
+be found.
 
 scriptPath
 """"""""""
@@ -690,10 +811,161 @@ Where ``newname`` is the new name for the current process.
 Return Value:
    ``undefined``.
 
+nCpu
+""""
+
+The value of ``process.nCpu`` is a :green:`Number`, the count of online
+logical CPUs as reported by ``sysconf(_SC_NPROCESSORS_ONLN)``.  Set once
+at startup; not affected by subsequent CPU hot-plug events.
+
+getTotalMem
+"""""""""""
+
+Get the total physical RAM installed in the system, in megabytes.
+
+Usage:
+
+.. code-block:: javascript
+
+   var mb = process.getTotalMem();
+
+Return Value:
+   :green:`Number`. Total physical memory in MB.
+
+Implementation: ``sysinfo(2)`` on Linux, ``sysctl HW_MEMSIZE`` on
+macOS, ``sysctl HW_PHYSMEM`` on FreeBSD.
+
+getFreeMem
+""""""""""
+
+Get the amount of memory currently available to the system, in
+megabytes.
+
+Usage:
+
+.. code-block:: javascript
+
+   var mb = process.getFreeMem();
+
+Return Value:
+   :green:`Number`. Available memory in MB.
+
+Implementation: ``sysinfo(2)`` on Linux.  On macOS, sums ``free`` +
+``inactive`` + ``speculative`` pages from ``host_statistics64(
+HOST_VM_INFO64)`` — matching node's convention, since macOS aggressively
+keeps reusable pages in the inactive list.  On FreeBSD, uses
+``sysctlbyname("vm.stats.vm.v_free_count")``.
+
+uptime
+""""""
+
+Get process uptime in seconds (matches ``process.uptime()`` in
+Node.js, Deno, Bun, and other JavaScript runtimes).
+
+Usage:
+
+.. code-block:: javascript
+
+   var sec = process.uptime();
+
+Return Value:
+   :green:`Number`. Seconds since *this rampart process* started.
+
+Implementation: ``clock_gettime(CLOCK_MONOTONIC)``.  The origin is
+captured on the first call across any context, so workers see the
+parent-process lifetime (matching node's worker_threads behavior).
+
+For seconds since the operating system booted (was the historical
+meaning of ``process.uptime()`` in rampart, now under a separate
+name), see `systemUptime`_.
+
+systemUptime
+""""""""""""
+
+Get system uptime in seconds.
+
+Usage:
+
+.. code-block:: javascript
+
+   var sec = process.systemUptime();
+
+Return Value:
+   :green:`Number`. Seconds since system boot.
+
+Implementation: ``sysinfo(2)`` on Linux, ``sysctl KERN_BOOTTIME``
+(boot ``timeval`` subtracted from wall-clock now) on macOS / *BSD.
+Falls back to ``CLOCK_MONOTONIC`` if the platform-native call fails.
+
+Equivalent to node's ``os.uptime()`` (rampart's nodeshim ``os``
+module delegates here).
+
+getCpuInfo
+""""""""""
+
+Get per-core CPU information, in the same shape node's ``os.cpus()``
+returns.
+
+Usage:
+
+.. code-block:: javascript
+
+   var cpus = process.getCpuInfo();
+   // cpus[i] = {
+   //    model: <String>,        // CPU model string ("unknown" if unavailable)
+   //    speed: <Number>,        // MHz (0 if not reported by the platform)
+   //    times: {
+   //       user: <ms>, nice: <ms>, sys: <ms>, idle: <ms>, irq: <ms>
+   //    }
+   // }
+
+Return Value:
+   :green:`Array` of per-core objects.
+
+Implementation: ``/proc/stat`` + ``/proc/cpuinfo`` on Linux;
+``host_processor_info(PROCESSOR_CPU_LOAD_INFO)`` plus ``sysctlbyname(
+"machdep.cpu.brand_string")`` and ``hw.cpufrequency_max``/
+``hw.cpufrequency`` on macOS; ``kern.cp_times`` plus ``hw.model`` and
+``dev.cpu.0.freq`` on FreeBSD.
+
+On Apple Silicon, ``hw.cpufrequency_max`` is not available and
+``speed`` will be ``0`` — matching node/libuv's behavior.  On macOS,
+``nice`` and ``irq`` are always ``0`` (the platform does not separate
+them from ``sys``/``user``).
+
+setMaxMem
+"""""""""
+
+Set a hard upper bound on the virtual address space the current
+process may use.  Once set, ``malloc``/buffer allocations that would
+push the process over this limit fail.
+
+Usage:
+
+.. code-block:: javascript
+
+   var mb = process.setMaxMem(amount);
+
+Where ``amount`` is either:
+
+   * a :green:`Number` — the limit in MB
+   * a :green:`String` ending in ``%`` — a percentage of
+     ``getTotalMem()`` (e.g. ``"75%"``)
+
+Return Value:
+   :green:`Number`. The limit actually set, in MB.
+
+Implementation: ``setrlimit(RLIMIT_AS, ...)``.  Note that on macOS,
+``RLIMIT_AS`` is accepted by ``setrlimit`` but **not enforced** by the
+kernel — the call returns success and ``getTotalMem``/``getFreeMem``
+report unchanged values, but allocations above the limit will still
+succeed.  Effective on Linux and FreeBSD.  Cannot be raised above
+any system-imposed hard limit.
+
 Using the require Function to Import Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Scripts may reference function stored in external files.  These files are
+Scripts may reference functions stored in external files.  These files are
 known as modules.  A module is a compiled C program or a JavaScript file
 which exports an :green:`Object` or :green:`Function` when the
 ``require("module-name")`` syntax is used.
@@ -825,77 +1097,116 @@ The module could then be imported using the ``require()`` function.
 See `The Duktape API Documentation <https://duktape.org/api.html>`_
 for a detailed listing of available Duktape C API functions.
 
+See also the :ref:`rampart-cmodule <rampart-extras:rampart-cmodule>`
+helper, which automatically compiles embedded C code into a JavaScript
+function.
+
 Module Search Path
 """"""""""""""""""
 
 Modules are searched for in the following order:
 
-#. As given.  If ``/path/to/module.js`` is given, the absolute path is checked first.
-   If ``path/to/module.js`` or ``module.js`` is given
-   ``./path/to/module.js`` or ``./module.js`` is checked
-   first. Thus relative paths are checked from the current directory first.
+#. If an absolute path (``/path/to/module.js``) is given, only that path
+   is checked; if not found, the search stops there.  (An absolute path is
+   always resolved from disk, never from a bundle.)
 
-#. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+#. When running a :ref:`single-file bundle <rampart-extras:single-file bundles>`,
+   the entire bundle (its appended zip) is searched before any on-disk
+   location: the module name at the zip root, then in the zip's
+   ``modules/`` and ``lib/rampart_modules/`` subdirectories.
 
-#. In the ``modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
+#. If included from within a module, in that module's own directory
+   (``module.path``).
 
-#. In the current working directory. If ``/module.js`` is given, 
-   ``./module.js`` is checked.
+#. In :ref:`process.scriptPath <rampart-main:scriptPath>`\ , then in its
+   ``modules/`` and ``lib/rampart_modules/`` subdirectories.
 
-#. In the ``modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
+#. In the ``modules/`` and ``lib/rampart_modules/`` subdirectories of
+   ``~/.rampart/`` (i.e. ``~/.rampart/modules/`` and
+   ``~/.rampart/lib/rampart_modules/``), where ``~`` is the current user's
+   home directory from the ``$HOME`` environment variable.  If ``$HOME``
+   is unset or unreadable, ``/tmp`` is used.
 
-#. In the ``~/.rampart/modules`` directory of current user's home directory 
-   as provided by the ``$HOME`` environment variable.
+#. If set, in the directory given by the ``$RAMPART_PATH`` environment
+   variable.
 
-#. In the ``modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
-   was compiled.  The default is ``/usr/local/rampart/modules``. Or
-   preferentially, if set, the path pointed to by the environment variable
-   ``$RAMPART_PATH`` + ``/modules``.
-
-#. In :ref:`process.installPath <rampart-main:installPath>`\ .
-
-#. In :ref:`process.installPathBin <rampart-main:installPathBin>`\ .
-
-#. In the ``/lib/rampart_modules/`` subdirectory of :ref:`process.scriptPath <rampart-main:scriptPath>`\ .
-
-#. In the ``lib/rampart_modules`` subdirectory of :ref:`process.installPath <rampart-main:installPath>`\ .
-
-#. In the ``~/.rampart/lib/rampart_modules`` directory of current user's home directory 
-   as provided by the ``$HOME`` environment variable.
-
-#. In the ``lib/rampart_modules`` directory of the ``-DRP_INST_PATH`` path set when Rampart 
-   was compiled.  The default is ``/usr/local/rampart/lib/rampart_modules``. Or
-   preferentially, if set, the path pointed to by the environment variable
-   ``$RAMPART_PATH`` + ``/lib/rampart_modules``.
+#. In :ref:`process.installPath <rampart-main:installPath>`\ , then in its
+   ``modules/`` and ``lib/rampart_modules/`` subdirectories.  (The modules
+   directory located here is exposed as
+   :ref:`process.modulesPath <rampart-main:modulesPath>`\ .)
 
 
 Extra JavaScript Functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A subset of post ES5 JavaScript syntax is supported when not using
-`babel <ECMAScript 2015+ and Babel.js>`_ below.  It is provided
-experimentally (unsupported) and is limited in scope. 
+Rampart provides a broad set of ES2015+ standard-library methods and
+globals, so most modern JavaScript runs without
+`babel <ECMAScript 2015+ and Babel.js>`_ or the
+`transpiler <ECMAScript 2015+ with transpiler>`_.  These aim to match
+the ECMAScript specification; only the rampart-specific extensions
+are flagged.  For language *syntax* beyond ES5 (``class``, arrow
+functions, ``async``/``await``, destructuring, ``for…of``,
+``...spread``, etc.), see the
+`transpiler <ECMAScript 2015+ with transpiler>`_.
 
-Object.values()
-"""""""""""""""
+Object Methods
+""""""""""""""
 
-Return an :green:`Array` containing the values of an object.
+* ``Object.values(obj)`` — Returns an :green:`Array` of the object's
+  own enumerable values.  Also accepts a :green:`String` (returns char
+  array) or :green:`Buffer` (passthrough).
+* ``Object.hasOwn(obj, prop)`` — :green:`Boolean`; safer than
+  ``obj.hasOwnProperty(prop)`` when ``obj`` lacks a prototype chain.
+* ``Object.fromEntries(iter)`` — Builds an object from an array of
+  ``[key, value]`` pairs (inverse of ``Object.entries``).
+* ``Object.groupBy(items, keyFn)`` — Groups items by the result of
+  ``keyFn``.  Returns a null-prototype object whose values are arrays
+  of items sharing a key.  Accepts any iterable.
 
 .. code-block:: javascript
 
-   var obj = {
-      key1: "val1",
-      key2: "val2"
-   }
+   Object.values({a:1, b:2});                    /* [1, 2] */
+   Object.fromEntries([['a',1],['b',2]]);        /* {a:1, b:2} */
+   Object.groupBy([1.1, 2.5, 1.7], Math.floor);  /* {1:[1.1,1.7], 2:[2.5]} */
 
-   console.log(Object.values(obj));
-   /* expected output:
-      ["val1","val2"]              */
+Array Methods
+"""""""""""""
+
+Standard prototype methods on :green:`Array.prototype`:
+``find``, ``findIndex``, ``includes``, ``flat`` (default depth 1;
+``Infinity`` supported), ``flatMap``, ``at`` (negative indices),
+``findLast``, ``findLastIndex``.
+
+Static methods on :green:`Array`: ``Array.from(iterable[, mapFn])``
+(strings, array-likes, iterables) and ``Array.of(...args)``.
+
+Iteration surface: ``arr.keys()``, ``arr.values()``, ``arr.entries()``,
+and ``arr[Symbol.iterator]()`` all return spec iterators.  Note that
+``for…of`` and spread *syntax* still require the
+`transpiler <ECMAScript 2015+ with transpiler>`_, but the underlying
+iterators work in vanilla Rampart via ``.next()`` and
+``Array.from(...)``.
+
+.. code-block:: javascript
+
+   [1,2,3,4].findLast(function(x){return x < 4;});   /* 3 */
+   [1,[2,[3]]].flat(Infinity);                       /* [1,2,3] */
+   Array.from('abc', function(c){return c.toUpperCase();});  /* ['A','B','C'] */
+
+String Methods
+""""""""""""""
+
+* ``str.trimStart()`` / ``str.trimEnd()`` — trim whitespace at one end.
+* ``str.replaceAll(search, repl)`` — string-only ``search``; replaces
+  every occurrence.
+* ``str.matchAll(regex)`` — returns an iterator over global-regex
+  matches (each match includes capture groups).  Throws
+  ``TypeError`` if ``regex`` is a non-global :green:`RegExp` (per spec).
 
 Template Literals
 """""""""""""""""
 
-These may be uses much as expected:
+These may be used in the same manner as in standard ES6 JavaScript:
 
 .. code-block:: javascript
 
@@ -913,7 +1224,7 @@ These may be uses much as expected:
 Tagged Functions
 """"""""""""""""
 
-These may be used much as expected:
+These may be used in the same manner as in standard ES6 JavaScript:
 
 .. code-block:: javascript
 
@@ -1031,6 +1342,281 @@ Example:
 Note that this non-standard syntax is not available when using 
 :ref:`babel <babeljs>` below.
 
+Unescaped Literals
+""""""""""""""""""
+
+A **non-standard** (and unique to Rampart) shortcut syntax using triple
+backticks may be used in place of normal :green:`Strings` where ``\`` have
+no special meaning.  It also accepts multi-lined strings.
+
+Example:
+
+.. code-block:: javascript
+
+    var unescaped = ```here is a single backslash:
+    \
+    ```;
+    /* equiv to ""here is a single backslash:\n\\\n"; */
+
+Note that this non-standard syntax is not available when using 
+:ref:`babel <babeljs>` below.
+
+
+Duktape/Node.js Buffer Binding Extras
+"""""""""""""""""""""""""""""""""""""
+
+The Duktape JavaScript engine provides basic
+`node.js Buffer <https://wiki.duktape.org/howtobuffers2x#node.js-buffer-bindings>`_
+support — the ``Buffer`` constructor, byte indexing, ``read*`` /
+``write*`` accessors for fixed-width integers and floats, ``slice``,
+``equals``, ``compare``, ``copy``, ``fill``, ``concat``, ``isBuffer``,
+``byteLength``, and a basic single-argument ``toString``. Rampart
+extends this with encoding-aware methods, additional factories, and
+several prototype helpers commonly used by node code.
+
+Supported encodings
+'''''''''''''''''''
+
+The following encoding names are accepted by ``toString()``,
+``write()``, ``Buffer.from()``, and ``Buffer.byteLength()``. Names
+are case-insensitive and dashes (``utf-8``) are tolerated.
+
+* ``utf8`` (default)
+* ``hex``
+* ``base64``
+* ``base64url`` (URL/filename-safe alphabet, no padding)
+* ``latin1`` (also ``binary``)
+* ``utf16le`` (also ``ucs2``)
+* ``ascii``
+
+Static methods
+''''''''''''''
+
+* ``Buffer.alloc(size[, fill])`` — Allocate a new zero-filled
+  :green:`Buffer`. If ``fill`` (a :green:`String`, :green:`Buffer`,
+  or :green:`Number`) is given, the buffer is filled with that data,
+  repeating if shorter than ``size``.
+
+* ``Buffer.allocUnsafe(size)`` / ``Buffer.allocUnsafeSlow(size)`` —
+  Aliases of ``Buffer.alloc``. (Node returns uninitialized memory
+  for speed; rampart always zero-fills since the difference is
+  negligible at our typical sizes and the safety win is real.)
+
+* ``Buffer.from(data[, encoding])`` — Create a new :green:`Buffer`
+  from any of:
+
+    * A :green:`Buffer` or :green:`Uint8Array` (copies the bytes).
+    * An :green:`Array` of integers (each truncated to a byte).
+    * A :green:`String`. With no ``encoding``, the string is taken
+      as UTF-8. Otherwise it is decoded per the encoding name (e.g.
+      ``Buffer.from('aabbcc','hex')`` yields ``<Buffer aa bb cc>``).
+
+* ``Buffer.byteLength(input[, encoding])`` — Number of bytes
+  ``input`` occupies. For a :green:`Buffer`, returns its length
+  directly. For a :green:`String`, returns the byte count for the
+  given encoding (or UTF-8 by default).
+
+* ``Buffer.isEncoding(name)`` — Returns :green:`true` if ``name`` is
+  one of the supported encodings above.
+
+* ``Buffer.isBuffer(value)`` / ``Buffer.concat(list[, totalLen])`` /
+  ``Buffer.compare(a, b)`` — As in node.
+
+* ``Buffer.poolSize`` — Numeric property. Set to ``8192`` for
+  node-compat; rampart doesn't actually pool internally.
+
+Prototype methods
+'''''''''''''''''
+
+* ``buf.toString([encoding][, start][, end])`` — Decode the bytes in
+  the slice ``[start, end)`` per ``encoding``. Default encoding is
+  UTF-8.
+
+* ``buf.write(string[, offset][, length][, encoding])`` — Write a
+  string into the buffer using the given encoding. Returns the
+  number of bytes written. Argument-parsing follows node's flexible
+  shapes (``write(str)``, ``write(str, enc)``, ``write(str, offset, enc)``,
+  ``write(str, offset, length, enc)``).
+
+* ``buf.indexOf(value[, byteOffset][, encoding])`` /
+  ``buf.lastIndexOf(...)`` / ``buf.includes(...)`` — Locate
+  ``value`` in ``buf``. ``value`` may be a single byte (:green:`Number`),
+  a :green:`Buffer`, or a :green:`String` (interpreted in the given
+  encoding). ``indexOf`` / ``lastIndexOf`` return the byte index or
+  ``-1``; ``includes`` returns :green:`Boolean`.
+
+* ``buf.swap16()`` / ``buf.swap32()`` / ``buf.swap64()`` — Byte-swap
+  the buffer in place as an array of 16/32/64-bit values. Throws if
+  the buffer length isn't a multiple of 2/4/8.
+
+* ``buf.subarray([start][, end])`` — Returns a new :green:`Buffer`
+  over the requested slice. (Unlike a bare ``Uint8Array.subarray``,
+  this is a real ``Buffer`` so node's prototype methods are
+  available on it.)
+
+* ``buf.keys()`` / ``buf.values()`` / ``buf.entries()`` — Return
+  iterators (following the ES2015 iterator protocol — ``next()`` +
+  ``[Symbol.iterator]`` returning ``{value, done}``) over byte
+  indexes, bytes, or ``[index, byte]`` pairs (inherited from
+  :green:`%TypedArray%.prototype`).  ``buf[Symbol.iterator]()`` is
+  also available so ``Buffer`` is iterable.
+
+* All of node's ``read*`` / ``write*`` accessors for fixed-width
+  integers and floats (e.g. ``readUInt32BE``, ``writeFloatLE``) are
+  provided by duktape's underlying Buffer and behave as in node.
+  The ``BigInt`` variants (``readBigInt64BE``, etc.) are not
+  available because duktape does not implement ``BigInt``.
+
+Examples
+''''''''
+
+.. code-block:: javascript
+
+    /* hashing & base64 round-trip */
+    var hash = crypto.sha256("hello world", {returnType: "buffer"});
+    var b64  = hash.toString('base64');
+    var same = Buffer.from(b64, 'base64').equals(hash);   // true
+
+    /* writing into a fixed-size buffer */
+    var b = Buffer.alloc(8);
+    b.write('aabbcc', 'hex');       // b is <Buffer aa bb cc 00 00 00 00 00>
+
+    /* finding bytes */
+    var needle = Buffer.from('world');
+    var pos = Buffer.from('hello world').indexOf(needle);   // 6
+
+    /* swap endianness */
+    var u32 = Buffer.from([0x01,0x02,0x03,0x04]);
+    u32.swap32();                                           // [0x04,0x03,0x02,0x01]
+
+TypedArray Methods
+""""""""""""""""""
+
+Rampart attaches the ES2015+ iteration helpers to the shared
+:green:`%TypedArray%.prototype`, so every typed array
+(``Uint8Array``, ``Int8Array``, ``Float32Array``, …) and ``Buffer``
+inherits them in one shot:
+
+``forEach``, ``map``, ``filter``, ``reduce``, ``reduceRight``, ``some``,
+``every``, ``find``, ``findIndex``, ``findLast``, ``findLastIndex``,
+``at``, ``slice``, ``fill``, ``copyWithin``, ``reverse``, ``sort``
+(numeric, not lexicographic), ``indexOf``, ``lastIndexOf``,
+``includes``, ``join``, ``keys``, ``values``, ``entries``, and
+``[Symbol.iterator]`` (aliased to ``values``).  ``Buffer``'s richer
+string-aware ``indexOf`` / ``lastIndexOf`` / ``includes`` shadow these
+for ``Buffer`` instances via the prototype chain.
+
+TextEncoder / TextDecoder
+"""""""""""""""""""""""""
+
+Rampart provides ``TextEncoder`` and ``TextDecoder`` modeled on the
+WHATWG encoding spec.  Supported encodings:
+``utf-8``, ``utf-16le``, ``utf-16be``, ``iso-8859-1`` (also
+``latin1``, ``binary``), ``us-ascii``, plus the standard aliases
+(``ucs-2``, ``csisolatin1``, ``iso646-us``, …).  Unknown labels throw
+``RangeError``.  Input may be a ``Buffer``, ``Uint8Array``,
+``ArrayBuffer``, or any ``TypedArray`` view.
+
+.. code-block:: javascript
+
+   new TextEncoder().encode('hello');                /* Uint8Array of 5 bytes */
+   new TextDecoder('utf-16le').decode(buf);          /* decode wide chars   */
+
+Map and Set
+"""""""""""
+
+Rampart provides full ES2015 ``Map`` and ``Set``:
+
+* ``Map``: ``set``, ``get``, ``has``, ``delete``, ``clear``,
+  ``forEach``, ``entries``, ``keys``, ``values``, ``size`` (getter),
+  and ``[Symbol.iterator]`` → ``entries``.
+* ``Set``: ``add``, ``has``, ``delete``, ``clear``, ``forEach``,
+  ``values``, ``keys``, ``entries``, ``size`` (getter), and
+  ``[Symbol.iterator]`` → ``values``.
+
+Both constructors accept any iterable for initial population.
+Iterators produce ``{value, done}`` result objects and are themselves
+iterable.
+
+console Extras
+""""""""""""""
+
+Alongside the standard ``log`` / ``error`` / ``warn`` / ``info`` /
+``debug`` / ``trace`` / ``dir`` / ``assert``, Rampart adds the
+following node-style methods:
+
+* ``console.time(label?)`` / ``timeLog(label?, ...extras)`` /
+  ``timeEnd(label?)`` — millisecond timers; label defaults to
+  ``"default"``.
+* ``console.count(label?)`` / ``countReset(label?)``.
+* ``console.group(label?)`` / ``groupCollapsed(label?)`` /
+  ``groupEnd()`` — indent-based grouping.
+* ``console.clear()``.
+* ``console.table(data, columns?)`` — tabular formatter.
+
+Proxy.revocable
+"""""""""""""""
+
+``Proxy.revocable(target, handler)`` returns ``{proxy, revoke}``.
+Calling ``revoke()`` makes every subsequent trap on ``proxy`` throw
+``TypeError``.
+
+WHATWG / W3C Web Platform APIs (experimental)
+"""""""""""""""""""""""""""""""""""""""""""""
+
+Rampart includes a substantial subset of browser Web Platform globals
+— ``fetch``, ``URL``, ``Headers``/``Request``/``Response``/``FormData``,
+``Blob``/``File``, the ``ReadableStream`` / ``WritableStream`` /
+``TransformStream`` family, ``WebSocket``, ``XMLHttpRequest``,
+``crypto`` (Web Crypto), ``structuredClone``, ``queueMicrotask``,
+``EventSource``, ``localStorage`` / ``sessionStorage``, and more.
+
+Like ``Intl``, the surface is **lazy-loaded**: ``rampart-whatwg.so`` is
+only ``dlopen()``-ed when JS first references one of these names.
+Scripts that never touch a Web Platform API pay zero startup cost.
+
+Conformance is **partial and experimental** — strongest for APIs that
+don't assume a browser/DOM context (Web Crypto, URL, mimesniff, data:
+URLs, value-stream APIs, HTTP/1.1 ``fetch``); weaker or absent for
+anything needing ``document`` / ``window`` / ``iframe``, ``WebAssembly``,
+HTTP/2 streaming upload, or ``br`` / ``zstd`` content-encoding (servers
+fall back to ``gzip``).  Behaviors may change as the implementation
+tracks the WPT suite.
+
+Intl
+""""
+
+``globalThis.Intl`` is installed as a lazy getter — on first access
+it loads the ICU4C-backed ``rampart-intl`` module (~37 MB of bundled
+locale data), which assigns ``globalThis.Intl``.  Scripts that never
+touch ``Intl`` pay nothing.
+
+All eight ECMA-402 constructors are available once loaded:
+``DateTimeFormat``, ``NumberFormat``, ``Collator``, ``PluralRules``,
+``RelativeTimeFormat``, ``ListFormat``, ``DisplayNames``, ``Locale``,
+``Segmenter``, ``DurationFormat``, plus ``Intl.getCanonicalLocales``
+and ``Intl.supportedValuesOf``.  Behaves per
+`MDN's Intl reference <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl>`_.
+
+Other Globals
+"""""""""""""
+
+* ``globalThis`` and ``global`` — both reference the global object
+  (Rampart adds the node-style ``global`` alias alongside
+  ``globalThis``).
+* ``JSON.parse(text[, reviver])`` — extended to accept a
+  :green:`Buffer` as ``text``.  When ``reviver === true``, walks the
+  parsed tree and resolves ``{"_cyclic_ref":"$.path"}`` placeholders
+  produced by ``rampart.utils.sprintf("%!J", obj)`` back into shared
+  references, restoring cyclic graphs.  This is a **rampart-specific**
+  reviver convention; passing a function reviver behaves per spec.
+* ``eval`` — when the transpiler is in effect (``-t`` or
+  ``"use transpiler"``), the source is lowered before evaluation.
+  Otherwise behaves as standard ES5 ``eval``.
+* ``new Function(...)`` — bodies are run through the transpiler so
+  ES2015+ syntax (classes, ``async``, generators) compiles inside
+  dynamically-built functions.
+
 setTimeout()
 """"""""""""
 
@@ -1042,12 +1628,13 @@ Usage:
 
 .. code-block:: javascript
 
-   var id = setTimeout(callback, timeOut);
+   var id = setTimeout(callback, timeOut[, arg1, arg2, ..., argn]);
 
 Where:
 
 * ``callback`` is a :green:`Function` to be run when the elapsed time is reached.
 * ``timeOut`` is the amount of time in milliseconds to wait before the ``callback`` function is called.
+* ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
     An id which may be used with `clearTimeout()`_\ .
@@ -1104,12 +1691,13 @@ Usage:
 
 .. code-block:: javascript
 
-   var id = setInterval(callback, interval);
+   var id = setInterval(callback, interval[, arg1, arg2, ..., argn]);
 
 Where:
 
 * ``callback`` is a :green:`Function` to be run when the elapsed time is reached.
 * ``interval`` is the amount of time in milliseconds between calls to ``callback``.
+* ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
     An id which may be used with `clearInterval()`_\ .
@@ -1162,12 +1750,13 @@ Usage:
 
 .. code-block:: javascript
 
-   var id = setMetronome(callback, interval);
+   var id = setMetronome(callback, interval[, arg1, arg2, ..., argn]);
 
 Where:
 
 * ``callback`` is a :green:`Function` to be run when the elapsed time is reached.
 * ``interval`` is the amount of time in milliseconds between calls to ``callback``.
+* ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
     An id which may be used with `clearMetronome()`_\ .
@@ -1241,9 +1830,10 @@ include:
 
 * `Duktape <https://duktape.org/guide.html#builtin-duktape>`_
 * `CBOR <https://duktape.org/guide.html#builtin-cbor>`_
-* `TextEncoder <https://duktape.org/guide.html#builtin-textencoder>`_
-* `TextDecoder <https://duktape.org/guide.html#builtin-textdecoder>`_
 * `performance <https://duktape.org/guide.html#builtin-performance>`_
+
+(``TextEncoder`` and ``TextDecoder`` are documented above under
+`TextEncoder / TextDecoder`_.)
 
 For more information, see the `Duktape Guide <https://duktape.org/guide.html>`_
 
@@ -1256,7 +1846,7 @@ Babel Acknowledgement
 """""""""""""""""""""
 
 Rampart **experimentally** uses `Babel.js <https://babeljs.io/>`_ to support a
-greater breath of JavaScript syntax and functionality.  Babel.js is a
+greater breadth of JavaScript syntax and functionality.  Babel.js is a
 toolchain that converts ECMAScript 2015+ (and optionally TypeScript) code
 into a version of JavaScript compatible with Duktape.  The authors of
 Rampart are extremely grateful to the 
@@ -1268,11 +1858,11 @@ Babel License
 Babel.js is 
 `MIT licensed <https://github.com/babel/babel/blob/main/LICENSE>`_. 
 
-Usage
-"""""
+Activating Babel
+""""""""""""""""
 
 A slightly modified version of babel.js (currently babel-standalone v
-7.11.1) and the associated collection of polyfills (babel-polyfill.js) are
+7.12.17) and the associated collection of polyfills (babel-polyfill.js) are
 included in the Rampart distribution.  To use ECMA 2015+ features of
 JavaScript, simply include the following at the beginning of the script:
 
@@ -1280,9 +1870,14 @@ JavaScript, simply include the following at the beginning of the script:
 
    "use babel"
 
-Note that the ``"use babel"`` string should be the first JavaScript text in
-the script.  However it may come after any comments or a hash-bang line.  It
-also should be the only text on the line, other than an optional comment. 
+    /* or */
+
+    "use babelGlobally" //run included modules through babel as well
+
+Note that the ``"use babel"`` or ``"use babelGlobally"`` string should be the
+first JavaScript text in the script.  However it may come after any comments
+or a hash-bang line.  It also should be the only text on the line, other
+than an optional comment.
 
 Example:
 
@@ -1305,9 +1900,24 @@ Example:
    `);
 
 The ``"use babel"`` directive optionally takes a ``:`` followed by babel
-options.  Without options ``"use babel"`` is equivalent to 
-``"use babel:{ presets: ['env'], retainLines: true }"``.  See 
-`babel documentation <https://babeljs.io/docs/en/babel-preset-env>`_ 
+options on the same line.  Without options ``"use babel"`` is equivalent
+to (shown wrapped for readability; the directive itself must be on one
+physical line)::
+
+   "use babel:{ presets: ['env'],
+                plugins: ['proposal-class-properties',
+                          'proposal-private-methods',
+                          'proposal-private-property-in-object',
+                          'proposal-nullish-coalescing-operator',
+                          'proposal-optional-chaining'],
+                retainLines: true }"
+
+The default plugin list enables ES2020/2022 class fields, private
+fields/methods, nullish coalescing (``??``), and optional chaining
+(``?.``) on top of ``preset-env``.  Specifying any explicit ``plugins:``
+or ``presets:`` in the directive replaces this default — include the
+plugins you need in the override.  See
+`babel documentation <https://babeljs.io/docs/en/babel-preset-env>`_
 for more information on possible options.
 
 A simple example in 
@@ -1337,7 +1947,8 @@ Note that babel does not actually do any type checking.  See
 `this caveat <https://babeljs.io/docs/en/babel-plugin-transform-typescript#caveats>`_.
 
 For a list of tested and supported syntax, see the 
-``/usr/local/rampart/tests/babel-test.js`` file.
+``/usr/local/rampart/tests/babel-test.js`` file (also available
+`here <https://github.com/aflin/rampart/blob/main/test/babel-test.js>`_\ .
 
 How it works
 """"""""""""
@@ -1360,7 +1971,7 @@ Caveats
 
 For a complicated script, the transpile stage can be very slow.  However if
 the script has not changed since last run, the execution speed will be
-normal as the cached/transpiled code will be used and thus no traspiling
+normal as the cached/transpiled code will be used and thus no transpiling
 will occur.
 
 Asynchronous code may also be used with babel.  For example, the following code 
@@ -1401,3 +2012,142 @@ produces the same output in Rampart and Node.js.
    **I'm async in a Timeout!!**
    */
 
+ECMAScript 2015+ with transpiler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tree-sitter Acknowledgement
+"""""""""""""""""""""""""""
+
+Rampart **experimentally** uses the `tree-sitter <https://github.com/tree-sitter/tree-sitter>`_
+and the `tree-sitter-javascript <https://github.com/tree-sitter/tree-sitter-javascript>`_
+libraries to transpile a limited set of post-ES5 JavaScript.  The authors of Rampart are
+indebted to the `tree-sitter contributors <https://github.com/tree-sitter/tree-sitter-javascript/graphs/contributors>`_
+for this indispensable library.  
+
+Tree-sitter License
+"""""""""""""""""""
+
+Tree-sitter is `MIT licensed <https://github.com/tree-sitter/tree-sitter-javascript?tab=MIT-1-ov-file#readme>`_\ .
+
+Activating the Transpiler
+"""""""""""""""""""""""""
+
+To use the limited ECMA 2015+ features covered by the transpiler,
+simply include the following at the beginning of the script:
+
+.. code-block:: javascript
+
+   "use transpiler"
+
+    /* or */
+
+    "use transpilerGlobally" //run included modules through the transpiler as well
+
+Note that the ``"use transpiler"`` or ``"use transpilerGlobally"`` string should be the
+first JavaScript text in the script.  However it may come after any comments
+or a hash-bang line.  It also should be the only text on the line, other
+than an optional comment.
+
+Transpiler Options
+""""""""""""""""""
+
+The ``"use transpiler"`` (or ``"use transpilerGlobally"``) directive
+optionally takes a ``:`` followed by an object literal of options.  The
+object literal uses JavaScript object literal syntax (unquoted identifier
+keys, ``true``/``false`` values).
+
+Currently the only supported option is ``functionSources``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 15 65
+
+   * - Option
+     - Default
+     - Description
+   * - ``functionSources``
+     - ``true``
+     - When enabled (the default), the transpiler captures the original
+       pre-transpile source text of each top-level ``function`` declaration,
+       ``function`` expression, ``arrow_function``, ``generator_function``
+       and ``async function``, and attaches it to the function so that
+       ``fn.toString()`` returns the original source written by the user.
+       Duktape's built-in ``Function.prototype.toString()`` otherwise
+       returns ``"function NAME() { [ecmascript code] }"``, which is often
+       not useful for debugging, logging or hot-reload tooling.
+
+       Setting this option to ``false`` disables the capture and reverts
+       to Duktape's built-in behavior.  Disable it if you want the smaller
+       transpiled output (each captured function is stored twice — once as
+       executable code, once as a string literal — which roughly doubles
+       the output size for function-heavy source).
+
+Examples:
+
+.. code-block:: javascript
+
+   /* default — fn.toString() returns the original source */
+   "use transpiler"
+
+   function greet(name) { return "hi " + name; }
+   console.log(greet.toString());
+   // -> function greet(name) { return "hi " + name; }
+
+
+.. code-block:: javascript
+
+   /* opt-out — fn.toString() uses duktape's built-in form */
+   "use transpiler:{functionSources:false}"
+
+   function greet(name) { return "hi " + name; }
+   console.log(greet.toString());
+   // -> function greet() { [ecmascript code] }
+
+
+Note: function-source capture currently applies to ``function``
+declarations, ``function`` expressions, ``arrow`` functions,
+``generator`` functions and ``async`` functions.  Methods inside
+``class`` bodies and object-literal method shorthand are not yet
+covered; their ``toString()`` still returns the built-in form.
+
+Example:
+
+Please see the `transpile-test.js file <https://github.com/aflin/rampart/blob/main/test/transpile-test.js>`_
+to see which features are currently supported (and the disabled tests which show
+yet to be completed support).
+
+Why use the transpiler instead of Babel?
+""""""""""""""""""""""""""""""""""""""""
+
+Though babel has better coverage of post-ES5 JavaScript, the transpiler is
+several orders of magnitude faster than babel.  Both save their transpiled
+output to disk (e.g., ``myscript.transpiled.js`` or ``myscript.babel.js``)
+and reuse it on subsequent runs if the source has not changed.
+In addition, the transpiler keeps the `Extra JavaScript Functionality`_ listed above.
+
+Skipping a second pass: the ``"noTranspile"`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Both the transpiler and babel save their processed output to disk
+(``myscript.transpiled.js`` / ``myscript.babel.js``) and prefix that
+output with a ``"noTranspile";`` directive.  A file that carries this
+directive is treated as already-processed: it is loaded as-is and is
+**not** run through the transpiler or babel a second time, even under
+``-t`` / ``"use transpilerGlobally"`` (or ``-b`` / ``"use babelGlobally"``).
+
+This matters when an already-transpiled/babelized file is renamed to a
+plain ``.js`` and ``require()``\ d from a script that has global
+transpilation or babel enabled — without the marker it would be
+re-processed unnecessarily.
+
+You can also place the directive in your own source to exempt a file from
+processing entirely:
+
+.. code-block:: javascript
+
+   "noTranspile"
+
+Like the other directives, it must be the first JavaScript text in the
+file — it may follow a hash-bang line and any comments, and it coexists
+with other leading directives such as ``"use strict"``.  At runtime it is
+an inert string-literal statement.

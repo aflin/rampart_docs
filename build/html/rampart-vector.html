@@ -185,6 +185,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -474,6 +475,9 @@ optional third argument giving the cutoff.</li>
 <span class="cm">      &quot;copy&quot;: {</span>
 <span class="cm">         &quot;_c_func&quot;: true</span>
 <span class="cm">      },</span>
+<span class="cm">      &quot;split&quot;: {</span>
+<span class="cm">         &quot;_c_func&quot;: true</span>
+<span class="cm">      },</span>
 <span class="cm">      &quot;distance&quot;: {</span>
 <span class="cm">         &quot;_c_func&quot;: true</span>
 <span class="cm">      }</span>
@@ -526,7 +530,8 @@ See <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)<
 </ul>
 </div></blockquote>
 <p>Note that a <code class="docutils literal notranslate"><span class="pre">b8</span></code> <cite>Vector Object</cite> has a reduced method set: in addition to
-<code class="docutils literal notranslate"><span class="pre">toNumbers</span></code>, <code class="docutils literal notranslate"><span class="pre">toRaw</span></code>, <code class="docutils literal notranslate"><span class="pre">byteLength</span></code>, <code class="docutils literal notranslate"><span class="pre">copy</span></code> and <code class="docutils literal notranslate"><span class="pre">distance</span></code>, it provides
+<code class="docutils literal notranslate"><span class="pre">toNumbers</span></code>, <code class="docutils literal notranslate"><span class="pre">toRaw</span></code>, <code class="docutils literal notranslate"><span class="pre">byteLength</span></code>, <code class="docutils literal notranslate"><span class="pre">copy</span></code>, <code class="docutils literal notranslate"><span class="pre">split</span></code> and
+<code class="docutils literal notranslate"><span class="pre">distance</span></code>, it provides
 the <em>reconstruction</em> methods <code class="docutils literal notranslate"><span class="pre">toF64</span></code>/<code class="docutils literal notranslate"><span class="pre">toF32</span></code>/<code class="docutils literal notranslate"><span class="pre">toF16</span></code>/<code class="docutils literal notranslate"><span class="pre">toBf16</span></code>/<code class="docutils literal notranslate"><span class="pre">toI8</span></code>/
 <code class="docutils literal notranslate"><span class="pre">toU8</span></code> (see <a class="reference internal" href="#binary-vectors-b8">Binary Vectors (b8)</a>) – but these are lossy expansions of the
 bits, <strong>not</strong> a round-trip to the original vector.</p>
@@ -554,9 +559,29 @@ vector and return the same <cite>Vector Object</cite>.</li>
 <cite>Vector Object</cite>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">resize(n)</span></code> - Copy and grow or truncate the underlying <span class="green">Buffer</span>
 so the vector contains <code class="docutils literal notranslate"><span class="pre">n</span></code> elements.  Return a new <cite>Vector Object</cite>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">split(n)</span></code> - Split the vector into an <span class="green">Array</span> of new
+<cite>Vector Objects</cite> of <code class="docutils literal notranslate"><span class="pre">n</span></code> elements each.  <code class="docutils literal notranslate"><span class="pre">dim</span></code> must be an exact
+multiple of <code class="docutils literal notranslate"><span class="pre">n</span></code> (a vector whose <code class="docutils literal notranslate"><span class="pre">dim</span></code> equals <code class="docutils literal notranslate"><span class="pre">n</span></code> returns a
+one-element <span class="green">Array</span>); each part is an independent copy of the
+same type.  This is the JavaScript-side accessor for <em>multi-vector</em>
+column values such as those produced by the SQL <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>
+function, which concatenates a document’s <code class="docutils literal notranslate"><span class="pre">k</span></code> chunk vectors into a
+single <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">×</span> <span class="pre">n</span></code>-element value — see
+<a class="reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows"><span class="std std-ref">Chunked documents (multi-vector rows)</span></a>.  For <code class="docutils literal notranslate"><span class="pre">b8</span></code>
+vectors <code class="docutils literal notranslate"><span class="pre">n</span></code> is a bit count and must be a multiple of 8.</li>
 <li><code class="docutils literal notranslate"><span class="pre">byteLength()</span></code> - Return the length of the underlying <span class="green">Buffer</span> in bytes.</li>
 </ul>
 </div></blockquote>
+<p>Example — splitting a multi-vector value:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// a chunkembed() column value: k chunk vectors of 384 elements each</span>
+<span class="kd">var</span> <span class="nx">row</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">one</span><span class="p">(</span><span class="s2">&quot;select Vec from docs&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">chunks</span> <span class="o">=</span> <span class="nx">row</span><span class="p">.</span><span class="nx">Vec</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="mi">384</span><span class="p">);</span>      <span class="c1">// Array of row.Vec.dim/384 vectors</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">chunks</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;chunk %d: dim=%d best=%f\n&quot;</span><span class="p">,</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">chunks</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">dim</span><span class="p">,</span>
+           <span class="nx">chunks</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">distance</span><span class="p">(</span><span class="nx">queryVec</span><span class="p">,</span> <span class="s1">&#39;dot&#39;</span><span class="p">));</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="distance-function">
 <h3>Distance Function<a class="headerlink" href="#distance-function" title="Permalink to this headline">¶</a></h3>

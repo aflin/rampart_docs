@@ -108,6 +108,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-do-they-do">What do they do?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#platform-availability">Platform Availability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#errors-warnings-and-logs">Errors, Warnings and Logs</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#the-rampart-llamacpp-module">The rampart-llamacpp module</a><ul>
@@ -136,6 +137,37 @@
 <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#the-rampart-onnx-module">The rampart-onnx module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cpu-and-gpu-runtime-selection">CPU and GPU (runtime selection)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#oemb-embedtexttofp16buf">oemb.embedTextToFp16Buf()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#oemb-embedtexttofp32buf-oemb-embedtexttonumbers">oemb.embedTextToFp32Buf() / oemb.embedTextToNumbers()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#oemb-embedtextstonumbers">oemb.embedTextsToNumbers()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#oemb-destroy">oemb.destroy()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#orr-rerank">orr.rerank()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-initsession">onnx.initSession</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sess-run">sess.run()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sess-inputs">sess.inputs()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sess-metadata">sess.metadata()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sess-destroy">sess.destroy()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-initsessionfrombuffer">onnx.initSessionFromBuffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-modelinfo">onnx.modelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-wordpiecetokenizer">onnx.wordPieceTokenizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-sptokenizer">onnx.spTokenizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-initsnacdecoder">onnx.initSnacDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-onnxversion">onnx.onnxVersion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-runtimeinfo">onnx.runtimeInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onnx-getlog-onnx-clearlog">onnx.getLog / onnx.clearLog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#converting-a-model-to-float16-or-int8">Converting a model to float16 or int8</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#the-rampart-faiss-module">The rampart-faiss module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#openfactory">openFactory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#openindexfromfile">openIndexFromFile</a></li>
@@ -158,12 +190,23 @@
 <li class="toctree-l3"><a class="reference internal" href="#decode">decode</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#the-rampart-models-module">The rampart-models module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#models-get">models.get()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-ggufget-models-onnxget">models.ggufGet() / models.onnxGet()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-url">models.url()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-resolve">models.resolve()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-list">models.list()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line">Command line</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#putting-it-together">Putting It Together</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-almanac.html">The rampart-almanac module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-url.html">The rampart-url module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-gm.html">The rampart-gm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rampart-webview.html">The rampart-webview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-chromeview.html">The rampart-chromeview module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rampart-extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorialtoc.html">Tutorials</a></li>
@@ -237,12 +280,17 @@
 <h2>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="acknowledgment">
 <h3>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h3>
-<p>The rampart-langtools package provides three modules built on
+<p>The rampart-langtools package provides four modules built on
 best-in-class machine-learning libraries:</p>
 <ul class="simple">
 <li>The rampart-llamacpp module is built on
 <a class="reference external" href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>, the C/C++
 LLM inference engine created by Georgi Gerganov and contributors.</li>
+<li>The rampart-onnx module is built on
+<a class="reference external" href="https://onnxruntime.ai/">ONNX Runtime</a>, the cross-platform
+inference engine for ONNX models from Microsoft (with tokenizers
+from
+<a class="reference external" href="https://github.com/microsoft/onnxruntime-extensions">onnxruntime-extensions</a>).</li>
 <li>The rampart-faiss module is built on
 <a class="reference external" href="https://github.com/facebookresearch/faiss">FAISS</a>, the library
 for efficient similarity search and clustering of dense vectors
@@ -258,6 +306,8 @@ contributors of each of these libraries.</p>
 <h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
 <p>The llama.cpp library is licensed under the
 <a class="reference external" href="https://github.com/ggml-org/llama.cpp/blob/master/LICENSE">MIT License</a>.
+The ONNX Runtime library is licensed under the
+<a class="reference external" href="https://github.com/microsoft/onnxruntime/blob/main/LICENSE">MIT License</a>.
 The FAISS library is licensed under the
 <a class="reference external" href="https://github.com/facebookresearch/faiss/blob/main/LICENSE">MIT License</a>.
 The SentencePiece library is licensed under the
@@ -266,22 +316,31 @@ The SentencePiece library is licensed under the
 </div>
 <div class="section" id="what-do-they-do">
 <h3>What do they do?<a class="headerlink" href="#what-do-they-do" title="Permalink to this headline">¶</a></h3>
-<p>Together the three modules provide the building blocks for semantic
+<p>Together the modules provide the building blocks for semantic
 search and local LLM inference inside Rampart:</p>
 <ul class="simple">
 <li><strong>rampart-llamacpp</strong> runs GGUF models directly inside the rampart
 process: text embedding (<a class="reference internal" href="#initembed">initEmbed</a>), reranking
 (<a class="reference internal" href="#initrerank">initRerank</a>) and text generation (<a class="reference internal" href="#initgen">initGen</a>).</li>
+<li><strong>rampart-onnx</strong> runs ONNX models: text embedding
+(<a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a>) and reranking (<a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a>) with
+the same handle API as rampart-llamacpp, plus a general-purpose
+session API (<a class="reference internal" href="#onnx-initsession">onnx.initSession</a>) for running any ONNX model.</li>
 <li><strong>rampart-faiss</strong> builds, trains, saves and searches vector
 indexes, from small exact-search indexes to compressed indexes
 holding hundreds of millions of vectors.</li>
 <li><strong>rampart-sentencepiece</strong> tokenizes text into subword pieces
 (and back) using a SentencePiece model.</li>
 </ul>
-<p>A typical pipeline embeds documents with rampart-llamacpp, stores
-the vectors in a rampart-faiss index (and/or a rampart-sql table),
-searches that index with an embedded query vector, and optionally
-reranks the results with a reranking model.</p>
+<p>The package also ships <strong>rampart-models</strong>, a pure-JavaScript helper
+that downloads and locates the models the engines above consume —
+<code class="docutils literal notranslate"><span class="pre">models.get('bge-m3')</span></code> returns a ready-to-use local path, fetching
+from HuggingFace on first use.  See
+<a class="reference internal" href="#the-rampart-models-module">The rampart-models module</a>.</p>
+<p>A typical pipeline embeds documents with rampart-llamacpp or
+rampart-onnx, stores the vectors in a rampart-faiss index (and/or a
+rampart-sql table), searches that index with an embedded query
+vector, and optionally reranks the results with a reranking model.</p>
 <p>Note that the rampart-sql module has this pipeline built in:  its
 <code class="docutils literal notranslate"><span class="pre">embed()</span></code> SQL function generates vectors in the SQL engine using
 this package’s rampart-llamacpp module, and its
@@ -312,6 +371,41 @@ on macOS 14 and below.</li>
 <p>On Linux, the modules are available in CPU and CUDA (GPU) builds.
 GPU-only features (such as the faiss <a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a> function)
 are noted where applicable.</p>
+<p>The rampart-onnx module additionally requires glibc 2.28 or later
+on Linux (it is not included in the packages built for older
+distributions), and its CUDA support requires an NVIDIA driver
+supporting CUDA 12 or later — see
+<a class="reference internal" href="#cpu-and-gpu-runtime-selection">CPU and GPU (runtime selection)</a>.</p>
+</div>
+<div class="section" id="errors-warnings-and-logs">
+<h3>Errors, Warnings and Logs<a class="headerlink" href="#errors-warnings-and-logs" title="Permalink to this headline">¶</a></h3>
+<p>The modules never write to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> or <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.  Instead:</p>
+<ul class="simple">
+<li>A <strong>failure</strong> throws a JavaScript <span class="green">Error</span> (a model that
+cannot be loaded, a malformed tensor, a session used after
+<code class="docutils literal notranslate"><span class="pre">destroy()</span></code>).  Catch it as usual.</li>
+<li>A <strong>warning</strong> — a non-fatal problem that did not stop the call —
+is placed in an <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> property, exactly as rampart-sql does.
+The property is set on the object the call was made on: the module
+object for <code class="docutils literal notranslate"><span class="pre">onnx.initEmbed()</span></code>, a handle for a handle method.  It
+is <strong>cleared at the start of every call</strong>, so it always describes
+the most recent one, and it is <code class="docutils literal notranslate"><span class="pre">undefined</span></code> when the call had
+nothing to report.  Typical warnings are a GPU that could not be
+used and silently fell back to the CPU, or an unusable
+<code class="docutils literal notranslate"><span class="pre">RAMPART_ONNX_RUNTIME</span></code> override.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">onnx</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">)</span>                       <span class="c1">// e.g. &quot;no usable GPU; using CPU&quot;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;warning: &quot;</span> <span class="o">+</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">errMsg</span></code> is deliberately kept separate from <a class="reference internal" href="#getlog">getLog</a> /
+<a class="reference internal" href="#onnx-getlog-onnx-clearlog">onnx.getLog / onnx.clearLog</a>, which capture the <em>informational</em>
+output of the underlying libraries (ggml/llama.cpp and ONNX Runtime).
+That log is verbose — a single embedding can produce thousands of
+lines — and a warning placed there would be lost in it.  Use
+<code class="docutils literal notranslate"><span class="pre">errMsg</span></code> to find out whether something went wrong, and <code class="docutils literal notranslate"><span class="pre">getLog()</span></code>
+when you want the engine’s own diagnostics.</p>
 </div>
 </div>
 <div class="section" id="the-rampart-llamacpp-module">
@@ -404,6 +498,50 @@ plus the following embedding-specific options:</p>
 (<code class="docutils literal notranslate"><span class="pre">--pooling</span></code> in llama-server).  Default: <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">attention</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;causal&quot;</span></code> or
 <code class="docutils literal notranslate"><span class="pre">&quot;non-causal&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">--attention</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">split</span></code> - A <span class="green">String</span> or <span class="green">Function</span>.
+<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default) chunks long text on its structure —
+paragraphs, merged or packed as configured below;
+<code class="docutils literal notranslate"><span class="pre">&quot;window&quot;</span></code> uses plain token windows.  A <span class="green">Function</span>
+replaces the built-in chunker entirely: it is called with
+the document text and must return an <span class="green">Array</span> of
+<span class="green">Strings</span> — N strings always produce N vectors.  A
+string that fits the token window gets its exact vector; an
+oversized string gets its combined (average) vector over
+its sub-chunks, and its <code class="docutils literal notranslate"><span class="pre">chunks</span></code> entry is marked
+<code class="docutils literal notranslate"><span class="pre">oversized</span></code>.  The strings
+may freely transform the input (inject a title, drop
+boilerplate, …), so the returned <code class="docutils literal notranslate"><span class="pre">chunks</span></code> carry
+<code class="docutils literal notranslate"><span class="pre">{text,</span> <span class="pre">tokens}</span></code> without byte spans.  Two notes: a
+splitter shared with other rampart threads (via a copied
+handle) must be self-contained — it cannot reference
+variables outside itself; and the SQL <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> /
+5-argument <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> machinery always uses the
+built-in chunker, so custom splitters are for JS-side
+pipelines.
+(The built-in chunker is the same as <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a>’s —
+the two modules share it, so identical options produce
+identical chunk boundaries for the same tokenizer.)</li>
+<li><code class="docutils literal notranslate"><span class="pre">minTokens</span></code> - A <span class="green">Number</span>, the paragraph-fragment
+floor: shorter paragraphs are merged with a neighbor.
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> disables merging.</li>
+<li><code class="docutils literal notranslate"><span class="pre">packParagraphs</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+consecutive paragraphs are packed together up to the token
+window (fewer, fuller chunks) instead of one vector per
+paragraph.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sentenceSplit</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, an
+oversized paragraph (or structureless text) is split at
+<strong>sentence boundaries</strong> and the sentences greedily packed
+to the token window, instead of being cut at raw token
+windows mid-sentence.  Boundaries come from a multi-script
+terminator table (ASCII <code class="docutils literal notranslate"><span class="pre">.!?</span></code> with a whitespace guard;
+self-delimiting CJK <code class="docutils literal notranslate"><span class="pre">。！？</span></code>, Arabic, Devanagari and
+others with none; fullwidth <code class="docutils literal notranslate"><span class="pre">．</span></code> digit-guarded so
+<code class="docutils literal notranslate"><span class="pre">３．１４</span></code> never splits), and a chunk never ends on a
+tiny trailing fragment (so a false boundary after “Mr.”
+can’t take a cut).  Languages without sentence punctuation
+(e.g. Thai) fall back to token windows.  Default <code class="docutils literal notranslate"><span class="pre">false</span></code>:
+enabling it changes chunk boundaries, which tables built
+WITHOUT value headers depend on for snippet spans.</li>
 </ul>
 <p>The legacy option names <code class="docutils literal notranslate"><span class="pre">nctx</span></code>, <code class="docutils literal notranslate"><span class="pre">ubatch</span></code>, <code class="docutils literal notranslate"><span class="pre">nthreads</span></code>
 and <code class="docutils literal notranslate"><span class="pre">nthreads_batch</span></code> are accepted as aliases for <code class="docutils literal notranslate"><span class="pre">nCtx</span></code>,
@@ -441,7 +579,8 @@ below.</dd>
 
 <span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="s2">&quot;about a paragraph of text ...&quot;</span><span class="p">);</span>
 
-<span class="cm">/* v = { vecs: [vec1, vec2, ...], avgVec: avgOfVecs }</span>
+<span class="cm">/* v = { vecs: [vec1, ...], avgVec: avg, coherence: n,</span>
+<span class="cm">         chunks: [ {start,end,tokens,text}, ... ] }</span>
 <span class="cm">   If the text fits the model&#39;s context window,</span>
 <span class="cm">   v.vecs.length == 1 and v.vecs[0] == v.avgVec.       */</span>
 
@@ -461,7 +600,7 @@ below.</dd>
 (little-endian) in a <span class="green">Buffer</span>.  This is the most compact
 format and is directly usable by
 <a class="reference internal" href="rampart-vector.html#rampart-vector-functions"><span class="std std-ref">rampart.vector</span></a>
-functions, the <span class="xref std std-ref">rampart-sql</span>
+functions, the <a class="reference internal" href="rampart-sql.html"><span class="doc">rampart-sql</span></a>
 <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> function and the faiss <a class="reference internal" href="#idx-addfp16">idx.addFp16()</a> /
 <a class="reference internal" href="#idx-searchfp16">idx.searchFp16()</a> functions.</p>
 <p>Usage:</p>
@@ -471,8 +610,11 @@ functions, the <span class="xref std std-ref">rampart-sql</span>
 <p>Where <code class="docutils literal notranslate"><span class="pre">text</span></code> is a <span class="green">String</span> (or a <span class="green">Buffer</span>
 containing text) to be embedded.</p>
 <p>If the tokenized text does not fit the model’s context window,
-it is split into overlapping chunks (one eighth of a window of
-overlap) and one vector is produced per chunk.  Each vector is
+it is chunked; with the default <code class="docutils literal notranslate"><span class="pre">split:</span> <span class="pre">&quot;auto&quot;</span></code> the chunking
+is <strong>structure-aware</strong>: text is split on paragraph boundaries
+(falling back to token windows for oversized paragraphs), so
+each vector corresponds to a semantically meaningful span of the
+input, and the spans are reported in <code class="docutils literal notranslate"><span class="pre">chunks</span></code>.  Each vector is
 L2-normalized.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -484,6 +626,18 @@ vector per chunk (<code class="docutils literal notranslate"><span class="pre">2
 produced, the same vector as <code class="docutils literal notranslate"><span class="pre">vecs[0]</span></code>.  Otherwise the
 re-normalized average of all the chunk vectors, suitable
 as a single whole-document vector.</li>
+<li><code class="docutils literal notranslate"><span class="pre">coherence</span></code> - A <span class="green">Number</span> in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>: the
+average pairwise cosine similarity of the chunk vectors
+(<code class="docutils literal notranslate"><span class="pre">1.0</span></code> for a single-chunk document).  A low value means
+the document spans several topics and <code class="docutils literal notranslate"><span class="pre">avgVec</span></code> is a
+blurrier summary of it.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chunks</span></code> - An <span class="green">Array</span> of <span class="green">Objects</span>, one
+per vector, with <code class="docutils literal notranslate"><span class="pre">start</span></code> / <code class="docutils literal notranslate"><span class="pre">end</span></code> (the chunk’s byte
+span in the input), <code class="docutils literal notranslate"><span class="pre">tokens</span></code> (its token count),
+<code class="docutils literal notranslate"><span class="pre">text</span></code> (the chunk text itself) and <code class="docutils literal notranslate"><span class="pre">oversized</span></code>
+(<span class="green">Boolean</span> <code class="docutils literal notranslate"><span class="pre">true</span></code> when this vector is one of
+several token windows over a single span that exceeded
+the model window; such sub-chunks share their span).</li>
 </ul>
 <p class="last">For empty or whitespace-only input, <code class="docutils literal notranslate"><span class="pre">vecs</span></code> is an empty
 <span class="green">Array</span> and <code class="docutils literal notranslate"><span class="pre">avgVec</span></code> is not set.</p>
@@ -558,6 +712,22 @@ tokens is truncated.</li>
 <dt>Return Value:</dt>
 <dd>An <span class="green">Object</span> (the reranker handle) with the functions
 <a class="reference internal" href="#rr-rerank">rr.rerank()</a> and <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> (as in <a class="reference internal" href="#emb-destroy">emb.destroy()</a>).</dd>
+<dt>Note:</dt>
+<dd>Instruct-style rerankers — the
+<a class="reference external" href="https://huggingface.co/Qwen/Qwen3-Reranker-0.6B">Qwen3-Reranker</a>
+family — judge relevance by answering a yes/no question inside
+a chat prompt rather than through a bert-style classifier
+head.  <code class="docutils literal notranslate"><span class="pre">initRerank</span></code> detects them by model architecture and
+wraps each (query, document) pair in the required prompt
+automatically.  Their scores are the probability of “yes”
+(roughly 0.5 – 1.0 for plausible documents) rather than the
+wide-range scores of bert-style rerankers; orderings are
+comparable, magnitudes are not.  Beware that many community
+GGUF conversions of these models were made as plain
+language models and lack the ranking head — such a file loads
+but scores every document identically.  The catalog’s
+<code class="docutils literal notranslate"><span class="pre">models.ggufGet(&quot;qwen3-reranker-0.6b&quot;)</span></code> is pinned to a
+verified conversion.</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
@@ -1013,6 +1183,767 @@ sets” are disabled by default to avoid an assertion at
 process exit.  Set <code class="docutils literal notranslate"><span class="pre">RAMPART_METAL_RESIDENCY=1</span></code> to keep the
 feature (a marginal performance optimization) enabled.</li>
 </ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="the-rampart-onnx-module">
+<h2>The rampart-onnx module<a class="headerlink" href="#the-rampart-onnx-module" title="Permalink to this headline">¶</a></h2>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
+function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The module runs models in the
+<a class="reference external" href="https://onnx.ai/">ONNX</a> format via ONNX Runtime.  It provides
+two layers:</p>
+<ul class="simple">
+<li>High-level text embedding (<a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a>) and reranking
+(<a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a>) with the same handle API as
+rampart-llamacpp’s <a class="reference internal" href="#initembed">initEmbed</a> / <a class="reference internal" href="#initrerank">initRerank</a> — use it when a
+model is published in ONNX form rather than GGUF (as most
+<a class="reference external" href="https://huggingface.co/sentence-transformers">sentence-transformers</a>
+models are).</li>
+<li>A general-purpose session API (<a class="reference internal" href="#onnx-initsession">onnx.initSession</a>) for running
+<strong>any</strong> ONNX model — named tensors in, named tensors out.</li>
+</ul>
+<p>For embedding and reranking, the simplest input is a HuggingFace
+model <em>directory</em> (e.g. a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> of
+<a class="reference external" href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2">all-MiniLM-L6-v2</a>):
+the <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> file, the tokenizer, the pooling mode and the token
+window are all discovered from the directory contents.  A bare
+<code class="docutils literal notranslate"><span class="pre">.onnx</span></code> file path also works, but then a tokenizer must be
+supplied.</p>
+<div class="section" id="cpu-and-gpu-runtime-selection">
+<h3>CPU and GPU (runtime selection)<a class="headerlink" href="#cpu-and-gpu-runtime-selection" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>A single <code class="docutils literal notranslate"><span class="pre">rampart-onnx.so</span></code> serves both CPU and GPU: the module
+contains a complete CPU-only ONNX Runtime, and GPU installs add
+an optional CUDA runtime directory (<code class="docutils literal notranslate"><span class="pre">onnx-cu12/</span></code> or
+<code class="docutils literal notranslate"><span class="pre">onnx-cu13/</span></code>) next to the module.  At first use the module
+picks a runtime:</p>
+<ol class="arabic simple">
+<li>If the environment variable <code class="docutils literal notranslate"><span class="pre">RAMPART_ONNX_RUNTIME</span></code> is set
+(<code class="docutils literal notranslate"><span class="pre">cpu</span></code>, <code class="docutils literal notranslate"><span class="pre">cu12</span></code>, <code class="docutils literal notranslate"><span class="pre">cu13</span></code> or an absolute directory path),
+it wins.</li>
+<li>Otherwise, if an NVIDIA driver supporting CUDA 12 or later is
+present <strong>and</strong> reports at least one GPU, the newest CUDA
+runtime directory the driver supports is used, preferring one
+built for the GPU’s exact compute capability.</li>
+<li>Otherwise (or if the chosen runtime fails to load), the
+built-in CPU runtime is used.</li>
+</ol>
+<p><a class="reference internal" href="#onnx-runtimeinfo">onnx.runtimeInfo</a> reports which runtime was picked.  Selecting a
+GPU runtime makes GPU execution <em>available</em>, and sessions then use
+it <strong>automatically</strong>: on a build where a GPU runtime was selected,
+<a class="reference internal" href="#onnx-initsession">onnx.initSession</a>, <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> and <a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a> run on
+the GPU by default (the same auto-GPU behavior as the rampart-sql
+embedding path).  Pass <code class="docutils literal notranslate"><span class="pre">gpu:</span> <span class="pre">false</span></code> (or <code class="docutils literal notranslate"><span class="pre">provider:</span> <span class="pre">&quot;cpu&quot;</span></code>) to
+force CPU.  A session that requests the GPU but cannot create one
+(no device, or a driver problem) falls back to CPU with a one-line
+notice rather than failing.</p>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-initembed">
+<h3>onnx.initEmbed<a class="headerlink" href="#onnx-initembed" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">initEmbed</span></code> function loads an ONNX embedding model and
+returns a handle used to convert text into semantic vectors.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">oemb</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="nx">modelPath</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">modelPath</span></code> is a <span class="green">String</span>: a HuggingFace-layout
+model <strong>directory</strong> (recommended), or the path of a <code class="docutils literal notranslate"><span class="pre">.onnx</span></code>
+file.  Given a directory, the module discovers the <code class="docutils literal notranslate"><span class="pre">.onnx</span></code>
+model file, the tokenizer (a <code class="docutils literal notranslate"><span class="pre">*vocab.txt</span></code> selects WordPiece,
+otherwise <code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code> selects a SentencePiece/BPE
+tokenizer), the pooling mode (from <code class="docutils literal notranslate"><span class="pre">1_Pooling/config.json</span></code>)
+and the model’s token window.  Given a bare <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> file, the
+module still tries to discover the tokenizer beside the model —
+in the file’s own directory and, when the file sits in an
+<code class="docutils literal notranslate"><span class="pre">onnx/</span></code> subdirectory (the common HuggingFace layout), in its
+parent — so pointing at a specific <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> (e.g. an fp16
+variant) usually works without <code class="docutils literal notranslate"><span class="pre">options.tokenizer</span></code>; supply it
+explicitly only when discovery cannot find one.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting all of
+the session options of <a class="reference internal" href="#onnx-initsession">onnx.initSession</a> (notably <code class="docutils literal notranslate"><span class="pre">gpu</span></code>),
+plus the following.  Every discovered setting can be
+overridden here.<ul>
+<li><code class="docutils literal notranslate"><span class="pre">tokenizer</span></code> - A <span class="green">String</span> (the path of a
+SentencePiece model, loaded via rampart-sentencepiece) or
+an <span class="green">Object</span> with an <code class="docutils literal notranslate"><span class="pre">encodeIds(text)</span></code> function
+(e.g. from <a class="reference internal" href="#onnx-wordpiecetokenizer">onnx.wordPieceTokenizer</a> or
+<a class="reference internal" href="#onnx-sptokenizer">onnx.spTokenizer</a>, or custom JavaScript).</li>
+<li><code class="docutils literal notranslate"><span class="pre">pooling</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;cls&quot;</span></code>.
+Default: the directory’s declared pooling, else
+<code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">normalize</span></code> - A <span class="green">Boolean</span>, L2-normalize each
+vector.  Default: <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">maxTokens</span></code> - A <span class="green">Number</span>, the per-chunk token
+window.  Default: the model’s discovered positional
+capacity (capped at 8192), else <code class="docutils literal notranslate"><span class="pre">512</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">queryPrefix</span></code> / <code class="docutils literal notranslate"><span class="pre">passagePrefix</span></code> - <span class="green">Strings</span>
+prepended to query / passage text before embedding, for
+models trained with instruction prefixes (e.g. e5’s
+<code class="docutils literal notranslate"><span class="pre">&quot;query:</span> <span class="pre">&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;passage:</span> <span class="pre">&quot;</span></code>).  See the <code class="docutils literal notranslate"><span class="pre">isQuery</span></code>
+argument of <a class="reference internal" href="#oemb-embedtexttofp16buf">oemb.embedTextToFp16Buf()</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">split</span></code> - A <span class="green">String</span> or <span class="green">Function</span>.
+<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default) chunks long text on its structure —
+paragraphs, merged or packed as configured below;
+<code class="docutils literal notranslate"><span class="pre">&quot;window&quot;</span></code> uses plain token windows.  A <span class="green">Function</span>
+replaces the built-in chunker entirely: it is called with
+the document text and must return an <span class="green">Array</span> of
+<span class="green">Strings</span> — N strings always produce N vectors.  A
+string that fits the token window gets its exact vector; an
+oversized string gets its combined (average) vector over
+its sub-chunks, and its <code class="docutils literal notranslate"><span class="pre">chunks</span></code> entry is marked
+<code class="docutils literal notranslate"><span class="pre">oversized</span></code>.  The strings
+may freely transform the input (inject a title, drop
+boilerplate, …), so the returned <code class="docutils literal notranslate"><span class="pre">chunks</span></code> carry
+<code class="docutils literal notranslate"><span class="pre">{text,</span> <span class="pre">tokens}</span></code> without byte spans.  Two notes: a
+splitter shared with other rampart threads (via a copied
+handle) must be self-contained — it cannot reference
+variables outside itself; and the SQL <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> /
+5-argument <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> machinery always uses the
+built-in chunker, so custom splitters are for JS-side
+pipelines.</li>
+<li><code class="docutils literal notranslate"><span class="pre">minTokens</span></code> - A <span class="green">Number</span>, the paragraph-fragment
+floor: shorter paragraphs are merged with a neighbor.
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> disables merging.</li>
+<li><code class="docutils literal notranslate"><span class="pre">packParagraphs</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+consecutive paragraphs are packed together up to the token
+window (fewer, fuller chunks) instead of one vector per
+paragraph.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sentenceSplit</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, an
+oversized paragraph (or structureless text) is split at
+<strong>sentence boundaries</strong> and the sentences greedily packed
+to the token window, instead of being cut at raw token
+windows mid-sentence.  Boundaries come from a multi-script
+terminator table (ASCII <code class="docutils literal notranslate"><span class="pre">.!?</span></code> with a whitespace guard;
+self-delimiting CJK <code class="docutils literal notranslate"><span class="pre">。！？</span></code>, Arabic, Devanagari and
+others with none; fullwidth <code class="docutils literal notranslate"><span class="pre">．</span></code> digit-guarded so
+<code class="docutils literal notranslate"><span class="pre">３．１４</span></code> never splits), and a chunk never ends on a
+tiny trailing fragment (so a false boundary after “Mr.”
+can’t take a cut).  Languages without sentence punctuation
+(e.g. Thai) fall back to token windows.  Default <code class="docutils literal notranslate"><span class="pre">false</span></code>:
+enabling it changes chunk boundaries, which tables built
+WITHOUT value headers depend on for snippet spans.</li>
+<li><code class="docutils literal notranslate"><span class="pre">maxChunkBatch</span></code> - A <span class="green">Number</span>, the maximum chunks
+per batched model run (bounds memory for many-chunk
+documents).  Default: <code class="docutils literal notranslate"><span class="pre">64</span></code> (CPU) or <code class="docutils literal notranslate"><span class="pre">32</span></code> (GPU).</li>
+<li><code class="docutils literal notranslate"><span class="pre">bosId</span></code>, <code class="docutils literal notranslate"><span class="pre">eosId</span></code>, <code class="docutils literal notranslate"><span class="pre">padId</span></code>, <code class="docutils literal notranslate"><span class="pre">idOffset</span></code> -
+<span class="green">Numbers</span>, special-token overrides.  Defaults
+follow the detected tokenizer family (e.g. <code class="docutils literal notranslate"><span class="pre">[CLS]</span></code>/
+<code class="docutils literal notranslate"><span class="pre">[SEP]</span></code> ids 101/102 for WordPiece).</li>
+<li><code class="docutils literal notranslate"><span class="pre">lowercase</span></code>, <code class="docutils literal notranslate"><span class="pre">stripAccents</span></code>, <code class="docutils literal notranslate"><span class="pre">tokenizeChinese</span></code> -
+<span class="green">Booleans</span>, WordPiece tokenizer settings (see
+<a class="reference internal" href="#onnx-wordpiecetokenizer">onnx.wordPieceTokenizer</a>).  Default: <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>The rampart-sql <code class="docutils literal notranslate"><span class="pre">embed()</span></code>, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> and related
+SQL functions can run this same engine inside the SQL
+module: <code class="docutils literal notranslate"><span class="pre">sql.set({onnxEmbed:</span> <span class="pre">{model:</span> <span class="pre">'/path/to/modeldir'}})</span></code>
+loads the model through rampart-onnx.  When embedding rows
+of a SQL table, that path avoids round-trips through
+JavaScript — see
+<a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class="std std-ref">Generating embeddings</span></a>,
+<a class="reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows"><span class="std std-ref">Chunked documents</span></a>
+and the <a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> property.</dd>
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the embedding handle) with the functions
+<a class="reference internal" href="#oemb-embedtexttofp16buf">oemb.embedTextToFp16Buf()</a>, <code class="docutils literal notranslate"><span class="pre">embedTextToFp32Buf()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">embedTextToNumbers()</span></code>, <a class="reference internal" href="#oemb-embedtextstonumbers">oemb.embedTextsToNumbers()</a> and
+<code class="docutils literal notranslate"><span class="pre">destroy()</span></code>, plus <code class="docutils literal notranslate"><span class="pre">session</span></code> (the underlying
+<a class="reference internal" href="#onnx-initsession">onnx.initSession</a> handle).</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">oemb</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="s2">&quot;./all-MiniLM-L6-v2&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">oemb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="s2">&quot;about a paragraph of text ...&quot;</span><span class="p">);</span>
+
+<span class="cm">/* v = { vecs: [vec1, ...], avgVec: avg, coherence: n,</span>
+<span class="cm">         chunks: [ {start,end,tokens,text}, ... ] }      */</span>
+
+<span class="cm">/* store the whole-document vector in a sql table */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into vecs values(?,?,?)&quot;</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">v</span><span class="p">.</span><span class="nx">avgVec</span><span class="p">,</span> <span class="nx">docId</span><span class="p">,</span> <span class="nx">text</span><span class="p">]);</span>
+
+<span class="nx">oemb</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="oemb-embedtexttofp16buf">
+<h4>oemb.embedTextToFp16Buf()<a class="headerlink" href="#oemb-embedtexttofp16buf" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Embed text and return the vector(s) packed as 16-bit floats
+(little-endian) in <span class="green">Buffers</span>, directly usable by
+<a class="reference internal" href="rampart-vector.html#rampart-vector-functions"><span class="std std-ref">rampart.vector</span></a>
+functions, the rampart-sql <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> function and the faiss
+<a class="reference internal" href="#idx-addfp16">idx.addFp16()</a> / <a class="reference internal" href="#idx-searchfp16">idx.searchFp16()</a> functions.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">oemb</span><span class="p">.</span><span class="nx">embedTextToFp16Buf</span><span class="p">(</span><span class="nx">text</span><span class="p">[,</span> <span class="nx">isQuery</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> is a <span class="green">String</span>, the text to be embedded.</li>
+<li><code class="docutils literal notranslate"><span class="pre">isQuery</span></code> is an optional <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+the <code class="docutils literal notranslate"><span class="pre">queryPrefix</span></code> (if configured) is applied; if <code class="docutils literal notranslate"><span class="pre">false</span></code>
+or omitted, the <code class="docutils literal notranslate"><span class="pre">passagePrefix</span></code> (if configured) is applied.</li>
+</ul>
+<p>If the tokenized text does not fit the model’s token window, it
+is chunked; with the default <code class="docutils literal notranslate"><span class="pre">split:</span> <span class="pre">&quot;auto&quot;</span></code> the chunking is
+<strong>structure-aware</strong>: text is split on paragraph boundaries
+(falling back to token windows for oversized paragraphs), so
+each vector corresponds to a semantically meaningful span of the
+input, and the spans are reported in <code class="docutils literal notranslate"><span class="pre">chunks</span></code>.
+rampart-llamacpp’s <a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a> chunks the same
+way — the two modules share the chunker.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">vecs</span></code> - An <span class="green">Array</span> of <span class="green">Buffers</span>, one
+vector per chunk (<code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">dimension</span></code> bytes each).</li>
+<li><code class="docutils literal notranslate"><span class="pre">avgVec</span></code> - A <span class="green">Buffer</span>.  If only one chunk was
+produced, the same vector as <code class="docutils literal notranslate"><span class="pre">vecs[0]</span></code>; otherwise the
+re-normalized average of the chunk vectors, suitable as a
+single whole-document vector.</li>
+<li><code class="docutils literal notranslate"><span class="pre">coherence</span></code> - A <span class="green">Number</span> in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>: the
+average pairwise cosine similarity of the chunk vectors
+(<code class="docutils literal notranslate"><span class="pre">1.0</span></code> for a single-chunk document).  A low value means
+the document spans several topics and <code class="docutils literal notranslate"><span class="pre">avgVec</span></code> is a
+blurrier summary of it.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chunks</span></code> - An <span class="green">Array</span> of <span class="green">Objects</span>, one
+per vector:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code> - <span class="green">Numbers</span>, the chunk’s
+byte span in <code class="docutils literal notranslate"><span class="pre">text</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tokens</span></code> - A <span class="green">Number</span>, the chunk’s token
+count.</li>
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> - A <span class="green">String</span>, the chunk text itself.</li>
+<li><code class="docutils literal notranslate"><span class="pre">oversized</span></code> - <span class="green">Boolean</span> <code class="docutils literal notranslate"><span class="pre">true</span></code> when this
+vector is one of several token windows over a single
+span that exceeded the model window (such sub-chunks
+share their span).  Not set otherwise.</li>
+</ul>
+</li>
+</ul>
+<p class="last">For empty input, the return value is <code class="docutils literal notranslate"><span class="pre">{vecs:</span> <span class="pre">[]}</span></code>.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="oemb-embedtexttofp32buf-oemb-embedtexttonumbers">
+<h4>oemb.embedTextToFp32Buf() / oemb.embedTextToNumbers()<a class="headerlink" href="#oemb-embedtexttofp32buf-oemb-embedtexttonumbers" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>The same as <a class="reference internal" href="#oemb-embedtexttofp16buf">oemb.embedTextToFp16Buf()</a> except that each vector
+is packed as 32-bit floats (<code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">dimension</span></code> bytes), or
+returned as an <span class="green">Array</span> of <span class="green">Numbers</span>, respectively.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">oemb</span><span class="p">.</span><span class="nx">embedTextToFp32Buf</span><span class="p">(</span><span class="nx">text</span><span class="p">[,</span> <span class="nx">isQuery</span><span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">oemb</span><span class="p">.</span><span class="nx">embedTextToNumbers</span><span class="p">(</span><span class="nx">text</span><span class="p">[,</span> <span class="nx">isQuery</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="oemb-embedtextstonumbers">
+<h4>oemb.embedTextsToNumbers()<a class="headerlink" href="#oemb-embedtextstonumbers" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Embed several short texts in one batched model run — the fast
+path for many small inputs (e.g. embedding a list of queries or
+titles).  Each text produces exactly <strong>one</strong> vector; text longer
+than the token window is truncated, not chunked.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">oemb</span><span class="p">.</span><span class="nx">embedTextsToNumbers</span><span class="p">(</span><span class="nx">texts</span><span class="p">[,</span> <span class="nx">isQuery</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">texts</span></code> is an <span class="green">Array</span> of <span class="green">Strings</span> and
+<code class="docutils literal notranslate"><span class="pre">isQuery</span></code> selects the prefix as in
+<a class="reference internal" href="#oemb-embedtexttofp16buf">oemb.embedTextToFp16Buf()</a>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Array</span> (same order as <code class="docutils literal notranslate"><span class="pre">texts</span></code>) of
+<span class="green">Objects</span>, each with a single property <code class="docutils literal notranslate"><span class="pre">avgVec</span></code>:
+the text’s vector as an <span class="green">Array</span> of <span class="green">Numbers</span>.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="oemb-destroy">
+<h4>oemb.destroy()<a class="headerlink" href="#oemb-destroy" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Free the model session.  Using the handle after calling
+<code class="docutils literal notranslate"><span class="pre">destroy()</span></code> throws an error.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">oemb</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="onnx-initrerank">
+<h3>onnx.initRerank<a class="headerlink" href="#onnx-initrerank" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">initRerank</span></code> function loads an ONNX cross-encoder
+reranking model (such as
+<a class="reference external" href="https://huggingface.co/BAAI/bge-reranker-v2-m3">bge-reranker-v2-m3</a>
+or
+<a class="reference external" href="https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2">ms-marco-MiniLM-L6-v2</a>)
+and returns a handle used to score how well documents answer a
+query.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">orr</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initRerank</span><span class="p">(</span><span class="nx">modelPath</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">modelPath</span></code> is a <span class="green">String</span>: a HuggingFace-layout
+model directory (recommended; the model, tokenizer, specials,
+token window and pair template are discovered) or a <code class="docutils literal notranslate"><span class="pre">.onnx</span></code>
+file path.  For a file path the tokenizer is still discovered
+beside the model (the file’s directory, and its parent when the
+file is in an <code class="docutils literal notranslate"><span class="pre">onnx/</span></code> subdirectory), so naming a specific
+<code class="docutils literal notranslate"><span class="pre">.onnx</span></code> variant works without <code class="docutils literal notranslate"><span class="pre">options.tokenizer</span></code>; pass it
+explicitly only if discovery fails.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting the
+session options of <a class="reference internal" href="#onnx-initsession">onnx.initSession</a> and the tokenizer /
+special-token options of <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a>, plus:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">pairTemplate</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;bert&quot;</span></code>
+(<code class="docutils literal notranslate"><span class="pre">[CLS]</span> <span class="pre">query</span> <span class="pre">[SEP]</span> <span class="pre">document</span> <span class="pre">[SEP]</span></code> with token types) or
+<code class="docutils literal notranslate"><span class="pre">&quot;roberta&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">[bos]</span> <span class="pre">query</span> <span class="pre">[eos</span> <span class="pre">eos]</span> <span class="pre">document</span> <span class="pre">[eos]</span></code>).
+Default: <code class="docutils literal notranslate"><span class="pre">&quot;bert&quot;</span></code> when the tokenizer is WordPiece, else
+<code class="docutils literal notranslate"><span class="pre">&quot;roberta&quot;</span></code>.  Instruct-style rerankers (the Qwen3-Reranker
+family) are not supported here — use the rampart-llamacpp
+<a class="reference internal" href="#initrerank">initRerank</a> for those.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sigmoid</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> (the
+default), scores are passed through a sigmoid and lie in
+<code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code>; if <code class="docutils literal notranslate"><span class="pre">false</span></code>, raw model logits are returned
+(matching rampart-llamacpp’s <a class="reference internal" href="#rr-rerank">rr.rerank()</a>).</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the reranker handle) with the functions
+<a class="reference internal" href="#orr-rerank">orr.rerank()</a> and <code class="docutils literal notranslate"><span class="pre">destroy()</span></code>, plus <code class="docutils literal notranslate"><span class="pre">session</span></code>.</dd>
+<dt>Note:</dt>
+<dd>The handle carries all of its state as object properties with
+native methods, so it survives being shared with other rampart
+threads — including a rampart-server <code class="docutils literal notranslate"><span class="pre">preThreadFunc</span></code> global
+propagating to worker threads, like a rampart-llamacpp handle.
+Handles from <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> and <code class="docutils literal notranslate"><span class="pre">initSnacDecoder</span></code> are
+thread-portable the same way.</dd>
+</dl>
+</div></blockquote>
+<div class="section" id="orr-rerank">
+<h4>orr.rerank()<a class="headerlink" href="#orr-rerank" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Score one or more documents against a query.  All documents are
+scored in one batched model run.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">score</span>  <span class="o">=</span> <span class="nx">orr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nb">document</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">scored</span> <span class="o">=</span> <span class="nx">orr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">documents</span><span class="p">[,</span> <span class="nx">scoresOnly</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">query</span></code> is a <span class="green">String</span> and <code class="docutils literal notranslate"><span class="pre">document</span></code> /
+<code class="docutils literal notranslate"><span class="pre">documents</span></code> is a <span class="green">String</span> or an <span class="green">Array</span> of
+<span class="green">Strings</span>, as in the llamacpp <a class="reference internal" href="#rr-rerank">rr.rerank()</a>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><ul class="first last simple">
+<li>Given a single <span class="green">String</span> document: a
+<span class="green">Number</span>, the relevance score.</li>
+<li>Given an <span class="green">Array</span> of documents: an <span class="green">Array</span>
+of <span class="green">Objects</span>, each <code class="docutils literal notranslate"><span class="pre">{document:</span> <span class="pre">String,</span> <span class="pre">score:</span>
+<span class="pre">Number,</span> <span class="pre">index:</span> <span class="pre">Number}</span></code>, sorted best-first; <code class="docutils literal notranslate"><span class="pre">index</span></code> is
+the document’s position in the input <span class="green">Array</span>.
+(Note this differs from the llamacpp reranker, which
+returns results in input order.)</li>
+<li>Given an <span class="green">Array</span> and <code class="docutils literal notranslate"><span class="pre">scoresOnly</span></code> = <code class="docutils literal notranslate"><span class="pre">true</span></code>: an
+<span class="green">Array</span> of <span class="green">Numbers</span> in <strong>input order</strong>
+(llamacpp parity).</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">orr</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initRerank</span><span class="p">(</span><span class="s2">&quot;./ms-marco-MiniLM-L6-v2&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">scored</span> <span class="o">=</span> <span class="nx">orr</span><span class="p">.</span><span class="nx">rerank</span><span class="p">(</span><span class="s2">&quot;How tall is the Eiffel Tower?&quot;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="s2">&quot;The Eiffel Tower is 330 metres tall.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Gustave Eiffel also designed bridges.&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Paris is the capital of France.&quot;</span>
+<span class="p">]);</span>
+<span class="cm">/* [ { document: &quot;The Eiffel Tower is ...&quot;, score: 0.98, index: 0 },</span>
+<span class="cm">     { document: &quot;Paris is the capital ...&quot;, score: 0.03, index: 2 },</span>
+<span class="cm">     ...  -- sorted best-first                                     ] */</span>
+
+<span class="nx">orr</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="onnx-initsession">
+<h3>onnx.initSession<a class="headerlink" href="#onnx-initsession" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">initSession</span></code> function loads any <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> model and
+returns a low-level session handle: named input tensors go in,
+named output tensors come out.  This is the layer beneath
+<a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> / <a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a>, exposed for models
+that are neither embedders nor rerankers (classifiers, taggers,
+audio and vision models, …).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">sess</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initSession</span><span class="p">(</span><span class="nx">path</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path of a <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> model
+file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> with the following
+properties:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">gpu</span></code> - A <span class="green">Boolean</span>.  Whether to run the session on
+the GPU via the CUDA execution provider (see <a class="reference internal" href="#cpu-and-gpu-runtime-selection">CPU and GPU
+(runtime selection)</a>).  <strong>Default: auto</strong> — <code class="docutils literal notranslate"><span class="pre">true</span></code> when
+the module selected a GPU runtime (a GPU build with a usable
+device), otherwise <code class="docutils literal notranslate"><span class="pre">false</span></code>.  Pass <code class="docutils literal notranslate"><span class="pre">gpu:</span> <span class="pre">false</span></code> to force
+CPU even on a GPU build.  A GPU session that cannot be
+created falls back to CPU with a one-line notice rather than
+throwing.  <code class="docutils literal notranslate"><span class="pre">provider:</span> <span class="pre">&quot;cuda&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code> is accepted as an
+alternative spelling (<code class="docutils literal notranslate"><span class="pre">provider:</span> <span class="pre">&quot;cpu&quot;</span></code> also forces CPU).</li>
+<li><code class="docutils literal notranslate"><span class="pre">device</span></code> - A <span class="green">Number</span>, the CUDA device id (with
+<code class="docutils literal notranslate"><span class="pre">gpu:</span> <span class="pre">true</span></code>).  Default: <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">intraOpThreads</span></code> - A <span class="green">Number</span>, threads used
+<em>within</em> an operator.  Default: <code class="docutils literal notranslate"><span class="pre">0</span></code> = ONNX Runtime’s own
+thread pool (sized to the machine’s cores), so a single
+call uses the full CPU.  Set <code class="docutils literal notranslate"><span class="pre">1</span></code> for a session with no
+background threads — see the fork note below.</li>
+<li><code class="docutils literal notranslate"><span class="pre">interOpThreads</span></code> - A <span class="green">Number</span>, threads used to
+run independent operators concurrently (only meaningful
+with <code class="docutils literal notranslate"><span class="pre">executionMode:</span> <span class="pre">&quot;parallel&quot;</span></code>).  Default: <code class="docutils literal notranslate"><span class="pre">1</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">executionMode</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;sequential&quot;</span></code>
+(default) or <code class="docutils literal notranslate"><span class="pre">&quot;parallel&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">graphOpt</span></code> - A <span class="green">String</span>, the graph optimization
+level: <code class="docutils literal notranslate"><span class="pre">&quot;disable&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;basic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;extended&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>.  Default: ONNX Runtime’s default (<code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>).</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>Fork safety costs no performance.  A session whose thread
+pool is broken by a <code class="docutils literal notranslate"><span class="pre">fork()</span></code> is transparently <strong>rebuilt</strong>
+from its model source on first use in the child process; a
+GPU session (whose device context cannot be rebuilt in a
+forked child) <strong>throws</strong> a descriptive error there instead.
+<code class="docutils literal notranslate"><span class="pre">intraOpThreads:</span> <span class="pre">1</span></code> (with sequential execution) creates a
+session with <strong>no background threads at all</strong>, which a forked
+child can keep using without any rebuild.  Concurrency is
+also available <em>across</em> rampart threads: a session may be
+used from several threads at once (<code class="docutils literal notranslate"><span class="pre">run</span></code> is thread-safe).</dd>
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> (the session handle) with the functions
+<a class="reference internal" href="#sess-run">sess.run()</a>, <a class="reference internal" href="#sess-inputs">sess.inputs()</a>, <code class="docutils literal notranslate"><span class="pre">outputs()</span></code>,
+<a class="reference internal" href="#sess-metadata">sess.metadata()</a> and <code class="docutils literal notranslate"><span class="pre">destroy()</span></code>.</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">sess</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initSession</span><span class="p">(</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">);</span>
+
+<span class="cm">/* what does it want? */</span>
+<span class="kd">var</span> <span class="nx">ins</span>  <span class="o">=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">inputs</span><span class="p">();</span>
+<span class="cm">/* [ { name: &quot;input_ids&quot;,      type: &quot;int64&quot;, shape: [-1,-1] },</span>
+<span class="cm">     { name: &quot;attention_mask&quot;, type: &quot;int64&quot;, shape: [-1,-1] } ] */</span>
+
+<span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">run</span><span class="p">({</span>
+    <span class="nx">input_ids</span><span class="o">:</span>      <span class="p">{</span> <span class="nx">data</span><span class="o">:</span> <span class="p">[</span><span class="mi">101</span><span class="p">,</span> <span class="mi">7592</span><span class="p">,</span> <span class="mi">102</span><span class="p">],</span> <span class="nx">shape</span><span class="o">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;int64&quot;</span> <span class="p">},</span>
+    <span class="nx">attention_mask</span><span class="o">:</span> <span class="p">{</span> <span class="nx">data</span><span class="o">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>        <span class="nx">shape</span><span class="o">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;int64&quot;</span> <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="cm">/* out.last_hidden_state.array is a Float32Array,</span>
+<span class="cm">   out.last_hidden_state.shape e.g. [1, 3, 384] */</span>
+
+<span class="nx">sess</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="sess-run">
+<h4>sess.run()<a class="headerlink" href="#sess-run" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Run the model once.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">outputs</span> <span class="o">=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="nx">feeds</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">feeds</span></code> is an <span class="green">Object</span> mapping each input’s name
+to a tensor <span class="green">Object</span>:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code> - A <span class="green">Buffer</span> (raw little-endian element
+bytes) or an <span class="green">Array</span> of <span class="green">Numbers</span> (converted to
+the given type).</li>
+<li><code class="docutils literal notranslate"><span class="pre">shape</span></code> - An <span class="green">Array</span> of <span class="green">Numbers</span>, the tensor
+dimensions.  If omitted, the tensor is treated as 1-D.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> - A <span class="green">String</span>, the element type: <code class="docutils literal notranslate"><span class="pre">&quot;float32&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;float16&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;double&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;int64&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;int32&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;int16&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;int8&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;uint8&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> mapping each output’s name to a tensor
+<span class="green">Object</span>:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code> - An <span class="green">ArrayBuffer</span> of the raw element
+bytes (so e.g. <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Float32Array(t.data)</span></code> reinterprets
+rather than copies).</li>
+<li><code class="docutils literal notranslate"><span class="pre">array</span></code> - A ready-made typed-array view over <code class="docutils literal notranslate"><span class="pre">data</span></code>
+matching the element type (<code class="docutils literal notranslate"><span class="pre">Float32Array</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Int32Array</span></code>, …).  Omitted for <code class="docutils literal notranslate"><span class="pre">int64</span></code> outputs,
+which have no native typed array (use <code class="docutils literal notranslate"><span class="pre">data</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">shape</span></code> - An <span class="green">Array</span> of <span class="green">Numbers</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> - A <span class="green">String</span>, the element type.</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="sess-inputs">
+<h4>sess.inputs()<a class="headerlink" href="#sess-inputs" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Return the model’s declared inputs (<code class="docutils literal notranslate"><span class="pre">sess.outputs()</span></code> likewise
+returns its outputs): an <span class="green">Array</span> of <span class="green">Objects</span>,
+each <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">String,</span> <span class="pre">type:</span> <span class="pre">String,</span> <span class="pre">shape:</span> <span class="pre">Array}</span></code>.  Dynamic
+dimensions appear as <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ins</span>  <span class="o">=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">inputs</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">outs</span> <span class="o">=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">outputs</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="sess-metadata">
+<h4>sess.metadata()<a class="headerlink" href="#sess-metadata" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Return the model’s metadata: an <span class="green">Object</span> with
+<code class="docutils literal notranslate"><span class="pre">producerName</span></code>, <code class="docutils literal notranslate"><span class="pre">graphName</span></code>, <code class="docutils literal notranslate"><span class="pre">domain</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>
+(<span class="green">Strings</span>, present when set in the model) and
+<code class="docutils literal notranslate"><span class="pre">version</span></code> (a <span class="green">Number</span>).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">meta</span> <span class="o">=</span> <span class="nx">sess</span><span class="p">.</span><span class="nx">metadata</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="sess-destroy">
+<h4>sess.destroy()<a class="headerlink" href="#sess-destroy" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Free the session.  Using the handle after calling <code class="docutils literal notranslate"><span class="pre">destroy()</span></code>
+throws an error.  Sessions are also freed automatically when
+garbage collected.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sess</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="onnx-initsessionfrombuffer">
+<h3>onnx.initSessionFromBuffer<a class="headerlink" href="#onnx-initsessionfrombuffer" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The same as <a class="reference internal" href="#onnx-initsession">onnx.initSession</a> except that the model is read
+from a <span class="green">Buffer</span> of model bytes rather than a file.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">sess</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initSessionFromBuffer</span><span class="p">(</span><span class="nx">buffer</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-modelinfo">
+<h3>onnx.modelInfo<a class="headerlink" href="#onnx-modelinfo" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Return a model’s declared inputs and outputs without creating a
+full session.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">modelInfo</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the path of a <code class="docutils literal notranslate"><span class="pre">.onnx</span></code>
+model file.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">inputs</span></code> and <code class="docutils literal notranslate"><span class="pre">outputs</span></code>, each an
+<span class="green">Array</span> of <code class="docutils literal notranslate"><span class="pre">{name,</span> <span class="pre">type,</span> <span class="pre">shape}</span></code> <span class="green">Objects</span>
+as returned by <a class="reference internal" href="#sess-inputs">sess.inputs()</a>.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-wordpiecetokenizer">
+<h3>onnx.wordPieceTokenizer<a class="headerlink" href="#onnx-wordpiecetokenizer" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Create a WordPiece (BERT-style) tokenizer from a <code class="docutils literal notranslate"><span class="pre">vocab.txt</span></code>
+file.  <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> / <a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a> create one of
+these automatically when the model directory contains a
+<code class="docutils literal notranslate"><span class="pre">*vocab.txt</span></code>; the function is exposed for custom pipelines.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">tok</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">wordPieceTokenizer</span><span class="p">(</span><span class="nx">vocabPath</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">vocabPath</span></code> is a <span class="green">String</span>, the path of the
+<code class="docutils literal notranslate"><span class="pre">vocab.txt</span></code> file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> with the
+<span class="green">Boolean</span> properties <code class="docutils literal notranslate"><span class="pre">lowercase</span></code>, <code class="docutils literal notranslate"><span class="pre">stripAccents</span></code>
+and <code class="docutils literal notranslate"><span class="pre">tokenizeChinese</span></code>, each defaulting to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with the property <code class="docutils literal notranslate"><span class="pre">vocabSize</span></code> (a
+<span class="green">Number</span>) and the function <code class="docutils literal notranslate"><span class="pre">encodeIds(text)</span></code>, which
+returns an <span class="green">Array</span> of <span class="green">Numbers</span> — the
+<strong>content</strong> token ids of <code class="docutils literal notranslate"><span class="pre">text</span></code>, without special tokens
+(<code class="docutils literal notranslate"><span class="pre">[CLS]</span></code>/<code class="docutils literal notranslate"><span class="pre">[SEP]</span></code> are added by the embed/rerank layers).</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-sptokenizer">
+<h3>onnx.spTokenizer<a class="headerlink" href="#onnx-sptokenizer" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Create a SentencePiece/BPE tokenizer from a HuggingFace
+<code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code>.  As with <a class="reference internal" href="#onnx-wordpiecetokenizer">onnx.wordPieceTokenizer</a>, this
+is created automatically for model directories that have a
+<code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">tok</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">spTokenizer</span><span class="p">(</span><span class="nx">modelDir</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">modelDir</span></code> is a <span class="green">String</span>, the directory
+containing <code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code>.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with the function <code class="docutils literal notranslate"><span class="pre">encodeIds(text)</span></code>, as
+in <a class="reference internal" href="#onnx-wordpiecetokenizer">onnx.wordPieceTokenizer</a>.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-initsnacdecoder">
+<h3>onnx.initSnacDecoder<a class="headerlink" href="#onnx-initsnacdecoder" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><strong>Experimental.</strong>  Load a
+<a class="reference external" href="https://github.com/hubertsiuzdak/snac">SNAC</a> audio-codec
+decoder model and return a handle that turns SNAC codes (as
+produced by speech models such as Orpheus TTS) into 24 kHz audio
+samples.  The handle has the property <code class="docutils literal notranslate"><span class="pre">sampleRate</span></code> (<code class="docutils literal notranslate"><span class="pre">24000</span></code>)
+and the functions <code class="docutils literal notranslate"><span class="pre">decode(codes)</span></code>, <code class="docutils literal notranslate"><span class="pre">framesToCodes(frames)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">decodeFrames(frames)</span></code>, <code class="docutils literal notranslate"><span class="pre">decodeOrpheus(tokens)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">destroy()</span></code>; decoded audio is returned as a <code class="docutils literal notranslate"><span class="pre">Float32Array</span></code>
+of samples.  The API may change.</div></blockquote>
+</div>
+<div class="section" id="onnx-onnxversion">
+<h3>onnx.onnxVersion<a class="headerlink" href="#onnx-onnxversion" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Return the ONNX Runtime version string (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;1.27.0&quot;</span></code>).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">onnxVersion</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-runtimeinfo">
+<h3>onnx.runtimeInfo<a class="headerlink" href="#onnx-runtimeinfo" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Return a <span class="green">String</span> describing which runtime the selection
+ladder picked (see <a class="reference internal" href="#cpu-and-gpu-runtime-selection">CPU and GPU (runtime selection)</a>) — e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;built-in</span> <span class="pre">CPU&quot;</span></code>, or the CUDA runtime directory with the
+driver version and GPU compute capability.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">runtimeInfo</span><span class="p">());</span>
+<span class="cm">/* &quot;/usr/local/rampart/modules/onnx-cu12 (driver CUDA 12.2, sm 89)&quot; */</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="onnx-getlog-onnx-clearlog">
+<h3>onnx.getLog / onnx.clearLog<a class="headerlink" href="#onnx-getlog-onnx-clearlog" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>ONNX Runtime warnings and non-fatal errors are captured in an
+internal buffer rather than printed to stderr.  <code class="docutils literal notranslate"><span class="pre">getLog()</span></code>
+returns the captured log as a <span class="green">String</span>; <code class="docutils literal notranslate"><span class="pre">clearLog()</span></code>
+empties it (<code class="docutils literal notranslate"><span class="pre">resetLog()</span></code> is an alias, for rampart-llamacpp
+naming parity).</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">log</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">getLog</span><span class="p">();</span>
+<span class="nx">onnx</span><span class="p">.</span><span class="nx">clearLog</span><span class="p">();</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="converting-a-model-to-float16-or-int8">
+<h3>Converting a model to float16 or int8<a class="headerlink" href="#converting-a-model-to-float16-or-int8" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>ONNX embedding and reranking models are usually exported in
+float32.  For GPU inference a <strong>float16</strong> copy roughly halves the
+weight size and uses the GPU’s tensor cores — usually the fastest
+ONNX option (the module auto-uses the GPU; see <a class="reference internal" href="#cpu-and-gpu-runtime-selection">CPU and GPU
+(runtime selection)</a>).  An <strong>int8</strong> (dynamically quantized) copy
+is smaller still but is CPU-oriented: ONNX Runtime’s CUDA
+execution provider has sparse int8 kernel coverage, so int8 tends
+to fall back to the CPU (with CPU⇄GPU copies) and is usually
+<em>slower</em> on the GPU than fp16 — prefer it with <code class="docutils literal notranslate"><span class="pre">gpu:</span> <span class="pre">false</span></code>.</p>
+<p>Conversion is a one-time, offline step using Python’s ONNX tooling
+(not a runtime rampart operation): convert once and place the
+resulting <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> beside the original, then load it like any
+other model.  Install the tooling into a throwaway virtualenv
+matching your <code class="docutils literal notranslate"><span class="pre">python3</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 -m venv /tmp/onnxconv
+/tmp/onnxconv/bin/pip install onnxruntime onnx sympy
+</pre></div>
+</div>
+<p><strong>float16</strong> — use ONNX Runtime’s transformer optimizer, which
+inserts/repairs the <code class="docutils literal notranslate"><span class="pre">Cast</span></code> nodes that a bare
+<code class="docutils literal notranslate"><span class="pre">onnxconverter_common</span></code> pass gets wrong.  <code class="docutils literal notranslate"><span class="pre">opt_level=0</span></code> applies
+no graph fusions (only the precision change, so outputs do not
+drift); <code class="docutils literal notranslate"><span class="pre">keep_io_types</span></code> leaves the int/float inputs and outputs
+unchanged; and <code class="docutils literal notranslate"><span class="pre">use_external_data_format</span></code> handles weights that
+exceed protobuf’s 2 GB single-file limit:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">onnxruntime.transformers.optimizer</span> <span class="kn">import</span> <span class="n">optimize_model</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">optimize_model</span><span class="p">(</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span> <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;bert&quot;</span><span class="p">,</span>
+                   <span class="n">opt_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_gpu</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">convert_float_to_float16</span><span class="p">(</span><span class="n">keep_io_types</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">save_model_to_file</span><span class="p">(</span><span class="s2">&quot;model_fp16.onnx&quot;</span><span class="p">,</span> <span class="n">use_external_data_format</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>int8</strong> — weight-only dynamic quantization (no calibration data
+needed):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">onnxruntime.quantization</span> <span class="kn">import</span> <span class="n">quantize_dynamic</span><span class="p">,</span> <span class="n">QuantType</span>
+<span class="n">quantize_dynamic</span><span class="p">(</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span> <span class="s2">&quot;model_int8.onnx&quot;</span><span class="p">,</span>
+                 <span class="n">weight_type</span><span class="o">=</span><span class="n">QuantType</span><span class="o">.</span><span class="n">QInt8</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then load the result as usual, e.g.
+<code class="docutils literal notranslate"><span class="pre">onnx.initRerank(&quot;&lt;dir&gt;/onnx/model_fp16.onnx&quot;,</span> <span class="pre">{tokenizer:</span> <span class="pre">...})</span></code>.
+A <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> saved with external data keeps its weights in a
+sidecar file (<code class="docutils literal notranslate"><span class="pre">model_fp16.onnx.data</span></code>); keep the two together.</p>
 </div></blockquote>
 </div>
 </div>
@@ -1498,17 +2429,255 @@ space-separated <span class="green">String</span> of pieces, as produced by
 </div></blockquote>
 </div>
 </div>
+<div class="section" id="the-rampart-models-module">
+<h2>The rampart-models module<a class="headerlink" href="#the-rampart-models-module" title="Permalink to this headline">¶</a></h2>
+<p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
+function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The module downloads and locates GGUF and ONNX models by short name,
+returning a local path that feeds <a class="reference internal" href="#initembed">initEmbed</a>, <a class="reference internal" href="#initrerank">initRerank</a>,
+<a class="reference internal" href="#initgen">initGen</a>, <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> / <a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a> and the
+rampart-sql <a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> /
+<a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> properties directly:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">models</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">onnx</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">oemb</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span> <span class="nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;bge-m3&quot;</span><span class="p">)</span> <span class="p">);</span>          <span class="c1">// onnx .onnx file</span>
+<span class="kd">var</span> <span class="nx">emb</span>  <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span> <span class="nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;bge-m3:q8_0&quot;</span><span class="p">)</span> <span class="p">);</span> <span class="c1">// gguf FILE</span>
+<span class="kd">var</span> <span class="nx">gen</span>  <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initGen</span><span class="p">(</span> <span class="nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;qwen3-4b&quot;</span><span class="p">)</span> <span class="p">);</span>      <span class="c1">// gen = gguf</span>
+</pre></div>
+</div>
+<p>Models live under <code class="docutils literal notranslate"><span class="pre">~/.rampart/models/&lt;category&gt;/</span></code> (categories:
+<code class="docutils literal notranslate"><span class="pre">embed</span></code>, <code class="docutils literal notranslate"><span class="pre">rerank</span></code>, <code class="docutils literal notranslate"><span class="pre">gen</span></code>; plain URLs go to <code class="docutils literal notranslate"><span class="pre">other</span></code>).  If the
+model is already on disk its path is returned immediately with no
+network access; otherwise it is downloaded from
+<a class="reference external" href="https://huggingface.co/">HuggingFace</a> with resume, retries and a
+single-line progress display.</p>
+<p>A short name is resolved in this order:</p>
+<ol class="arabic simple">
+<li>Already on disk under <code class="docutils literal notranslate"><span class="pre">~/.rampart/models/</span></code>.</li>
+<li>The embedded catalog — ~75 curated models (embedding, reranking
+and text-generation), each pinned to a specific repository
+revision.  Embedding entries also record the model’s vector
+dimension and its retrieval prompts, when it has them (see
+<a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a> below).  <code class="docutils literal notranslate"><span class="pre">models.list()</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">--list</span></code> on the command line) shows them.</li>
+<li>A name containing <code class="docutils literal notranslate"><span class="pre">/</span></code> is used as an exact HuggingFace
+<code class="docutils literal notranslate"><span class="pre">org/repo</span></code> — no search.</li>
+<li>A live HuggingFace search (exact-name match first, model-family
+organizations before converter organizations, then quant
+coverage).  Live resolutions are remembered in
+<code class="docutils literal notranslate"><span class="pre">~/.rampart/models/.resolved.json</span></code> so the same name resolves the
+same way next time.</li>
+</ol>
+<div class="section" id="models-get">
+<h3>models.get()<a class="headerlink" href="#models-get" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Resolve (and, if needed, download) a model; return its local path.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">name</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">name</span></code> is a <span class="green">String</span>: a catalog short name
+(<code class="docutils literal notranslate"><span class="pre">&quot;bge-m3&quot;</span></code>), a short name with a quant suffix
+(<code class="docutils literal notranslate"><span class="pre">&quot;bge-m3:q8_0&quot;</span></code> — implies GGUF), an exact HuggingFace
+<code class="docutils literal notranslate"><span class="pre">&quot;org/repo&quot;</span></code>, or a full <code class="docutils literal notranslate"><span class="pre">https://</span></code> URL (downloaded as-is).</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span>:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">format</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;onnx&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;gguf&quot;</span></code>.
+Default: <code class="docutils literal notranslate"><span class="pre">&quot;onnx&quot;</span></code> when the model has an ONNX form and is
+an embedding/reranking model, else <code class="docutils literal notranslate"><span class="pre">&quot;gguf&quot;</span></code>
+(text-generation models are GGUF-only).</li>
+<li><code class="docutils literal notranslate"><span class="pre">quant</span></code> - A <span class="green">String</span>, the GGUF quantization (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Q4_K_M&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Q8_0&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;F16&quot;</span></code>); same meaning as the
+<code class="docutils literal notranslate"><span class="pre">:quant</span></code> name suffix.  When the exact quant isn’t
+available, the closest available one is chosen.</li>
+<li><code class="docutils literal notranslate"><span class="pre">precision</span></code> - A <span class="green">String</span>, the ONNX weight precision:
+<code class="docutils literal notranslate"><span class="pre">&quot;fp16&quot;</span></code> (the default — half precision, the GPU sweet
+spot), <code class="docutils literal notranslate"><span class="pre">&quot;fp32&quot;</span></code> (full precision, the reference), <code class="docutils literal notranslate"><span class="pre">&quot;int8&quot;</span></code>
+or <code class="docutils literal notranslate"><span class="pre">&quot;q4&quot;</span></code> (quantized — smaller and often faster on CPU).
+Since model authors rarely publish every precision in the
+original repository, the closest converter mirror
+(<code class="docutils literal notranslate"><span class="pre">onnx-community/*</span></code>, <code class="docutils literal notranslate"><span class="pre">Xenova/*</span></code>) is searched as well; if
+the requested precision isn’t found anywhere it falls back to
+<code class="docutils literal notranslate"><span class="pre">fp16</span></code> then <code class="docutils literal notranslate"><span class="pre">fp32</span></code>, printing a notice to stderr.  Ignored
+for GGUF (use <code class="docutils literal notranslate"><span class="pre">quant</span></code> there).</li>
+<li><code class="docutils literal notranslate"><span class="pre">category</span></code> - A <span class="green">String</span>, the subdirectory under
+<code class="docutils literal notranslate"><span class="pre">~/.rampart/models/</span></code> (default: from the catalog, else
+<code class="docutils literal notranslate"><span class="pre">&quot;embed&quot;</span></code>; URLs default to <code class="docutils literal notranslate"><span class="pre">&quot;other&quot;</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">dest</span></code> - A <span class="green">String</span>, an exact destination file or
+directory, overriding the category layout.</li>
+<li><code class="docutils literal notranslate"><span class="pre">progress</span></code> - <code class="docutils literal notranslate"><span class="pre">false</span></code> (silent), a
+<a class="reference internal" href="rampart-utils.html#fopen"><span class="std std-ref">file handle</span></a> to write progress
+to, or a <span class="green">Function</span> called with progress info.
+Default: single-line progress on stdout.</li>
+<li><code class="docutils literal notranslate"><span class="pre">force</span></code> - A <span class="green">Boolean</span>, re-download even if the
+model is already present.  Default: <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">token</span></code> - A <span class="green">String</span>, a HuggingFace access token
+for gated repositories.  Default: the <code class="docutils literal notranslate"><span class="pre">HF_TOKEN</span></code>
+environment variable.</li>
+<li><code class="docutils literal notranslate"><span class="pre">confirm</span></code> - A <span class="green">Function</span>, called <strong>only when a
+download is actually needed</strong> (the model isn’t already on
+disk), so the caller can prompt before a large fetch.  It
+receives an info <span class="green">Object</span>
+(<code class="docutils literal notranslate"><span class="pre">{name,</span> <span class="pre">format,</span> <span class="pre">dest,</span> <span class="pre">size,</span> <span class="pre">bytes,</span> <span class="pre">precision|quant,</span>
+<span class="pre">repo}</span></code>) and returns a <span class="green">Boolean</span>; a falsy return skips
+the download and <a class="reference internal" href="#models-get">models.get()</a> returns <code class="docutils literal notranslate"><span class="pre">null</span></code>.  Omit it
+for the default silent fetch.  The module never reads stdin
+itself — any prompt lives in this callback.</li>
+<li><code class="docutils literal notranslate"><span class="pre">revision</span></code> - A <span class="green">String</span>, the git revision to fetch.
+Default: the catalog-pinned revision, else <code class="docutils literal notranslate"><span class="pre">&quot;main&quot;</span></code>.</li>
+</ul>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">String</span>: the local path — the <code class="docutils literal notranslate"><span class="pre">.onnx</span></code> <em>file</em> for
+ONNX models, a <code class="docutils literal notranslate"><span class="pre">.gguf</span></code> <em>file</em> for GGUF.  Throws on resolution
+or download failure.  Returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when a <code class="docutils literal notranslate"><span class="pre">confirm</span></code>
+callback declines a needed download.</dd>
+</dl>
+<p><code class="docutils literal notranslate"><span class="pre">models.pull()</span></code> is an alias of <code class="docutils literal notranslate"><span class="pre">models.get()</span></code>.</p>
+<dl class="docutils">
+<dt>Note:</dt>
+<dd>For an ONNX model the whole usable directory is fetched — the
+<code class="docutils literal notranslate"><span class="pre">.onnx</span></code> file (plus its <code class="docutils literal notranslate"><span class="pre">.onnx_data</span></code> weights sidecar when
+present) alongside the tokenizer and configuration files
+(<code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code> / <code class="docutils literal notranslate"><span class="pre">vocab.txt</span></code>, <code class="docutils literal notranslate"><span class="pre">config.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">1_Pooling/</span></code> etc.) — but the returned path is the <code class="docutils literal notranslate"><span class="pre">.onnx</span></code>
+file itself.  <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> / <a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a> accept
+that file directly and auto-discover the tokenizer and
+configuration from its directory, so it feeds them (and the
+<a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> property) as-is.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="models-ggufget-models-onnxget">
+<h3>models.ggufGet() / models.onnxGet()<a class="headerlink" href="#models-ggufget-models-onnxget" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Format-explicit variants of <a class="reference internal" href="#models-get">models.get()</a> — the call site then
+reads as the engine it feeds:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">emb</span>  <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ggufGet</span><span class="p">(</span><span class="s2">&quot;bge-m3&quot;</span><span class="p">)</span> <span class="p">);</span>
+<span class="kd">var</span> <span class="nx">oemb</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span>     <span class="nx">models</span><span class="p">.</span><span class="nx">onnxGet</span><span class="p">(</span><span class="s2">&quot;bge-m3&quot;</span><span class="p">)</span> <span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="models-url">
+<h3>models.url()<a class="headerlink" href="#models-url" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Download a plain URL into the models directory (or <code class="docutils literal notranslate"><span class="pre">dest</span></code>) with
+the same resume/retry/progress machinery; returns the file path.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">url</span><span class="p">(</span><span class="nx">theUrl</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="models-resolve">
+<h3>models.resolve()<a class="headerlink" href="#models-resolve" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Resolve a name to its catalog-shaped entry — repository, pinned
+revision, available quants, license, category, and (for embedding
+models) vector dimension and retrieval prompts — <strong>without
+downloading</strong>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">name</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="models-list">
+<h3>models.list()<a class="headerlink" href="#models-list" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Return the embedded catalog’s short names grouped by category
+(an <span class="green">Object</span> of <span class="green">Arrays</span>), each annotated with its
+available formats:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">list</span><span class="p">();</span>
+<span class="cm">/* { embed:  [ &quot;all-minilm-l6-v2 [onnx+gguf]&quot;, &quot;bge-m3 [onnx+gguf]&quot;, ... ],</span>
+<span class="cm">     rerank: [ &quot;ms-marco-minilm-l6-v2 [onnx+gguf]&quot;, ... ],</span>
+<span class="cm">     gen:    [ &quot;qwen3-4b [gguf]&quot;, ... ] }                                  */</span>
+</pre></div>
+</div>
+<p>The module also exposes <code class="docutils literal notranslate"><span class="pre">models.catalog</span></code> (the raw catalog
+<span class="green">Object</span>) and <code class="docutils literal notranslate"><span class="pre">models.modelsDir</span></code> (the
+<code class="docutils literal notranslate"><span class="pre">~/.rampart/models</span></code> path).</p>
+</div></blockquote>
+</div>
+<div class="section" id="retrieval-prompt-sidecars">
+<h3>Retrieval prompt sidecars<a class="headerlink" href="#retrieval-prompt-sidecars" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Many embedding models are <em>asymmetric</em>: they expect a short prefix
+on queries, on documents, or on both (e.g.
+<code class="docutils literal notranslate"><span class="pre">nomic-embed-text-v1.5</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;search_query:</span> <span class="pre">&quot;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">&quot;search_document:</span> <span class="pre">&quot;</span></code>, or the e5 family’s <code class="docutils literal notranslate"><span class="pre">&quot;query:</span> <span class="pre">&quot;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">&quot;passage:</span> <span class="pre">&quot;</span></code>).  Using such a model without its prompts costs
+retrieval quality.</p>
+<p>The catalog records each model’s published prompts, and every
+download writes them into a small sidecar file next to the model:
+<code class="docutils literal notranslate"><span class="pre">&lt;file&gt;.gguf.prompts.json</span></code> beside a GGUF file, and
+<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.prompts.json</span></code> beside an ONNX model directory.  Fetching
+the path of an already-downloaded model refreshes the sidecar, so
+models downloaded before this feature gain one on their next
+<code class="docutils literal notranslate"><span class="pre">models.get()</span></code>.</p>
+<p>The rampart-sql <a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> and
+<a class="reference internal" href="sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> settings read the sidecar
+automatically — <code class="docutils literal notranslate"><span class="pre">likev</span></code> queries, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'query'|'document')</span></code> then apply the right prompt with
+no further configuration.  See <a class="reference internal" href="sql-set.html#retrieval-prompts"><span class="std std-ref">Retrieval prompts</span></a> for how the prompts are applied and
+how to override or disable them.  Symmetric models (e.g.
+<code class="docutils literal notranslate"><span class="pre">all-minilm-l6-v2</span></code>) have no prompts and embed text verbatim.</p>
+<p>The module-level engines embed exactly the text they are given:
+when calling <a class="reference internal" href="#initembed">initEmbed</a> / <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a> directly, prepending
+a model’s prompts is the caller’s responsibility.</p>
+</div></blockquote>
+</div>
+<div class="section" id="command-line">
+<h3>Command line<a class="headerlink" href="#command-line" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The module doubles as a downloader script:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>rampart rampart-models.js bge-m3                <span class="c1"># onnx .onnx file (fp16)</span>
+rampart rampart-models.js bge-m3 onnx fp32      <span class="c1"># onnx, full precision</span>
+rampart rampart-models.js bge-m3 onnx q4        <span class="c1"># onnx, 4-bit quantized</span>
+rampart rampart-models.js bge-m3 gguf Q8_0      <span class="c1"># gguf file, chosen quant</span>
+rampart rampart-models.js qwen3-4b:q4_k_m       <span class="c1"># quant suffix</span>
+rampart rampart-models.js --list                <span class="c1"># show the catalog</span>
+</pre></div>
+</div>
+<p>The third argument is the ONNX <code class="docutils literal notranslate"><span class="pre">precision</span></code>
+(<code class="docutils literal notranslate"><span class="pre">fp16</span></code> | <code class="docutils literal notranslate"><span class="pre">fp32</span></code> | <code class="docutils literal notranslate"><span class="pre">int8</span></code> | <code class="docutils literal notranslate"><span class="pre">q4</span></code>, default <code class="docutils literal notranslate"><span class="pre">fp16</span></code>) when the
+format is <code class="docutils literal notranslate"><span class="pre">onnx</span></code>, or the GGUF <code class="docutils literal notranslate"><span class="pre">quant</span></code> otherwise.  The resolved
+local path is printed on success.  <code class="docutils literal notranslate"><span class="pre">--list</span></code> groups the catalog by
+category, colorizes on a color terminal (plain when piped), and marks
+already-downloaded models — e.g. <code class="docutils literal notranslate"><span class="pre">[installed</span> <span class="pre">(onnx</span> <span class="pre">fp32,</span> <span class="pre">gguf</span>
+<span class="pre">Q4_K_M)]</span></code> — showing the on-disk precision/quant of each.</p>
+<p>Environment: <code class="docutils literal notranslate"><span class="pre">HF_TOKEN</span></code> supplies the HuggingFace token for gated
+repositories; <code class="docutils literal notranslate"><span class="pre">HF_ENDPOINT</span></code> overrides the HuggingFace host (for
+mirrors).  Only HuggingFace’s stable URL patterns are used
+(<code class="docutils literal notranslate"><span class="pre">api/models</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve/{revision}/</span></code>), never CDN URLs.</p>
+</div></blockquote>
+</div>
+</div>
 <div class="section" id="putting-it-together">
 <h2>Putting It Together<a class="headerlink" href="#putting-it-together" title="Permalink to this headline">¶</a></h2>
-<p>A compact end-to-end example: embed documents, index them, and
-serve semantic search queries.</p>
+<p>A compact end-to-end example: fetch a model, embed documents, index
+them, and serve semantic search queries.  Runs as-is on a fresh
+install — <a class="reference internal" href="#models-get">models.get()</a> downloads the model on first use and
+returns its local path immediately thereafter.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
+<span class="kd">var</span> <span class="nx">models</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">faiss</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-faiss&quot;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">dim</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">modelInfo</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2_f16.gguf&quot;</span><span class="p">).</span><span class="nx">embedDim</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">mdl</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ggufGet</span><span class="p">(</span><span class="s2">&quot;all-minilm-l6-v2&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="nx">mdl</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">dim</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">modelInfo</span><span class="p">(</span><span class="nx">mdl</span><span class="p">).</span><span class="nx">embedDim</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">docs</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;The Eiffel Tower is 330 metres tall.&quot;</span><span class="p">,</span>
