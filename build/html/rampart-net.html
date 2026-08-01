@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-net module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-net module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-html module" href="rampart-html.html"/>
         <link rel="prev" title="The rampart-auth module" href="rampart-auth.html"/> 
 
@@ -155,6 +155,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#shortcut-functions">Shortcut Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#net-createconnection">net.createConnection()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-createserver">net.createServer()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#net-setcacert">net.setCaCert()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-resolve-async">net.resolve_async()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#net-reverse-async">net.reverse_async()</a></li>
 </ul>
@@ -689,13 +690,17 @@ current connection.</div></blockquote>
 <div class="section" id="other-socket-properties">
 <h3>Other socket properties<a class="headerlink" href="#other-socket-properties" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><p>The <code class="docutils literal notranslate"><span class="pre">socket</span></code> <span class="green">Object</span> may include these possible status properties:</p>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">socket</span></code> <span class="green">Object</span> may include these possible status properties.
+Note that they are set as the socket changes state, so a property may be
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> rather than <code class="docutils literal notranslate"><span class="pre">false</span></code> before the relevant event has occurred
+(<code class="docutils literal notranslate"><span class="pre">connecting</span></code> and <code class="docutils literal notranslate"><span class="pre">destroyed</span></code>, for example, are <code class="docutils literal notranslate"><span class="pre">undefined</span></code> until a
+connection has been attempted):</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">connecting</span></code> - <span class="green">Boolean</span>. Whether the connection has been
 initiated, but not yet established.</li>
 <li><code class="docutils literal notranslate"><span class="pre">connected</span></code> - <span class="green">Boolean</span>. Whether the connection has been
 established.</li>
-<li><code class="docutils literal notranslate"><span class="pre">tsl</span></code> - <span class="green">Boolean</span>. Whether this is a secure connection.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tls</span></code> - <span class="green">Boolean</span>. Whether this is a secure connection.</li>
 <li><code class="docutils literal notranslate"><span class="pre">destroyed</span></code> - <span class="green">Boolean</span>. Whether this connection has been
 closed or destroyed.</li>
 <li><code class="docutils literal notranslate"><span class="pre">pending</span></code> - <span class="green">Boolean</span>. Whether a connection has not yet been
@@ -710,7 +715,7 @@ before <code class="docutils literal notranslate"><span class="pre">socket.conne
 <li><code class="docutils literal notranslate"><span class="pre">remoteAddress</span></code> - <span class="green">String</span>.  IP address of the connected remote peer.</li>
 <li><code class="docutils literal notranslate"><span class="pre">remotePort</span></code> - <span class="green">Number</span>.  Port of the connected remote peer.</li>
 <li><code class="docutils literal notranslate"><span class="pre">remoteFamily</span></code> - <span class="green">String</span>.  IP version used for connection
-(<code class="docutils literal notranslate"><span class="pre">ipv4</span></code> or <code class="docutils literal notranslate"><span class="pre">ipv6</span></code>).</li>
+(<code class="docutils literal notranslate"><span class="pre">IPv4</span></code> or <code class="docutils literal notranslate"><span class="pre">IPv6</span></code>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> - <span class="green">Number</span>. Same as <code class="docutils literal notranslate"><span class="pre">remotePort</span></code></li>
 <li><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Object</span>. Host address used for this connection
 returned from a call to <a class="reference internal" href="#new-net-resolver">new net.Resolver()</a> by <a class="reference internal" href="#socket-connect">socket.connect()</a> internally.</li>
@@ -962,6 +967,11 @@ except with <code class="docutils literal notranslate"><span class="pre">once</s
 <h3>server.connectionCount()<a class="headerlink" href="#server-connectioncount" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Get the number of connected clients.</p>
+<p>Note that the count is updated as connections are fully established and
+fully torn down.  Inside a <code class="docutils literal notranslate"><span class="pre">connection</span></code> callback the connection being
+reported is not yet counted (so a first connection reads <code class="docutils literal notranslate"><span class="pre">0</span></code>), and a
+closed connection may still be counted until the following event-loop
+cycle.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>A <span class="green">Number</span>, the number of connected clients.</dd>
@@ -975,6 +985,10 @@ except with <code class="docutils literal notranslate"><span class="pre">once</s
 server will drop new connections if this number is reached.
 This function can be called at any time to set or adjust the
 connection limit.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> is a function, not a readable property:
+the limit can be set or changed, but not read back.  Use
+<a class="reference internal" href="#server-connectioncount">server.connectionCount()</a> for the number of clients currently
+connected.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
 
@@ -995,13 +1009,12 @@ platform and settings.</p>
 <blockquote>
 <div><p>The <code class="docutils literal notranslate"><span class="pre">server</span></code> <span class="green">Object</span> may include these possible status properties:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">listening</span></code> - <span class="green">Boolean</span>. Whether the connection has been
-initiated, but not yet established.</li>
+<li><code class="docutils literal notranslate"><span class="pre">listening</span></code> - <span class="green">Boolean</span>. Whether the server is bound and
+listening for connections.</li>
 <li><code class="docutils literal notranslate"><span class="pre">_events</span></code> - <span class="green">Object</span>. Registered callbacks for events.</li>
-<li><code class="docutils literal notranslate"><span class="pre">tsl</span></code> - <span class="green">Boolean</span>. Whether server accepts secure connections.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tls</span></code> - <span class="green">Boolean</span>. Whether server accepts secure connections.</li>
 <li><code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> - <span class="green">String</span>.  The SSL/TLS key file, if provided</li>
-<li><code class="docutils literal notranslate"><span class="pre">sslCertFil</span></code> - <span class="green">String</span>.  The SSL/TLS cert file, if provided.</li>
-<li><code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> - <span class="green">Number</span>. <code class="docutils literal notranslate"><span class="pre">maxConnections</span></code> value, if set.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> - <span class="green">String</span>.  The SSL/TLS cert file, if provided.</li>
 <li><code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> - <span class="green">Array</span> of <span class="green">Objects</span>.  Host addresses
 that the server is listening on as returned from a call to
 <a class="reference internal" href="#resolver-resolve">resolver.resolve()</a>  by <a class="reference internal" href="#server-listen">server.listen()</a> internally.</li>
@@ -1698,7 +1711,7 @@ notation, e.g. <code class="docutils literal notranslate"><span class="pre">&quo
 
 <span class="cm">/* res =</span>
 <span class="cm">    {</span>
-<span class="cm">       &quot;errMsg&quot;: &quot;Host not found&quot;</span>
+<span class="cm">       &quot;errMsg&quot;: &quot;Unknown host&quot;</span>
 <span class="cm">    }</span>
 <span class="cm">*/</span>
 </pre></div>
@@ -1805,6 +1818,28 @@ above):</p>
 <span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">makeserver</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">connect_callback</span><span class="p">);</span>
 </pre></div>
 </div>
+</div></blockquote>
+</div>
+<div class="section" id="net-setcacert">
+<h3>net.setCaCert()<a class="headerlink" href="#net-setcacert" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Set the Certificate Authority bundle used to verify peer certificates
+for secure (<code class="docutils literal notranslate"><span class="pre">tls</span></code>) connections.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-net&quot;</span><span class="p">);</span>
+
+<span class="nx">net</span><span class="p">.</span><span class="nx">setCaCert</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the location of a CA bundle file.
+An error is thrown if the file does not exist or cannot be read.</p>
+<p>The bundle in effect is also readable as the <span class="green">String</span> property
+<code class="docutils literal notranslate"><span class="pre">net.default_ca_file</span></code>, which is set at load time to the system bundle
+if one was found.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
+</dl>
 </div></blockquote>
 </div>
 <div class="section" id="net-resolve-async">
@@ -1917,7 +1952,7 @@ function.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

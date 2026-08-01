@@ -473,6 +473,12 @@
                             <a class="reference internal" href="#onnxembed">onnxEmbed</a>
                           </li>
                           <li class="toctree-l4">
+                            <a class="reference internal" href="#clipembed">clipEmbed</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#retrieval-prompts">Retrieval prompts</a>
+                          </li>
+                          <li class="toctree-l4">
                             <a class="reference internal" href="#likevcache">likevCache</a>
                           </li>
                         </ul>
@@ -852,6 +858,26 @@
                       "pre">SET</span> <span class="pre">property=value</span></code> may be overwritten or applied in
                       the wrong context. Therefore, <code class="docutils literal notranslate"><span class=
                       "pre">sql.set()</span></code> should always be used when in JavaScript.
+                    </dd>
+                    <dt>
+                      NOTE:
+                    </dt>
+                    <dd>
+                      Two settings are an exception to the handle scoping described above. The expression list
+                      (<a class="reference internal" href="#addexp">addExp</a> / <a class="reference internal" href=
+                      "#delexp">delExp</a>, i.e. <code class="docutils literal notranslate"><span class=
+                      "pre">addExpressions</span></code> / <code class="docutils literal notranslate"><span class=
+                      "pre">deleteExpressions</span></code>) and the index temporary directory list (<a class=
+                      "reference internal" href="#addindextmp">addIndexTmp</a> / <a class="reference internal" href=
+                      "#delindextmp">delIndexTmp</a>, i.e. <code class="docutils literal notranslate"><span class=
+                      "pre">addIndexTemp</span></code> / <code class="docutils literal notranslate"><span class=
+                      "pre">deleteIndexTemp</span></code>) are stored <strong>process-wide</strong>, not per handle.
+                      Changing either affects every other <code class="docutils literal notranslate"><span class=
+                      "pre">sql</span></code> handle in the process – including handles opened on different databases,
+                      and handles created afterward – and neither is restored by <a class="reference internal" href=
+                      "#sql-reset">sql.reset()</a>. To undo a change to these two lists, remove the entries explicitly
+                      with <code class="docutils literal notranslate"><span class="pre">deleteExpressions</span></code>
+                      or <code class="docutils literal notranslate"><span class="pre">deleteIndexTemp</span></code>.
                     </dd>
                   </dl>
                   <div class="section" id="search-and-optimization-parameters">
@@ -1979,7 +2005,7 @@
                           <p>
                             Setting to <code class="docutils literal notranslate"><span class="pre">false</span></code>
                             restores the defaults of <code class="docutils literal notranslate"><span class=
-                            "pre">{useEquiv:false,</span> <span class="pre">alEquiv:false,</span> <span class=
+                            "pre">{useEquiv:false,</span> <span class="pre">alEquivs:false,</span> <span class=
                             "pre">eqPrefix:"builtin"}</span></code>
                           </p>
                           <p>
@@ -1995,8 +2021,9 @@
                           <p>
                             This setting implies <code class="docutils literal notranslate"><span class=
                             "pre">{useEquiv:true</span></code>, <code class="docutils literal notranslate"><span class=
-                            "pre">alEquiv:true</span></code> and <code class=
-                            "docutils literal notranslate"><span class="pre">eqPrefix:`derivations/${lc}/${lc}-deriv`</span></code>.
+                            "pre">alEquivs:true</span></code> and <code class=
+                            "docutils literal notranslate"><span class=
+                            "pre">eqPrefix:`derivations/${lc}/${lc}-deriv`</span></code>.
                           </p>
                           <p>
                             More info, plus files for languages other than English can be found on the <a class=
@@ -2184,7 +2211,6 @@
                       </h3>
                       <blockquote>
                         <div>
-                          AKA <code class="docutils literal notranslate"><span class="pre">defsufrm</span></code>.
                           Whether to remove a trailing vowel, or one of a trailing double consonant pair, after normal
                           suffix processing, and if the word is still <code class=
                           "docutils literal notranslate"><span class="pre">minwordlen</span></code> or greater. This
@@ -2422,7 +2448,9 @@
                         <div>
                           <p>
                             The suffix list used for suffix processing (if enabled) during search. An array of strings.
-                            The default suffix list is:
+                            The default suffix list is shown below sorted alphabetically for readability; when read
+                            back with <a class="reference internal" href="#listsuffix">listSuffix</a> the same members
+                            are returned in the order the matcher uses them (longest first), not in this order:
                           </p>
                           <div class="highlight-default notranslate">
                             <div class="highlight">
@@ -2530,8 +2558,8 @@
                           <div class="highlight-default notranslate">
                             <div class="highlight">
                               <pre><span></span><span class="p">[</span> <span class="s2">"'"</span><span class=
-                              "p">,</span>  <span class="s2">"ies"</span><span class="p">,</span>  <span class=
-                              "s2">"s"</span> <span class="p">]</span>
+                              "p">,</span>  <span class="s2">"s"</span><span class="p">,</span>  <span class=
+                              "s2">"ies"</span> <span class="p">]</span>
 </pre>
                             </div>
                           </div>
@@ -2554,7 +2582,7 @@
                             "pre">false</span></code>, the return object of <code class=
                             "docutils literal notranslate"><span class="pre">sql.set()</span></code> will include the
                             property <code class="docutils literal notranslate"><span class=
-                            "pre">suffixListEquivs</span></code>, which will be set to an array containing the current
+                            "pre">suffixEquivsList</span></code>, which will be set to an array containing the current
                             suffix list.
                           </p>
                           <p>
@@ -2665,6 +2693,16 @@
                       rank will be based solely on lead bias. If <code class=
                       "docutils literal notranslate"><span class="pre">likepproximity</span></code> is then set to 1000
                       as well, then lead bias and proximity each determine 50% of the rank.
+                    </p>
+                    <p>
+                      The rank these knobs shape is a solitary <code class="docutils literal notranslate"><span class=
+                      "pre">likep</span></code>’s <code class="docutils literal notranslate"><span class=
+                      "pre">$rank</span></code>. In a hybrid keyword-OR-vector query, <code class=
+                      "docutils literal notranslate"><span class="pre">$rank</span></code> is instead the fused RRF
+                      score, but the same knob-shaped keyword rank remains available per row as <code class=
+                      "docutils literal notranslate"><span class="pre">$krank</span></code> — see <a class=
+                      "reference internal" href="rampart-sql.html#hybrid-rank-fusion"><span class="std std-ref">Hybrid
+                      keyword + vector queries (rank fusion)</span></a>.
                     </p>
                     <div class="section" id="likepproximity">
                       <h3>
@@ -2891,11 +2929,11 @@
                     </h2>
                     <p>
                       These settings affect <code class="docutils literal notranslate"><span class=
-                      "pre">LIKEV</span></code> queries against an <span class="xref std std-ref">INDEX_VEC</span> (the
-                      ANN vector index). The <code class="docutils literal notranslate"><span class=
-                      "pre">likeV*</span></code> properties mirror the corresponding <code class=
-                      "docutils literal notranslate"><span class="pre">likeP*</span></code> properties for the LIKEP /
-                      Metamorph search path.
+                      "pre">LIKEV</span></code> queries against an <a class="reference internal" href=
+                      "rampart-sql.html#vector-indexes"><span class="std std-ref">INDEX_VEC</span></a> (the ANN vector
+                      index). The <code class="docutils literal notranslate"><span class="pre">likeV*</span></code>
+                      properties mirror the corresponding <code class="docutils literal notranslate"><span class=
+                      "pre">likeP*</span></code> properties for the LIKEP / Metamorph search path.
                     </p>
                     <p>
                       The same value-form rules from the chapter intro apply: in tsql write <code class=
@@ -3131,8 +3169,9 @@
                             "docutils literal notranslate"><span class="pre">likevPqNprobe</span></code> — LIKEV
                             re-scores each candidate against the actual stored column bytes after the index step. This
                             setting controls how <em>many</em> and <em>which</em> candidates the index surfaces; once
-                            surfaced, they are scored exactly. See <span class="xref std std-ref">Querying with
-                            LIKEV</span>.
+                            surfaced, they are scored exactly. See <a class="reference internal" href=
+                            "rampart-sql.html#querying-with-likev"><span class="std std-ref">Querying with
+                            LIKEV</span></a>.
                           </p>
                         </div>
                       </blockquote>
@@ -3192,31 +3231,49 @@
                             </div>
                           </div>
                           <p>
+                            An <span class="green">Object</span> form is also accepted for models that need retrieval
+                            prompts (see <a class="reference internal" href="#retrieval-prompts"><span class=
+                            "std std-ref">Retrieval prompts</span></a> below):
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">sql</span><span class="p">.</span><span class=
+                              "nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class=
+                              "o">:</span> <span class="p">{</span>
+    <span class="nx">model</span><span class="o">:</span>          <span class=
+"s1">'/models/nomic-embed-text-v1.5.Q8_0.gguf'</span><span class="p">,</span>
+    <span class="c1">// optional -- normally discovered from the model's sidecar:</span>
+    <span class="nx">queryPrompt</span><span class="o">:</span>    <span class="s1">'search_query: '</span><span class=
+"p">,</span>
+    <span class="nx">documentPrompt</span><span class="o">:</span> <span class=
+"s1">'search_document: '</span><span class="p">,</span>
+    <span class="c1">// documentTitlePrompt: 'title: {title} | text: ',</span>
+    <span class="c1">// prompts: false,     // disable prompts entirely</span>
+<span class="p">}});</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
                             Loading requires the <code class="docutils literal notranslate"><span class=
                             "pre">rampart-llamacpp</span></code> module to be installed. If no llamacpp module is
                             already loaded, this <code class="docutils literal notranslate"><span class=
                             "pre">set</span></code> call auto-tries <code class=
-                            "docutils literal notranslate"><span class="pre">require('rampart-llamacpp')</span></code>,
-                            then <code class="docutils literal notranslate"><span class=
-                            "pre">rampart-llamacpp_cuda</span></code>, then <code class=
-                            "docutils literal notranslate"><span class="pre">rampart-llamacpp_cpu</span></code> —
-                            whichever resolves first wins, so no explicit <code class=
-                            "docutils literal notranslate"><span class="pre">require()</span></code> is typically
-                            needed. To force a specific variant when more than one is installed, call <code class=
-                            "docutils literal notranslate"><span class=
-                            "pre">require('rampart-llamacpp_cpu')</span></code> (or <code class=
-                            "docutils literal notranslate"><span class="pre">_cuda</span></code>, <code class=
-                            "docutils literal notranslate"><span class="pre">_metal</span></code>, etc.)
-                            <strong>before</strong> <code class="docutils literal notranslate"><span class=
-                            "pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code>; <code class=
-                            "docutils literal notranslate"><span class="pre">rampart-sql</span></code> resolves the
-                            embed functions via <code class="docutils literal notranslate"><span class=
-                            "pre">dlsym</span></code> from whichever variant is already loaded, so a manually required
-                            module always takes precedence. If no variant resolves, <code class=
+                            "docutils literal notranslate"><span class="pre">require('rampart-llamacpp')</span></code>
+                            — the canonical name, which the installer points at whichever build variant (CPU or a CUDA
+                            one) is installed — so no explicit <code class="docutils literal notranslate"><span class=
+                            "pre">require()</span></code> is typically needed. To force a specific variant when more
+                            than one is installed, <code class="docutils literal notranslate"><span class=
+                            "pre">require()</span></code> it by its full name <strong>before</strong> <code class=
                             "docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class=
-                            "pre">...})</span></code> throws with a clear “cannot load rampart-llamacpp” message.
-                            <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code>
-                            ships separately in <code class="docutils literal notranslate"><span class=
+                            "pre">...})</span></code>; <code class="docutils literal notranslate"><span class=
+                            "pre">rampart-sql</span></code> resolves the embed functions via <code class=
+                            "docutils literal notranslate"><span class="pre">dlsym</span></code> from whichever variant
+                            is already loaded, so a manually required module always takes precedence. If nothing
+                            resolves, <code class="docutils literal notranslate"><span class=
+                            "pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code> throws with a clear
+                            “cannot load rampart-llamacpp” message. <code class=
+                            "docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> ships
+                            separately in <code class="docutils literal notranslate"><span class=
                             "pre">rampart-langtools</span></code>; see its module documentation for build variants and
                             install instructions.
                           </p>
@@ -3343,14 +3400,24 @@
                             "pre">'auto'</span></code> | <code class="docutils literal notranslate"><span class=
                             "pre">'mean'</span></code> | <code class="docutils literal notranslate"><span class=
                             "pre">'cls'</span></code>), <code class="docutils literal notranslate"><span class=
-                            "pre">normalize</span></code> (<span class="green">Boolean</span>), <code class=
+                            "pre">normalize</span></code> (<span class="green">Boolean</span>), and the token ids
+                            <code class="docutils literal notranslate"><span class="pre">bosId</span></code> /
+                            <code class="docutils literal notranslate"><span class="pre">eosId</span></code> /
+                            <code class="docutils literal notranslate"><span class="pre">padId</span></code> /
+                            <code class="docutils literal notranslate"><span class="pre">idOffset</span></code>. The
+                            retrieval prompt keys <code class="docutils literal notranslate"><span class=
+                            "pre">queryPrompt</span></code> / <code class="docutils literal notranslate"><span class=
+                            "pre">documentPrompt</span></code> / <code class=
+                            "docutils literal notranslate"><span class="pre">documentTitlePrompt</span></code> /
+                            <code class="docutils literal notranslate"><span class="pre">prompts:</span> <span class=
+                            "pre">false</span></code> are accepted exactly as in <code class=
+                            "docutils literal notranslate"><span class="pre">llamaEmbed</span></code>’s object form
+                            (see <a class="reference internal" href="#retrieval-prompts"><span class=
+                            "std std-ref">Retrieval prompts</span></a> below); the older engine-level <code class=
                             "docutils literal notranslate"><span class="pre">queryPrefix</span></code> / <code class=
-                            "docutils literal notranslate"><span class="pre">passagePrefix</span></code> (e5-style
-                            instruction prefixes), and the token ids <code class=
-                            "docutils literal notranslate"><span class="pre">bosId</span></code> / <code class=
-                            "docutils literal notranslate"><span class="pre">eosId</span></code> / <code class=
-                            "docutils literal notranslate"><span class="pre">padId</span></code> / <code class=
-                            "docutils literal notranslate"><span class="pre">idOffset</span></code>.
+                            "docutils literal notranslate"><span class="pre">passagePrefix</span></code> strings are
+                            still honored, and their presence disables sidecar prompts so the two mechanisms never
+                            stack.
                           </p>
                           <p>
                             Chunker options, mirroring <code class="docutils literal notranslate"><span class=
@@ -3376,10 +3443,8 @@
                             "pre">llamaEmbed</span></code>: on first use, <code class=
                             "docutils literal notranslate"><span class="pre">rampart-sql</span></code> tries
                             <code class="docutils literal notranslate"><span class=
-                            "pre">require('rampart-onnx')</span></code>, then <code class=
-                            "docutils literal notranslate"><span class="pre">rampart-onnx_cuda</span></code>, then
-                            <code class="docutils literal notranslate"><span class=
-                            "pre">rampart-onnx_cpu</span></code>; an explicitly <code class=
+                            "pre">require('rampart-onnx')</span></code> — the canonical name, which the installer
+                            points at the installed build variant; an explicitly <code class=
                             "docutils literal notranslate"><span class="pre">require()</span></code>d variant takes
                             precedence. <code class="docutils literal notranslate"><span class=
                             "pre">rampart-onnx</span></code> ships separately in <code class=
@@ -3388,7 +3453,8 @@
                           <p>
                             A connection has <strong>one</strong> embedding engine: whichever of <code class=
                             "docutils literal notranslate"><span class="pre">llamaEmbed</span></code> / <code class=
-                            "docutils literal notranslate"><span class="pre">onnxEmbed</span></code> was set most
+                            "docutils literal notranslate"><span class="pre">onnxEmbed</span></code> / <code class=
+                            "docutils literal notranslate"><span class="pre">clipEmbed</span></code> was set most
                             recently serves its <code class="docutils literal notranslate"><span class=
                             "pre">embed()</span></code> / <code class="docutils literal notranslate"><span class=
                             "pre">chunkembed()</span></code> / <code class="docutils literal notranslate"><span class=
@@ -3403,6 +3469,229 @@
                             ONNX sessions support concurrent inference across threads with no per-thread setup —
                             <code class="docutils literal notranslate"><span class=
                             "pre">llamaEmbedPerThread</span></code> does not apply.
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="clipembed">
+                      <h3>
+                        clipEmbed<a class="headerlink" href="#clipembed" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Load a <a class="reference external" href="https://openai.com/research/clip">CLIP</a> model
+                            as the connection’s embedding engine, via <code class=
+                            "docutils literal notranslate"><span class="pre">rampart-clip</span></code>. CLIP encodes
+                            <strong>images and text into one shared vector space</strong>, so a table of image vectors
+                            can be searched with an ordinary text query:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">sql</span><span class="p">.</span><span class=
+                              "nx">set</span><span class="p">({</span><span class="nx">clipEmbed</span><span class=
+                              "o">:</span> <span class="s1">'/models/clip-vit-b-32.gguf'</span><span class=
+                              "p">});</span>
+<span class="c1">// or: sql.set({clipEmbed: {model: '/models/clip-vit-b-32.gguf'}});</span>
+</pre>
+                            </div>
+                          </div>
+                          <div class="highlight-sql notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="k">create</span> <span class="k">table</span> <span class=
+                              "n">images</span> <span class="p">(</span><span class="n">Id</span> <span class=
+                              "nb">int</span><span class="p">,</span> <span class="n">Path</span> <span class=
+                              "nb">varchar</span><span class="p">(</span><span class="mi">255</span><span class=
+                              "p">),</span> <span class="n">Vec</span> <span class="n">varvecF16</span><span class=
+                              "p">);</span>
+
+<span class="c1">-- store: the image goes through the VISION encoder</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">images</span> <span class=
+"k">values</span> <span class="p">(</span><span class="o">?</span><span class="p">,</span> <span class=
+"o">?</span><span class="p">,</span> <span class="n">embed</span><span class="p">(</span><span class=
+"o">?</span><span class="p">,</span> <span class="s1">'image'</span><span class="p">));</span>
+
+<span class="c1">-- search: the query goes through the TEXT encoder</span>
+<span class="k">select</span> <span class="n">Path</span> <span class="k">from</span> <span class=
+"n">images</span> <span class="k">where</span> <span class="n">Vec</span> <span class="n">likev</span> <span class=
+"s1">'a dog catching a frisbee'</span><span class="p">;</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            <code class="docutils literal notranslate"><span class="pre">embed(x,</span> <span class=
+                            "pre">'image')</span></code> accepts either a <span class="green">String</span>
+                            <strong>file path</strong> or a <span class="green">Buffer</span> of image bytes (PNG,
+                            JPEG, GIF, BMP, TGA — any format the bundled decoder reads). Every other kind —
+                            <code class="docutils literal notranslate"><span class="pre">'text'</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">'query'</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">'document'</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">'raw'</span></code>, or no
+                            kind at all — uses the text encoder. See <a class="reference internal" href=
+                            "sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a> for the argument
+                            forms.
+                          </p>
+                          <p>
+                            Buffer parameters are embedded in the calling process, before the statement is prepared,
+                            and the resulting vector is bound in place of the bytes — so a multi-megabyte image is
+                            never copied to the SQL helper and back. This is transparent: the stored vector is
+                            identical to the one the file-path form produces.
+                          </p>
+                          <p>
+                            Not supported with <code class="docutils literal notranslate"><span class=
+                            "pre">clipEmbed</span></code> (both raise an error rather than returning something
+                            meaningless):
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> /
+                              <code class="docutils literal notranslate"><span class="pre">chunkavg()</span></code> /
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">chunkcoherence()</span></code> — CLIP produces exactly one vector per image, and
+                              its text encoder takes only a short phrase, so there is nothing to chunk.
+                            </li>
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">embed(...,</span>
+                              <span class="pre">'image')</span></code> on a <strong>non</strong>-CLIP engine —
+                              embedding the path <em>as text</em> would store a plausible but meaningless vector, so it
+                              is refused outright.
+                            </li>
+                          </ul>
+                          <p>
+                            A model with no text encoder (a vision-only projector, such as a llava <code class=
+                            "docutils literal notranslate"><span class="pre">mmproj</span></code> file) is rejected by
+                            <code class="docutils literal notranslate"><span class="pre">sql.set</span></code> itself,
+                            since it could never serve a <code class="docutils literal notranslate"><span class=
+                            "pre">LIKEV</span></code> text query.
+                          </p>
+                          <p>
+                            Module resolution mirrors the other engines: <code class=
+                            "docutils literal notranslate"><span class="pre">rampart-sql</span></code> tries
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">require('rampart-clip')</span></code>, the canonical name the installer points at the
+                            installed build variant. <code class="docutils literal notranslate"><span class=
+                            "pre">rampart-clip</span></code> ships separately in <code class=
+                            "docutils literal notranslate"><span class="pre">rampart-langtools</span></code>.
+                          </p>
+                          <div class="admonition note">
+                            <p class="first admonition-title">
+                              Note
+                            </p>
+                            <p class="last">
+                              <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                              "pre">'image')</span></code> makes the database open a file named by the statement. Do
+                              not pass unvalidated user input to it: a caller could otherwise probe for the existence
+                              of arbitrary files. Resolve user-supplied names against a fixed image directory first.
+                            </p>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="retrieval-prompts">
+                      <h3>
+                        Retrieval prompts<a class="headerlink" href="#retrieval-prompts" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Many recent embedding models are <strong>asymmetric</strong>: they expect a prompt prefixed
+                            to search queries and (for some) documents — e.g. nomic’s <code class=
+                            "docutils literal notranslate"><span class="pre">"search_query:</span> <span class=
+                            "pre">"</span></code> / <code class="docutils literal notranslate"><span class=
+                            "pre">"search_document:</span> <span class="pre">"</span></code>, bge’s <code class=
+                            "docutils literal notranslate"><span class="pre">"Represent</span> <span class=
+                            "pre">this</span> <span class="pre">sentence</span> <span class="pre">for</span>
+                            <span class="pre">searching</span> <span class="pre">relevant</span> <span class=
+                            "pre">passages:</span> <span class="pre">"</span></code>, e5’s <code class=
+                            "docutils literal notranslate"><span class="pre">"query:</span> <span class=
+                            "pre">"</span></code> / <code class="docutils literal notranslate"><span class=
+                            "pre">"passage:</span> <span class="pre">"</span></code>. Skipping the prompts, or applying
+                            them on only one side, measurably degrades retrieval quality.
+                          </p>
+                          <p>
+                            When an embed model is bound to a connection, <code class=
+                            "docutils literal notranslate"><span class="pre">rampart-sql</span></code> looks for the
+                            prompts <strong>once</strong> — next to the model on disk:
+                          </p>
+                          <ol class="arabic simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">&lt;model-path&gt;.prompts.json</span></code> — written automatically by
+                              <code class="docutils literal notranslate"><span class="pre">rampart-models</span></code>
+                              when it downloads a model whose catalog entry carries prompts (works for <code class=
+                              "docutils literal notranslate"><span class="pre">.gguf</span></code> files and ONNX model
+                              directories alike);
+                            </li>
+                            <li>for ONNX directories, the repo’s own <code class=
+                            "docutils literal notranslate"><span class=
+                            "pre">config_sentence_transformers.json</span></code> when it publishes a <code class=
+                            "docutils literal notranslate"><span class="pre">prompts</span></code> dict.
+                            </li>
+                          </ol>
+                          <p>
+                            The file format is HuggingFace’s: <code class="docutils literal notranslate"><span class=
+                            "pre">{"prompts":</span> <span class="pre">{"query":</span> <span class="pre">"...",</span>
+                            <span class="pre">"document":</span> <span class="pre">"...",</span> <span class=
+                            "pre">"documentWithTitle":</span> <span class="pre">"...</span> <span class=
+                            "pre">{title}</span> <span class="pre">..."}}</span></code> (<code class=
+                            "docutils literal notranslate"><span class="pre">"passage"</span></code> is accepted as an
+                            alias for <code class="docutils literal notranslate"><span class=
+                            "pre">"document"</span></code>; <code class="docutils literal notranslate"><span class=
+                            "pre">documentWithTitle</span></code> is a rampart extension for models whose document
+                            prompt has a title slot). A hand-downloaded model gains prompt support by writing this
+                            sidecar next to it.
+                          </p>
+                          <p>
+                            Once loaded, the prompts are applied automatically — a plain string prepend before the
+                            model runs, never file I/O on the query path:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> with a
+                              <span class="green">String</span> right-hand side, and the query embedding inside
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">abstract(...'querybest'...)</span></code>, get the <strong>query</strong> prompt;
+                            </li>
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>
+                              gets the <strong>document</strong> prompt, folded around its title argument when one is
+                              given;
+                            </li>
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">embed()</span></code> embeds
+                              verbatim unless told otherwise: <code class="docutils literal notranslate"><span class=
+                              "pre">embed(?,</span> <span class="pre">'query')</span></code> / <code class=
+                              "docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                              "pre">'document'[,</span> <span class="pre">title])</span></code> — see <a class=
+                              "reference internal" href="sql-server-funcs.html#embed"><span class=
+                              "std std-ref">embed()</span></a>.
+                            </li>
+                          </ul>
+                          <p>
+                            With no sidecar (e.g. <code class="docutils literal notranslate"><span class=
+                            "pre">all-MiniLM-L6-v2</span></code>, which is symmetric), everything embeds verbatim —
+                            behavior is byte-identical to older releases.
+                          </p>
+                          <p>
+                            Explicit <code class="docutils literal notranslate"><span class=
+                            "pre">queryPrompt</span></code> / <code class="docutils literal notranslate"><span class=
+                            "pre">documentPrompt</span></code> / <code class=
+                            "docutils literal notranslate"><span class="pre">documentTitlePrompt</span></code> keys in
+                            the <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> /
+                            <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code> object
+                            override the sidecar <strong>wholesale</strong> (unlisted kinds get no prompt), and
+                            <code class="docutils literal notranslate"><span class="pre">prompts:</span> <span class=
+                            "pre">false</span></code> disables prompts entirely.
+                          </p>
+                          <p>
+                            <strong>Consistency matters</strong>: the same document prompt must be in effect at index
+                            build time and afterwards, and stored vectors must have been embedded with the document
+                            prompt for query-prompted searches to score correctly. With an asymmetric model, insert
+                            single vectors via <code class="docutils literal notranslate"><span class=
+                            "pre">embed(?,</span> <span class="pre">'document')</span></code> (<code class=
+                            "docutils literal notranslate"><span class="pre">chunkembed()</span></code> is automatic)
+                            and rebuild the index if you change a model’s prompts.
                           </p>
                         </div>
                       </blockquote>
@@ -3500,12 +3789,22 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                       </h3>
                       <blockquote>
                         <div>
-                          When indexes are created Texis will use memory to speed up the process. This setting allows
-                          the amount of memory used to be adjusted. The default is to use 40% of physical memory, if it
-                          can be determined, and to use 16MB if not. If the value set is less than 100 then it is
-                          treated as a percentage of physical memory. If the number is greater than 100 then it is
-                          treated as the number of bytes of memory to use. Setting this value too high can cause
-                          excessive swapping, while setting it too low causes unneeded extra merges to disk.
+                          <p>
+                            When indexes are created Texis will use memory to speed up the process. This setting allows
+                            the amount of memory used to be adjusted. The default is to use 40% of physical memory, if
+                            it can be determined, and to use 16MB if not. If the value set is less than 100 then it is
+                            treated as a percentage of physical memory. If the number is greater than 100 then it is
+                            treated as the number of bytes of memory to use. Setting this value too high can cause
+                            excessive swapping, while setting it too low causes unneeded extra merges to disk.
+                          </p>
+                          <p>
+                            This setting also determines whether <a class="reference internal" href=
+                            "#addindextmp">addIndexTmp</a> has any effect: an index build stays entirely in memory
+                            until it exceeds <code class="docutils literal notranslate"><span class=
+                            "pre">indexMem</span></code>, and only then are temporary files created in one of the
+                            <code class="docutils literal notranslate"><span class="pre">indexTmp</span></code>
+                            directories.
+                          </p>
                         </div>
                       </blockquote>
                     </div>
@@ -3647,7 +3946,7 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
 <span class="cm">/* expected output</span>
 <span class="cm">{</span>
 <span class="cm">   "expressionsList": [</span>
-<span class="cm">      "\\alnum\\x80-\\xff]+",</span>
+<span class="cm">      "[\\alnum\\x80-\\xff]+",</span>
 <span class="cm">      "[\\alnum\\$\\%\\@\\-\\_\\+]+"</span>
 <span class="cm">   ]</span>
 <span class="cm">}</span>
@@ -3664,17 +3963,34 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                       </h3>
                       <blockquote>
                         <div>
-                          AKA <code class="docutils literal notranslate"><span class="pre">addIndexTemp</span></code>
-                          in <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>. A
-                          string or array of strings. Add a directory or directories to the list of directories to use
-                          for temporary files while creating the index. If temporary files are needed while creating a
-                          Metamorph index they will be created in one of these directories, the one with the most space
-                          at the time of creation. If no <code class="docutils literal notranslate"><span class=
-                          "pre">addIndexTmp</span></code> dirs are specified, the default list is the index’s
-                          destination dir (e.g. database or <code class="docutils literal notranslate"><span class=
-                          "pre">indexSpace</span></code>), and the environment variables <code class=
-                          "docutils literal notranslate"><span class="pre">TMP</span></code> and <code class=
-                          "docutils literal notranslate"><span class="pre">TMPDIR</span></code>.
+                          <p>
+                            AKA <code class="docutils literal notranslate"><span class="pre">addIndexTemp</span></code>
+                            in <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>. A
+                            string or array of strings. Add a directory or directories to the list of directories to
+                            use for temporary files while creating the index. If temporary files are needed while
+                            creating a Metamorph index they will be created in one of these directories, the one with
+                            the most space at the time of creation. If no <code class=
+                            "docutils literal notranslate"><span class="pre">addIndexTmp</span></code> dirs are
+                            specified, the default list is the index’s destination dir (e.g. database or <code class=
+                            "docutils literal notranslate"><span class="pre">indexSpace</span></code>), and the
+                            environment variables <code class="docutils literal notranslate"><span class=
+                            "pre">TMP</span></code> and <code class="docutils literal notranslate"><span class=
+                            "pre">TMPDIR</span></code>.
+                          </p>
+                          <p>
+                            Note the “if temporary files are needed” above: an index is built in memory and only spills
+                            to a temporary file once the build exceeds <a class="reference internal" href=
+                            "#indexmem">indexMem</a>. Since <code class="docutils literal notranslate"><span class=
+                            "pre">indexMem</span></code> defaults to 40% of physical memory, ordinary indexes never
+                            spill and this setting will appear to have no effect. It becomes observable on very large
+                            indexes, or if <code class="docutils literal notranslate"><span class=
+                            "pre">indexMem</span></code> is lowered.
+                          </p>
+                          <p>
+                            Note also that this list is process-wide and is not restored by <a class=
+                            "reference internal" href="#sql-reset">sql.reset()</a> – see the second NOTE at the top of
+                            this page.
+                          </p>
                         </div>
                       </blockquote>
                     </div>
@@ -4204,9 +4520,12 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                             This is a <code class="docutils literal notranslate"><span class=
                             "pre">strftime</span></code> format used to format dates for conversion to character
                             format. This will affect <code class="docutils literal notranslate"><span class=
-                            "pre">tsql</span></code>, as well as attempts to retrieve dates in ASCII format. Although
-                            the features supported by different operating systems will vary, some of the more common
-                            format codes are:
+                            "pre">tsql</span></code>, as well as attempts to retrieve dates in ASCII format. Note that
+                            it does not affect dates retrieved from JavaScript with <code class=
+                            "docutils literal notranslate"><span class="pre">sql.exec()</span></code>, which are always
+                            returned as <span class="green">Date</span> objects (ISO strings when serialized)
+                            regardless of this setting. Although the features supported by different operating systems
+                            will vary, some of the more common format codes are:
                           </p>
                           <p>
                             <code class="docutils literal notranslate"><span class="pre">%%</span></code> - Output
@@ -4453,8 +4772,7 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
 <span class="p">}</span>
 <span class="cm">/* expected output:</span>
 <span class="cm">   [{Keys:"key2",Vals:"val2"}]</span>
-<span class=
-"cm">   Error: sql exec error: 000 SQLExecute() failed with 99: Needed parameters not supplied in the function: texis_execute</span>
+<span class="cm">   Error: sql add parameters error: parameter 'key' not found in Object.</span>
 <span class="cm">*/</span>
 
 
@@ -4559,22 +4877,30 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                           <p>
                             The mode for converting a <code class="docutils literal notranslate"><span class=
                             "pre">strlst</span></code> to a <code class="docutils literal notranslate"><span class=
-                            "pre">varchar</span></code> in Texis. In Rampart,the default is set to <code class=
+                            "pre">varchar</span></code> in Texis. In Rampart, the default is set to <code class=
                             "docutils literal notranslate"><span class="pre">json</span></code> regardless of the
                             <code class="docutils literal notranslate"><span class="pre">conf/texis.ini</span></code>
                             setting. Using <code class="docutils literal notranslate"><span class=
                             "pre">tsql</span></code>, it is set to <code class=
-                            "docutils literal notranslate"><span class="pre">delimited</span></code>, or as set in
-                            <code class="docutils literal notranslate"><span class="pre">conf/texis.ini</span></code>.
+                            "docutils literal notranslate"><span class="pre">delimited</span></code> (with a
+                            “<code class="docutils literal notranslate"><span class="pre">,</span></code>” separator),
+                            or as set in <code class="docutils literal notranslate"><span class=
+                            "pre">conf/texis.ini</span></code>.
                           </p>
                           <ul class="simple">
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">json</span></code> - convert
-                              to a JSON string.
+                              to a JSON string. This is the mode used from Rampart JavaScript; <code class=
+                              "docutils literal notranslate"><span class=
+                              "pre">sql.set({strlstToVarcharMode:...})</span></code> accepts only <code class=
+                              "docutils literal notranslate"><span class="pre">json</span></code>.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">delimited</span></code> -
-                              convert to a list of strings delimited by the last character.
+                              convert to a list of strings delimited by the last character. This mode applies to
+                              <code class="docutils literal notranslate"><span class="pre">tsql</span></code> only and
+                              cannot be selected via <code class="docutils literal notranslate"><span class=
+                              "pre">sql.set()</span></code>.
                             </li>
                           </ul>
                         </div>
@@ -4765,11 +5091,21 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                       </h3>
                       <blockquote>
                         <div>
-                          The string value to output for SQL NULL values. The default is “<code class=
-                          "docutils literal notranslate"><span class="pre">NULL</span></code>”. Note that this is
-                          different than the output string for zero-integer <code class=
-                          "docutils literal notranslate"><span class="pre">date</span></code> values, which are also
-                          shown as “<code class="docutils literal notranslate"><span class="pre">NULL</span></code>”.
+                          <p>
+                            The string value to output for SQL NULL values. The default is “<code class=
+                            "docutils literal notranslate"><span class="pre">NULL</span></code>”. Note that this is
+                            different than the output string for zero-integer <code class=
+                            "docutils literal notranslate"><span class="pre">date</span></code> values, which are also
+                            shown as “<code class="docutils literal notranslate"><span class="pre">NULL</span></code>”.
+                          </p>
+                          <p>
+                            This setting affects textual output (e.g. <code class=
+                            "docutils literal notranslate"><span class="pre">tsql</span></code>) only. Rows retrieved
+                            from JavaScript with <code class="docutils literal notranslate"><span class=
+                            "pre">sql.exec()</span></code> always return SQL NULL values as JavaScript <code class=
+                            "docutils literal notranslate"><span class="pre">null</span></code>, regardless of this
+                            setting.
+                          </p>
                         </div>
                       </blockquote>
                     </div>
@@ -4939,6 +5275,25 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                             generated by linear queries if allinear is off.
                           </p>
                           <p>
+                            Note on how the refusal appears from JavaScript: Texis refusals that are not syntax (or
+                            other prepare-time) errors do not throw. The query completes “successfully” with
+                            <strong>zero rows</strong>, and the message (e.g. “Query would require linear search”) is
+                            available in <code class="docutils literal notranslate"><span class=
+                            "pre">sql.errMsg</span></code>. If a query unexpectedly returns no rows, check <code class=
+                            "docutils literal notranslate"><span class="pre">sql.errMsg</span></code> before assuming
+                            the data isn’t there.
+                          </p>
+                          <p>
+                            <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> follows
+                            the same policy: a vector search on a column with no usable vector index is a full-table
+                            scan (every row scored) and is refused with the same “would require linear search” message
+                            unless <code class="docutils literal notranslate"><span class="pre">allinear</span></code>
+                            is <code class="docutils literal notranslate"><span class="pre">true</span></code>. Rows
+                            added after a vector index was created (or last optimized) are scanned as part of the
+                            indexed search and do not need <code class="docutils literal notranslate"><span class=
+                            "pre">allinear</span></code>.
+                          </p>
+                          <p>
                             Note that an otherwise indexable query like “rocket” may become linear if there is no text
                             index on its field, or if an index for another part of the SQL query is favored instead by
                             Texis. For example, with the SQL query “select Title from Books where Date &gt; ‘May 1998’
@@ -5042,6 +5397,14 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                             query is attempted and <code class="docutils literal notranslate"><span class=
                             "pre">denyMode</span></code> is not <code class="docutils literal notranslate"><span class=
                             "pre">silent</span></code>.
+                          </p>
+                          <p>
+                            Note that “failing” the query under <code class="docutils literal notranslate"><span class=
+                            "pre">error</span></code> does not throw a JavaScript exception: as with other non-syntax
+                            Texis refusals, the query returns <strong>zero rows</strong> and the reason is recorded in
+                            <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code>.
+                            Check <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code>
+                            to distinguish a refused query from one that genuinely matched nothing.
                           </p>
                         </div>
                       </blockquote>
@@ -5169,10 +5532,8 @@ SELECT id, $rank FROM docs WHERE v LIKEV ?;
                                 "pre">alPostProc</span></code>, <code class="docutils literal notranslate"><span class=
                                 "pre">alLinear</span></code>, <code class="docutils literal notranslate"><span class=
                                 "pre">alWithin</span></code>, <code class="docutils literal notranslate"><span class=
-                                "pre">alIntersects</span></code>, <code class=
-                                "docutils literal notranslate"><span class="pre">alEquivs</span></code> and
-                                <code class="docutils literal notranslate"><span class=
-                                "pre">alExactphrase</span></code>.
+                                "pre">alIntersects</span></code> and <code class=
+                                "docutils literal notranslate"><span class="pre">alEquivs</span></code>.
                               </p>
                               <p>
                                 The following are set <code class="docutils literal notranslate"><span class=

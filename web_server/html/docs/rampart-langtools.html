@@ -280,6 +280,9 @@
                       <li class="toctree-l3">
                         <a class="reference internal" href="#platform-availability">Platform Availability</a>
                       </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#errors-warnings-and-logs">Errors, Warnings and Logs</a>
+                      </li>
                     </ul>
                   </li>
                   <li class="toctree-l2">
@@ -428,6 +431,46 @@
                     </ul>
                   </li>
                   <li class="toctree-l2">
+                    <a class="reference internal" href="#the-rampart-clip-module">The rampart-clip module</a>
+                    <ul>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#models">Models</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#clip-initembed">clip.initEmbed</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#model-dimension">model.dimension</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#model-embedimagetonumbers">model.embedImageToNumbers</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href=
+                        "#model-embedimagetofp16buf-embedimagetofp32buf">model.embedImageToFp16Buf /
+                        embedImageToFp32Buf</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href=
+                        "#model-embedtexttonumbers-embedtexttofp16buf-embedtexttofp32buf">model.embedTextToNumbers /
+                        embedTextToFp16Buf / embedTextToFp32Buf</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#model-similarity">model.similarity</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#model-destroy">model.destroy</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#clip-and-threads">CLIP and threads</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#example-search-images-by-text">Example: search images by
+                        text</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li class="toctree-l2">
                     <a class="reference internal" href="#the-rampart-faiss-module">The rampart-faiss module</a>
                     <ul>
                       <li class="toctree-l3">
@@ -506,12 +549,18 @@
                         <a class="reference internal" href="#models-list">models.list()</a>
                       </li>
                       <li class="toctree-l3">
+                        <a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a>
+                      </li>
+                      <li class="toctree-l3">
                         <a class="reference internal" href="#command-line">Command line</a>
                       </li>
                     </ul>
                   </li>
                   <li class="toctree-l2">
                     <a class="reference internal" href="#putting-it-together">Putting It Together</a>
+                  </li>
+                  <li class="toctree-l2">
+                    <a class="reference internal" href="#integration-with-rampart-sql">Integration with rampart-sql</a>
                   </li>
                 </ul>
               </li>
@@ -579,13 +628,18 @@
                         "Permalink to this headline">¶</a>
                       </h3>
                       <p>
-                        The rampart-langtools package provides four modules built on best-in-class machine-learning
+                        The rampart-langtools package provides five modules built on best-in-class machine-learning
                         libraries:
                       </p>
                       <ul class="simple">
                         <li>The rampart-llamacpp module is built on <a class="reference external" href=
                         "https://github.com/ggml-org/llama.cpp">llama.cpp</a>, the C/C++ LLM inference engine created
                         by Georgi Gerganov and contributors.
+                        </li>
+                        <li>The rampart-clip module is built on <a class="reference external" href=
+                        "https://github.com/monatis/clip.cpp">clip.cpp</a>, a CLIP inference implementation by Yusuf
+                        Sarıgöz, ported onto the same <a class="reference external" href=
+                        "https://github.com/ggml-org/ggml">ggml</a> tensor library that rampart-llamacpp uses.
                         </li>
                         <li>The rampart-onnx module is built on <a class="reference external" href=
                         "https://onnxruntime.ai/">ONNX Runtime</a>, the cross-platform inference engine for ONNX models
@@ -612,8 +666,10 @@
                       </h3>
                       <p>
                         The llama.cpp library is licensed under the <a class="reference external" href=
-                        "https://github.com/ggml-org/llama.cpp/blob/master/LICENSE">MIT License</a>. The ONNX Runtime
-                        library is licensed under the <a class="reference external" href=
+                        "https://github.com/ggml-org/llama.cpp/blob/master/LICENSE">MIT License</a>. The clip.cpp
+                        implementation (and the ggml library it uses) is licensed under the <a class=
+                        "reference external" href="https://github.com/monatis/clip.cpp/blob/main/LICENSE">MIT
+                        License</a>. The ONNX Runtime library is licensed under the <a class="reference external" href=
                         "https://github.com/microsoft/onnxruntime/blob/main/LICENSE">MIT License</a>. The FAISS library
                         is licensed under the <a class="reference external" href=
                         "https://github.com/facebookresearch/faiss/blob/main/LICENSE">MIT License</a>. The
@@ -646,6 +702,12 @@
                           "#onnx-initrerank">onnx.initRerank</a>) with the same handle API as rampart-llamacpp, plus a
                           general-purpose session API (<a class="reference internal" href=
                           "#onnx-initsession">onnx.initSession</a>) for running any ONNX model.
+                        </li>
+                        <li>
+                          <strong>rampart-clip</strong> runs CLIP models: it embeds <strong>images and text into one
+                          shared vector space</strong> (<a class="reference internal" href=
+                          "#clip-initembed">clip.initEmbed</a>), so a text query can search a collection of images, or
+                          an image can find similar images — cross-modal semantic search.
                         </li>
                         <li>
                           <strong>rampart-faiss</strong> builds, trains, saves and searches vector indexes, from small
@@ -722,6 +784,60 @@
                         in the packages built for older distributions), and its CUDA support requires an NVIDIA driver
                         supporting CUDA 12 or later — see <a class="reference internal" href=
                         "#cpu-and-gpu-runtime-selection">CPU and GPU (runtime selection)</a>.
+                      </p>
+                    </div>
+                    <div class="section" id="errors-warnings-and-logs">
+                      <h3>
+                        Errors, Warnings and Logs<a class="headerlink" href="#errors-warnings-and-logs" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        The modules never write to <code class="docutils literal notranslate"><span class=
+                        "pre">stdout</span></code> or <code class="docutils literal notranslate"><span class=
+                        "pre">stderr</span></code>. Instead:
+                      </p>
+                      <ul class="simple">
+                        <li>A <strong>failure</strong> throws a JavaScript <span class="green">Error</span> (a model
+                        that cannot be loaded, a malformed tensor, a session used after <code class=
+                        "docutils literal notranslate"><span class="pre">destroy()</span></code>). Catch it as usual.
+                        </li>
+                        <li>A <strong>warning</strong> — a non-fatal problem that did not stop the call — is placed in
+                        an <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> property,
+                        exactly as rampart-sql does. The property is set on the object the call was made on: the module
+                        object for <code class="docutils literal notranslate"><span class=
+                        "pre">onnx.initEmbed()</span></code>, a handle for a handle method. It is <strong>cleared at
+                        the start of every call</strong>, so it always describes the most recent one, and it is
+                        <code class="docutils literal notranslate"><span class="pre">undefined</span></code> when the
+                        call had nothing to report. Typical warnings are a GPU that could not be used and silently fell
+                        back to the CPU, or an unusable <code class="docutils literal notranslate"><span class=
+                        "pre">RAMPART_ONNX_RUNTIME</span></code> override.
+                        </li>
+                      </ul>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">emb</span> <span class=
+                          "o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class=
+                          "nx">initEmbed</span><span class="p">(</span><span class="nx">model</span><span class=
+                          "p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">onnx</span><span class="p">.</span><span class=
+"nx">errMsg</span><span class="p">)</span>                       <span class=
+"c1">// e.g. "no usable GPU; using CPU"</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class=
+"p">(</span><span class="s2">"warning: "</span> <span class="o">+</span> <span class="nx">onnx</span><span class=
+"p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> is
+                        deliberately kept separate from <a class="reference internal" href="#getlog">getLog</a> /
+                        <a class="reference internal" href="#onnx-getlog-onnx-clearlog">onnx.getLog /
+                        onnx.clearLog</a>, which capture the <em>informational</em> output of the underlying libraries
+                        (ggml/llama.cpp and ONNX Runtime). That log is verbose — a single embedding can produce
+                        thousands of lines — and a warning placed there would be lost in it. Use <code class=
+                        "docutils literal notranslate"><span class="pre">errMsg</span></code> to find out whether
+                        something went wrong, and <code class="docutils literal notranslate"><span class=
+                        "pre">getLog()</span></code> when you want the engine’s own diagnostics.
                       </p>
                     </div>
                   </div>
@@ -1330,6 +1446,24 @@
                               "reference internal" href="#rr-rerank">rr.rerank()</a> and <code class=
                               "docutils literal notranslate"><span class="pre">destroy()</span></code> (as in <a class=
                               "reference internal" href="#emb-destroy">emb.destroy()</a>).
+                            </dd>
+                            <dt>
+                              Note:
+                            </dt>
+                            <dd>
+                              Instruct-style rerankers — the <a class="reference external" href=
+                              "https://huggingface.co/Qwen/Qwen3-Reranker-0.6B">Qwen3-Reranker</a> family — judge
+                              relevance by answering a yes/no question inside a chat prompt rather than through a
+                              bert-style classifier head. <code class="docutils literal notranslate"><span class=
+                              "pre">initRerank</span></code> detects them by model architecture and wraps each (query,
+                              document) pair in the required prompt automatically. Their scores are the probability of
+                              “yes” (roughly 0.5 – 1.0 for plausible documents) rather than the wide-range scores of
+                              bert-style rerankers; orderings are comparable, magnitudes are not. Beware that many
+                              community GGUF conversions of these models were made as plain language models and lack
+                              the ranking head — such a file loads but scores every document identically. The catalog’s
+                              <code class="docutils literal notranslate"><span class=
+                              "pre">models.ggufGet("qwen3-reranker-0.6b")</span></code> is pinned to a verified
+                              conversion.
                             </dd>
                           </dl>
                           <p>
@@ -3010,7 +3144,9 @@
                                   "pre">[eos]</span></code>). Default: <code class=
                                   "docutils literal notranslate"><span class="pre">"bert"</span></code> when the
                                   tokenizer is WordPiece, else <code class="docutils literal notranslate"><span class=
-                                  "pre">"roberta"</span></code>.
+                                  "pre">"roberta"</span></code>. Instruct-style rerankers (the Qwen3-Reranker family)
+                                  are not supported here — use the rampart-llamacpp <a class="reference internal" href=
+                                  "#initrerank">initRerank</a> for those.
                                 </li>
                                 <li>
                                   <code class="docutils literal notranslate"><span class="pre">sigmoid</span></code> -
@@ -3908,6 +4044,351 @@
                       </blockquote>
                     </div>
                   </div>
+                  <div class="section" id="the-rampart-clip-module">
+                    <h2>
+                      The rampart-clip module<a class="headerlink" href="#the-rampart-clip-module" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <p>
+                      Loading the module is a simple matter of using the <code class=
+                      "docutils literal notranslate"><span class="pre">require()</span></code> function:
+                    </p>
+                    <div class="highlight-javascript notranslate">
+                      <div class="highlight">
+                        <pre><span></span><span class="kd">var</span> <span class="nx">clip</span> <span class=
+                        "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                        "s2">"rampart-clip"</span><span class="p">);</span>
+</pre>
+                      </div>
+                    </div>
+                    <p>
+                      CLIP (Contrastive Language–Image Pre-training) maps <strong>images and text into a single shared
+                      vector space</strong>, so similar concepts land close together regardless of modality. That makes
+                      it possible to search a collection of images with a text query, find images similar to a
+                      reference image, or score how well a caption matches a picture — all with plain dot-product
+                      similarity on the vectors it returns.
+                    </p>
+                    <p>
+                      The module is built on a CLIP implementation ported onto the same ggml tensor library
+                      rampart-llamacpp uses, so it links no second copy of ggml and — like the other langtools modules
+                      — a loaded model is <strong>shared across rampart threads</strong>: every thread copy of a model
+                      object shares one read-only set of weights and does its own computation, so a model may be handed
+                      to a worker thread and used there directly (see <a class="reference internal" href=
+                      "#clip-and-threads">CLIP and threads</a>).
+                    </p>
+                    <div class="section" id="models">
+                      <h3>
+                        Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        rampart-clip loads CLIP models in the GGUF format used by <a class="reference external" href=
+                        "https://github.com/monatis/clip.cpp">clip.cpp</a> — standard OpenAI and LAION CLIP models
+                        converted to GGUF, available pre-converted on HuggingFace (e.g. the <code class=
+                        "docutils literal notranslate"><span class="pre">mys/ggml_CLIP-ViT-*</span></code>
+                        repositories). The <code class="docutils literal notranslate"><span class=
+                        "pre">q8_0</span></code> quantization is a good default: nearly identical to <code class=
+                        "docutils literal notranslate"><span class="pre">f16</span></code> in quality at roughly half
+                        the size.
+                      </p>
+                      <p>
+                        The <a class="reference internal" href="#the-rampart-models-module">The rampart-models
+                        module</a> helper can fetch one into the standard location for you:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">models</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-models"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">path</span>   <span class="o">=</span> <span class=
+"nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class=
+"s2">"clip-vit-b-32-laion:q8_0"</span><span class="p">);</span>   <span class="c1">// -&gt; local .gguf path</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="clip-initembed">
+                      <h3>
+                        clip.initEmbed<a class="headerlink" href="#clip-initembed" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">clip.initEmbed(modelPath[,</span> <span class="pre">options])</span></code> (alias:
+                            <code class="docutils literal notranslate"><span class="pre">clip.load</span></code>)
+                          </p>
+                          <p>
+                            Load a CLIP GGUF model and return a <strong>model object</strong> carrying the image+text
+                            embedding methods below. <code class="docutils literal notranslate"><span class=
+                            "pre">modelPath</span></code> is the path to a <code class=
+                            "docutils literal notranslate"><span class="pre">.gguf</span></code> file (typically from
+                            <a class="reference internal" href="#the-rampart-models-module">The rampart-models
+                            module</a>). Named <code class="docutils literal notranslate"><span class=
+                            "pre">initEmbed</span></code> to match the other langtools modules (<a class=
+                            "reference internal" href="#initembed">initEmbed</a>/<a class="reference internal" href=
+                            "#initgen">initGen</a>/<a class="reference internal" href=
+                            "#onnx-initembed">onnx.initEmbed</a>); <code class=
+                            "docutils literal notranslate"><span class="pre">clip.load</span></code> is a
+                            backward-compatible alias for the same call.
+                          </p>
+                          <p>
+                            The optional <code class="docutils literal notranslate"><span class=
+                            "pre">options</span></code> object accepts:
+                          </p>
+                          <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">nThreads</span></code> –
+                              <em>Number</em>. CPU threads for inference.
+                            </li>
+                          </ul>
+                          <p>
+                            A given model file is loaded once per process and shared: calling <code class=
+                            "docutils literal notranslate"><span class="pre">clip.initEmbed</span></code> again with
+                            the same path (on any thread) returns a handle onto the already-resident weights rather
+                            than reloading them.
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">model</span> <span class=
+                              "o">=</span> <span class="nx">clip</span><span class="p">.</span><span class=
+                              "nx">initEmbed</span><span class="p">(</span><span class="nx">path</span><span class=
+                              "p">);</span>
+<span class="nx">model</span><span class="p">.</span><span class="nx">dimension</span><span class=
+"p">;</span>            <span class="c1">// 512 for ViT-B/32, 768 for ViT-L/14, ...</span>
+</pre>
+                            </div>
+                          </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="model-dimension">
+                      <h3>
+                        model.dimension<a class="headerlink" href="#model-dimension" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          Read-only <em>Number</em>: the dimension of the shared embedding space (the length of every
+                          vector this model produces).
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="model-embedimagetonumbers">
+                      <h3>
+                        model.embedImageToNumbers<a class="headerlink" href="#model-embedimagetonumbers" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">model.embedImageToNumbers(image)</span></code>
+                          </p>
+                          <p>
+                            Embed an image and return the vector as a JavaScript <code class=
+                            "docutils literal notranslate"><span class="pre">Array</span></code> of <code class=
+                            "docutils literal notranslate"><span class="pre">Number</span></code>. <code class=
+                            "docutils literal notranslate"><span class="pre">image</span></code> is
+                            <strong>either</strong> a <code class="docutils literal notranslate"><span class=
+                            "pre">String</span></code> file path <strong>or</strong> a <code class=
+                            "docutils literal notranslate"><span class="pre">Buffer</span></code> holding the image
+                            bytes — a JPEG/PNG/… blob such as a <code class="docutils literal notranslate"><span class=
+                            "pre">readFile()</span></code> result, a <code class=
+                            "docutils literal notranslate"><span class="pre">fetch()</span></code> body, or a
+                            rampart-sql <code class="docutils literal notranslate"><span class=
+                            "pre">varbyte</span></code> column. A String is always taken as a path and a Buffer always
+                            as image bytes (never the reverse). Any buffer flavor is accepted (a plain buffer,
+                            <code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">ArrayBuffer</span></code>, or
+                            a Node <code class="docutils literal notranslate"><span class="pre">Buffer</span></code>).
+                            Either way the image is decoded, resized and center-cropped to the model’s input size
+                            automatically; supported formats include JPEG, PNG, BMP, GIF (first frame), TGA, PSD, HDR,
+                            PIC and PNM. The returned vector is L2-normalized. (Contrast the <code class=
+                            "docutils literal notranslate"><span class="pre">embedText*</span></code> methods below,
+                            where a Buffer means <em>text</em> stored in a buffer, not an image.)
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="model-embedimagetofp16buf-embedimagetofp32buf">
+                      <h3>
+                        model.embedImageToFp16Buf / embedImageToFp32Buf<a class="headerlink" href=
+                        "#model-embedimagetofp16buf-embedimagetofp32buf" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">model.embedImageToFp16Buf(image)</span></code> / <code class=
+                            "docutils literal notranslate"><span class=
+                            "pre">model.embedImageToFp32Buf(image)</span></code>
+                          </p>
+                          <p>
+                            As above — <code class="docutils literal notranslate"><span class="pre">image</span></code>
+                            is a path <code class="docutils literal notranslate"><span class="pre">String</span></code>
+                            or a <code class="docutils literal notranslate"><span class="pre">Buffer</span></code> of
+                            image bytes — but return the vector as a <code class=
+                            "docutils literal notranslate"><span class="pre">Buffer</span></code> of fp16 (2 bytes per
+                            element) or fp32 (4 bytes per element) values — the compact forms to store in a <a class=
+                            "reference internal" href="#the-rampart-faiss-module">The rampart-faiss module</a> index or
+                            a rampart-sql vector column.
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="model-embedtexttonumbers-embedtexttofp16buf-embedtexttofp32buf">
+                      <h3>
+                        model.embedTextToNumbers / embedTextToFp16Buf / embedTextToFp32Buf<a class="headerlink" href=
+                        "#model-embedtexttonumbers-embedtexttofp16buf-embedtexttofp32buf" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">model.embedTextToNumbers(text)</span></code> (and the <code class=
+                            "docutils literal notranslate"><span class="pre">Fp16Buf</span></code> / <code class=
+                            "docutils literal notranslate"><span class="pre">Fp32Buf</span></code> variants)
+                          </p>
+                          <p>
+                            Embed a text string into the <strong>same</strong> space as the image methods, so an image
+                            vector and a text vector can be compared directly. Return types match the image methods.
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="model-similarity">
+                      <h3>
+                        model.similarity<a class="headerlink" href="#model-similarity" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            <code class="docutils literal notranslate"><span class="pre">model.similarity(vec1,</span>
+                            <span class="pre">vec2)</span></code>
+                          </p>
+                          <p>
+                            Cosine similarity (a <code class="docutils literal notranslate"><span class=
+                            "pre">Number</span></code> from -1 to 1) between two vectors, each an fp16
+                            <strong>or</strong> fp32 <code class="docutils literal notranslate"><span class=
+                            "pre">Buffer</span></code> as returned by the <code class=
+                            "docutils literal notranslate"><span class="pre">*Buf</span></code> methods (both must be
+                            the same type). Because the vectors are L2-normalized this is simply their dot product;
+                            higher means more similar.
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="model-destroy">
+                      <h3>
+                        model.destroy<a class="headerlink" href="#model-destroy" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          Release this model object. The object must not be used afterward (any method then throws).
+                          The underlying weights stay resident in the process for reuse, exactly as rampart-onnx and
+                          rampart-llamacpp keep embedding models loaded — so a subsequent <code class=
+                          "docutils literal notranslate"><span class="pre">clip.initEmbed</span></code> of the same
+                          path is instant.
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="clip-and-threads">
+                      <h3>
+                        CLIP and threads<a class="headerlink" href="#clip-and-threads" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            A model object is <strong>thread-safe to copy</strong>: it may be passed into a
+                            <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code>
+                            worker (or is copied automatically when a server hands a request to a worker) and used
+                            there. All copies share one read-only set of weights; each thread builds its own small
+                            compute context on first use. This is the recommended way to embed in parallel — the heavy
+                            weights are not duplicated.
+                          </p>
+                          <p>
+                            Warnings and errors follow the langtools convention described in <a class=
+                            "reference internal" href="#errors-warnings-and-logs">Errors, Warnings and Logs</a>: a
+                            failure throws a JavaScript <code class="docutils literal notranslate"><span class=
+                            "pre">Error</span></code>, a non-fatal problem is placed in <code class=
+                            "docutils literal notranslate"><span class="pre">errMsg</span></code>, and nothing is
+                            written to <code class="docutils literal notranslate"><span class=
+                            "pre">stdout</span></code> or <code class="docutils literal notranslate"><span class=
+                            "pre">stderr</span></code>.
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="example-search-images-by-text">
+                      <h3>
+                        Example: search images by text<a class="headerlink" href="#example-search-images-by-text"
+                        title="Permalink to this headline">¶</a>
+                      </h3>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">clip</span>   <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"rampart-clip"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class=
+"nx">require</span><span class="p">(</span><span class="s2">"rampart-models"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">printf</span> <span class="o">=</span> <span class=
+"nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
+"nx">printf</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">model</span> <span class="o">=</span> <span class=
+"nx">clip</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class=
+"nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class=
+"s2">"clip-vit-b-32-laion:q8_0"</span><span class="p">));</span>
+
+<span class="c1">// embed a set of images once</span>
+<span class="kd">var</span> <span class="nx">images</span> <span class="o">=</span> <span class=
+"p">[</span><span class="s2">"cat.jpg"</span><span class="p">,</span> <span class="s2">"dog.jpg"</span><span class=
+"p">,</span> <span class="s2">"beach.jpg"</span><span class="p">].</span><span class="nx">map</span><span class=
+"p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class=
+"p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span> <span class="nx">name</span><span class=
+"o">:</span> <span class="nx">f</span><span class="p">,</span> <span class="nx">vec</span><span class=
+"o">:</span> <span class="nx">model</span><span class="p">.</span><span class=
+"nx">embedImageToFp32Buf</span><span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class=
+"p">};</span>
+<span class="p">});</span>
+
+<span class="c1">// rank them against a text query</span>
+<span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class=
+"nx">model</span><span class="p">.</span><span class="nx">embedTextToFp32Buf</span><span class="p">(</span><span class=
+"s2">"a dog playing outside"</span><span class="p">);</span>
+<span class="nx">images</span>
+    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class=
+"kd">function</span><span class="p">(</span><span class="nx">im</span><span class="p">)</span> <span class=
+"p">{</span> <span class="k">return</span> <span class="p">{</span> <span class="nx">name</span><span class=
+"o">:</span> <span class="nx">im</span><span class="p">.</span><span class="nx">name</span><span class=
+"p">,</span> <span class="nx">score</span><span class="o">:</span> <span class="nx">model</span><span class=
+"p">.</span><span class="nx">similarity</span><span class="p">(</span><span class="nx">im</span><span class=
+"p">.</span><span class="nx">vec</span><span class="p">,</span> <span class="nx">q</span><span class=
+"p">)</span> <span class="p">};</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">sort</span><span class="p">(</span><span class=
+"kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class=
+"nx">b</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class=
+"nx">b</span><span class="p">.</span><span class="nx">score</span> <span class="o">-</span> <span class=
+"nx">a</span><span class="p">.</span><span class="nx">score</span><span class="p">;</span> <span class="p">})</span>
+    <span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class=
+"kd">function</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class=
+"p">{</span> <span class="nx">printf</span><span class="p">(</span><span class="s2">"  %-12s %.4f\n"</span><span class=
+"p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">name</span><span class=
+"p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">score</span><span class=
+"p">);</span> <span class="p">});</span>
+
+<span class="nx">model</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div class="section" id="the-rampart-faiss-module">
                     <h2>
                       The rampart-faiss module<a class="headerlink" href="#the-rampart-faiss-module" title=
@@ -4082,8 +4563,10 @@
 "p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">0</span><span class=
 "p">,</span><span class="mi">0</span><span class="p">]).</span><span class="nx">buffer</span><span class=
 "p">,</span> <span class="mi">2</span><span class="p">);</span>
-<span class="cm">/* res = [ { id: 101, distance: 0.9 },</span>
-<span class="cm">           { id: 102, distance: 0.1 } ]  */</span>
+<span class="cm">/* res = [ { id: 101, distance: 0.8999999761581421 },</span>
+<span class="cm">           { id: 102, distance: 0.10000000149011612 } ]</span>
+<span class="cm">   (distances come back as 32-bit floats widened to JavaScript</span>
+<span class="cm">   doubles, so they carry fp32 rounding) */</span>
 
 <span class="nx">idx</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class=
 "s2">"myindex.faiss"</span><span class="p">);</span>
@@ -4267,30 +4750,56 @@
                           <p>
                             Where:
                           </p>
-                          <ul class="simple">
+                          <ul>
                             <li>
-                              <code class="docutils literal notranslate"><span class="pre">id</span></code> is a
-                              <span class="green">Number</span> or <span class="green">String</span> (for ids larger
-                              than the float precision of a <span class="green">Number</span>), the 64-bit id to
-                              associate with the vector. Pass <code class="docutils literal notranslate"><span class=
-                              "pre">-1</span></code> to have an id assigned sequentially (<code class=
-                              "docutils literal notranslate"><span class="pre">0</span></code>, <code class=
-                              "docutils literal notranslate"><span class="pre">1</span></code>, <code class=
-                              "docutils literal notranslate"><span class="pre">2</span></code>, …). Arbitrary
-                              (non-sequential) ids require an <code class="docutils literal notranslate"><span class=
-                              "pre">IDMap</span></code>/ <code class="docutils literal notranslate"><span class=
-                              "pre">IDMap2</span></code> index — see <a class="reference internal" href=
-                              "#openfactory">openFactory</a>.
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">id</span></code> is a
+                                <span class="green">Number</span> or <span class="green">String</span> (for ids larger
+                                than the float precision of a <span class="green">Number</span>), the 64-bit id to
+                                associate with the vector. Pass <code class="docutils literal notranslate"><span class=
+                                "pre">-1</span></code> to have an id assigned sequentially (<code class=
+                                "docutils literal notranslate"><span class="pre">0</span></code>, <code class=
+                                "docutils literal notranslate"><span class="pre">1</span></code>, <code class=
+                                "docutils literal notranslate"><span class="pre">2</span></code>, …).
+                              </p>
+                              <p>
+                                The two forms are mutually exclusive, and which one applies is decided by the index
+                                type:
+                              </p>
+                              <ul class="simple">
+                                <li>An <code class="docutils literal notranslate"><span class=
+                                "pre">IDMap</span></code>/<code class="docutils literal notranslate"><span class=
+                                "pre">IDMap2</span></code> index stores your own ids, and so <strong>requires</strong>
+                                an explicit <code class="docutils literal notranslate"><span class=
+                                "pre">id</span></code>; passing <code class=
+                                  "docutils literal notranslate"><span class="pre">-1</span></code> throws.
+                                </li>
+                                <li>Any other index type (e.g. a plain <code class=
+                                "docutils literal notranslate"><span class="pre">Flat</span></code>) has no id map and
+                                so <strong>requires</strong> <code class="docutils literal notranslate"><span class=
+                                "pre">-1</span></code>; passing an explicit <code class="docutils literal notranslate">
+                                  <span class="pre">id</span></code> throws.
+                                </li>
+                              </ul>
+                              <p>
+                                In other words, use <code class="docutils literal notranslate"><span class=
+                                "pre">IDMap</span></code>/<code class="docutils literal notranslate"><span class=
+                                "pre">IDMap2</span></code> when you need arbitrary ids, and a bare index when
+                                sequential ids are sufficient — see <a class="reference internal" href=
+                                "#openfactory">openFactory</a>.
+                              </p>
                             </li>
                             <li>
-                              <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a
-                              <span class="green">Buffer</span> of <code class=
-                              "docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span>
-                              <span class="pre">dimension</span></code> bytes: the vector packed as little-endian
-                              32-bit floats (e.g. from <a class="reference internal" href=
-                              "#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a> or a <code class=
-                              "docutils literal notranslate"><span class="pre">Float32Array</span></code>’s
-                              <code class="docutils literal notranslate"><span class="pre">buffer</span></code>).
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is a
+                                <span class="green">Buffer</span> of <code class=
+                                "docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span>
+                                <span class="pre">dimension</span></code> bytes: the vector packed as little-endian
+                                32-bit floats (e.g. from <a class="reference internal" href=
+                                "#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a> or a <code class=
+                                "docutils literal notranslate"><span class="pre">Float32Array</span></code>’s
+                                <code class="docutils literal notranslate"><span class="pre">buffer</span></code>).
+                              </p>
                             </li>
                           </ul>
                           <p>
@@ -4996,11 +5505,12 @@
                       "pre">~/.rampart/models/&lt;category&gt;/</span></code> (categories: <code class=
                       "docutils literal notranslate"><span class="pre">embed</span></code>, <code class=
                       "docutils literal notranslate"><span class="pre">rerank</span></code>, <code class=
-                      "docutils literal notranslate"><span class="pre">gen</span></code>; plain URLs go to <code class=
-                      "docutils literal notranslate"><span class="pre">other</span></code>). If the model is already on
-                      disk its path is returned immediately with no network access; otherwise it is downloaded from
-                      <a class="reference external" href="https://huggingface.co/">HuggingFace</a> with resume, retries
-                      and a single-line progress display.
+                      "docutils literal notranslate"><span class="pre">gen</span></code>, <code class=
+                      "docutils literal notranslate"><span class="pre">clip</span></code>; plain URLs go to
+                      <code class="docutils literal notranslate"><span class="pre">other</span></code>). If the model
+                      is already on disk its path is returned immediately with no network access; otherwise it is
+                      downloaded from <a class="reference external" href="https://huggingface.co/">HuggingFace</a> with
+                      resume, retries and a single-line progress display.
                     </p>
                     <p>
                       A short name is resolved in this order:
@@ -5009,11 +5519,14 @@
                       <li>Already on disk under <code class="docutils literal notranslate"><span class=
                       "pre">~/.rampart/models/</span></code>.
                       </li>
-                      <li>The embedded catalog — ~70 curated models (embedding, reranking and text-generation), each
-                      pinned to a specific repository revision. <code class=
-                        "docutils literal notranslate"><span class="pre">models.list()</span></code> (or <code class=
-                        "docutils literal notranslate"><span class="pre">--list</span></code> on the command line)
-                        shows them.
+                      <li>The embedded catalog — currently 81 curated models (embedding, reranking, text-generation and
+                      CLIP), each pinned to a specific repository revision. Embedding entries also record the model’s
+                      vector dimension and its retrieval prompts, when it has them (see <a class="reference internal"
+                      href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a> below). <code class=
+                      "docutils literal notranslate"><span class="pre">models.list()</span></code> (or <code class=
+                      "docutils literal notranslate"><span class="pre">--list</span></code> on the command line) shows
+                      them; it returns an <span class="green">Object</span> keyed by category, each value an
+                      <span class="green">Array</span> of the model names in that category.
                       </li>
                       <li>A name containing <code class="docutils literal notranslate"><span class=
                       "pre">/</span></code> is used as an exact HuggingFace <code class="docutils literal notranslate">
@@ -5269,7 +5782,8 @@
                         <div>
                           <p>
                             Resolve a name to its catalog-shaped entry — repository, pinned revision, available quants,
-                            license, category — <strong>without downloading</strong>.
+                            license, category, and (for embedding models) vector dimension and retrieval prompts —
+                            <strong>without downloading</strong>.
                           </p>
                           <p>
                             Usage:
@@ -5314,6 +5828,59 @@
                             <code class="docutils literal notranslate"><span class="pre">models.modelsDir</span></code>
                             (the <code class="docutils literal notranslate"><span class=
                             "pre">~/.rampart/models</span></code> path).
+                          </p>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="retrieval-prompt-sidecars">
+                      <h3>
+                        Retrieval prompt sidecars<a class="headerlink" href="#retrieval-prompt-sidecars" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Many embedding models are <em>asymmetric</em>: they expect a short prefix on queries, on
+                            documents, or on both (e.g. <code class="docutils literal notranslate"><span class=
+                            "pre">nomic-embed-text-v1.5</span></code>’s <code class=
+                            "docutils literal notranslate"><span class="pre">"search_query:</span> <span class=
+                            "pre">"</span></code> / <code class="docutils literal notranslate"><span class=
+                            "pre">"search_document:</span> <span class="pre">"</span></code>, or the e5 family’s
+                            <code class="docutils literal notranslate"><span class="pre">"query:</span> <span class=
+                            "pre">"</span></code> / <code class="docutils literal notranslate"><span class=
+                            "pre">"passage:</span> <span class="pre">"</span></code>). Using such a model without its
+                            prompts costs retrieval quality.
+                          </p>
+                          <p>
+                            The catalog records each model’s published prompts, and every download writes them into a
+                            small sidecar file next to the model: <code class=
+                            "docutils literal notranslate"><span class=
+                            "pre">&lt;file&gt;.gguf.prompts.json</span></code> beside a GGUF file, and <code class=
+                            "docutils literal notranslate"><span class="pre">&lt;name&gt;.prompts.json</span></code>
+                            beside an ONNX model directory. Fetching the path of an already-downloaded model refreshes
+                            the sidecar, so models downloaded before this feature gain one on their next <code class=
+                            "docutils literal notranslate"><span class="pre">models.get()</span></code>.
+                          </p>
+                          <p>
+                            The rampart-sql <a class="reference internal" href="sql-set.html#llamaembed"><span class=
+                            "std std-ref">llamaEmbed</span></a> and <a class="reference internal" href=
+                            "sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> settings read the
+                            sidecar automatically — <code class="docutils literal notranslate"><span class=
+                            "pre">likev</span></code> queries, <code class="docutils literal notranslate"><span class=
+                            "pre">chunkembed()</span></code> and <code class=
+                            "docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                            "pre">'query'|'document')</span></code> then apply the right prompt with no further
+                            configuration. See <a class="reference internal" href=
+                            "sql-set.html#retrieval-prompts"><span class="std std-ref">Retrieval prompts</span></a> for
+                            how the prompts are applied and how to override or disable them. Symmetric models (e.g.
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">all-minilm-l6-v2</span></code>) have no prompts and embed text verbatim.
+                          </p>
+                          <p>
+                            The module-level engines embed exactly the text they are given: when calling <a class=
+                            "reference internal" href="#initembed">initEmbed</a> / <a class="reference internal" href=
+                            "#onnx-initembed">onnx.initEmbed</a> directly, prepending a model’s prompts is the caller’s
+                            responsibility.
                           </p>
                         </div>
                       </blockquote>
@@ -5449,6 +6016,90 @@ rampart rampart-models.js --list                <span class="c1"># show the cata
                       For a larger, trained index (tens of millions of vectors) see the <a class="reference internal"
                       href="#idx-trainer">idx.trainer()</a> example above; for improving the final ordering of the top
                       results, see <a class="reference internal" href="#initrerank">initRerank</a>.
+                    </p>
+                  </div>
+                  <div class="section" id="integration-with-rampart-sql">
+                    <h2>
+                      Integration with rampart-sql<a class="headerlink" href="#integration-with-rampart-sql" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <p>
+                      The rampart-sql module has this whole pipeline built in, so vectors can be generated, indexed and
+                      searched <strong>inside the SQL engine</strong> — the langtools modules are the engines under the
+                      hood, with no application glue required.
+                    </p>
+                    <p>
+                      <strong>Embedding — the</strong> <code class="docutils literal notranslate"><span class=
+                      "pre">embed()</span></code> <strong>SQL function.</strong> A value is turned into a vector by an
+                      embedding engine loaded once per connection with <code class=
+                      "docutils literal notranslate"><span class="pre">sql.set()</span></code>:
+                    </p>
+                    <ul class="simple">
+                      <li>
+                        <a class="reference internal" href="sql-set.html#llamaembed"><span class=
+                        "std std-ref">llamaEmbed</span></a> runs a GGUF model through rampart-llamacpp (<a class=
+                        "reference internal" href="#initembed">initEmbed</a>) — the CPU / macOS default.
+                      </li>
+                      <li>
+                        <a class="reference internal" href="sql-set.html#onnxembed"><span class=
+                        "std std-ref">onnxEmbed</span></a> runs an ONNX model through rampart-onnx (<a class=
+                        "reference internal" href="#onnx-initembed">onnx.initEmbed</a>) — GPU acceleration is available
+                        only on NVIDIA.
+                      </li>
+                      <li>
+                        <a class="reference internal" href="sql-set.html#clipembed"><span class=
+                        "std std-ref">clipEmbed</span></a> runs a CLIP model through rampart-clip (<a class=
+                        "reference internal" href="#clip-initembed">clip.initEmbed</a>) — images and text in one shared
+                        space, so an <strong>image</strong> table can be searched by a <strong>text</strong> query (see
+                        below).
+                      </li>
+                    </ul>
+                    <p>
+                      The text engines (<code class="docutils literal notranslate"><span class=
+                      "pre">llamaEmbed</span></code> / <code class="docutils literal notranslate"><span class=
+                      "pre">onnxEmbed</span></code>) use the structure-aware chunking and pooling described under
+                      <a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class=
+                      "std std-ref">Generating embeddings</span></a>; all three share one loaded model across the SQL
+                      worker threads — the thread-copyable, refcounted handle design these modules use makes that safe.
+                    </p>
+                    <p>
+                      <strong>Indexing and search — FAISS vector indexes.</strong> <code class=
+                      "docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span>
+                      <span class="pre">INDEX</span></code> builds a compressed IVFPQ index and the <code class=
+                      "docutils literal notranslate"><span class="pre">LIKEV</span></code> operator searches it by
+                      vector similarity, both backed by rampart-faiss (<a class="reference internal" href=
+                      "#the-rampart-faiss-module">The rampart-faiss module</a>) inside the engine. See <a class=
+                      "reference internal" href="rampart-sql.html#vector-indexes"><span class="std std-ref">Vector
+                      Indexes</span></a> and <a class="reference internal" href=
+                      "rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a>. The typical
+                      flow embeds documents with <code class="docutils literal notranslate"><span class=
+                      "pre">embed()</span></code>, stores the vectors in a column, indexes that column, and answers
+                      <code class="docutils literal notranslate"><span class="pre">…</span> <span class=
+                      "pre">WHERE</span> <span class="pre">vec</span> <span class="pre">LIKEV</span> <span class=
+                      "pre">'a</span> <span class="pre">natural-language</span> <span class="pre">query'</span></code>.
+                    </p>
+                    <p>
+                      <strong>Cross-modal image search — clipEmbed.</strong> Because CLIP embeds images and text into
+                      the <em>same</em> space, an image table is searched by a plain text query. An image is stored
+                      with <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                      "pre">'image')</span></code> — the bytes (a <code class=
+                      "docutils literal notranslate"><span class="pre">Buffer</span></code> from a column, or a file
+                      path) go through CLIP’s <strong>vision</strong> encoder — and found with an ordinary <code class=
+                      "docutils literal notranslate"><span class="pre">…</span> <span class="pre">WHERE</span>
+                      <span class="pre">Vec</span> <span class="pre">LIKEV</span> <span class="pre">'a</span>
+                      <span class="pre">dog</span> <span class="pre">catching</span> <span class="pre">a</span>
+                      <span class="pre">frisbee'</span></code>, where the query text goes through CLIP’s
+                      <strong>text</strong> encoder. Image <code class="docutils literal notranslate"><span class=
+                      "pre">Buffer</span></code> parameters are embedded in the calling process before the statement is
+                      bound, so a multi-megabyte blob is never shipped to the SQL helper and back. See <a class=
+                      "reference internal" href="sql-set.html#clipembed"><span class="std std-ref">clipEmbed</span></a>
+                      for the details.
+                    </p>
+                    <p>
+                      <strong>Reordering — reranking.</strong> For the highest-precision top results a cross-encoder
+                      reranker (<a class="reference internal" href="#initrerank">initRerank</a> / <a class=
+                      "reference internal" href="#onnx-initrerank">onnx.initRerank</a>) can reorder a short candidate
+                      list after the vector search — a little more latency for a better final ordering.
                     </p>
                   </div>
                 </div>

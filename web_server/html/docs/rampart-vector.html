@@ -917,51 +917,26 @@
 <span class="cm">/* expected output:</span>
 <span class="cm">   {</span>
 <span class="cm">      "type": "f32",</span>
-<span class="cm">      "dim": 8,</span>
-<span class="cm">      "toF64": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toF32": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toF16": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toBf16": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toI8": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toU8": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toNumbers": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "l2Normalize": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "toRaw": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "byteLength": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "resize": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "copy": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "split": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      },</span>
-<span class="cm">      "distance": {</span>
-<span class="cm">         "_c_func": true</span>
-<span class="cm">      }</span>
+<span class="cm">      "dim": 8</span>
 <span class="cm">   }</span>
 <span class="cm">*/</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        Note that only the two constants are serialized by <code class=
+                        "docutils literal notranslate"><span class="pre">%3J</span></code>; the methods are present on
+                        the object but are not rendered by JSON. The full set of property names for the example above
+                        is:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nb">Object</span><span class="p">.</span><span class=
+                          "nx">getOwnPropertyNames</span><span class="p">(</span><span class="nx">v</span><span class=
+                          "p">);</span>
+<span class="cm">/* [ "type", "dim", "toF64", "toF32", "toF16", "toBf16", "toI8", "toU8",</span>
+<span class="cm">     "toNumbers", "toBit", "l2Normalize", "toRaw", "byteLength",</span>
+<span class="cm">     "resize", "copy", "split", "distance" ] */</span>
 </pre>
                         </div>
                       </div>
@@ -1005,10 +980,12 @@
                               available from <code class="docutils literal notranslate"><span class=
                               "pre">f64</span></code>, <code class="docutils literal notranslate"><span class=
                               "pre">f32</span></code>, <code class="docutils literal notranslate"><span class=
-                              "pre">f16</span></code> and <code class="docutils literal notranslate"><span class=
-                              "pre">i8</span></code> (not <code class="docutils literal notranslate"><span class=
-                              "pre">bf16</span></code> or <code class="docutils literal notranslate"><span class=
-                              "pre">u8</span></code>).
+                              "pre">f16</span></code>, <code class="docutils literal notranslate"><span class=
+                              "pre">i8</span></code> and <code class="docutils literal notranslate"><span class=
+                              "pre">u8</span></code> (not <code class="docutils literal notranslate"><span class=
+                              "pre">bf16</span></code>). See <a class="reference internal" href="#u8-i8-rebase">u8 → i8
+                              rebase</a> for the <code class="docutils literal notranslate"><span class=
+                              "pre">u8</span></code> case.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">toU8()</span></code> is
@@ -1154,7 +1131,15 @@
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">l2Normalize()</span></code>
                               - perform an in-place <cite>L2-Normalization</cite> of the vector and return the same
-                              <cite>Vector Object</cite>.
+                              <cite>Vector Object</cite>. Available on the float types (<code class=
+                              "docutils literal notranslate"><span class="pre">f64</span></code>, <code class=
+                              "docutils literal notranslate"><span class="pre">f32</span></code>, <code class=
+                              "docutils literal notranslate"><span class="pre">f16</span></code>) only; it is not
+                              present on <code class="docutils literal notranslate"><span class=
+                              "pre">bf16</span></code>, <code class="docutils literal notranslate"><span class=
+                              "pre">i8</span></code>, <code class="docutils literal notranslate"><span class=
+                              "pre">u8</span></code> or <code class="docutils literal notranslate"><span class=
+                              "pre">b8</span></code>.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">toRaw()</span></code> -
@@ -1202,7 +1187,9 @@
                         </div>
                       </blockquote>
                       <p>
-                        Example — splitting a multi-vector value:
+                        Example — splitting a multi-vector value (fragment; assumes an open <code class=
+                        "docutils literal notranslate"><span class="pre">sql</span></code> connection and a query
+                        vector <code class="docutils literal notranslate"><span class="pre">queryVec</span></code>):
                       </p>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">

@@ -321,6 +321,9 @@
                     </ul>
                   </li>
                   <li class="toctree-l2">
+                    <a class="reference internal" href="#installing-python-packages">Installing Python Packages</a>
+                  </li>
+                  <li class="toctree-l2">
                     <a class="reference internal" href="#example-use-importing-data">Example Use Importing Data</a>
                   </li>
                 </ul>
@@ -545,7 +548,7 @@
 
 <span class="kd">var</span> <span class="nx">mymod</span> <span class="o">=</span> <span class=
 "nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class=
-"nx">pyscript</span><span class="p">[,</span> <span class="nx">scriptName</span><span class="p">);</span>
+"nx">pyscript</span><span class="p">[,</span> <span class="nx">scriptName</span><span class="p">]);</span>
 </pre>
                             </div>
                           </div>
@@ -554,7 +557,7 @@
                           </p>
                           <ul class="simple">
                             <li>
-                              <code class="docutils literal notranslate"><span class="pre">script</span></code> is a
+                              <code class="docutils literal notranslate"><span class="pre">pyscript</span></code> is a
                               <span class="green">String</span>, the python source code
                             </li>
                             <li>
@@ -727,7 +730,7 @@
 "nx">rampart</span><span class="p">.</span><span class="nx">printf</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">mymod</span> <span class="o">=</span> <span class=
-"nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class=
+"nx">python</span><span class="p">.</span><span class="nx">importFile</span><span class="p">(</span><span class=
 "s2">"/path/to/myscript.py"</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">pvar</span> <span class="o">=</span> <span class=
@@ -829,13 +832,22 @@
                               </tr>
                               <tr class="row-odd">
                                 <td>
-                                  <span class="green">Date</span>
+                                  <span class="green">TypedArray</span>, <span class="green">ArrayBuffer</span>,
+                                  <span class="green">DataView</span>
                                 </td>
                                 <td>
-                                  Datetime
+                                  Bytes Object (the underlying bytes)
                                 </td>
                               </tr>
                               <tr class="row-even">
+                                <td>
+                                  <span class="green">Date</span>
+                                </td>
+                                <td>
+                                  Datetime (naive, in UTC)
+                                </td>
+                              </tr>
+                              <tr class="row-odd">
                                 <td>
                                   <span class="green">Undefined</span>
                                 </td>
@@ -843,7 +855,7 @@
                                   None
                                 </td>
                               </tr>
-                              <tr class="row-odd">
+                              <tr class="row-even">
                                 <td>
                                   <span class="green">null</span>
                                 </td>
@@ -853,6 +865,21 @@
                               </tr>
                             </tbody>
                           </table>
+                          <p>
+                            Note that JavaScript <span class="green">Numbers</span> always convert to Python floats.
+                            When a Python function requires an integer (common in modules such as <code class=
+                            "docutils literal notranslate"><span class="pre">numpy</span></code> and <code class=
+                            "docutils literal notranslate"><span class="pre">torch</span></code>), pass it explicitly
+                            as <code class="docutils literal notranslate"><span class="pre">{pyType:</span>
+                            <span class="pre">"int",</span> <span class="pre">value:</span> <span class=
+                            "pre">n}</span></code>.
+                          </p>
+                          <p>
+                            Dates cross the boundary in UTC: a JavaScript <span class="green">Date</span> becomes a
+                            naive Python datetime holding the UTC time, and a naive datetime returned from Python is
+                            read as UTC. Timezone-aware datetimes are converted using their own offset. A round trip
+                            returns the original time.
+                          </p>
                           <p>
                             Where possible, translations can be specified by creating an <span class=
                             "green">Object</span> with <code class="docutils literal notranslate"><span class=
@@ -907,7 +934,7 @@
 "p">});</span>
 
 <span class="cm">/* output:</span>
-<span class="cm">    &lt;class 'datetime.datetime'&gt;    1999-12-31 23:59:59.999000</span>
+<span class="cm">    &lt;class 'datetime.datetime'&gt;    2000-01-01 07:59:59.999000</span>
 <span class="cm">    &lt;class 'int'&gt;                  1234567800000000000000000000000000000000000000</span>
 <span class="cm">    &lt;class 'list'&gt;                 ['a', 'b', 'c']</span>
 <span class="cm">    &lt;class 'tuple'&gt;                ('d',)</span>
@@ -1013,7 +1040,7 @@
 "p">());</span>
 
 <span class="cm">/* output:</span>
-<span class="cm">    "1999-12-31T23:59:59.999Z"</span>
+<span class="cm">    "2000-01-01T07:59:59.999Z"</span>
 <span class="cm">    1.2345678e+45</span>
 <span class="cm">    ["a","b","c"]</span>
 <span class="cm">    ["d"]</span>
@@ -1058,6 +1085,10 @@
 <span class="sb">     return a+b;</span>
 <span class="sb"> `</span><span class="p">;</span>
 
+ <span class="kd">var</span> <span class="nx">mymod</span> <span class="o">=</span> <span class=
+"nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class=
+"nx">pyscript</span><span class="p">);</span>
+
  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class=
 "nx">mymod</span><span class="p">.</span><span class="nx">retvar</span><span class="p">({</span><span class=
 "nx">pyType</span><span class="o">:</span> <span class="s2">"complex"</span><span class="p">,</span> <span class=
@@ -1076,7 +1107,7 @@
 "p">());</span>
 
  <span class="cm">/* output:</span>
-<span class="cm">     [3,4]</span>
+<span class="cm">     [4,6]</span>
 
 <span class="cm">    note that var a and b hold the Python variables and are</span>
 <span class="cm">    not translated when mymod.add(a,b) is called.</span>
@@ -1113,6 +1144,10 @@
 <span class="sb">def add(a,b):</span>
 <span class="sb">    return a+b;</span>
 <span class="sb">`</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">mymod</span> <span class="o">=</span> <span class=
+"nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class=
+"nx">pyscript</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">comp1</span> <span class="o">=</span> <span class=
 "nx">mymod</span><span class="p">.</span><span class="nx">retvar</span><span class="p">({</span><span class=
@@ -1319,6 +1354,78 @@
                       </blockquote>
                     </div>
                   </div>
+                  <div class="section" id="installing-python-packages">
+                    <h2>
+                      Installing Python Packages<a class="headerlink" href="#installing-python-packages" title=
+                      "Permalink to this headline">¶</a>
+                    </h2>
+                    <blockquote>
+                      <div>
+                        <p>
+                          Rampart ships its own Python runtime along with two helper commands in the rampart
+                          <code class="docutils literal notranslate"><span class="pre">bin</span></code> directory:
+                        </p>
+                        <ul class="simple">
+                          <li>
+                            <code class="docutils literal notranslate"><span class="pre">pip3r</span></code> - the
+                            bundled pip. Use it to install packages for the embedded Python (e.g. <code class=
+                            "docutils literal notranslate"><span class="pre">pip3r</span> <span class=
+                            "pre">install</span> <span class="pre">numpy</span></code>).
+                          </li>
+                          <li>
+                            <code class="docutils literal notranslate"><span class="pre">python3r</span></code> - the
+                            bundled Python interpreter, with the same module search path as <a class=
+                            "reference internal" href="#python-import">python.import()</a>.
+                          </li>
+                        </ul>
+                        <p>
+                          Where packages are installed depends on whether the rampart installation is writable:
+                        </p>
+                        <ul class="simple">
+                          <li>If the rampart installation is writable (e.g. rampart was installed in your home
+                          directory, or pip3r is run as root), packages are installed system-wide inside the rampart
+                          installation.
+                          </li>
+                          <li>Otherwise pip falls back to a per-user installation in <code class=
+                          "docutils literal notranslate"><span class=
+                          "pre">~/.rampart/modules/python3-lib</span></code>.
+                          </li>
+                        </ul>
+                        <p>
+                          Both locations are automatically included in the module search path of the embedded
+                          interpreter, with per-user packages taking precedence. The per-user location may be
+                          overridden by setting the <code class="docutils literal notranslate"><span class=
+                          "pre">PYTHONUSERBASE</span></code> environment variable before running rampart or
+                          <code class="docutils literal notranslate"><span class="pre">pip3r</span></code>.
+                        </p>
+                        <p>
+                          Example, as a normal user with rampart installed in a system location:
+                        </p>
+                        <div class="highlight-none notranslate">
+                          <div class="highlight">
+                            <pre><span></span>$ pip3r install requests
+Defaulting to user installation because normal site-packages is not writeable
+...
+Successfully installed requests-2.32.3
+</pre>
+                          </div>
+                        </div>
+                        <div class="highlight-javascript notranslate">
+                          <div class="highlight">
+                            <pre><span></span><span class="kd">var</span> <span class="nx">python</span> <span class=
+                            "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                            "s1">'rampart-python'</span><span class="p">);</span>
+
+<span class="cm">/* finds the package installed under ~/.rampart */</span>
+<span class="kd">var</span> <span class="nx">requests</span> <span class="o">=</span> <span class=
+"nx">python</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class=
+"s1">'requests'</span><span class="p">);</span>
+</pre>
+                          </div>
+                        </div>
+                      </div>
+                    </blockquote>
+                  </div>
                   <div class="section" id="example-use-importing-data">
                     <h2>
                       Example Use Importing Data<a class="headerlink" href="#example-use-importing-data" title=
@@ -1339,7 +1446,7 @@
 
 <span class="cm">/* create the rampart sql db*/</span>
 <span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class=
-"k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class=
+"k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">init</span><span class=
 "p">(</span><span class="s2">"./pytest-sql"</span><span class="p">,</span> <span class="kc">true</span><span class=
 "p">);</span>
 

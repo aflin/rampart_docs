@@ -9,26 +9,59 @@ General
 How do I install Rampart?
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Download the latest binary for your platform from
+The quickest way is the install script, which detects your platform,
+downloads the matching build, verifies its checksum and runs the
+installer:
+
+.. code-block:: bash
+
+    curl -fsSL https://get.rampart.dev/ | sh
+
+It supports Linux x86_64 and aarch64 (glibc 2.31 or newer), macOS 11
+(Big Sur) or newer, and FreeBSD 14 or newer.  On any
+other system it stops with a specific reason rather than installing
+something that will not run.
+
+Run without ``sudo``, it installs to ``~/.rampart``.  For a system-wide
+install to ``/usr/local/rampart``, pipe to ``sudo sh`` instead:
+
+.. code-block:: bash
+
+    curl -fsSL https://get.rampart.dev/ | sudo sh
+
+The files are still left owned by the user who invoked ``sudo``, not by
+root, so ongoing maintenance — including ``rampart --install`` below —
+does not need ``sudo`` afterwards.
+
+To place the files yourself instead, download a ``.tar.gz`` for your
+platform from
 `rampart.dev/downloads/latest/ <https://rampart.dev/downloads/latest/>`_
-as a ``.tar.gz`` file.  Extract it and change to the ``rampart/``
-directory:
+and extract it:
 
 .. code-block:: bash
 
     tar xzf rampart-<version>-<platform>.tar.gz
     cd rampart
 
-From there you have two options:
+From there, either run the bundled ``./install.sh``, or run in place —
+Rampart needs no installation step so long as the extracted directory
+structure is kept intact.  Run ``./bin/rampart`` directly, or add the
+``bin/`` directory to your ``PATH``.
 
-* **Run the installer** — execute ``./install.sh``, which will guide you
-  through the installation process.
+**Adding optional modules.**  The base install carries the core
+modules.  Others — Python interop, langtools, tree-sitter, chromeview
+and so on — are downloaded on demand:
 
-* **Run in place** — Rampart is designed to run from any directory, so
-  long as the directory structure of the extracted distribution is
-  maintained.  No installation step is required; you can run
-  ``./bin/rampart`` directly or add the ``bin/`` directory to your
-  ``PATH``.
+.. code-block:: bash
+
+    rampart --install --list                        # show what is available
+    rampart --install rampart-python rampart-sql    # install named modules
+    rampart --install all                           # install everything available
+
+Note that ``--install`` works only on official builds — the ones the
+install script and the download page provide.  A Rampart you compiled
+yourself will refuse, since the distribution packages are not
+necessarily ABI-compatible with it.
 
 
 What is Rampart and how does it differ from Node.js?
@@ -75,12 +108,37 @@ consuming considerably fewer resources.
 Can I use npm packages with Rampart?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-No.  Rampart does not use V8 or the Node.js runtime, so npm packages
-that depend on Node.js built-in modules (``fs``, ``http``, ``stream``,
-etc.) will not work.
+Some of them.  The experimental
+:ref:`rampart-nodeshim <rampart-extras:rampart-nodeshim Module>` module
+provides node's core modules (``fs``, ``path``, ``stream``, ``events``
+and others), which is enough to run many pure-JavaScript npm packages —
+``axios``, ``cheerio``, ``commander``, ``markdown-it``, ``pino``,
+``yaml`` and ``zod`` among those tested.
 
-In practice, most of the functionality you would reach for npm to provide
-is already included in the Rampart distribution.
+Three things to know before relying on it:
+
+* **You install the packages with npm yourself.**  Rampart does not
+  fetch dependencies; run ``npm install`` to produce a
+  ``node_modules/`` tree and Rampart resolves from it by bare name.
+
+* **It requires the transpiler.**  npm packages are almost always
+  written in modern JavaScript, which Duktape's ES5 parser will not
+  accept, so in practice you need the ``-t`` flag.
+
+* **It is not fully compatible.**  There is no ESM, no compiled native
+  add-ons (``.node`` binaries), and core-module coverage is partial.
+  Whether a given package works is best-effort, so test before
+  committing to one.
+
+See the
+:ref:`rampart-nodeshim <rampart-extras:rampart-nodeshim Module>` section
+for the full list of submodules, the known gaps, and the tested
+libraries.
+
+That said, prefer Rampart's own modules where they cover the task —
+they are written in C and are considerably faster than the equivalent
+npm package running through the shim.  Most of what you would reach for
+npm to provide is already in the distribution.
 
 Some functionality is **built into the rampart executable** and is always
 available without ``require()``:
@@ -109,9 +167,8 @@ distribution and are loaded with ``require()``:
 * **URL parsing** — ``rampart-url``
 * **robots.txt** — ``rampart-robots``
 
-Pure-JavaScript libraries with no Node.js dependencies may work, but you
-should test carefully.  You can also write your own C modules using the
-Duktape C API (see `How do I write a C module for Rampart?`_).
+You can also write your own C modules using the Duktape C API (see
+`How do I write a C module for Rampart?`_).
 
 
 What version of ECMAScript does Rampart support?
@@ -356,6 +413,30 @@ Then load it like any other module:
 
     var x3 = require("times3");
     console.log(x3(7));  // 21
+
+For something small, you can skip the separate build step entirely.
+:ref:`rampart-cmodule <rampart-extras:rampart-cmodule>` compiles C
+source at run time and hands back a callable JavaScript function:
+
+.. code-block:: javascript
+
+    var cmodule = require('rampart-cmodule.js');
+
+    var timesThree = cmodule("timesThree", `
+    {
+        double val = REQUIRE_NUMBER(ctx, 0, "timesThree: argument 1 must be a Number");
+        duk_push_number(ctx, val * 3);
+        return 1;
+    }`);
+
+    console.log(timesThree(7));  // 21
+
+You supply only ``#include`` lines and the function body — no signature.
+The generated ``.c`` and ``.so`` are written to the current directory,
+so a later ``cmodule("timesThree")`` loads the built module instead of
+recompiling.  A C compiler must be present on the machine.  See
+:ref:`rampart-cmodule <rampart-extras:rampart-cmodule>` for support
+functions, compiler flags and libraries.
 
 The full Duktape C API documentation is available at
 `duktape.org/api.html <https://duktape.org/api.html>`_.
@@ -1006,7 +1087,7 @@ and the connection is closed before any async callback can reply.
 
 
 How do I generate HTML in mapped functions?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The most common pattern uses template literals with Rampart's sprintf
 format codes for safe output:
@@ -1261,6 +1342,85 @@ MIME type detection via the ``details`` parameter, see the
 ``rampart-totext`` documentation.
 
 
+How do I do semantic (vector) search?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Embedding happens **inside** the SQL engine.  Load a model once on the
+connection; ``embed()`` and the ``LIKEV`` operator then use it
+automatically.
+
+.. code-block:: javascript
+
+    sql.set({llamaEmbed: "/path/to/model.gguf"});
+
+    sql.exec("CREATE TABLE docs (title varchar(128), doc varchar(8000), v varvecF32(384))");
+    sql.exec("INSERT INTO docs VALUES(?,?,embed(?))", [title, body, body]);
+
+    // LIKEV takes a vector, or a String which is embedded with the same model
+    var hits = sql.exec("SELECT title, $rank FROM docs WHERE v LIKEV ?",
+                        ["what I am looking for"]);
+
+Rows come back already ordered by ``$rank``, best first — no ``ORDER BY``
+needed.  For large tables add a vector index (``CREATE VECTOR INDEX``);
+without one a ``LIKEV`` is refused rather than scanned, and the only
+sign is a soft error in ``sql.errMsg``.
+
+Three engines are available, one per connection: ``llamaEmbed``
+(llama.cpp GGUF), ``onnxEmbed`` (an ONNX model directory) and
+``clipEmbed`` (CLIP image/text models).  See
+:ref:`Vector Search <rampart-sql:Vector Search>` in the rampart-sql
+documentation — in particular :ref:`rampart-sql:Vector Indexes` and
+:ref:`Querying with LIKEV <querying-with-likev>` — and the knobs in
+:ref:`sql-set <sql-set:llamaEmbed>`.
+
+
+Which embedding engine should I use?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ``llamaEmbed`` unless you have a reason not to.  It is the more
+mature path and is GPU-accelerated on every supported platform — Metal
+on Apple Silicon, CUDA on Linux.
+
+``onnxEmbed`` accelerates only through CUDA, so on macOS it always runs
+on the CPU.  It is the right choice when you already have an ONNX model,
+or need ONNX-only features.
+
+``clipEmbed`` is for CLIP models, where images and text share one vector
+space — ``embed(?, 'image')`` takes an image path, so you can search
+images with a text query.
+
+Model files can be fetched by short name rather than path with
+``rampart-models``: ``models.get("bge-m3:q8_0")``.  See
+:ref:`rampart-langtools <rampart-langtools:The rampart-models module>`.
+
+
+How do I combine keyword and semantic search?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Put both in one ``WHERE`` with ``OR``.  Texis fuses the two ranked lists
+with Reciprocal Rank Fusion, which usually beats either retriever alone:
+
+.. code-block:: javascript
+
+    var res = sql.exec(
+        "SELECT id, title, $rank, $krank, $vrank FROM docs " +
+        "WHERE doc LIKEP ? OR v LIKEV ?",
+        [terms, terms], {maxRows: 20});
+
+``$rank`` is the fused score (a positional value, not a calibrated
+relevance).  ``$krank`` and ``$vrank`` expose what each side scored on
+its own, and are ``0`` when that side did not match — useful for seeing
+which retriever found a row.  They are meaningful in the ``SELECT`` list
+only.
+
+Pool sizes are set with ``likepRows`` and ``likevRows``.  For documents
+too long for a single vector, ``chunkembed()`` stores every chunk's
+vector in one column, so a match on any chunk finds the row.
+
+See :ref:`Hybrid keyword + vector queries (rank fusion)
+<hybrid-rank-fusion>` in the rampart-sql documentation.
+
+
 When should I use rampart-sql vs rampart-lmdb vs rampart-redis?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1455,13 +1615,18 @@ specifiers plus several useful extensions:
 +--------+-----------------------------+-----------------------------------------------+
 | ``%!H``| HTML decode                 | ``sprintf("%!H", "&amp;")`` → ``&``           |
 +--------+-----------------------------+-----------------------------------------------+
-| ``%U`` | URL encode                  | ``sprintf("%U", "a b")`` → ``a%20b``          |
+| ``%U`` | URL encode                  | ``sprintf("%U", "a b")`` → ``a+b``            |
++--------+-----------------------------+-----------------------------------------------+
+| ``%!U``| URL decode                  | ``sprintf("%!U", "a+b")`` → ``a b``           |
+|        |                             | (also decodes ``a%20b``)                      |
 +--------+-----------------------------+-----------------------------------------------+
 | ``%B`` | Base64 encode               | ``sprintf("%B", data)``                       |
 +--------+-----------------------------+-----------------------------------------------+
 | ``%!B``| Base64 decode               | ``sprintf("%!B", b64str)``                    |
 +--------+-----------------------------+-----------------------------------------------+
-| ``%P`` | Pretty-print with wrapping  | ``sprintf("%40P", longText)``                 |
+| ``%P`` | Pretty-print with wrapping  | ``sprintf("%0.60P", longText)`` — the         |
+|        |                             | *precision* is the wrap width; a leading      |
+|        |                             | number is the indent                          |
 +--------+-----------------------------+-----------------------------------------------+
 
 These are available in ``printf()``, ``sprintf()``, ``fprintf()``, and
@@ -1485,7 +1650,7 @@ How do I run external commands?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use ``rampart.utils.exec()`` for fine-grained control, or
-``rampart.utils.shell()`` for quick bash commands:
+``rampart.utils.shell()`` for quick shell commands:
 
 .. code-block:: javascript
 
@@ -1504,7 +1669,7 @@ Use ``rampart.utils.exec()`` for fine-grained control, or
         cd: "/working/dir"       // change directory before executing
     }, "arg1", "arg2");
 
-    // shell() — run a bash command string
+    // shell() — run a command string in $SHELL (or bash, or sh)
     var res = shell("cat /etc/hostname | tr -d '\\n'");
 
 Both return an :green:`Object` with ``stdout``, ``stderr``,
@@ -1586,11 +1751,11 @@ The following table summarizes what works in Rampart:
 +----------------------------+-------+--------+-----------+----------+--------+
 | ``.set()``                 | Yes   | No     | Yes       | No       | Yes    |
 +----------------------------+-------+--------+-----------+----------+--------+
-| ``.slice()``               | No    | Yes    | No        | No       | Yes    |
+| ``.slice()``               | Yes   | Yes    | Yes       | No       | Yes    |
 +----------------------------+-------+--------+-----------+----------+--------+
 | ``.copy()``                | No    | No     | No        | No       | Yes    |
 +----------------------------+-------+--------+-----------+----------+--------+
-| ``.fill()``                | No    | No     | No        | No       | Yes    |
+| ``.fill()``                | Yes   | No     | Yes       | No       | Yes    |
 +----------------------------+-------+--------+-----------+----------+--------+
 | ``.concat()``              | No    | No     | No        | No       | Yes    |
 +----------------------------+-------+--------+-----------+----------+--------+
@@ -1606,7 +1771,8 @@ The following table summarizes what works in Rampart:
 +----------------------------+-------+--------+-----------+----------+--------+
 | Endianness control         | No    | No     | No        | Yes      | Yes    |
 +----------------------------+-------+--------+-----------+----------+--------+
-| forEach/map/filter/etc.    | No    | No     | No        | No       | No     |
+| forEach/map/filter/sort/   | Yes   | No     | Yes       | No       | Yes    |
+| reduce/indexOf/keys/values |       |        |           |          |        |
 +----------------------------+-------+--------+-----------+----------+--------+
 
 **Important notes for Node.js developers:**
@@ -1628,16 +1794,17 @@ The following table summarizes what works in Rampart:
 * ``buf.indexOf()``, ``buf.lastIndexOf()``, ``buf.includes()``,
   ``buf.swap16()``, ``buf.swap32()``, ``buf.swap64()``, and
   ``Buffer.isEncoding()`` are available. ``buf.keys()`` /
-  ``buf.values()`` / ``buf.entries()`` return arrays (Node returns
-  iterators).
+  ``buf.values()`` / ``buf.entries()`` return iterators, as in Node.
 * ``buf.readBigInt64BE()`` / ``writeBigInt64BE()`` and the other
-  ``BigInt`` variants are **not** available — Duktape does not
-  implement ``BigInt``. Use the 32-bit accessors and combine, or use
-  ``crypto.JSBI`` from rampart-crypto where a bignum representation
-  is needed.
-* TypedArrays do **not** have higher-order methods (``forEach``,
-  ``map``, ``filter``, ``reduce``, ``sort``, ``indexOf``, etc.).
-  Convert to an :green:`Array` first if needed.
+  ``BigInt`` accessors are **not** available.  This is a gap in the
+  Buffer methods only: ``BigInt`` itself *is* implemented, so
+  ``BigInt`` values may be used freely in JavaScript.  Read a 64-bit
+  value with the 32-bit accessors and combine.
+* Plain buffers, TypedArrays and node ``Buffer``\ s all have the usual
+  higher-order methods — ``forEach``, ``map``, ``filter``, ``reduce``,
+  ``sort``, ``indexOf`` and friends all work.  Note that ``map``,
+  ``filter`` and ``slice`` return another buffer of the same type, not
+  an :green:`Array`.
 
 **Concatenating buffers:** Use ``bprintf('%s%s', buf1, buf2)`` — works
 with any buffer type and returns a plain buffer.
@@ -1839,6 +2006,67 @@ Packages installed this way can then be imported from within Rampart:
 
     var python = require("rampart-python");
     var requests = python.import("requests");
+
+
+Can I use browser APIs like fetch, URL or Blob?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, for a substantial subset.  ``fetch``, ``URL``, ``Headers`` /
+``Request`` / ``Response`` / ``FormData``, ``Blob`` / ``File``, the
+stream family, ``WebSocket``, ``XMLHttpRequest``, ``crypto`` (Web
+Crypto), ``structuredClone`` and ``localStorage`` are all present.
+
+They are **lazy-loaded**: nothing is initialized until a script first
+references one of the names, so scripts that never use them pay no
+startup cost.  There is nothing to ``require()``.
+
+Conformance is partial and experimental — strongest for the APIs that do
+not assume a browser or DOM.  ``Intl`` (vendored ICU4C) is available the
+same way.  See :ref:`WHATWG / W3C Web Platform APIs (experimental)
+<rampart-main:WHATWG / W3C Web Platform APIs (experimental)>`.
+
+
+Can I run code written for Node.js?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Often, yes.  ``rampart-nodeshim`` is a compatibility layer that makes
+``require('fs')``, ``require('path')``, ``require('http')``,
+``require('stream')``, ``require('child_process')``,
+``require('worker_threads')`` and similar names resolve.
+
+Two things to know:
+
+* Code going through the shim needs the **transpiler** — run with
+  ``rampart -t`` (or add a ``"use transpiler"`` pragma) in nearly all
+  cases.
+* Coverage is partial and the shim is slower than the native APIs.
+
+It exists so that third-party libraries written for Node can run.  For
+your own code, prefer ``rampart.utils`` and the ``rampart-*`` modules.
+See :ref:`rampart-nodeshim Module
+<rampart-extras:rampart-nodeshim Module>` for the per-submodule gaps.
+
+
+Can I run AI models directly, without the database?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes.  The langtools modules are ordinary ``require()``\ s, independent of
+the SQL embedding path described under `Database and Search`_:
+
+* ``rampart-llamacpp`` — ``initEmbed()``, ``initRerank()`` and
+  ``initGen()`` for text generation, chat and tool calling.  GPU via
+  Metal or CUDA.
+* ``rampart-onnx`` — ``initEmbed()`` / ``initRerank()``, plus
+  ``initSession()`` to run an arbitrary ONNX model, and tokenizers.
+  GPU is CUDA-only.
+* ``rampart-clip`` — CLIP image and text embeddings in a shared space.
+* ``rampart-faiss`` — a standalone vector index (``openFactory()``,
+  ``addFp32()``, ``searchFp32()``), separate from SQL vector indexes.
+* ``rampart-models`` — resolve a short model name to a file, downloading
+  it on first use: ``models.get("bge-m3:q8_0")``.
+
+All are documented in :ref:`rampart-langtools
+<rampart-langtools:The rampart-langtools modules>`.
 
 
 Vibe Coding with Rampart

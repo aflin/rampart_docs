@@ -337,10 +337,14 @@ Example:
     var result = totext.convert(buf, {details: true});
     console.log(result.mimeType);  // "application/vnd.openxmlformats-..."
 
-    /* convert an HTML string directly */
-    var html = "<h1>Hello</h1><p>World</p>";
+    /* convert an HTML string directly.  Note that when converting content
+       rather than a named file, the format is detected from the content
+       itself, so the string must carry a document-level signature such as
+       <!DOCTYPE html> or <html>.  A bare fragment cannot be identified and
+       is returned unchanged. */
+    var html = "<html><body><h1>Hello</h1><p>World</p></body></html>";
     var text = totext.convert(html);
-    console.log(text);  // "Hello\n\nWorld"
+    console.log(text);  // "Hello\n\nWorld\n\n"
 
 
 identify
@@ -410,7 +414,9 @@ formatted for search indexing and semantic analysis:
    original formatting is preserved.
 
 *  **Trimming** — Leading and trailing whitespace is removed from the
-   output.
+   output.  Note that this applies to the ``xml``, ``latex``, ``rtf`` and
+   plain-text paths; the HTML and Markdown converters may leave trailing
+   newlines in place.
 
 *  **Entity decoding** — HTML and XML entities (e.g. ``&amp;``,
    ``&#8220;``, ``&nbsp;``) are decoded to their Unicode equivalents.

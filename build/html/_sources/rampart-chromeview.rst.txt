@@ -132,8 +132,8 @@ Prerequisites
   :ref:`rampart-curl <rampart-curl:The rampart-curl module>` (both
   ship in the standard distribution).
 
-Loading
-~~~~~~~
+Loading rampart-chromeview
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Loading the module is a simple matter of using the ``require()`` function:
 
@@ -315,7 +315,7 @@ Worker — Runtime only, no DOM
 ``Worker``.
 
 page.queryObjects requires a real JSHandle prototype
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``page.evaluateHandle("Foo.prototype")`` is passed in, not a class
 name string.  This matches Puppeteer.
@@ -1567,8 +1567,8 @@ What it provides
 * ``PuppeteerExtra`` - The constructor, exposed for advanced
   usage.
 
-Loading
-~~~~~~~
+Loading puppeteer-extras
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: javascript
 

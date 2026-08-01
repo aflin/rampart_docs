@@ -79,7 +79,10 @@ fetch()
     
         var curl = require("rampart-curl");
         
-        var res = curl.fetch( url|url_list[, options][, callback]); 
+        var res = curl.fetch( url|url_list[, options][, callback]);
+
+        /* the options may equivalently be given first */
+        var res = curl.fetch( options, url|url_list[, callback]);
 
     Where:
     
@@ -126,8 +129,11 @@ fetch() Results
     * ``url`` - the request url as given to the `fetch()`_ function.
 
     * ``effectiveUrl`` - the url as returned from the server, possibly
-      different from ``url`` if ``location`` is ``true`` (see 
+      different from ``url`` if ``location`` is ``true`` (see
       `Curl Options`_ below).
+
+    * ``effectiveUrlUnicode`` - the same as ``effectiveUrl``, with any
+      internationalized (punycode) host name converted back to unicode.
 
     Other possible properties of the results :green:`Object` are (not all
     apply to non-http requests):
@@ -139,11 +145,11 @@ fetch() Results
       directly written to by the Curl library.  If the return data is large,
       it is more efficient to have ``returnText`` set ``false``.
 
-    * ``localIp`` - a :green:`String`, the IP address used to connect to the remote server.
+    * ``localIP`` - a :green:`String`, the IP address used to connect to the remote server.
     
     * ``localPort`` - a :green:`Number`, the port used to connect to the remote server.
     
-    * ``serverIp`` - a :green:`String`, the IP address of the remote server.
+    * ``serverIP`` - a :green:`String`, the IP address of the remote server.
     
     * ``serverPort`` -  a :green:`Number`, the remote server's port used for the connection.
     
@@ -159,7 +165,9 @@ fetch() Results
       requested URL.
 
     * ``cookies`` - an :green:`Array`, a list of cookies sent from the
-      remote server.
+      remote server.  Only present if the ``cookie`` or ``cookie-jar``
+      option was used for the request.  Each entry is a line in Netscape
+      cookie-jar format, not a parsed :green:`Object`.
 
 
 Adding More Requests
@@ -208,7 +216,7 @@ submit()
 
 NOTE:  
     ``submit()`` is preferred over ``fetch()`` when retrieving multiple urls
-    which neet to have different option apply to each url.
+    which need to have different options apply to each url.
            
 
 fetchAsync()
@@ -382,7 +390,8 @@ encode()
     .. code-block:: javascript
 
         var encoded = curl.encode('hello world&foo=bar');
-        // "hello%20world%26foo%3Dbar"
+        // "hello+world%26foo%3dbar"
+        // (spaces become '+', hex escapes are lower case)
 
 decode()
 ~~~~~~~~
@@ -639,7 +648,10 @@ Note that `examples`_ are provided below.
       used for the main callback, with the exception that  ``res.body`` 
       will contain the current chunk of data and res.text is not present.
       This function will return chunks of data regardless of whether
-      ``Content-Encoding: chunked`` is being used.
+      ``Content-Encoding: chunked`` is being used.  Note that a
+      ``chunkCallback`` requires a main callback as well; supplying it to a
+      synchronous ``fetch()`` throws ``fetch: chunkCallback cannot be used
+      without a normal Callback function``.
 
     * ``progressCallback`` - a :green:`Function`, a callback to receive
       download progress updates.  Called each time there is a new chunk of
@@ -693,7 +705,7 @@ Note that `examples`_ are provided below.
                             out=sprintf("    %Ad%%, %d of %d bytes, (%.2f %s)",
                                 'green', perc, tot, res.expectedTotal, rate, unit );
                         else
-                            out=sprintf("    %d bytes", o.file, tot);
+                            out=sprintf("    %d bytes", tot);
                         printf('%M', [`downloading file ${myurl} ->`, `  ${myfile}`, out]);
                     },
 
@@ -750,11 +762,18 @@ Note that `examples`_ are provided below.
       | ``url``          | effective URL after redirect chain (matches          |
       |                  | ``originalUrl`` if no redirects)                     |
       +------------------+------------------------------------------------------+
+      | ``urlUnicode``   | same as ``url``, with any punycode host name         |
+      |                  | converted back to unicode                            |
+      +------------------+------------------------------------------------------+
 
       Returning ``false`` from the callback aborts the transfer.
       libcurl reports the abort via ``CURLE_ABORTED_BY_CALLBACK``; the
-      final callback's ``r.errMsg`` will contain ``"curl failed:
-      Operation was aborted by an application callback"``.
+      final callback's ``r.errMsg`` will contain ``"curl failed for
+      '<url>': Operation was aborted by an application callback"``.
+      Note that errors reported to a callback are prefixed with the url
+      of the transfer they belong to (several transfers may be in flight
+      at once); errors returned from a synchronous ``fetch()`` are not,
+      and read simply ``"curl failed: ..."``.
 
       Returning any other value — including ``true``, an object, or no
       return at all (``undefined``) — continues the transfer. This
@@ -950,7 +969,7 @@ Note that `examples`_ are provided below.
 Curl short options
 ~~~~~~~~~~~~~~~~~~
 
-    * ``0`` - same as ``http-1.0``.
+    * ``0`` - same as ``http1.0``.
     * ``1`` - same as ``tlsv1``.
     * ``2`` - same as ``sslv2``.
     * ``3`` - same as ``sslv3``.
@@ -1151,7 +1170,7 @@ Multiple HTTP request with addurl()
 
 There may be cases where, while fetching HTML pages, more resources are discovered and can be 
 added to the list of URLs that ``fetch()`` will retrieve.  The following example uses
-:ref:`the rampart-html module <rampart-html:The rampart-server HTML module>` to extract
+:ref:`the rampart-html module <rampart-html:The rampart-html module>` to extract
 links from the ``index.html`` page on a sample website (using 
 `this <https://github.com/dragdropsite/mPurpose>`_ example) and "crawl" the rest of the site.
 

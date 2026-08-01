@@ -641,13 +641,12 @@ Usage:
             cursorNext:  {_func: true},
             cursorPrev:  {_func: true},
             commit:      {_func: true},
-            abort:       {_func: true},
-            lmdb:        {} //the above lmdb object
+            abort:       {_func: true}
         }
     */
 
     /* use connection, then commit or abort */
-    tnx.commit();
+    txn.commit();
 
 Where:
 
@@ -712,12 +711,16 @@ Usage:
     /* open read only if only reading in this transaction */
     var txn = new lmdb.transaction([dbase, ] false);
 
-    var res = txn.get(key [, return_string]);
+    var res = txn.get([dbase, ] key [, return_string]);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
-    
+
+    * ``dbase`` is an optional database handle as returned from `openDb`_\ ().
+      If given, it overrides the database the transaction was opened on for
+      this call.
+
     * ``key`` is a :green:`String` or :green:`Buffer`, the key of the item
       to be retrieved.
 
@@ -748,7 +751,7 @@ Usage:
 
     /* use res here */
 
-    tnx.commit();
+    txn.commit();
 
     /* res data is invalid and buffer is reset to zero length */
 
@@ -820,7 +823,7 @@ Usage:
 
     txn.put(key, value);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
 
@@ -857,7 +860,7 @@ Usage:
 
     var ret = txn.del(key);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
 
@@ -895,12 +898,16 @@ Usage:
     /* open read only if only reading in this transaction */
     var txn = new lmdb.transaction([dbase, ] false);
 
-    var res = txn.cursorGet(op [, key] [, key_is_string [, val_is_string] ]);
+    var res = txn.cursorGet([dbase, ] op [, key] [, key_is_string [, val_is_string] ]);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
-    
+
+    * ``dbase`` is an optional database handle as returned from `openDb`_\ ().
+      If given, it overrides the database the transaction was opened on for
+      this call.
+
     * ``op`` is a flag, which specifies the operation mode and is one of the following:
 
         * ``lmdb.op_set`` - Position the cursor at the item with the key
@@ -960,7 +967,7 @@ Usage:
 
     txn.cursorPut(key, value);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
 
@@ -997,7 +1004,7 @@ Usage:
     /* delete item at cursor position */
     txn.cursorDel();
 
-    tnx.commit();
+    txn.commit();
 
 Return Value:
     ``undefined``.
@@ -1021,7 +1028,7 @@ Usage:
     /* position the cursor at next item*/
     var res = txn.cursorNext([key_is_string [, val_is_string] ]);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
 
@@ -1047,7 +1054,7 @@ This operates identically to:
     /* position the cursor at next item*/
     var res = txn.cursorGet(lmdb.op_next);
 
-    tnx.commit();
+    txn.commit();
 
 The exception is that if the cursor is already at the last item,
 ``undefined`` is returned instead of an empty object.
@@ -1075,7 +1082,7 @@ It allows the following:
         /* do something with res */
     }
 
-    tnx.commit();
+    txn.commit();
 
 Return Value:
     Same as `txn.cursorGet`_ (an :green:`Object`) unless the cursor
@@ -1100,7 +1107,7 @@ Usage:
     /* position the cursor at previous item*/
     var res = txn.cursorPrev([key_is_string [, val_is_string] ]);
 
-    tnx.commit();
+    txn.commit();
 
 Where:
 
@@ -1128,7 +1135,7 @@ This operates identically to:
     /* position the cursor at previous item*/
     var res = txn.cursorGet([dbase, ] lmdb.op_prev);
 
-    tnx.commit();
+    txn.commit();
 
 The exception is that if the cursor is already at the first item,
 ``undefined`` is returned instead of an empty object.
@@ -1156,7 +1163,7 @@ It allows the following:
         /* do something with res */
     }
 
-    tnx.commit();
+    txn.commit();
 
 
 Return Value:
@@ -1180,9 +1187,9 @@ Usage:
 
     var txn = new lmdb.transaction([dbase], open_rw);
 
-    /* use tnx here */
+    /* use txn here */
    
-    tnx.commit();
+    txn.commit();
 
 Return Value:
     ``undefined``
@@ -1204,10 +1211,10 @@ Usage:
 
     var txn = new lmdb.transaction([dbase], open_rw);
 
-    /* use tnx here */
+    /* use txn here */
    
    /* discard any/all changes */
-    tnx.abort();
+    txn.abort();
 
 Return Value:
     ``undefined``

@@ -24,8 +24,10 @@ Calculate the distance/score of two vectors.
 
 If not specified, default metric is ``dot`` and default type is ``f16``
 
-Performs the same distance calculation as :ref:`rampart-vector:Vector Distance Function`
+Performs the same distance calculation as :ref:`rampart-vector:Distance Function`
 with the exception that ``type`` must be a buffer type and cannot be ``numbers``.
+Note that when the column is a typed ``varvec*``, the ``type`` argument is
+redundant and is ignored; the column's own type is used.
 
 With semantic embedding vectors, it can be used to rerank likep results.
 
@@ -49,8 +51,10 @@ embed
 
 Compute a semantic embedding vector for a piece of text using the
 connection's currently-loaded embedding model
-(:ref:`llamaEmbed <sql-set:llamaEmbed>` — a ``llama.cpp`` GGUF — or
-:ref:`onnxEmbed <sql-set:onnxEmbed>` — an ONNX model directory).
+(:ref:`llamaEmbed <sql-set:llamaEmbed>` — a ``llama.cpp`` GGUF —
+:ref:`onnxEmbed <sql-set:onnxEmbed>` — an ONNX model directory — or
+:ref:`clipEmbed <sql-set:clipEmbed>` — a CLIP model, which can also
+embed **images**).
 
 .. code-block:: sql
 
@@ -58,7 +62,8 @@ connection's currently-loaded embedding model
 
 * ``text`` is a :green:`String` column, bound parameter, literal, or any
   expression that evaluates to text.  ``NULL`` and the empty string
-  produce ``NULL``.
+  produce ``NULL``.  With ``kind`` = ``'image'`` it is instead an image
+  **file path** or a :green:`Buffer` of image bytes.
 * ``dtype`` is an optional :green:`String` naming the result vec dtype.
   One of ``'f16'`` (default), ``'f32'``, ``'f64'``, or ``'bf16'``.
   ``''`` and ``'auto'`` are accepted placeholders for the default —
@@ -66,14 +71,29 @@ connection's currently-loaded embedding model
   where a later argument follows the dtype.  The
   named dtype propagates to the result column type: ``embed(?, 'f32')``
   returns a ``varvecF32``, ``embed(?)`` returns a ``varvecF16``.
-* ``kind`` is an optional :green:`String` prompt kind for models with
-  asymmetric retrieval prompts (see
-  :ref:`Retrieval prompts <sql-set:Retrieval prompts>`): ``'query'``,
-  ``'document'``, or ``'raw'``.  It may be given directly as the second
-  argument (``embed(?, 'query')``) or after a dtype
-  (``embed(?, 'f32', 'query')``).  ``embed(text)`` embeds verbatim —
-  exactly as before prompts existed; with no prompts configured, every
-  kind embeds verbatim.
+* ``kind`` is an optional :green:`String` saying **what the value is**.
+  It may be given directly as the second argument
+  (``embed(?, 'query')``) or after a dtype (``embed(?, 'f32', 'query')``).
+
+  ``'query'``, ``'document'`` and ``'raw'`` select a model's asymmetric
+  retrieval prompt (see
+  :ref:`Retrieval prompts <sql-set:Retrieval prompts>`).  ``'text'`` is
+  an explicit synonym for ``'raw'`` — text content, no prompt — and
+  exists so the modality reads symmetrically against ``'image'``.
+  ``embed(text)`` embeds verbatim, exactly as before prompts existed;
+  with no prompts configured, every one of these embeds verbatim.
+
+  ``'image'`` selects a different **encoder** rather than a prompt: the
+  value is an image file path or a :green:`Buffer` of image bytes, and
+  it is embedded by the vision tower of a
+  :ref:`clipEmbed <sql-set:clipEmbed>` model into the same vector space
+  as that model's text output.  Using ``'image'`` on a text-only engine
+  is an error — embedding the path *as text* would store a plausible but
+  meaningless vector.
+
+  All kind words are accepted by every engine (``'text'`` under an ONNX
+  model simply means "no prompt"), so a statement keeps parsing when a
+  connection's engine changes.
 * ``title`` is an optional :green:`String`, valid only with
   ``'document'``: ``embed(?, 'document', ?)`` folds the title into the
   document prompt (models whose prompt has a title slot use it; others
@@ -83,6 +103,17 @@ With an asymmetric model loaded, single-vector inserts should use
 ``embed(?, 'document')`` so stored vectors match the query side —
 ``LIKEV`` with a string automatically applies the query prompt, and
 ``chunkembed()`` automatically applies the document prompt.
+
+With a :ref:`clipEmbed <sql-set:clipEmbed>` model, images and text share
+one vector space, so images are stored and then found by text:
+
+.. code-block:: sql
+
+    insert into images values (?, ?, embed(?, 'image'));
+    select Path from images where Vec likev 'a dog catching a frisbee';
+
+``chunkembed()`` and friends are **not** available with a CLIP model
+(one vector per image; nothing to chunk).
 
 The model is configured via :ref:`llamaEmbed <sql-set:llamaEmbed>` or
 :ref:`onnxEmbed <sql-set:onnxEmbed>`; llama.cpp concurrency behavior is
@@ -103,10 +134,12 @@ Results are cached per model (see
 applied to the same text — in one statement, across statements, or
 across threads — runs the model once.
 
-``embed()`` requires the engine's module (``rampart-llamacpp`` or
-``rampart-onnx``) to be installed.  ``rampart-sql`` auto-loads it on the
-first ``sql.set({llamaEmbed: ...})`` / ``sql.set({onnxEmbed: ...})``
-call (trying the canonical name, then ``_cuda``, then ``_cpu``).  To
+``embed()`` requires the engine's module (``rampart-llamacpp``,
+``rampart-onnx`` or ``rampart-clip``) to be installed.  ``rampart-sql``
+auto-loads it on the first ``sql.set({llamaEmbed: ...})`` /
+``sql.set({onnxEmbed: ...})`` / ``sql.set({clipEmbed: ...})``
+call, using the canonical module name — which the installer points at
+the installed build variant.  To
 force a specific variant, ``require()`` it first.  See
 :ref:`Generating embeddings <rampart-sql:Generating embeddings>` for
 the full dependency and install notes.
@@ -995,6 +1028,15 @@ strings:
 -  ``lowerInclusivity``: Returns the inclusive/exclusive operator for
    the lower bound, e.g. “{” or “”
 
+-  ``lowerBound``: Returns the lower bound of the range, e.g. “10”
+
+-  ``rangeOperator``: Returns the range operator, e.g. “..”
+
+-  ``upperBound``: Returns the upper bound of the range, e.g. “20”
+
+-  ``upperInclusivity``: Returns the inclusive/exclusive operator for
+   the upper bound, e.g. “}” or “”
+
 If a requested part is not present, an empty string is returned for that
 part. The concatenation of the above listed parts, in the above order,
 should equal the given range. Non-string range arguments are not
@@ -1086,8 +1128,12 @@ Syntax:
 
         SELECT isNull(myColumn) FROM myTable;
 
-Note that Texis ``isNull`` behavior differs from some other SQL implementations; see
-also `ifNull`_.
+Note that Texis ``isNull`` behavior differs from some other SQL
+implementations: ordinary columns are non-nullable (an unset ``varchar``
+is an empty string, not NULL, and a ``NULL`` literal is not accepted in
+``INSERT``), so ``isNull`` returns 1 only for values that are genuinely
+SQL NULL, which rarely arise from Rampart JavaScript.  See also
+`ifNull`_.
 
 .. not in this version
    xmlTreeQuickXPath
@@ -1398,11 +1444,14 @@ Generate an abstract of a given portion of text. The syntax is
 
        abstract(text[, maxsize[, style[, query[, vecColumn]]]])
 
-The abstract will be less than ``maxsize`` bytes long, and will
+The abstract text will be cut to ``maxsize`` bytes, and will
 attempt to end at a word boundary (a multi-byte UTF-8 character is
 never split, so the cut always falls on a whole character). If
 ``maxsize`` is not specified (or is less than or equal to 0) then a
-default size of 230 bytes is used.
+default size of 230 bytes is used.  Note that when text is cut, a
+trailing ``" ..."`` is appended, so the returned string may be up to
+four bytes longer than ``maxsize`` (a truncated default-size abstract
+is 233 bytes).
 
 The ``style`` argument is a string or integer, and allows a choice
 between several different ways of creating the abstract. Note that some
@@ -1479,7 +1528,7 @@ the loaded embedding model's chunker; for those rows the same engine
 The vec form works directly in a hybrid rank-fused query
 (``Doc LIKEP ? OR Vec LIKEV ?`` — see :ref:`Hybrid keyword + vector
 queries (rank fusion)
-<rampart-sql:Hybrid keyword + vector queries (rank fusion)>`), where
+<hybrid-rank-fusion>`), where
 best-chunk snippets seed normally even for rows only the keyword side
 contributed (abstract scores that row's chunks itself).  Do not add an
 ``ORDER BY`` to such a query — see the performance note in the hybrid
@@ -1839,8 +1888,13 @@ integer (if a multi-value ``varint``), etc.
   Returns the bit-wise NOT of ``a``.
 
 - ``bitsize(a)``
-  Returns the total number of bits in ``a``, i.e. the highest bit
-  number plus 1.
+  Returns the total number of bits addressable in ``a`` -- that is, the
+  width of the underlying value, not the position of its highest set bit.
+  For an ordinary integer this is ``32`` regardless of the value (so
+  ``bitsize(0)``, ``bitsize(1)`` and ``bitsize(5)`` all return ``32``),
+  growing as higher bits are set (e.g. ``bitsize(bitset(5,40))`` returns
+  ``64``).  For the position of the highest set bit, see ``bitmax()``
+  below.
 
 - ``bitcount(a)``
   Returns the number of bits in ``a`` that are set to 1.
@@ -1856,7 +1910,10 @@ integer (if a multi-value ``varint``), etc.
 - ``bitlist(a)``
   Returns the list of bit numbers of ``a``, in ascending order, that
   are set to 1, as a ``varint``. Returns a single -1 if no bits are
-  set to 1.
+  set to 1.  Note that a multi-value ``varint`` displays as its first
+  element when selected directly; use
+  ``convert(bitlist(a),'varchar')`` to see the whole list (e.g.
+  ``"0,2"`` for ``bitlist(5)``).
 
 - ``bitshiftleft(a, n)``
   Returns ``a`` shifted ``n`` bits to the left, with 0s padded for
@@ -1880,7 +1937,10 @@ integer (if a multi-value ``varint``), etc.
 - ``bitset(a, n)``
   Returns ``a`` with bit number ``n`` set to 1. ``a`` will be padded
   with 0-value integers if needed to reach ``n`` (e.g.
-  ``bitset(5, 40)`` will return a ``varint(2)``).
+  ``bitset(5, 40)`` will return a ``varint(2)``).  Note that a
+  multi-integer ``varint`` result retrieved from JavaScript currently
+  yields only the first integer; convert in SQL (e.g. to ``varchar``)
+  to see the full value.
 
 - ``bitclear(a, n)``
   Returns ``a`` with bit number ``n`` set to 0. ``a`` will be padded
@@ -1964,7 +2024,10 @@ netmask will be extended to 32 to include all 4 given bytes.
 - ``inetclass(inet)``
   Returns class of ``inet``, e.g. A, B, C, D, E or classless if a
   different netmask is used (or the address is IPv6). Empty string is
-  returned on error.
+  returned on error.  Note that a bare host address with no explicit
+  netmask (e.g. ``1.2.3.4``) has its netmask auto-extended to ``/32``
+  and therefore returns ``classless``; to get the class of the network,
+  include the classful netmask (e.g. ``1.2.3.4/8`` returns ``A``).
 
 - ``inet2int(inet)``
   Returns integer representation of IP network/host bits of ``$inet``
@@ -2322,7 +2385,9 @@ geocode2lat, geocode2lon
 The ``geocode2lat`` and ``geocode2lon`` functions decode a geocode into
 a latitude or longitude coordinate, respectively. The returned
 coordinate is in the decimal degrees format. An invalid geocode value
-(e.g. -1) will return NaN (Not a Number).
+(e.g. -1) will return NaN (Not a Number).  Note that when a NaN result
+is retrieved from JavaScript (or serialized as JSON, e.g. with ``%J``),
+it surfaces as ``null``; use ``isNaN()`` in SQL to test for it.
 
 If you want :math:`DDDMMSS` “degrees minutes seconds” (DMS) format, you
 can use :ref:`dec2dms <dms-dec>` to convert it.
@@ -2533,7 +2598,7 @@ Valid ``FormatOptions`` are:
 -  INDENT(N) - print the JSON with each object or array member on a new
    line, indented by N spaces to show structure
 
--  SORT-KEYS - sort the keys in the object. By default the order is
+-  SORT\_KEYS - sort the keys in the object. By default the order is
    preserved
 
 -  EMBED - omit the enclosing ``{}`` or ``[]`` is using the snippet in
@@ -3042,5 +3107,13 @@ dedicated columns.  However, when the table may need to accomodate future
 fields, or where fields vary per row, using JSON fields can allow for
 greater flexibility.
 
-Note also that any index made on a JSON virtual field will be treated as
-text or a :green:`String`.  Numbers will not sort properly or be selectable based on range.
+Note also that within SQL, JSON virtual field values (and any index made
+on one) are treated as text or a :green:`String`.  A bare comparison or
+``ORDER BY`` on a numeric JSON field compares lexicographically, so
+numbers will not sort properly or be selectable based on range.  To
+compare or sort numerically, wrap the field in
+:ref:`convert <sql-server-funcs:convert>` (e.g.
+``where convert(EmpData.$.salary, 'float') > 50000``), as shown in the
+example above.  Values returned to JavaScript from a bare ``select`` of
+a JSON field keep their JSON types (numbers arrive as :green:`Numbers`,
+booleans as :green:`Booleans`, etc.).

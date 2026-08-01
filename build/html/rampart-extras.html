@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rampart Extras &mdash; Rampart 0.7.0 documentation</title>
+  <title>Rampart Extras &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="Tutorials" href="tutorialtoc.html"/>
         <link rel="prev" title="The rampart-chromeview module" href="rampart-chromeview.html"/> 
 
@@ -140,14 +140,20 @@
 <li class="toctree-l2"><a class="reference internal" href="#forkpty-term">forkpty-term</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-converter">rampart-converter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-email">rampart-email</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id2">Loading the module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-rampart-email">Loading rampart-email</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#send">send()</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#delivery-methods">Delivery Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delivery-methods">Delivery Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#method-direct">method: “direct”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#method-relay">method: “relay”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#method-smtp">method: “smtp”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#method-gmailapp">method: “gmailApp”</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#html-email-with-attachment">HTML email with attachment</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rampart-llm">rampart-llm</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Loading the module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-rampart-llm">Loading rampart-llm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-connection">Creating a connection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#instance-properties">Instance properties</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#query">query()</a></li>
@@ -311,7 +317,7 @@ as well as extras to simplify the process and add extra functionality.</p>
 server, also listen on this port for plain <code class="docutils literal notranslate"><span class="pre">http</span></code> and 301-redirect
 every request to the <code class="docutils literal notranslate"><span class="pre">https</span></code> listener.  This runs in-process via
 the underlying
-<span class="xref std std-ref">httpRedirect</span> option; no
+<a class="reference internal" href="rampart-server.html#tls-certificates"><span class="std std-ref">httpRedirect</span></a> option; no
 separate daemon is spawned.  The redirect <code class="docutils literal notranslate"><span class="pre">Location:</span></code> header
 includes the actual <code class="docutils literal notranslate"><span class="pre">https</span></code> port automatically, so non-standard
 configurations (e.g. https on <code class="docutils literal notranslate"><span class="pre">:8443</span></code>) work without further setup.
@@ -349,6 +355,21 @@ Default is false.</li>
 with the monitor process, if launched).</li>
 </ul>
 </div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>macOS</strong>:  <code class="docutils literal notranslate"><span class="pre">start</span></code>/<code class="docutils literal notranslate"><span class="pre">stop</span></code>/<code class="docutils literal notranslate"><span class="pre">restart</span></code>/<code class="docutils literal notranslate"><span class="pre">status</span></code> work exactly as
+described above, but with <code class="docutils literal notranslate"><span class="pre">daemon</span></code> set <code class="docutils literal notranslate"><span class="pre">true</span></code> the server is
+daemonized through a transient, automatically managed <code class="docutils literal notranslate"><span class="pre">launchd</span></code> job
+rather than a classic <code class="docutils literal notranslate"><span class="pre">fork()</span></code> daemon (a forked daemon on macOS
+cannot use system services such as the Metal shader compiler, which
+breaks GPU model loading).  No plist editing or <code class="docutils literal notranslate"><span class="pre">launchctl</span></code>
+knowledge is required, and nothing persists across a reboot.  Two
+small differences: with <code class="docutils literal notranslate"><span class="pre">monitor</span></code> set <code class="docutils literal notranslate"><span class="pre">true</span></code>, a dead server is
+relaunched by <code class="docutils literal notranslate"><span class="pre">launchd</span></code> (this takes about 10 seconds); and since
+macOS does not restrict ports below 1024 to root, a server may bind,
+e.g., port 443 without being started as root (though the TLS
+key/certificate files must be readable by the user starting it).</p>
+</div>
 </div>
 <div class="section" id="building-a-command-line-utility">
 <h3>Building a command line utility<a class="headerlink" href="#building-a-command-line-utility" title="Permalink to this headline">¶</a></h3>
@@ -356,10 +377,10 @@ with the monitor process, if launched).</li>
 configure it from a JavaScript script, a small script such as the following
 can be used:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">wserv</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-webserver&quot;</span><span class="p">);</span>
-<span class="nx">webserv</span><span class="p">.</span><span class="nx">cmdLine</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="nx">wserv</span><span class="p">.</span><span class="nx">cmdLine</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">webserv.cmdLine(2);</span></code> function will process options
+<p>The <code class="docutils literal notranslate"><span class="pre">wserv.cmdLine(2);</span></code> function will process options
 from command line arguments, starting with the second one (skipping
 argv[0] (<code class="docutils literal notranslate"><span class="pre">rampart</span></code>) and argv[1] (<code class="docutils literal notranslate"><span class="pre">script_name.js</span></code>).  It will
 then launch a server using the processed options.</p>
@@ -398,10 +419,13 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --logRoot            String. Log directory
 --accessLog          String. Log file name. &quot;&quot; for stdout
 --errorLog           String. error log file name. &quot;&quot; for stderr
+--irohProxy          Bool.   Start the iroh webproxy server for this server
+--selfSign           Bool.   Whether to auto generate a self signed https cert
 --log                Bool.   Whether to log requests and errors
 --rotateLogs         Bool.   Whether to rotate the logs
 --rotateInterval     Number. Interval between log rotations in seconds
 --rotateStart        String. Time to start log rotations
+--rotateCount        Number. Maximum number of old log files to keep (default 30)
 --user               String. If started as root, switch to this user
 --threads            Number. Limit the number of threads used by the server.
                      Default (-1) is the number of cores on the system
@@ -412,7 +436,7 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --letsencrypt        String. If using letsencrypt, the &#39;domain.tld&#39; name for automatic setup of https
                      (assumes --secure true and looks for &#39;/etc/letsencrypt/live/domain.tld/&#39; directory)
                      (if redir is set, also map ./letsencrypt_wd/.well-known/ --&gt; http://mydom.com/.well-known/)
-                     (if set to &quot;setup&quot;, don\&#39;t start https server, but do map &quot;.well-known/&quot; for http)
+                     (if set to &quot;setup&quot;, don&#39;t start https server, but do map &quot;.well-known/&quot; for http)
                      (sets port:443 unless set otherwise)
 --rootScripts        Bool.   Whether to treat *.js files in htmlRoot as apps (not secure)
 --directoryFunc      Bool.   Whether to provide a directory listing if no index.html is found
@@ -420,6 +444,8 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --monitor            fork and run a monitor as a daemon which restarts server w/in 10 seconds if it dies
 --scriptTimeout      Number  Max time to wait for a script module to return a reply in seconds (default 20)
 --connectTimeout     Number  Max time to wait for client send request in seconds (default 20)
+--defaultCharset     String. Charset appended to text/* Content-Type headers (default &quot;utf-8&quot;).
+                     Use &quot;false&quot; to disable.  Applies to static files and dynamic responses.
 -d                   alias for &#39;--daemon true&#39;
 --detach             alias for &#39;--daemon true&#39;
 --stop               stop the server.  Also stop the monitor and log rotation, if started
@@ -450,6 +476,7 @@ Defaults for --server:
    &quot;rotateLogs&quot;: false,
    &quot;rotateInterval&quot;: 86400,
    &quot;rotateStart&quot;: &quot;00:00&quot;,
+   &quot;rotateCount&quot;: 30,
    &quot;user&quot;: &quot;nobody&quot;,
    &quot;threads&quot;: -1,
    &quot;sslKeyFile&quot;: &quot;&quot;,
@@ -465,6 +492,12 @@ Defaults for --server:
    &quot;connectTimeout&quot;: 20,
    &quot;quickserver&quot;: false,
    &quot;appendProcTitle&quot;: false,
+   &quot;beginFunc&quot;: false,
+   &quot;beginFuncOnFile&quot;: false,
+   &quot;endFunc&quot;: false,
+   &quot;irohProxy&quot;: false,
+   &quot;selfSign&quot;: false,
+   &quot;defaultCharset&quot;: &quot;utf-8&quot;,
    &quot;serverRoot&quot;: &quot;/home/rampart/web_server&quot;,
    &quot;fullServer&quot;: 1
 }
@@ -479,6 +512,7 @@ Defaults for --quickserver:
    &quot;ipv6Port&quot;: 8088,
    &quot;port&quot;: -1,
    &quot;redirPort&quot;: -1,
+   &quot;redir&quot;: false,
    &quot;htmlRoot&quot;: &quot;/home/rampart/dir_with_files/&quot;,
    &quot;appsRoot&quot;: &quot;&quot;,
    &quot;wsappsRoot&quot;: &quot;&quot;,
@@ -490,6 +524,7 @@ Defaults for --quickserver:
    &quot;rotateLogs&quot;: false,
    &quot;rotateInterval&quot;: 86400,
    &quot;rotateStart&quot;: &quot;00:00&quot;,
+   &quot;rotateCount&quot;: 30,
    &quot;user&quot;: &quot;nobody&quot;,
    &quot;threads&quot;: 1,
    &quot;sslKeyFile&quot;: &quot;&quot;,
@@ -505,6 +540,12 @@ Defaults for --quickserver:
    &quot;connectTimeout&quot;: 20,
    &quot;quickserver&quot;: true,
    &quot;appendProcTitle&quot;: false,
+   &quot;beginFunc&quot;: false,
+   &quot;beginFuncOnFile&quot;: false,
+   &quot;endFunc&quot;: false,
+   &quot;irohProxy&quot;: false,
+   &quot;selfSign&quot;: false,
+   &quot;defaultCharset&quot;: &quot;utf-8&quot;,
    &quot;serverRoot&quot;: &quot;/home/rampart/dir_with_files&quot;,
    &quot;fullServer&quot;: 0
 }
@@ -693,7 +734,7 @@ runtime.  These all work transparently with either disk paths or
 <span class="c1">// generic file reads</span>
 <span class="kd">var</span> <span class="nx">conf</span> <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;:zip:/config.json&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">st</span>   <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="s2">&quot;:zip:/apps/auth.js&quot;</span><span class="p">);</span>
-<span class="k">if</span> <span class="p">(</span><span class="nx">u</span><span class="p">.</span><span class="nx">fileExists</span><span class="p">(</span><span class="s2">&quot;:zip:/data.csv&quot;</span><span class="p">))</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">u</span><span class="p">.</span><span class="nx">exists</span><span class="p">(</span><span class="s2">&quot;:zip:/data.csv&quot;</span><span class="p">))</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
 
 <span class="kd">var</span> <span class="nx">fh</span> <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">fopen</span><span class="p">(</span><span class="s2">&quot;:zip:/big.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">);</span>   <span class="c1">// read-mode only</span>
 <span class="kd">var</span> <span class="nx">line</span> <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">readLine</span><span class="p">(</span><span class="nx">fh</span><span class="p">);</span>
@@ -728,7 +769,7 @@ runtime.  These all work transparently with either disk paths or
 <dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadList()</span></code></dt>
 <dd>Returns an <span class="green">Object</span> mapping every entry’s name to a
 stat-like object (<code class="docutils literal notranslate"><span class="pre">size</span></code>, <code class="docutils literal notranslate"><span class="pre">mode</span></code>, <code class="docutils literal notranslate"><span class="pre">mtime</span></code> (Date), <code class="docutils literal notranslate"><span class="pre">isFile</span></code>,
-<code class="docutils literal notranslate"><span class="pre">isDirectory</span></code>, <code class="docutils literal notranslate"><span class="pre">isSymlink</span></code>, <code class="docutils literal notranslate"><span class="pre">permissions</span></code> etc.).</dd>
+<code class="docutils literal notranslate"><span class="pre">isDirectory</span></code>, <code class="docutils literal notranslate"><span class="pre">isSymbolicLink</span></code>, <code class="docutils literal notranslate"><span class="pre">permissions</span></code> etc.).</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadGet(name)</span></code></dt>
 <dd>Returns the entry’s contents as a <span class="green">Buffer</span> (decompressed).</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadExtract(destDir</span> <span class="pre">[,</span> <span class="pre">filterArray])</span></code></dt>
@@ -747,11 +788,15 @@ starts with <code class="docutils literal notranslate"><span class="pre">/</span
 </dl>
 <p>A second set works on <strong>any</strong> zip file on disk – not the appended
 payload – and is always available:</p>
-<p><code class="docutils literal notranslate"><span class="pre">rampart.utils.zipList(zipPath)</span></code>
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.zipGet(zipPath,</span> <span class="pre">name)</span></code>
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.zipExtract(zipPath,</span> <span class="pre">destDir</span> <span class="pre">[,</span> <span class="pre">filterArray])</span></code></p>
-<blockquote>
-<div>Same filter semantics as <code class="docutils literal notranslate"><span class="pre">payloadExtract</span></code>.</div></blockquote>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.zipList(zipPath)</span></code></dt>
+<dd>As <code class="docutils literal notranslate"><span class="pre">payloadList</span></code>, but for the zip file at <code class="docutils literal notranslate"><span class="pre">zipPath</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.zipGet(zipPath,</span> <span class="pre">name)</span></code></dt>
+<dd>As <code class="docutils literal notranslate"><span class="pre">payloadGet</span></code>, but for the zip file at <code class="docutils literal notranslate"><span class="pre">zipPath</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.zipExtract(zipPath,</span> <span class="pre">destDir</span> <span class="pre">[,</span> <span class="pre">filterArray])</span></code></dt>
+<dd>As <code class="docutils literal notranslate"><span class="pre">payloadExtract</span></code>, but for the zip file at <code class="docutils literal notranslate"><span class="pre">zipPath</span></code>.  Same
+filter semantics.</dd>
+</dl>
 <p>These are useful for installers, update packages and similar tooling
 that needs to inspect a zip without unpacking it first.</p>
 </div>
@@ -1015,8 +1060,8 @@ is either of:</p>
 <a class="reference internal" href="rampart-net.html#the-rampart-net-module"><span class="std std-ref">rampart-net module</span></a>.  It supports
 direct delivery (MX lookup), local relay, authenticated SMTP, and Gmail
 with App Passwords.</p>
-<div class="section" id="id2">
-<h3>Loading the module<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="loading-rampart-email">
+<h3>Loading rampart-email<a class="headerlink" href="#loading-rampart-email" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">email</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-email.js&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -1074,7 +1119,7 @@ envelope recipient list.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">method</span></code> - <span class="green">String</span> - The delivery method.  One of
 <code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;relay&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;smtp&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;gmailApp&quot;</span></code>.
-See <a class="reference internal" href="#id3">Delivery Methods</a> below.</p>
+See <a class="reference internal" href="#id2">Delivery Methods</a> below.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - <span class="green">Number</span> - Maximum total time in seconds for the
 SMTP transaction.  Default is <code class="docutils literal notranslate"><span class="pre">30</span></code>.</p>
@@ -1120,7 +1165,9 @@ mode that succeeded: <code class="docutils literal notranslate"><span class="pre
 </div></blockquote>
 </div>
 <div class="section" id="delivery-methods">
-<span id="id3"></span><h3>Delivery Methods<a class="headerlink" href="#delivery-methods" title="Permalink to this headline">¶</a></h3>
+<span id="id2"></span><h3>Delivery Methods<a class="headerlink" href="#delivery-methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="method-direct">
+<h4>method: “direct”<a class="headerlink" href="#method-direct" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><p>The default method.  Looks up MX records for each recipient’s domain
 using <code class="docutils literal notranslate"><span class="pre">net.resolve(domain,</span> <span class="pre">&quot;MX&quot;)</span></code> and connects directly to the
@@ -1153,6 +1200,9 @@ plain (unencrypted) SMTP.  Default is <code class="docutils literal notranslate"
 </pre></div>
 </div>
 </div></blockquote>
+</div>
+<div class="section" id="method-relay">
+<h4>method: “relay”<a class="headerlink" href="#method-relay" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><p>Sends all recipients through a local or specified SMTP relay server
 (e.g. Postfix), which handles onward delivery, retries, and queuing.</p>
@@ -1176,6 +1226,9 @@ return value.</p>
 </pre></div>
 </div>
 </div></blockquote>
+</div>
+<div class="section" id="method-smtp">
+<h4>method: “smtp”<a class="headerlink" href="#method-smtp" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><p>Sends through any authenticated SMTP server.  The full URL including
 protocol and port must be provided.</p>
@@ -1199,6 +1252,9 @@ protocol and port must be provided.</p>
 </pre></div>
 </div>
 </div></blockquote>
+</div>
+<div class="section" id="method-gmailapp">
+<h4>method: “gmailApp”<a class="headerlink" href="#method-gmailapp" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><p>Sends through Gmail’s SMTP server (<code class="docutils literal notranslate"><span class="pre">smtps://smtp.gmail.com:465</span></code>)
 using a Google App Password.  The SMTP URL is handled automatically.</p>
@@ -1234,6 +1290,7 @@ directly to <code class="docutils literal notranslate"><span class="pre">myaccou
 <p>Note: “App passwords” will not appear if 2-Step Verification is not
 enabled, or if a Google Workspace admin has disabled the feature.</p>
 </div></blockquote>
+</div>
 </div>
 <div class="section" id="html-email-with-attachment">
 <h3>HTML email with attachment<a class="headerlink" href="#html-email-with-attachment" title="Permalink to this headline">¶</a></h3>
@@ -1280,8 +1337,8 @@ backends.  The same callback-based API works against:</p>
 and context-window discovery, and exposes the same response shape to your
 code regardless of which backend served the request.</p>
 <p>The module lives in the <code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> directory.</p>
-<div class="section" id="id4">
-<h3>Loading the module<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="loading-rampart-llm">
+<h3>Loading rampart-llm<a class="headerlink" href="#loading-rampart-llm" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llm</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llm.js&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -2289,7 +2346,7 @@ such code under rampart you need one of:</p>
 <li>a <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babelGlobally&quot;</span></code>
 directive at the top of the entry script</li>
 </ul>
-<p class="last">See <span class="xref std std-ref">the transpiler section</span>
+<p class="last">See <a class="reference internal" href="rampart-main.html#activating-the-transpiler"><span class="std std-ref">the transpiler section</span></a>
 for details.  Without one of these, the shim still loads, but
 your <em>own</em> code is restricted to ES5 syntax.  The submodule
 implementations themselves are ES5 internally, so the shim’s
@@ -2312,12 +2369,19 @@ bare-name require works:</p>
 </div>
 <p>The re-export files in <code class="docutils literal notranslate"><span class="pre">js_modules/</span></code> are one-liners:
 <code class="docutils literal notranslate"><span class="pre">module.exports</span> <span class="pre">=</span> <span class="pre">require('rampart-nodeshim').&lt;name&gt;;</span></code>.  Full list:
-<code class="docutils literal notranslate"><span class="pre">assert.js</span></code>, <code class="docutils literal notranslate"><span class="pre">buffer.js</span></code>, <code class="docutils literal notranslate"><span class="pre">console.js</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto.js</span></code>, <code class="docutils literal notranslate"><span class="pre">dns.js</span></code>,
-<code class="docutils literal notranslate"><span class="pre">events.js</span></code>, <code class="docutils literal notranslate"><span class="pre">fs.js</span></code>, <code class="docutils literal notranslate"><span class="pre">module.js</span></code>, <code class="docutils literal notranslate"><span class="pre">os.js</span></code>, <code class="docutils literal notranslate"><span class="pre">path.js</span></code>,
-<code class="docutils literal notranslate"><span class="pre">perf_hooks.js</span></code>, <code class="docutils literal notranslate"><span class="pre">process.js</span></code>, <code class="docutils literal notranslate"><span class="pre">punycode.js</span></code> (vendored Mathias
-Bynens v2.3.1 IDN library — standalone, not part of the <code class="docutils literal notranslate"><span class="pre">.so</span></code>),
-<code class="docutils literal notranslate"><span class="pre">querystring.js</span></code>, <code class="docutils literal notranslate"><span class="pre">string_decoder.js</span></code>, <code class="docutils literal notranslate"><span class="pre">timers.js</span></code>, <code class="docutils literal notranslate"><span class="pre">url.js</span></code>,
-<code class="docutils literal notranslate"><span class="pre">util.js</span></code>, <code class="docutils literal notranslate"><span class="pre">worker_threads.js</span></code>, <code class="docutils literal notranslate"><span class="pre">zlib.js</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">assert.js</span></code>, <code class="docutils literal notranslate"><span class="pre">buffer.js</span></code>, <code class="docutils literal notranslate"><span class="pre">child_process.js</span></code>, <code class="docutils literal notranslate"><span class="pre">console.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">crypto.js</span></code>, <code class="docutils literal notranslate"><span class="pre">dns.js</span></code>, <code class="docutils literal notranslate"><span class="pre">events.js</span></code>, <code class="docutils literal notranslate"><span class="pre">fs.js</span></code>, <code class="docutils literal notranslate"><span class="pre">http.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">https.js</span></code>, <code class="docutils literal notranslate"><span class="pre">module.js</span></code>, <code class="docutils literal notranslate"><span class="pre">net.js</span></code>, <code class="docutils literal notranslate"><span class="pre">os.js</span></code>, <code class="docutils literal notranslate"><span class="pre">path.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">perf_hooks.js</span></code>, <code class="docutils literal notranslate"><span class="pre">process.js</span></code>, <code class="docutils literal notranslate"><span class="pre">querystring.js</span></code>, <code class="docutils literal notranslate"><span class="pre">readline.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">repl.js</span></code>, <code class="docutils literal notranslate"><span class="pre">stream.js</span></code>, <code class="docutils literal notranslate"><span class="pre">string_decoder.js</span></code>, <code class="docutils literal notranslate"><span class="pre">timers.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tls.js</span></code>, <code class="docutils literal notranslate"><span class="pre">tty.js</span></code>, <code class="docutils literal notranslate"><span class="pre">url.js</span></code>, <code class="docutils literal notranslate"><span class="pre">util.js</span></code>, <code class="docutils literal notranslate"><span class="pre">vm.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">worker_threads.js</span></code>, <code class="docutils literal notranslate"><span class="pre">zlib.js</span></code>.</p>
+<p>A few further modules in <code class="docutils literal notranslate"><span class="pre">js_modules/</span></code> are standalone shims rather than
+one-line re-exports — they are implemented in JavaScript in the file itself
+and are not part of the <code class="docutils literal notranslate"><span class="pre">.so</span></code>: <code class="docutils literal notranslate"><span class="pre">async_hooks.js</span></code>, <code class="docutils literal notranslate"><span class="pre">constants.js</span></code>,
+<code class="docutils literal notranslate"><span class="pre">diagnostics_channel.js</span></code>, <code class="docutils literal notranslate"><span class="pre">http2.js</span></code> (a stub; rampart-nodeshim does not
+implement HTTP/2), <code class="docutils literal notranslate"><span class="pre">v8.js</span></code>, and <code class="docutils literal notranslate"><span class="pre">punycode.js</span></code> (vendored Mathias Bynens
+v2.3.1 IDN library).</p>
 </div>
 <div class="section" id="submodules-and-notable-gaps">
 <h3>Submodules and notable gaps<a class="headerlink" href="#submodules-and-notable-gaps" title="Permalink to this headline">¶</a></h3>
@@ -2495,7 +2559,7 @@ compatibility as best-effort rather than guaranteed.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

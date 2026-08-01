@@ -360,6 +360,12 @@
                     require Function to Import Modules</a>
                     <ul>
                       <li class="toctree-l3">
+                        <a class="reference internal" href="#resolution-order">Resolution order</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#requiring-a-directory">Requiring a directory</a>
+                      </li>
+                      <li class="toctree-l3">
                         <a class="reference internal" href="#example-creating-a-javascript-module">Example creating a
                         JavaScript module</a>
                       </li>
@@ -433,6 +439,9 @@
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#proxy-revocable">Proxy.revocable</a>
+                      </li>
+                      <li class="toctree-l3">
+                        <a class="reference internal" href="#reflect">Reflect</a>
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#whatwg-w3c-web-platform-apis-experimental">WHATWG / W3C
@@ -1244,7 +1253,9 @@
                           "Permalink to this headline">¶</a>
                         </h4>
                         <p>
-                          Trigger a named event, calling all the callbacks registered under the given name.
+                          Trigger a named event, calling all the callbacks registered under the given name. Callbacks
+                          do not run in place: they are deferred to the event loop and run after the current code
+                          returns.
                         </p>
                         <div class="highlight-javascript notranslate">
                           <div class="highlight">
@@ -2324,9 +2335,16 @@
                       </dl>
                       <p>
                         Implementation: <code class="docutils literal notranslate"><span class=
-                        "pre">clock_gettime(CLOCK_MONOTONIC)</span></code>. The origin is captured on the first call
-                        across any context, so workers see the parent-process lifetime (matching node’s worker_threads
-                        behavior).
+                        "pre">clock_gettime(CLOCK_MONOTONIC)</span></code>. The origin is captured once at startup, so
+                        the value includes rampart’s own start-up time — as it does in node.
+                      </p>
+                      <p>
+                        The origin is process-wide. Threads report the lifetime of the process that created them,
+                        matching node, whose <code class="docutils literal notranslate"><span class=
+                        "pre">worker_threads</span></code> also see the parent’s uptime. A process created by <a class=
+                        "reference internal" href="rampart-utils.html#fork"><span class="std std-ref">fork()</span></a>
+                        re-stamps its own origin and reports its own age, matching node’s process-spawning APIs, where
+                        each new process starts from zero.
                       </p>
                       <p>
                         For seconds since the operating system booted (was the historical meaning of <code class=
@@ -2366,10 +2384,9 @@
                         "pre">sysinfo(2)</span></code> on Linux, <code class=
                         "docutils literal notranslate"><span class="pre">sysctl</span> <span class=
                         "pre">KERN_BOOTTIME</span></code> (boot <code class="docutils literal notranslate"><span class=
-                        "pre">timeval</span></code> subtracted from wall-clock now) on macOS / <a href=
-                        "#id2"><span class="problematic" id="id3">*</span></a>BSD. Falls back to <code class=
-                        "docutils literal notranslate"><span class="pre">CLOCK_MONOTONIC</span></code> if the
-                        platform-native call fails.
+                        "pre">timeval</span></code> subtracted from wall-clock now) on macOS / *BSD. Falls back to
+                        <code class="docutils literal notranslate"><span class="pre">CLOCK_MONOTONIC</span></code> if
+                        the platform-native call fails.
                       </p>
                       <p>
                         Equivalent to node’s <code class="docutils literal notranslate"><span class=
@@ -2497,6 +2514,16 @@
                         still succeed. Effective on Linux and FreeBSD. Cannot be raised above any system-imposed hard
                         limit.
                       </p>
+                      <p>
+                        Note also that the limit is applied to both the soft <strong>and</strong> hard <code class=
+                        "docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code>. Since a hard limit
+                        can only ever be lowered by an unprivileged process, a later call with a larger <code class=
+                        "docutils literal notranslate"><span class="pre">amount</span></code> will fail with
+                        <code class="docutils literal notranslate"><span class="pre">process.setMaxMem</span>
+                        <span class="pre">-</span> <span class="pre">Failed</span> <span class="pre">to</span>
+                        <span class="pre">set</span> <span class="pre">Max</span></code>. In other words the limit may
+                        be lowered repeatedly, but never raised again within the same process.
+                      </p>
                     </div>
                   </div>
                   <div class="section" id="using-the-require-function-to-import-modules">
@@ -2506,10 +2533,10 @@
                     </h2>
                     <p>
                       Scripts may reference functions stored in external files. These files are known as modules. A
-                      module is a compiled C program or a JavaScript file which exports an <span class=
-                      "green">Object</span> or <span class="green">Function</span> when the <code class=
-                      "docutils literal notranslate"><span class="pre">require("module-name")</span></code> syntax is
-                      used.
+                      module is a compiled C program, a JavaScript file which exports an <span class=
+                      "green">Object</span> or <span class="green">Function</span>, or a JSON file, loaded with the
+                      <code class="docutils literal notranslate"><span class="pre">require("module-name")</span></code>
+                      syntax.
                     </p>
                     <p>
                       Example for the SQL C Module:
@@ -2523,16 +2550,147 @@
                       </div>
                     </div>
                     <p>
-                      This will search the current directory and the rampart modules directories for a module named
-                      <code class="docutils literal notranslate"><span class="pre">rampart-sql.so</span></code> or
-                      <code class="docutils literal notranslate"><span class="pre">rampart-sql.js</span></code> and use
-                      the first one found. In this case <code class="docutils literal notranslate"><span class=
+                      This will search the script’s own directory and the rampart modules directories for a module
+                      named <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code>. In
+                      this case <code class="docutils literal notranslate"><span class=
                       "pre">rampart-sql.so</span></code> will be found and the SQL module and its functions will be
                       usable via the named variable <code class="docutils literal notranslate"><span class=
                       "pre">Sql</span></code>. See, e.g, <a class="reference internal" href=
                       "rampart-sql.html#loading-the-javascript-module"><span class="std std-ref">The rampart-sql
                       documentation</span></a> for full details.
                     </p>
+                    <p>
+                      Note that the <em>current working directory</em> is not searched — only the directory of the
+                      running script (<a class="reference internal" href="#scriptpath"><span class=
+                      "std std-ref">process.scriptPath</span></a>), the calling module’s own directory, and the
+                      locations listed under <a class="reference internal" href="#module-search-path">Module Search
+                      Path</a> below. The two coincide when a script is run from its own directory, which is the usual
+                      case, but a script invoked from elsewhere will not pick up modules sitting in the directory you
+                      happen to be in. The same applies to relative ids: <code class=
+                      "docutils literal notranslate"><span class="pre">require("./mod.js")</span></code> is resolved
+                      against the requiring script or module, not against the working directory.
+                    </p>
+                    <div class="section" id="resolution-order">
+                      <span id="require-resolution-order"></span>
+                      <h3>
+                        Resolution order<a class="headerlink" href="#resolution-order" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        When the name given to <code class="docutils literal notranslate"><span class=
+                        "pre">require()</span></code> has no extension, each extension is tried in turn, and for each
+                        one <strong>every</strong> search directory is checked before moving on to the next extension:
+                      </p>
+                      <ol class="arabic simple">
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">.js</span></code> — loaded as
+                          JavaScript
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">.json</span></code> — read and
+                          <code class="docutils literal notranslate"><span class="pre">JSON.parse</span></code>d; the
+                          result becomes <code class="docutils literal notranslate"><span class=
+                          "pre">module.exports</span></code>
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">.so</span></code> — loaded as a
+                          compiled C module
+                        </li>
+                        <li>the bare name with no extension — loaded as JavaScript
+                        </li>
+                      </ol>
+                      <p>
+                        This is the same precedence node uses (<code class="docutils literal notranslate"><span class=
+                        "pre">.js</span></code>, then <code class="docutils literal notranslate"><span class=
+                        "pre">.json</span></code>, then native — <code class=
+                        "docutils literal notranslate"><span class="pre">.node</span></code> there, <code class=
+                        "docutils literal notranslate"><span class="pre">.so</span></code> here).
+                      </p>
+                      <p>
+                        One consequence is worth noting: a <code class="docutils literal notranslate"><span class=
+                        "pre">foo.js</span></code> found anywhere on the search path is preferred over a <code class=
+                        "docutils literal notranslate"><span class="pre">foo.so</span></code> in the current directory,
+                        since the whole path is checked for <code class="docutils literal notranslate"><span class=
+                        "pre">.js</span></code> before <code class="docutils literal notranslate"><span class=
+                        "pre">.so</span></code> is tried at all. To load a specific file, give the extension:
+                        <code class="docutils literal notranslate"><span class="pre">require("foo.so")</span></code>.
+                      </p>
+                      <p>
+                        JSON modules are cached like any other module, so <code class=
+                        "docutils literal notranslate"><span class="pre">require("conf.json")</span></code> and a later
+                        <code class="docutils literal notranslate"><span class="pre">require("conf")</span></code>
+                        return the same object:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class=
+                          "cm">/* conf.json contains: {"host":"localhost","port":8088} */</span>
+<span class="kd">var</span> <span class="nx">conf</span> <span class="o">=</span> <span class=
+"nx">require</span><span class="p">(</span><span class="s2">"conf.json"</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">"%s:%d\n"</span><span class=
+"p">,</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">host</span><span class=
+"p">,</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">port</span><span class=
+"p">);</span>   <span class="cm">/* localhost:8088 */</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="section" id="requiring-a-directory">
+                      <h3>
+                        Requiring a directory<a class="headerlink" href="#requiring-a-directory" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        If the name resolves to a directory, an entry point inside it is used. Both <code class=
+                        "docutils literal notranslate"><span class="pre">require("mymod")</span></code> and
+                        <code class="docutils literal notranslate"><span class="pre">require("mymod/")</span></code>
+                        work, as do absolute and relative forms. The directory is resolved as follows:
+                      </p>
+                      <ol class="arabic simple">
+                        <li>the file named by the <code class="docutils literal notranslate"><span class=
+                        "pre">"main"</span></code> field of <code class="docutils literal notranslate"><span class=
+                        "pre">package.json</span></code> in that directory, if present;
+                        </li>
+                        <li>otherwise <code class="docutils literal notranslate"><span class=
+                        "pre">index.js</span></code>, then <code class="docutils literal notranslate"><span class=
+                        "pre">index.json</span></code>, then <code class="docutils literal notranslate"><span class=
+                        "pre">index.so</span></code>.
+                        </li>
+                      </ol>
+                      <p>
+                        If the directory contains neither, resolution fails with the usual “Could not resolve module
+                        id” error.
+                      </p>
+                      <p>
+                        <code class="docutils literal notranslate"><span class="pre">"main"</span></code> must name a
+                        file. An extension may be omitted — <code class="docutils literal notranslate"><span class=
+                        "pre">"main":</span> <span class="pre">"lib/entry"</span></code> will find <code class=
+                        "docutils literal notranslate"><span class="pre">lib/entry.js</span></code> — but a
+                        <code class="docutils literal notranslate"><span class="pre">"main"</span></code> that points
+                        at a <em>directory</em> is not followed, and resolution falls through to <code class=
+                        "docutils literal notranslate"><span class="pre">index.{js,json,so}</span></code> in the
+                        package’s own directory.
+                      </p>
+                      <p>
+                        A trailing slash forces directory resolution. Where both a <code class=
+                        "docutils literal notranslate"><span class="pre">mymod.js</span></code> file and a <code class=
+                        "docutils literal notranslate"><span class="pre">mymod/</span></code> directory exist alongside
+                        each other, the bare name selects the file, since <code class=
+                        "docutils literal notranslate"><span class="pre">.js</span></code> is tried across the whole
+                        search path before directories are considered:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="kd">var</span> <span class="nx">a</span> <span class=
+                          "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                          "s2">"./mymod"</span><span class="p">);</span>    <span class="c1">// mymod.js</span>
+<span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class=
+"nx">require</span><span class="p">(</span><span class="s2">"./mymod/"</span><span class="p">);</span>   <span class=
+"c1">// mymod/index.js</span>
+</pre>
+                        </div>
+                      </div>
+                    </div>
                     <div class="section" id="example-creating-a-javascript-module">
                       <h3>
                         Example creating a JavaScript module<a class="headerlink" href=
@@ -2602,11 +2760,21 @@
    <span class="s2">"path"</span><span class="o">:</span> <span class="s2">"/path/to/my"</span><span class="p">,</span>
    <span class="s2">"exports"</span><span class="o">:</span> <span class="p">{},</span>
    <span class="s2">"mtime"</span><span class="o">:</span> <span class="mi">1624904227</span><span class="p">,</span>
-   <span class="s2">"atime"</span><span class="o">:</span> <span class="mi">1624904227</span>
+   <span class="s2">"atime"</span><span class="o">:</span> <span class="mi">1624904227</span><span class="p">,</span>
+   <span class="s2">"deps"</span><span class="o">:</span> <span class="p">[]</span>
 <span class="p">}</span>
 </pre>
                         </div>
                       </div>
+                      <p>
+                        Where <code class="docutils literal notranslate"><span class="pre">deps</span></code> is an
+                        <span class="green">Array</span> of the modules this one has itself required. The <code class=
+                        "docutils literal notranslate"><span class="pre">module</span></code> object additionally has a
+                        non-enumerable <code class="docutils literal notranslate"><span class=
+                        "pre">resolve()</span></code> <span class="green">Function</span> (and so is not shown above),
+                        which takes a module name and returns the full path that <code class=
+                        "docutils literal notranslate"><span class="pre">require()</span></code> would load for it.
+                      </p>
                     </div>
                     <div class="section" id="example-creating-a-c-module">
                       <h3>
@@ -3369,8 +3537,11 @@
                           duktape’s underlying Buffer and behave as in node. The <code class=
                           "docutils literal notranslate"><span class="pre">BigInt</span></code> variants
                             (<code class="docutils literal notranslate"><span class="pre">readBigInt64BE</span></code>,
-                            etc.) are not available because duktape does not implement <code class=
-                            "docutils literal notranslate"><span class="pre">BigInt</span></code>.
+                            etc.) are not available. Note that this is a gap in the Buffer accessors only: <code class=
+                            "docutils literal notranslate"><span class="pre">BigInt</span></code> itself
+                            <strong>is</strong> implemented, so <code class="docutils literal notranslate"><span class=
+                            "pre">BigInt</span></code> values may be used freely in JavaScript; they simply cannot be
+                            read from or written to a Buffer with these methods.
                           </li>
                         </ul>
                       </div>
@@ -3381,6 +3552,8 @@
                         <div class="highlight-javascript notranslate">
                           <div class="highlight">
                             <pre><span></span><span class="cm">/* hashing & base64 round-trip */</span>
+<span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class=
+"nx">require</span><span class="p">(</span><span class="s2">"rampart-crypto"</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">hash</span> <span class="o">=</span> <span class=
 "nx">crypto</span><span class="p">.</span><span class="nx">sha256</span><span class="p">(</span><span class=
 "s2">"hello world"</span><span class="p">,</span> <span class="p">{</span><span class=
@@ -3557,6 +3730,16 @@
                         "docutils literal notranslate"><span class="pre">{value,</span> <span class=
                         "pre">done}</span></code> result objects and are themselves iterable.
                       </p>
+                      <p>
+                        Note that <code class="docutils literal notranslate"><span class=
+                        "pre">[Symbol.iterator]</span></code> is an equivalent function, but not the identical function
+                        object – that is, <code class="docutils literal notranslate"><span class=
+                        "pre">map[Symbol.iterator]</span> <span class="pre">===</span> <span class=
+                        "pre">map.entries</span></code> is <code class="docutils literal notranslate"><span class=
+                        "pre">false</span></code>, where the ES2015 specification requires it to be <code class=
+                        "docutils literal notranslate"><span class="pre">true</span></code>. Iteration behaves
+                        correctly; only an identity comparison between the two will differ.
+                      </p>
                     </div>
                     <div class="section" id="console-extras">
                       <h3>
@@ -3616,7 +3799,66 @@
                         "pre">revoke}</span></code>. Calling <code class="docutils literal notranslate"><span class=
                         "pre">revoke()</span></code> makes every subsequent trap on <code class=
                         "docutils literal notranslate"><span class="pre">proxy</span></code> throw <code class=
-                        "docutils literal notranslate"><span class="pre">TypeError</span></code>.
+                        "docutils literal notranslate"><span class="pre">TypeError</span></code>. As with <code class=
+                        "docutils literal notranslate"><span class="pre">new</span> <span class=
+                        "pre">Proxy()</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">handler</span></code> may be empty, in which case operations pass through to <code class=
+                        "docutils literal notranslate"><span class="pre">target</span></code>.
+                      </p>
+                    </div>
+                    <div class="section" id="reflect">
+                      <h3>
+                        Reflect<a class="headerlink" href="#reflect" title="Permalink to this headline">¶</a>
+                      </h3>
+                      <p>
+                        <code class="docutils literal notranslate"><span class="pre">Reflect</span></code> is
+                        available, with <code class="docutils literal notranslate"><span class="pre">get</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">set</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">has</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">deleteProperty</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">ownKeys</span></code> and the rest of the
+                        standard methods.
+                      </p>
+                      <p>
+                        One limitation: duktape does not implement the optional <code class=
+                        "docutils literal notranslate"><span class="pre">receiver</span></code> argument of
+                        <code class="docutils literal notranslate"><span class="pre">Reflect.get()</span></code> and
+                        <code class="docutils literal notranslate"><span class="pre">Reflect.set()</span></code>.
+                        Calling either with a <code class="docutils literal notranslate"><span class=
+                        "pre">receiver</span></code> that is not the target throws <code class=
+                        "docutils literal notranslate"><span class="pre">Error:</span> <span class=
+                        "pre">unsupported</span></code>:
+                      </p>
+                      <div class="highlight-javascript notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="nx">Reflect</span><span class="p">.</span><span class=
+                          "nx">get</span><span class="p">(</span><span class="nx">obj</span><span class=
+                          "p">,</span> <span class="s2">"key"</span><span class=
+                          "p">);</span>                 <span class="cm">/* ok */</span>
+<span class="nx">Reflect</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class=
+"nx">obj</span><span class="p">,</span> <span class="s2">"key"</span><span class="p">,</span> <span class=
+"nx">otherObj</span><span class="p">);</span>       <span class="cm">/* throws Error: unsupported */</span>
+
+<span class="nx">Reflect</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class=
+"nx">obj</span><span class="p">,</span> <span class="s2">"key"</span><span class="p">,</span> <span class=
+"nx">val</span><span class="p">);</span>            <span class="cm">/* ok */</span>
+<span class="nx">Reflect</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class=
+"nx">obj</span><span class="p">,</span> <span class="s2">"key"</span><span class="p">,</span> <span class=
+"nx">val</span><span class="p">,</span> <span class="nx">otherObj</span><span class="p">);</span>  <span class=
+"cm">/* throws Error: unsupported */</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        The <code class="docutils literal notranslate"><span class="pre">receiver</span></code> only
+                        affects which object <code class="docutils literal notranslate"><span class=
+                        "pre">this</span></code> refers to inside a getter or setter, so omitting it matters only for
+                        accessor properties. <code class="docutils literal notranslate"><span class=
+                        "pre">Reflect.has()</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">Reflect.deleteProperty()</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">Reflect.ownKeys()</span></code> take no
+                        <code class="docutils literal notranslate"><span class="pre">receiver</span></code> and are
+                        unaffected.
                       </p>
                     </div>
                     <div class="section" id="whatwg-w3c-web-platform-apis-experimental">
@@ -3793,8 +4035,8 @@
                           Return Value:
                         </dt>
                         <dd>
-                          An id which may be used with <a class="reference internal" href=
-                          "#cleartimeout">clearTimeout()</a>.
+                          An id (an <span class="green">Object</span>, not a <span class="green">Number</span>) which
+                          may be used with <a class="reference internal" href="#cleartimeout">clearTimeout()</a>.
                         </dd>
                       </dl>
                       <p>
@@ -3927,8 +4169,8 @@
                           Return Value:
                         </dt>
                         <dd>
-                          An id which may be used with <a class="reference internal" href=
-                          "#clearinterval">clearInterval()</a>.
+                          An id (an <span class="green">Object</span>, not a <span class="green">Number</span>) which
+                          may be used with <a class="reference internal" href="#clearinterval">clearInterval()</a>.
                         </dd>
                       </dl>
                       <p>
@@ -4049,8 +4291,8 @@
                           Return Value:
                         </dt>
                         <dd>
-                          An id which may be used with <a class="reference internal" href=
-                          "#clearmetronome">clearMetronome()</a>.
+                          An id (an <span class="green">Object</span>, not a <span class="green">Number</span>) which
+                          may be used with <a class="reference internal" href="#clearmetronome">clearMetronome()</a>.
                         </dd>
                       </dl>
                       <p>
@@ -4344,7 +4586,7 @@
                       <p>
                         For a list of tested and supported syntax, see the <code class=
                         "docutils literal notranslate"><span class=
-                        "pre">/usr/local/rampart/tests/babel-test.js</span></code> file (also available <a class=
+                        "pre">/usr/local/rampart/test/babel-test.js</span></code> file (also available <a class=
                         "reference external" href=
                         "https://github.com/aflin/rampart/blob/main/test/babel-test.js">here</a>.
                       </p>
@@ -4464,6 +4706,7 @@
                       </p>
                     </div>
                     <div class="section" id="activating-the-transpiler">
+                      <span id="id7"></span>
                       <h3>
                         Activating the Transpiler<a class="headerlink" href="#activating-the-transpiler" title=
                         "Permalink to this headline">¶</a>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-crypto module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-crypto module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-curl module" href="rampart-curl.html"/>
         <link rel="prev" title="The rampart-html module" href="rampart-html.html"/> 
 
@@ -1131,8 +1131,8 @@ protected, the password used to encrypt the private key.</p>
 <li><code class="docutils literal notranslate"><span class="pre">mgfHash</span></code> - a <span class="green">String</span>, MGF1 hash name used for
 PSS.  Defaults to <code class="docutils literal notranslate"><span class="pre">hash</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">saltLength</span></code> - a <span class="green">Number</span>, PSS salt length.
-<code class="docutils literal notranslate"><span class="pre">-1</span></code> (default) = digest length, <code class="docutils literal notranslate"><span class="pre">-2</span></code> = maximum, <a href="#id2"><span class="problematic" id="id3">``</span></a>0``+ =
-explicit byte count.</li>
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> (default) = digest length, <code class="docutils literal notranslate"><span class="pre">-2</span></code> = maximum; a value of
+<code class="docutils literal notranslate"><span class="pre">0</span></code> or greater = explicit byte count.</li>
 <li><code class="docutils literal notranslate"><span class="pre">password</span></code> - a <span class="green">String</span>, the private-key password
 if encrypted.</li>
 </ul>
@@ -1261,11 +1261,7 @@ explicit <code class="docutils literal notranslate"><span class="pre">curve</spa
 <a class="reference internal" href="#rsa-import-priv-key">rsa_import_priv_key</a>).  Optionally re-encrypts the returned
 private keys with a new password.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">ec_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span> <span class="nx">opts</span><span class="p">]);</span>
-
-<span class="cm">/* or */</span>
-
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">ec_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span> <span class="nx">oldpass</span><span class="p">][,</span> <span class="nx">newpass</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">ec_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span> <span class="nx">oldpass</span><span class="p">][,</span> <span class="nx">newpass</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1273,14 +1269,14 @@ private keys with a new password.</p>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">oldprivate_key</span></code> is a <span class="green">String</span> (PEM) or <span class="green">Buffer</span>
 (DER).  Format is auto-detected.</li>
-<li><code class="docutils literal notranslate"><span class="pre">opts</span></code> is an <span class="green">Object</span> with the properties
-<code class="docutils literal notranslate"><span class="pre">{decryptPassword:</span> <span class="pre">&quot;oldpass&quot;,</span> <span class="pre">encryptPassword:</span> <span class="pre">&quot;newpass&quot;}</span></code>.
-For raw scalar input, also accepts <code class="docutils literal notranslate"><span class="pre">{key,</span> <span class="pre">curve,</span> <span class="pre">format:&quot;raw&quot;}</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">oldpass</span></code> is the password to decrypt <code class="docutils literal notranslate"><span class="pre">oldprivate_key</span></code> (if
-encrypted).</li>
+encrypted), or <code class="docutils literal notranslate"><span class="pre">null</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">newpass</span></code> is the optional password to encrypt the returned
 private-key PEMs.</li>
 </ul>
+<p>Note that unlike <a class="reference internal" href="#rsa-import-priv-key">rsa_import_priv_key</a>, this function does not
+accept an options-<span class="green">Object</span> form; passwords must be passed
+positionally.</p>
 </div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -1524,10 +1520,6 @@ return the canonical SPKI PEM <span class="green">String</span>.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">x25519_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">[,</span> <span class="nx">oldpass</span><span class="p">[,</span> <span class="nx">newpass</span><span class="p">]]);</span>
 
-<span class="cm">/* or */</span>
-
-<span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">x25519_import_priv_key</span><span class="p">(</span><span class="nx">oldprivate_key</span><span class="p">,</span> <span class="p">{</span><span class="nx">decryptPassword</span><span class="p">,</span> <span class="nx">encryptPassword</span><span class="p">});</span>
-
 <span class="cm">/* or for raw 32-byte scalar: */</span>
 
 <span class="kd">var</span> <span class="nx">key</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">x25519_import_priv_key</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="nx">raw32</span><span class="p">,</span> <span class="nx">format</span><span class="o">:</span> <span class="s2">&quot;raw&quot;</span><span class="p">});</span>
@@ -1538,10 +1530,13 @@ return the canonical SPKI PEM <span class="green">String</span>.</p>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">oldprivate_key</span></code> is a <span class="green">String</span> (PEM) or <span class="green">Buffer</span>
 (DER).</li>
-<li><code class="docutils literal notranslate"><span class="pre">oldpass</span></code> is the password to decrypt the input (if encrypted).</li>
+<li><code class="docutils literal notranslate"><span class="pre">oldpass</span></code> is the password to decrypt the input (if encrypted),
+or <code class="docutils literal notranslate"><span class="pre">null</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">newpass</span></code> is the optional password to encrypt the returned
 private-key PEM.</li>
 </ul>
+<p>Note that passwords must be passed positionally; there is no
+<code class="docutils literal notranslate"><span class="pre">{decryptPassword,</span> <span class="pre">encryptPassword}</span></code> options form.</p>
 </div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
@@ -2464,7 +2459,10 @@ underlying SHAKE defaults).</li>
 the S parameter for domain separation.</li>
 <li><code class="docutils literal notranslate"><span class="pre">functionName</span></code> - a <span class="green">String</span> or <span class="green">Buffer</span>,
 the N parameter (typically reserved by other NIST functions
-built on cSHAKE, such as KMAC).</li>
+built on cSHAKE, such as KMAC).  Note that OpenSSL accepts
+only the empty string (the default) or <code class="docutils literal notranslate"><span class="pre">&quot;KMAC&quot;</span></code> here; any
+other value raises <code class="docutils literal notranslate"><span class="pre">Provider</span> <span class="pre">routines::invalid</span> <span class="pre">function</span>
+<span class="pre">name</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">returnType</span></code> - optional <span class="green">String</span>, same as for
 <a class="reference internal" href="#pbkdf2">pbkdf2</a>.</li>
 </ul>
@@ -2595,8 +2593,8 @@ if <code class="docutils literal notranslate"><span class="pre">returnType:</spa
 <span class="kd">var</span> <span class="nx">alice</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">ec_gen_key</span><span class="p">({</span><span class="nx">curve</span><span class="o">:</span> <span class="s2">&quot;P-256&quot;</span><span class="p">});</span>
 <span class="kd">var</span> <span class="nx">bob</span>   <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">ec_gen_key</span><span class="p">({</span><span class="nx">curve</span><span class="o">:</span> <span class="s2">&quot;P-256&quot;</span><span class="p">});</span>
 <span class="kd">var</span> <span class="nx">sharedSecret</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">ecdh</span><span class="p">({</span>
-    <span class="nx">privateKey</span><span class="o">:</span> <span class="nx">alice</span><span class="p">.</span><span class="nx">privateKey</span><span class="p">,</span>
-    <span class="nx">publicKey</span><span class="o">:</span>  <span class="nx">bob</span><span class="p">.</span><span class="nx">publicKey</span>
+    <span class="kr">private</span><span class="o">:</span> <span class="nx">alice</span><span class="p">.</span><span class="kr">private</span><span class="p">,</span>
+    <span class="kr">public</span><span class="o">:</span>  <span class="nx">bob</span><span class="p">.</span><span class="kr">public</span>
 <span class="p">});</span>
 <span class="kd">var</span> <span class="nx">aesKey</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">hkdf</span><span class="p">({</span>
     <span class="nx">ikm</span><span class="o">:</span>    <span class="nx">sharedSecret</span><span class="p">,</span>
@@ -2964,7 +2962,7 @@ only when used for a signed binary integer (using <code class="docutils literal 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

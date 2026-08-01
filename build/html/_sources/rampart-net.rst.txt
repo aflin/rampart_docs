@@ -479,7 +479,11 @@ socket.bytesRead
 Other socket properties
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-    The ``socket`` :green:`Object` may include these possible status properties:
+    The ``socket`` :green:`Object` may include these possible status properties.
+    Note that they are set as the socket changes state, so a property may be
+    ``undefined`` rather than ``false`` before the relevant event has occurred
+    (``connecting`` and ``destroyed``, for example, are ``undefined`` until a
+    connection has been attempted):
 
     * ``connecting`` - :green:`Boolean`. Whether the connection has been
       initiated, but not yet established.
@@ -487,7 +491,7 @@ Other socket properties
     * ``connected`` - :green:`Boolean`. Whether the connection has been
       established.
 
-    * ``tsl`` - :green:`Boolean`. Whether this is a secure connection.
+    * ``tls`` - :green:`Boolean`. Whether this is a secure connection.
 
     * ``destroyed`` - :green:`Boolean`. Whether this connection has been
       closed or destroyed.
@@ -510,7 +514,7 @@ Other socket properties
     * ``remotePort`` - :green:`Number`.  Port of the connected remote peer.
 
     * ``remoteFamily`` - :green:`String`.  IP version used for connection
-      (``ipv4`` or ``ipv6``).
+      (``IPv4`` or ``IPv6``).
 
     * ``_hostPort`` - :green:`Number`. Same as ``remotePort``
 
@@ -765,7 +769,13 @@ server.connectionCount()
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
     Get the number of connected clients.
-    
+
+    Note that the count is updated as connections are fully established and
+    fully torn down.  Inside a ``connection`` callback the connection being
+    reported is not yet counted (so a first connection reads ``0``), and a
+    closed connection may still be counted until the following event-loop
+    cycle.
+
     Return Value:
         A :green:`Number`, the number of connected clients.
 
@@ -774,8 +784,13 @@ server.maxConnections()
 
     Set the maximum number of connections concurrently connected.  The
     server will drop new connections if this number is reached.
-    This function can be called at any time to set or adjust the 
+    This function can be called at any time to set or adjust the
     connection limit.
+
+    Note that ``maxConnections`` is a function, not a readable property:
+    the limit can be set or changed, but not read back.  Use
+    `server.connectionCount()`_ for the number of clients currently
+    connected.
    
     Usage:
     
@@ -798,18 +813,16 @@ Other server properties
 
     The ``server`` :green:`Object` may include these possible status properties:
 
-    * ``listening`` - :green:`Boolean`. Whether the connection has been
-      initiated, but not yet established.
+    * ``listening`` - :green:`Boolean`. Whether the server is bound and
+      listening for connections.
 
     * ``_events`` - :green:`Object`. Registered callbacks for events.
 
-    * ``tsl`` - :green:`Boolean`. Whether server accepts secure connections.
+    * ``tls`` - :green:`Boolean`. Whether server accepts secure connections.
 
     * ``sslKeyFile`` - :green:`String`.  The SSL/TLS key file, if provided  
 
-    * ``sslCertFil`` - :green:`String`.  The SSL/TLS cert file, if provided.
-
-    * ``maxConnections`` - :green:`Number`. ``maxConnections`` value, if set.
+    * ``sslCertFile`` - :green:`String`.  The SSL/TLS cert file, if provided.
 
     * ``_hostAddrs`` - :green:`Array` of :green:`Objects`.  Host addresses
       that the server is listening on as returned from a call to 
@@ -1546,7 +1559,7 @@ Typed DNS Queries
 
         /* res =
             {
-               "errMsg": "Host not found"
+               "errMsg": "Unknown host"
             }
         */
 
@@ -1663,6 +1676,30 @@ net.createServer()
         }
 
         var server = makeserver(options, connect_callback);
+
+net.setCaCert()
+~~~~~~~~~~~~~~~
+
+    Set the Certificate Authority bundle used to verify peer certificates
+    for secure (``tls``) connections.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var net = require("rampart-net");
+
+        net.setCaCert(path);
+
+    Where ``path`` is a :green:`String`, the location of a CA bundle file.
+    An error is thrown if the file does not exist or cannot be read.
+
+    The bundle in effect is also readable as the :green:`String` property
+    ``net.default_ca_file``, which is set at load time to the system bundle
+    if one was found.
+
+    Return Value:
+        ``undefined``.
 
 net.resolve_async()
 ~~~~~~~~~~~~~~~~~~~

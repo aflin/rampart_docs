@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-treesitter module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-treesitter module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-langtools modules" href="rampart-langtools.html"/>
         <link rel="prev" title="The rampart-cmark module" href="rampart-cmark.html"/> 
 
@@ -124,6 +124,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#extracting-symbols">Extracting Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extracting-a-symbol-s-source">Extracting a Symbol’s Source</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inspecting-the-ast">Inspecting the AST</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#handling-parse-errors">Handling Parse Errors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#parsing-a-configuration-file">Parsing a Configuration File</a></li>
@@ -452,10 +453,11 @@ whether the parse was clean.</li>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd><p class="first">An <span class="green">Object</span> with two properties:</p>
-<ul class="last simple">
-<li><code class="docutils literal notranslate"><span class="pre">symbols</span></code> - An <span class="green">Array</span> of <span class="green">Object</span> values,
+<ul class="last">
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">symbols</span></code> - An <span class="green">Array</span> of <span class="green">Object</span> values,
 one per extracted definition.  Each entry has the
-following shape:<ul>
+following shape:</p>
+<ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">name</span></code> - A <span class="green">String</span>, the identifier of the
 symbol.  Falls back to <code class="docutils literal notranslate"><span class="pre">&quot;(anonymous)&quot;</span></code> when no name
 can be resolved (for example, an anonymous struct in
@@ -468,8 +470,10 @@ type that produced the match (for example,
 which the symbol begins.</li>
 <li><code class="docutils literal notranslate"><span class="pre">column</span></code> - A <span class="green">Number</span>, the 1-based column.</li>
 <li><code class="docutils literal notranslate"><span class="pre">signature</span></code> - A <span class="green">String</span>, the source text
-covering the symbol’s node, truncated at the first
-<code class="docutils literal notranslate"><span class="pre">{</span></code> or after 256 bytes (whichever comes first).
+covering the symbol’s node.  Nodes of 256 bytes or fewer
+are returned in full; longer nodes are cut at the last
+<code class="docutils literal notranslate"><span class="pre">{</span></code> before the 256-byte limit (or hard-cut at the limit
+if there is none) and suffixed with <code class="docutils literal notranslate"><span class="pre">...</span></code>.
 Suitable for display and for indexing.</li>
 <li><code class="docutils literal notranslate"><span class="pre">startByte</span></code> - A <span class="green">Number</span>, the byte offset
 into <code class="docutils literal notranslate"><span class="pre">source</span></code> where the symbol begins.</li>
@@ -477,10 +481,33 @@ into <code class="docutils literal notranslate"><span class="pre">source</span><
 where the symbol ends.</li>
 </ul>
 </li>
-<li><code class="docutils literal notranslate"><span class="pre">hasErrors</span></code> - A <span class="green">Boolean</span>, <code class="docutils literal notranslate"><span class="pre">true</span></code> if the
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">hasErrors</span></code> - A <span class="green">Boolean</span>, <code class="docutils literal notranslate"><span class="pre">true</span></code> if the
 parsed tree contains any <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> node.  When <code class="docutils literal notranslate"><span class="pre">true</span></code>,
 the symbol list may be incomplete; tree-sitter’s
-error-recovery may have skipped sections of the source.</li>
+error-recovery may have skipped sections of the source.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">extract</span></code> - A <span class="green">Function</span>.  A convenience method
+that returns the source text of a symbol without the
+caller re-slicing <code class="docutils literal notranslate"><span class="pre">source</span></code> by hand.  It is called as
+<code class="docutils literal notranslate"><span class="pre">result.extract(which)</span></code> where <code class="docutils literal notranslate"><span class="pre">which</span></code> is either:</p>
+<ul class="simple">
+<li>A <span class="green">Number</span>, an index into the <code class="docutils literal notranslate"><span class="pre">symbols</span></code> array;
+or</li>
+<li>A <span class="green">String</span>, a symbol name.  The <strong>first</strong> symbol
+with a matching <code class="docutils literal notranslate"><span class="pre">name</span></code> is used.</li>
+</ul>
+<p>It returns a <span class="green">String</span>, the exact bytes
+<code class="docutils literal notranslate"><span class="pre">[startByte,</span> <span class="pre">endByte)</span></code> of the chosen symbol - equivalent
+to
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.readFile(file,</span> <span class="pre">symbol.startByte,</span> <span class="pre">symbol.endByte</span> <span class="pre">-</span> <span class="pre">symbol.startByte,</span> <span class="pre">true)</span></code>
+but sliced directly from the already-parsed source, so it
+does not re-read the file and is immune to source/offset
+drift.  It throws if the index is out of range or no symbol
+has the given name.</p>
+<p>The retained source is held internally by reference (a
+refcounted, interned string - not a copy), and is not an
+enumerable property of the result.</p>
+</li>
 </ul>
 </dd>
 </dl>
@@ -582,6 +609,30 @@ is <code class="docutils literal notranslate"><span class="pre">true</span></cod
 <span class="cm">class_declaration &#39;Greeter&#39; at line 4</span>
 <span class="cm">method_definition &#39;greet&#39; at line 5</span>
 <span class="cm">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="extracting-a-symbol-s-source">
+<h3>Extracting a Symbol’s Source<a class="headerlink" href="#extracting-a-symbol-s-source" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">extract</span></code> method on the result returns the full source text of a
+symbol, selected by index or by name.  This is convenient for pulling a
+function or class body straight out of a large file after locating it:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ts</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-treesitter&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">src</span> <span class="o">=</span> <span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;/path/to/module.js&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">extractSymbols</span><span class="p">(</span><span class="nx">src</span><span class="p">,</span> <span class="s2">&quot;javascript&quot;</span><span class="p">);</span>
+
+<span class="cm">/* by index */</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+
+<span class="cm">/* by name - returns the first symbol so named */</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="s2">&quot;greet&quot;</span><span class="p">));</span>
+
+<span class="cm">/* equivalent to slicing the source yourself: */</span>
+<span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">symbols</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="kd">var</span> <span class="nx">same</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">extract</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">===</span>
+           <span class="nx">src</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">startByte</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">endByte</span><span class="p">);</span>   <span class="cm">/* true */</span>
 </pre></div>
 </div>
 </div>
@@ -700,7 +751,7 @@ example extracts the top-level keys of a YAML document:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

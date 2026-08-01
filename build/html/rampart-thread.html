@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rampart Thread Functions &mdash; Rampart 0.7.0 documentation</title>
+  <title>Rampart Thread Functions &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="Rampart Vector Functions" href="rampart-vector.html"/>
         <link rel="prev" title="rampart.utils" href="rampart-utils.html"/> 
 
@@ -287,9 +287,11 @@ message-passing surface are installed.</p>
 <code class="docutils literal notranslate"><span class="pre">rampart.vector</span></code>, etc.).</li>
 <li>The <code class="docutils literal notranslate"><span class="pre">process</span></code> global.</li>
 <li>The <code class="docutils literal notranslate"><span class="pre">require()</span></code> function.</li>
-<li>WHATWG / Web platform globals (<code class="docutils literal notranslate"><span class="pre">URL</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto</span></code>, <code class="docutils literal notranslate"><span class="pre">Blob</span></code>,
-etc.) — these are not installed and their lazy getters are
-not present.</li>
+<li>Most WHATWG / Web platform globals (<code class="docutils literal notranslate"><span class="pre">URL</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">setTimeout</span></code>, etc.) — these are not installed and
+their lazy getters are not present.  Note that a few remain
+available in a bare thread: <code class="docutils literal notranslate"><span class="pre">Blob</span></code>, <code class="docutils literal notranslate"><span class="pre">File</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TextEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">TextDecoder</span></code> and <code class="docutils literal notranslate"><span class="pre">console</span></code>.</li>
 <li>Any properties from the parent thread’s <code class="docutils literal notranslate"><span class="pre">globalThis</span></code> —
 the normal “copy of globals at thread creation” step is
 skipped (compare to the bullet under <a class="reference internal" href="#thr-exec">thr.exec()</a>
@@ -431,11 +433,12 @@ creation.  The variable <code class="docutils literal notranslate"><span class="
 available to the thread as a global variable.  The variable
 <code class="docutils literal notranslate"><span class="pre">notcopied</span></code> will not be copied since it was set after the thread was
 created.</li>
-<li>In the positional form, optional arguments cannot be skipped with
-<code class="docutils literal notranslate"><span class="pre">null</span></code>/<code class="docutils literal notranslate"><span class="pre">undefined</span></code> placeholders –
-<code class="docutils literal notranslate"><span class="pre">thr.exec(threadFunc,</span> <span class="pre">threadArg,</span> <span class="pre">null,</span> <span class="pre">threadDelay)</span></code> throws.  To
-set <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> without a <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code>, use the
-<code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> form instead.</li>
+<li>In the positional form, optional arguments cannot be skipped with a
+<code class="docutils literal notranslate"><span class="pre">null</span></code> placeholder –
+<code class="docutils literal notranslate"><span class="pre">thr.exec(threadFunc,</span> <span class="pre">threadArg,</span> <span class="pre">null,</span> <span class="pre">threadDelay)</span></code> throws.
+<code class="docutils literal notranslate"><span class="pre">undefined</span></code> <em>is</em> accepted in that position, but for clarity use
+the <code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> form to set <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code> without
+a <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code>.</li>
 <li>A <code class="docutils literal notranslate"><span class="pre">callbackFunc</span></code> runs in the event loop of the thread that called
 <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread()</span></code>.  If that is the main thread, it will not
 run until the top-level script finishes (see <a class="reference internal" href="#how-does-it-work">How does it work?</a>).</li>
@@ -1089,7 +1092,7 @@ require using a lock.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

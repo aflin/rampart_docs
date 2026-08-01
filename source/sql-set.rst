@@ -47,6 +47,18 @@ NOTE:
    context.  Therefore, ``sql.set()`` should always be used when in
    JavaScript.
 
+NOTE:
+   Two settings are an exception to the handle scoping described above.  The
+   expression list (`addExp`_ / `delExp`_, i.e. ``addExpressions`` /
+   ``deleteExpressions``) and the index temporary directory list
+   (`addIndexTmp`_ / `delIndexTmp`_, i.e. ``addIndexTemp`` /
+   ``deleteIndexTemp``) are stored **process-wide**, not per handle.  Changing
+   either affects every other ``sql`` handle in the process -- including
+   handles opened on different databases, and handles created afterward -- and
+   neither is restored by `sql.reset()`_\ .  To undo a change to these two
+   lists, remove the entries explicitly with ``deleteExpressions`` or
+   ``deleteIndexTemp``.
+
 
 Search and optimization parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -832,7 +844,7 @@ useDerivations
     ``derivations/fa/fa-deriv`` file for Farsi equivalences).
 
     Setting to ``false`` restores the defaults of ``{useEquiv:false,
-    alEquiv:false, eqPrefix:"builtin"}``
+    alEquivs:false, eqPrefix:"builtin"}``
 
     The loaded file is made of word derivation associations so that when there is
     a search for, e.g. ``watch superman fly``, it will look for words such
@@ -840,7 +852,7 @@ useDerivations
     find relevant matches which would otherwise not be found, at the
     potential cost to performance and accuracy.
 
-    This setting implies ``{useEquiv:true``, ``alEquiv:true`` and
+    This setting implies ``{useEquiv:true``, ``alEquivs:true`` and
     ``eqPrefix:`derivations/${lc}/${lc}-deriv```.
 
     More info, plus files for languages other than English can be found on the
@@ -947,7 +959,7 @@ phrasewordproc
 
 defSuffRm
 """""""""
-    AKA ``defsufrm``.  Whether to remove a trailing vowel, or one of a
+    Whether to remove a trailing vowel, or one of a
     trailing double consonant pair, after normal suffix processing, and if
     the word is still ``minwordlen`` or greater.  This only has effect if
     suffix processing is enabled (``suffixProc`` set ``true`` and the
@@ -1053,7 +1065,10 @@ listNoise
 suffixList
 """"""""""
     The suffix list used for suffix processing (if enabled) during
-    search. An array of strings. The default suffix list is:
+    search. An array of strings. The default suffix list is shown below
+    sorted alphabetically for readability; when read back with
+    `listSuffix`_ the same members are returned in the order the matcher
+    uses them (longest first), not in this order:
 
     ::
 
@@ -1097,14 +1112,14 @@ suffixEquivsList
 
     ::
 
-         [ "'",  "ies",  "s" ]
+         [ "'",  "s",  "ies" ]
 
     This setting can only be set using ``sql.set()``.
 
 listSuffixEquivs
 """"""""""""""""
     If not set to ``false``, the return object of ``sql.set()`` will include
-    the property ``suffixListEquivs``, which will be set to an array containing the
+    the property ``suffixEquivsList``, which will be set to an array containing the
     current suffix list.
 
     This setting can only be used via ``sql.set()``.
@@ -1164,6 +1179,12 @@ sum of all weights. For example, if ``likepleadbias`` is set to 1000 and
 the remaining properties to 0, then a hit’s rank will be based solely on
 lead bias. If ``likepproximity`` is then set to 1000 as well, then lead
 bias and proximity each determine 50% of the rank.
+
+The rank these knobs shape is a solitary ``likep``'s ``$rank``.  In a
+hybrid keyword-OR-vector query, ``$rank`` is instead the fused RRF
+score, but the same knob-shaped keyword rank remains available per row
+as ``$krank`` — see :ref:`Hybrid keyword + vector queries (rank fusion)
+<hybrid-rank-fusion>`.
 
 
 likepProximity
@@ -1299,7 +1320,7 @@ Vector Index Properties
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 These settings affect ``LIKEV`` queries against an
-:ref:`INDEX_VEC <sql:Vector Indexes>` (the ANN vector index).
+:ref:`INDEX_VEC <rampart-sql:Vector Indexes>` (the ANN vector index).
 The ``likeV*`` properties mirror the corresponding ``likeP*`` properties
 for the LIKEP / Metamorph search path.
 
@@ -1405,7 +1426,7 @@ likevPqNprobe
     actual stored column bytes after the index step.  This setting
     controls how *many* and *which* candidates the index surfaces;
     once surfaced, they are scored exactly.  See
-    :ref:`Querying with LIKEV <rampart-sql:Querying with LIKEV>`.
+    :ref:`Querying with LIKEV <querying-with-likev>`.
 
 
 Embedding Properties
@@ -1456,15 +1477,15 @@ llamaEmbed
 
     Loading requires the ``rampart-llamacpp`` module to be installed.
     If no llamacpp module is already loaded, this ``set`` call
-    auto-tries ``require('rampart-llamacpp')``, then
-    ``rampart-llamacpp_cuda``, then ``rampart-llamacpp_cpu`` — whichever
-    resolves first wins, so no explicit ``require()`` is typically
+    auto-tries ``require('rampart-llamacpp')`` — the canonical name,
+    which the installer points at whichever build variant (CPU or a
+    CUDA one) is installed — so no explicit ``require()`` is typically
     needed.  To force a specific variant when more than one is
-    installed, call ``require('rampart-llamacpp_cpu')`` (or
-    ``_cuda``, ``_metal``, etc.) **before** ``sql.set({llamaEmbed: ...})``;
+    installed, ``require()`` it by its full name **before**
+    ``sql.set({llamaEmbed: ...})``;
     ``rampart-sql`` resolves the embed functions via ``dlsym`` from
     whichever variant is already loaded, so a manually required
-    module always takes precedence.  If no variant resolves,
+    module always takes precedence.  If nothing resolves,
     ``sql.set({llamaEmbed: ...})`` throws with a clear "cannot load
     rampart-llamacpp" message.  ``rampart-llamacpp`` ships separately
     in ``rampart-langtools``; see its module documentation for build
@@ -1558,13 +1579,14 @@ onnxEmbed
     their spans in-band and don't depend on this agreement.
 
     Module resolution mirrors ``llamaEmbed``: on first use,
-    ``rampart-sql`` tries ``require('rampart-onnx')``, then
-    ``rampart-onnx_cuda``, then ``rampart-onnx_cpu``; an explicitly
-    ``require()``\ d variant takes precedence.  ``rampart-onnx`` ships
-    separately in ``rampart-langtools``.
+    ``rampart-sql`` tries ``require('rampart-onnx')`` — the canonical
+    name, which the installer points at the installed build variant; an
+    explicitly ``require()``\ d variant takes precedence.
+    ``rampart-onnx`` ships separately in ``rampart-langtools``.
 
     A connection has **one** embedding engine: whichever of
-    ``llamaEmbed`` / ``onnxEmbed`` was set most recently serves its
+    ``llamaEmbed`` / ``onnxEmbed`` / ``clipEmbed`` was set most recently
+    serves its
     ``embed()`` / ``chunkembed()`` / ``chunkavg()`` /
     ``chunkcoherence()`` calls and its ``LIKEV`` string coercion.
     Different connections may use different engines (or different
@@ -1575,14 +1597,76 @@ onnxEmbed
     ONNX sessions support concurrent inference across threads with no
     per-thread setup — ``llamaEmbedPerThread`` does not apply.
 
+clipEmbed
+"""""""""
+    Load a `CLIP <https://openai.com/research/clip>`_ model as the
+    connection's embedding engine, via ``rampart-clip``.  CLIP encodes
+    **images and text into one shared vector space**, so a table of
+    image vectors can be searched with an ordinary text query:
+
+    .. code-block:: javascript
+
+        sql.set({clipEmbed: '/models/clip-vit-b-32.gguf'});
+        // or: sql.set({clipEmbed: {model: '/models/clip-vit-b-32.gguf'}});
+
+    .. code-block:: sql
+
+        create table images (Id int, Path varchar(255), Vec varvecF16);
+
+        -- store: the image goes through the VISION encoder
+        insert into images values (?, ?, embed(?, 'image'));
+
+        -- search: the query goes through the TEXT encoder
+        select Path from images where Vec likev 'a dog catching a frisbee';
+
+    ``embed(x, 'image')`` accepts either a :green:`String` **file path**
+    or a :green:`Buffer` of image bytes (PNG, JPEG, GIF, BMP, TGA — any
+    format the bundled decoder reads).  Every other kind — ``'text'``,
+    ``'query'``, ``'document'``, ``'raw'``, or no kind at all — uses the
+    text encoder.  See :ref:`embed() <sql-server-funcs:embed>` for the
+    argument forms.
+
+    Buffer parameters are embedded in the calling process, before the
+    statement is prepared, and the resulting vector is bound in place of
+    the bytes — so a multi-megabyte image is never copied to the SQL
+    helper and back.  This is transparent: the stored vector is
+    identical to the one the file-path form produces.
+
+    Not supported with ``clipEmbed`` (both raise an error rather than
+    returning something meaningless):
+
+    *  ``chunkembed()`` / ``chunkavg()`` / ``chunkcoherence()`` — CLIP
+       produces exactly one vector per image, and its text encoder takes
+       only a short phrase, so there is nothing to chunk.
+    *  ``embed(..., 'image')`` on a **non**-CLIP engine — embedding the
+       path *as text* would store a plausible but meaningless vector, so
+       it is refused outright.
+
+    A model with no text encoder (a vision-only projector, such as a
+    llava ``mmproj`` file) is rejected by ``sql.set`` itself, since it
+    could never serve a ``LIKEV`` text query.
+
+    Module resolution mirrors the other engines: ``rampart-sql`` tries
+    ``require('rampart-clip')``, the canonical name the installer points
+    at the installed build variant.  ``rampart-clip`` ships separately in
+    ``rampart-langtools``.
+
+    .. note::
+
+        ``embed(?, 'image')`` makes the database open a file named by the
+        statement.  Do not pass unvalidated user input to it: a caller
+        could otherwise probe for the existence of arbitrary files.
+        Resolve user-supplied names against a fixed image directory
+        first.
+
 
 Retrieval prompts
 """""""""""""""""
     Many recent embedding models are **asymmetric**: they expect a
     prompt prefixed to search queries and (for some) documents — e.g.
-    nomic's ``search_query: `` / ``search_document: ``, bge's
-    ``Represent this sentence for searching relevant passages: ``,
-    e5's ``query: `` / ``passage: ``.  Skipping the prompts, or applying
+    nomic's ``"search_query: "`` / ``"search_document: "``, bge's
+    ``"Represent this sentence for searching relevant passages: "``,
+    e5's ``"query: "`` / ``"passage: "``.  Skipping the prompts, or applying
     them on only one side, measurably degrades retrieval quality.
 
     When an embed model is bound to a connection, ``rampart-sql`` looks
@@ -1699,6 +1783,11 @@ indexMem
     use. Setting this value too high can cause excessive swapping, while
     setting it too low causes unneeded extra merges to disk.
 
+    This setting also determines whether `addIndexTmp`_ has any effect: an
+    index build stays entirely in memory until it exceeds ``indexMem``, and
+    only then are temporary files created in one of the ``indexTmp``
+    directories.
+
 indexMeter
 """"""""""
     Whether to print a progress meter during index
@@ -1778,7 +1867,7 @@ lstExp
        /* expected output
        {
           "expressionsList": [
-             "\\alnum\\x80-\\xff]+",
+             "[\\alnum\\x80-\\xff]+",
              "[\\alnum\\$\\%\\@\\-\\_\\+]+"
           ]
        }
@@ -1797,6 +1886,16 @@ addIndexTmp
     ``addIndexTmp`` dirs are specified, the default list is the index’s
     destination dir (e.g.  database or ``indexSpace``), and the environment
     variables ``TMP`` and ``TMPDIR``.
+
+    Note the "if temporary files are needed" above: an index is built in
+    memory and only spills to a temporary file once the build exceeds
+    `indexMem`_.  Since ``indexMem`` defaults to 40% of physical memory,
+    ordinary indexes never spill and this setting will appear to have no
+    effect.  It becomes observable on very large indexes, or if ``indexMem``
+    is lowered.
+
+    Note also that this list is process-wide and is not restored by
+    `sql.reset()`_ -- see the second NOTE at the top of this page.
 
 
 delIndexTmp
@@ -2363,7 +2462,10 @@ dateFmt
 """""""
     This is a ``strftime`` format used to format dates for conversion to
     character format. This will affect ``tsql``, as well as attempts to
-    retrieve dates in ASCII format. Although the features supported by
+    retrieve dates in ASCII format.  Note that it does not affect dates
+    retrieved from JavaScript with ``sql.exec()``, which are always
+    returned as :green:`Date` objects (ISO strings when serialized)
+    regardless of this setting. Although the features supported by
     different operating systems will vary, some of the more common
     format codes are:
 
@@ -2513,7 +2615,7 @@ paramChk
          }
          /* expected output:
             [{Keys:"key2",Vals:"val2"}]
-            Error: sql exec error: 000 SQLExecute() failed with 99: Needed parameters not supplied in the function: texis_execute
+            Error: sql add parameters error: parameter 'key' not found in Object.
          */
 
 
@@ -2578,13 +2680,17 @@ varcharToStrlstMode
 strlstToVarcharMode
 """""""""""""""""""
     The mode for converting a ``strlst`` to a ``varchar`` in Texis. In
-    Rampart,the default is set to ``json`` regardless of the
+    Rampart, the default is set to ``json`` regardless of the
     ``conf/texis.ini`` setting.  Using ``tsql``, it is set to
-    ``delimited``, or as set in ``conf/texis.ini``.
+    ``delimited`` (with a "``,``" separator), or as set in
+    ``conf/texis.ini``.
 
-    *  ``json`` - convert to a JSON string.
+    *  ``json`` - convert to a JSON string.  This is the mode used from
+       Rampart JavaScript; ``sql.set({strlstToVarcharMode:...})`` accepts
+       only ``json``.
     *  ``delimited`` - convert to a list of strings delimited by the last
-       character.
+       character.  This mode applies to ``tsql`` only and cannot be
+       selected via ``sql.set()``.
 
 
 
@@ -2712,6 +2818,10 @@ nullOutputString
     “``NULL``”. Note that this is different than the output string for
     zero-integer ``date`` values, which are also shown as “``NULL``”.
 
+    This setting affects textual output (e.g. ``tsql``) only.  Rows
+    retrieved from JavaScript with ``sql.exec()`` always return SQL NULL
+    values as JavaScript ``null``, regardless of this setting.
+
 validateBtrees
 """"""""""""""
     Bit flags for additional consistency checks on B-trees.
@@ -2787,6 +2897,13 @@ alLinear
    to a tiny fraction of the table. The error message "Query would require
    linear search" may be generated by linear queries if allinear is off.
 
+   Note on how the refusal appears from JavaScript: Texis refusals that
+   are not syntax (or other prepare-time) errors do not throw.  The
+   query completes "successfully" with **zero rows**, and the message
+   (e.g. "Query would require linear search") is available in
+   ``sql.errMsg``.  If a query unexpectedly returns no rows, check
+   ``sql.errMsg`` before assuming the data isn't there.
+
    ``LIKEV`` follows the same policy: a vector search on a column with
    no usable vector index is a full-table scan (every row scored) and
    is refused with the same "would require linear search" message
@@ -2853,6 +2970,12 @@ denyMode
    A message such as "'delimiters' not allowed in query" may be generated when
    a disallowed query is attempted and ``denyMode`` is not ``silent``.
 
+   Note that "failing" the query under ``error`` does not throw a
+   JavaScript exception: as with other non-syntax Texis refusals, the
+   query returns **zero rows** and the reason is recorded in
+   ``sql.errMsg``.  Check ``sql.errMsg`` to distinguish a refused query
+   from one that genuinely matched nothing.
+
 qMaxSets
 """"""""
    Integer, ``100`` by default. The maximum number of sets (terms)
@@ -2918,8 +3041,7 @@ querySettings
       The following are set ``false``:
 
       ``prefixProc``, ``keepNoise``, ``keepEqvs``/``useEquivs``, ``alPostProc``,
-      ``alLinear``, ``alWithin``, ``alIntersects``, ``alEquivs`` and
-      ``alExactphrase``.
+      ``alLinear``, ``alWithin``, ``alIntersects`` and ``alEquivs``.
 
       The following are set ``true``:
 

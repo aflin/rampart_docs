@@ -214,51 +214,21 @@ Several constants and methods will be available as properties of the resulting `
    /* expected output:
       {
          "type": "f32",
-         "dim": 8,
-         "toF64": {
-            "_c_func": true
-         },
-         "toF32": {
-            "_c_func": true
-         },
-         "toF16": {
-            "_c_func": true
-         },
-         "toBf16": {
-            "_c_func": true
-         },
-         "toI8": {
-            "_c_func": true
-         },
-         "toU8": {
-            "_c_func": true
-         },
-         "toNumbers": {
-            "_c_func": true
-         },
-         "l2Normalize": {
-            "_c_func": true
-         },
-         "toRaw": {
-            "_c_func": true
-         },
-         "byteLength": {
-            "_c_func": true
-         },
-         "resize": {
-            "_c_func": true
-         },
-         "copy": {
-            "_c_func": true
-         },
-         "split": {
-            "_c_func": true
-         },
-         "distance": {
-            "_c_func": true
-         }
+         "dim": 8
       }
    */
+
+Note that only the two constants are serialized by ``%3J``; the methods are
+present on the object but are not rendered by JSON.  The full set of property
+names for the example above is:
+
+.. code-block:: javascript
+
+   Object.getOwnPropertyNames(v);
+   /* [ "type", "dim", "toF64", "toF32", "toF16", "toBf16", "toI8", "toU8",
+        "toNumbers", "toBit", "l2Normalize", "toRaw", "byteLength",
+        "resize", "copy", "split", "distance" ] */
+
 
 Vector Object Conversion Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,8 +245,8 @@ current limitations are:
    *  ``toF16()`` is available for every type **except** ``bf16``.
    *  ``toBf16()`` is available only from ``f64``, ``f32`` and ``bf16``
       (its own type).
-   *  ``toI8()`` is available from ``f64``, ``f32``, ``f16`` and ``i8`` (not
-      ``bf16`` or ``u8``).
+   *  ``toI8()`` is available from ``f64``, ``f32``, ``f16``, ``i8`` and
+      ``u8`` (not ``bf16``).  See `u8 → i8 rebase`_ for the ``u8`` case.
    *  ``toU8()`` is available from ``f64``, ``f32``, ``f16`` and ``u8`` (not
       ``bf16`` or ``i8``).
 
@@ -324,7 +294,9 @@ Utility Functions
 ~~~~~~~~~~~~~~~~~
 
    * ``l2Normalize()`` - perform an in-place `L2-Normalization` of the
-     vector and return the same `Vector Object`.
+     vector and return the same `Vector Object`.  Available on the float
+     types (``f64``, ``f32``, ``f16``) only; it is not present on
+     ``bf16``, ``i8``, ``u8`` or ``b8``.
    * ``toRaw()`` - return the underlying :green:`Buffer`.
    * ``copy()`` - Copy the underlying :green:`Buffer` and return a new
      `Vector Object`.
@@ -342,7 +314,8 @@ Utility Functions
      vectors ``n`` is a bit count and must be a multiple of 8.
    * ``byteLength()`` - Return the length of the underlying :green:`Buffer` in bytes.
 
-Example — splitting a multi-vector value:
+Example — splitting a multi-vector value (fragment; assumes an open
+``sql`` connection and a query vector ``queryVec``):
 
 .. code-block:: javascript
 

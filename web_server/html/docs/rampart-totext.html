@@ -1160,14 +1160,18 @@
 "nx">result</span><span class="p">.</span><span class="nx">mimeType</span><span class="p">);</span>  <span class=
 "c1">// "application/vnd.openxmlformats-..."</span>
 
-<span class="cm">/* convert an HTML string directly */</span>
+<span class="cm">/* convert an HTML string directly.  Note that when converting content</span>
+<span class="cm">   rather than a named file, the format is detected from the content</span>
+<span class="cm">   itself, so the string must carry a document-level signature such as</span>
+<span class="cm">   &lt;!DOCTYPE html&gt; or &lt;html&gt;.  A bare fragment cannot be identified and</span>
+<span class="cm">   is returned unchanged. */</span>
 <span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class=
-"s2">"&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;"</span><span class="p">;</span>
+"s2">"&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class=
 "nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class=
 "nx">html</span><span class="p">);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class=
-"nx">text</span><span class="p">);</span>  <span class="c1">// "Hello\n\nWorld"</span>
+"nx">text</span><span class="p">);</span>  <span class="c1">// "Hello\n\nWorld\n\n"</span>
 </pre>
                         </div>
                       </div>
@@ -1305,7 +1309,12 @@
                         formatting is preserved.
                       </li>
                       <li>
-                        <strong>Trimming</strong> — Leading and trailing whitespace is removed from the output.
+                        <strong>Trimming</strong> — Leading and trailing whitespace is removed from the output. Note
+                        that this applies to the <code class="docutils literal notranslate"><span class=
+                        "pre">xml</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">latex</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">rtf</span></code> and plain-text paths; the HTML and Markdown converters may leave
+                        trailing newlines in place.
                       </li>
                       <li>
                         <strong>Entity decoding</strong> — HTML and XML entities (e.g. <code class=

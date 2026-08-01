@@ -79,7 +79,7 @@ Notable extras:
       server, also listen on this port for plain ``http`` and 301-redirect
       every request to the ``https`` listener.  This runs in-process via
       the underlying
-      :ref:`httpRedirect <rampart-server:tls-certificates>` option; no
+      :ref:`httpRedirect <tls-certificates>` option; no
       separate daemon is spawned.  The redirect ``Location:`` header
       includes the actual ``https`` port automatically, so non-standard
       configurations (e.g. https on ``:8443``) work without further setup.
@@ -126,6 +126,20 @@ Notable extras:
     * ``stop``         - :green:`Boolean`, if true, stop the server (along
       with the monitor process, if launched).
 
+.. note::
+    **macOS**:  ``start``/``stop``/``restart``/``status`` work exactly as
+    described above, but with ``daemon`` set ``true`` the server is
+    daemonized through a transient, automatically managed ``launchd`` job
+    rather than a classic ``fork()`` daemon (a forked daemon on macOS
+    cannot use system services such as the Metal shader compiler, which
+    breaks GPU model loading).  No plist editing or ``launchctl``
+    knowledge is required, and nothing persists across a reboot.  Two
+    small differences: with ``monitor`` set ``true``, a dead server is
+    relaunched by ``launchd`` (this takes about 10 seconds); and since
+    macOS does not restrict ports below 1024 to root, a server may bind,
+    e.g., port 443 without being started as root (though the TLS
+    key/certificate files must be readable by the user starting it).
+
 Building a command line utility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -136,10 +150,10 @@ can be used:
 .. code-block:: javascript
 
     var wserv = require("rampart-webserver");
-    webserv.cmdLine(2);
+    wserv.cmdLine(2);
 
 
-The ``webserv.cmdLine(2);`` function will process options
+The ``wserv.cmdLine(2);`` function will process options
 from command line arguments, starting with the second one (skipping
 argv[0] (``rampart``) and argv[1] (``script_name.js``).  It will
 then launch a server using the processed options.
@@ -182,10 +196,13 @@ as such:
     --logRoot            String. Log directory
     --accessLog          String. Log file name. "" for stdout
     --errorLog           String. error log file name. "" for stderr
+    --irohProxy          Bool.   Start the iroh webproxy server for this server
+    --selfSign           Bool.   Whether to auto generate a self signed https cert
     --log                Bool.   Whether to log requests and errors
     --rotateLogs         Bool.   Whether to rotate the logs
     --rotateInterval     Number. Interval between log rotations in seconds
     --rotateStart        String. Time to start log rotations
+    --rotateCount        Number. Maximum number of old log files to keep (default 30)
     --user               String. If started as root, switch to this user
     --threads            Number. Limit the number of threads used by the server.
                          Default (-1) is the number of cores on the system
@@ -196,7 +213,7 @@ as such:
     --letsencrypt        String. If using letsencrypt, the 'domain.tld' name for automatic setup of https
                          (assumes --secure true and looks for '/etc/letsencrypt/live/domain.tld/' directory)
                          (if redir is set, also map ./letsencrypt_wd/.well-known/ --> http://mydom.com/.well-known/)
-                         (if set to "setup", don\'t start https server, but do map ".well-known/" for http)
+                         (if set to "setup", don't start https server, but do map ".well-known/" for http)
                          (sets port:443 unless set otherwise)
     --rootScripts        Bool.   Whether to treat *.js files in htmlRoot as apps (not secure)
     --directoryFunc      Bool.   Whether to provide a directory listing if no index.html is found
@@ -204,6 +221,8 @@ as such:
     --monitor            fork and run a monitor as a daemon which restarts server w/in 10 seconds if it dies
     --scriptTimeout      Number  Max time to wait for a script module to return a reply in seconds (default 20)
     --connectTimeout     Number  Max time to wait for client send request in seconds (default 20)
+    --defaultCharset     String. Charset appended to text/* Content-Type headers (default "utf-8").
+                         Use "false" to disable.  Applies to static files and dynamic responses.
     -d                   alias for '--daemon true'
     --detach             alias for '--daemon true'
     --stop               stop the server.  Also stop the monitor and log rotation, if started
@@ -236,6 +255,7 @@ following commands:
        "rotateLogs": false,
        "rotateInterval": 86400,
        "rotateStart": "00:00",
+       "rotateCount": 30,
        "user": "nobody",
        "threads": -1,
        "sslKeyFile": "",
@@ -251,6 +271,12 @@ following commands:
        "connectTimeout": 20,
        "quickserver": false,
        "appendProcTitle": false,
+       "beginFunc": false,
+       "beginFuncOnFile": false,
+       "endFunc": false,
+       "irohProxy": false,
+       "selfSign": false,
+       "defaultCharset": "utf-8",
        "serverRoot": "/home/rampart/web_server",
        "fullServer": 1
     }
@@ -265,6 +291,7 @@ following commands:
        "ipv6Port": 8088,
        "port": -1,
        "redirPort": -1,
+       "redir": false,
        "htmlRoot": "/home/rampart/dir_with_files/",
        "appsRoot": "",
        "wsappsRoot": "",
@@ -276,6 +303,7 @@ following commands:
        "rotateLogs": false,
        "rotateInterval": 86400,
        "rotateStart": "00:00",
+       "rotateCount": 30,
        "user": "nobody",
        "threads": 1,
        "sslKeyFile": "",
@@ -291,6 +319,12 @@ following commands:
        "connectTimeout": 20,
        "quickserver": true,
        "appendProcTitle": false,
+       "beginFunc": false,
+       "beginFuncOnFile": false,
+       "endFunc": false,
+       "irohProxy": false,
+       "selfSign": false,
+       "defaultCharset": "utf-8",
        "serverRoot": "/home/rampart/dir_with_files",
        "fullServer": 0
     }
@@ -500,7 +534,7 @@ runtime.  These all work transparently with either disk paths or
     // generic file reads
     var conf = u.readFile(":zip:/config.json", true);
     var st   = u.stat(":zip:/apps/auth.js");
-    if (u.fileExists(":zip:/data.csv")) { /* ... */ }
+    if (u.exists(":zip:/data.csv")) { /* ... */ }
 
     var fh = u.fopen(":zip:/big.txt", "r");   // read-mode only
     var line = u.readLine(fh);
@@ -537,7 +571,7 @@ A small set of utilities is exposed only when a zip payload is present
 ``rampart.utils.payloadList()``
     Returns an :green:`Object` mapping every entry's name to a
     stat-like object (``size``, ``mode``, ``mtime`` (Date), ``isFile``,
-    ``isDirectory``, ``isSymlink``, ``permissions`` etc.).
+    ``isDirectory``, ``isSymbolicLink``, ``permissions`` etc.).
 
 ``rampart.utils.payloadGet(name)``
     Returns the entry's contents as a :green:`Buffer` (decompressed).
@@ -560,9 +594,14 @@ A second set works on **any** zip file on disk -- not the appended
 payload -- and is always available:
 
 ``rampart.utils.zipList(zipPath)``
+    As ``payloadList``, but for the zip file at ``zipPath``.
+
 ``rampart.utils.zipGet(zipPath, name)``
+    As ``payloadGet``, but for the zip file at ``zipPath``.
+
 ``rampart.utils.zipExtract(zipPath, destDir [, filterArray])``
-    Same filter semantics as ``payloadExtract``.
+    As ``payloadExtract``, but for the zip file at ``zipPath``.  Same
+    filter semantics.
 
 These are useful for installers, update packages and similar tooling
 that needs to inspect a zip without unpacking it first.
@@ -862,8 +901,8 @@ The ``rampart-email.js`` module sends email via SMTP using the
 direct delivery (MX lookup), local relay, authenticated SMTP, and Gmail
 with App Passwords.
 
-Loading the module
-~~~~~~~~~~~~~~~~~~
+Loading rampart-email
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: javascript
 
@@ -971,7 +1010,7 @@ Delivery Methods
 ~~~~~~~~~~~~~~~~
 
 method: "direct"
-""""""""""""""""
+^^^^^^^^^^^^^^^^
 
     The default method.  Looks up MX records for each recipient's domain
     using ``net.resolve(domain, "MX")`` and connects directly to the
@@ -1007,7 +1046,7 @@ method: "direct"
         });
 
 method: "relay"
-"""""""""""""""
+^^^^^^^^^^^^^^^
 
     Sends all recipients through a local or specified SMTP relay server
     (e.g. Postfix), which handles onward delivery, retries, and queuing.
@@ -1035,7 +1074,7 @@ method: "relay"
         });
 
 method: "smtp"
-""""""""""""""
+^^^^^^^^^^^^^^
 
     Sends through any authenticated SMTP server.  The full URL including
     protocol and port must be provided.
@@ -1063,7 +1102,7 @@ method: "smtp"
         });
 
 method: "gmailApp"
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 
     Sends through Gmail's SMTP server (``smtps://smtp.gmail.com:465``)
     using a Google App Password.  The SMTP URL is handled automatically.
@@ -1151,8 +1190,8 @@ code regardless of which backend served the request.
 
 The module lives in the ``process.modulesPath`` directory.
 
-Loading the module
-~~~~~~~~~~~~~~~~~~
+Loading rampart-llm
+~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: javascript
 
@@ -2197,7 +2236,7 @@ libraries* below.
     * a ``"use transpilerGlobally"`` or ``"use babelGlobally"``
       directive at the top of the entry script
 
-    See :ref:`the transpiler section <rampart-main:Use Transpiler>`
+    See :ref:`the transpiler section <activating-the-transpiler>`
     for details.  Without one of these, the shim still loads, but
     your *own* code is restricted to ES5 syntax.  The submodule
     implementations themselves are ES5 internally, so the shim's
@@ -2223,12 +2262,20 @@ bare-name require works:
 
 The re-export files in ``js_modules/`` are one-liners:
 ``module.exports = require('rampart-nodeshim').<name>;``.  Full list:
-``assert.js``, ``buffer.js``, ``console.js``, ``crypto.js``, ``dns.js``,
-``events.js``, ``fs.js``, ``module.js``, ``os.js``, ``path.js``,
-``perf_hooks.js``, ``process.js``, ``punycode.js`` (vendored Mathias
-Bynens v2.3.1 IDN library — standalone, not part of the ``.so``),
-``querystring.js``, ``string_decoder.js``, ``timers.js``, ``url.js``,
-``util.js``, ``worker_threads.js``, ``zlib.js``.
+``assert.js``, ``buffer.js``, ``child_process.js``, ``console.js``,
+``crypto.js``, ``dns.js``, ``events.js``, ``fs.js``, ``http.js``,
+``https.js``, ``module.js``, ``net.js``, ``os.js``, ``path.js``,
+``perf_hooks.js``, ``process.js``, ``querystring.js``, ``readline.js``,
+``repl.js``, ``stream.js``, ``string_decoder.js``, ``timers.js``,
+``tls.js``, ``tty.js``, ``url.js``, ``util.js``, ``vm.js``,
+``worker_threads.js``, ``zlib.js``.
+
+A few further modules in ``js_modules/`` are standalone shims rather than
+one-line re-exports — they are implemented in JavaScript in the file itself
+and are not part of the ``.so``: ``async_hooks.js``, ``constants.js``,
+``diagnostics_channel.js``, ``http2.js`` (a stub; rampart-nodeshim does not
+implement HTTP/2), ``v8.js``, and ``punycode.js`` (vendored Mathias Bynens
+v2.3.1 IDN library).
 
 Submodules and notable gaps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

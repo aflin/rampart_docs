@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-totext module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-totext module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-python module" href="rampart-python.html"/>
         <link rel="prev" title="The rampart-redis module" href="rampart-redis.html"/> 
 
@@ -535,10 +535,14 @@ external tool via standard input.</p>
 <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span> <span class="p">{</span><span class="nx">details</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">mimeType</span><span class="p">);</span>  <span class="c1">// &quot;application/vnd.openxmlformats-...&quot;</span>
 
-<span class="cm">/* convert an HTML string directly */</span>
-<span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s2">&quot;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;&quot;</span><span class="p">;</span>
+<span class="cm">/* convert an HTML string directly.  Note that when converting content</span>
+<span class="cm">   rather than a named file, the format is detected from the content</span>
+<span class="cm">   itself, so the string must carry a document-level signature such as</span>
+<span class="cm">   &lt;!DOCTYPE html&gt; or &lt;html&gt;.  A bare fragment cannot be identified and</span>
+<span class="cm">   is returned unchanged. */</span>
+<span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s2">&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;World&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;&quot;</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">html</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>  <span class="c1">// &quot;Hello\n\nWorld&quot;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>  <span class="c1">// &quot;Hello\n\nWorld\n\n&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -601,7 +605,9 @@ paragraph are collapsed to a single space.  For source code and
 structured text files (<code class="docutils literal notranslate"><span class="pre">.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">.json</span></code>, <code class="docutils literal notranslate"><span class="pre">.py</span></code>, etc.), the
 original formatting is preserved.</li>
 <li><strong>Trimming</strong> — Leading and trailing whitespace is removed from the
-output.</li>
+output.  Note that this applies to the <code class="docutils literal notranslate"><span class="pre">xml</span></code>, <code class="docutils literal notranslate"><span class="pre">latex</span></code>, <code class="docutils literal notranslate"><span class="pre">rtf</span></code> and
+plain-text paths; the HTML and Markdown converters may leave trailing
+newlines in place.</li>
 <li><strong>Entity decoding</strong> — HTML and XML entities (e.g. <code class="docutils literal notranslate"><span class="pre">&amp;amp;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&amp;#8220;</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;nbsp;</span></code>) are decoded to their Unicode equivalents.</li>
 <li><strong>Formatting removal</strong> — Bold, italic, font changes, colors,
@@ -722,7 +728,7 @@ with a buffer, the content is passed to the tool via standard input.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

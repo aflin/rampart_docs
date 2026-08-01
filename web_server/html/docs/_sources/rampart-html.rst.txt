@@ -883,8 +883,8 @@ Example:
 
     Table of Contents
 
-            1. Chapter 1
-            2. Chapter 2
+       1. Chapter 1
+       2. Chapter 2
 
     Chapter 1
     I was born
@@ -935,7 +935,14 @@ Where
 
 Note:
    Setting options in ``prettyPrint`` overrides the options set in `newDocument`_
-   for all future operations.
+   for that call only.  A subsequent ``prettyPrint()`` with no options reverts
+   to the options given to `newDocument`_\ .
+
+   Note also that ``indent`` and ``indentSpaces`` are independent here: passing
+   ``{indent: true}`` to ``prettyPrint`` without an ``indentSpaces`` indents by
+   zero, rather than falling back to the default of ``2`` described under
+   `newDocument`_\ .  Give ``indentSpaces`` explicitly when setting ``indent``
+   on a ``prettyPrint`` call.
 
 Example:
 
@@ -1587,7 +1594,7 @@ Example:
     /* expected output:
 
     [
-       "<div class>one</div>",
+       "<div class=\"\">one</div>",
        "<span>two</span>",
        "<span class>three</span>",
        "<div id=\"myid\">four</div>"

@@ -60,7 +60,7 @@ A partial list of Duktape features:
 * Property virtualization using a subset of ECMAScript ES2015 Proxy object
 * Bytecode dump/load for caching compiled functions
 
-See full list `Here <https://duktape.org>`_
+See full list `Here <https://duktape.org>`__
 
 Rampart additions
 """""""""""""""""
@@ -313,7 +313,9 @@ Where:
 rampart.event.trigger()
 '''''''''''''''''''''''
 
-Trigger a named event, calling all the callbacks registered under the given name.
+Trigger a named event, calling all the callbacks registered under the
+given name.  Callbacks do not run in place: they are deferred to the
+event loop and run after the current code returns.
 
 .. code-block:: javascript
 
@@ -872,8 +874,14 @@ Return Value:
    :green:`Number`. Seconds since *this rampart process* started.
 
 Implementation: ``clock_gettime(CLOCK_MONOTONIC)``.  The origin is
-captured on the first call across any context, so workers see the
-parent-process lifetime (matching node's worker_threads behavior).
+captured once at startup, so the value includes rampart's own start-up
+time — as it does in node.
+
+The origin is process-wide.  Threads report the lifetime of the process
+that created them, matching node, whose ``worker_threads`` also see the
+parent's uptime.  A process created by :ref:`fork() <rampart-utils:fork>`
+re-stamps its own origin and reports its own age, matching node's
+process-spawning APIs, where each new process starts from zero.
 
 For seconds since the operating system booted (was the historical
 meaning of ``process.uptime()`` in rampart, now under a separate
@@ -894,7 +902,7 @@ Return Value:
    :green:`Number`. Seconds since system boot.
 
 Implementation: ``sysinfo(2)`` on Linux, ``sysctl KERN_BOOTTIME``
-(boot ``timeval`` subtracted from wall-clock now) on macOS / *BSD.
+(boot ``timeval`` subtracted from wall-clock now) on macOS / \*BSD.
 Falls back to ``CLOCK_MONOTONIC`` if the platform-native call fails.
 
 Equivalent to node's ``os.uptime()`` (rampart's nodeshim ``os``
@@ -962,13 +970,20 @@ report unchanged values, but allocations above the limit will still
 succeed.  Effective on Linux and FreeBSD.  Cannot be raised above
 any system-imposed hard limit.
 
+Note also that the limit is applied to both the soft **and** hard
+``RLIMIT_AS``.  Since a hard limit can only ever be lowered by an
+unprivileged process, a later call with a larger ``amount`` will fail
+with ``process.setMaxMem - Failed to set Max``.  In other words the
+limit may be lowered repeatedly, but never raised again within the
+same process.
+
 Using the require Function to Import Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Scripts may reference functions stored in external files.  These files are
-known as modules.  A module is a compiled C program or a JavaScript file
-which exports an :green:`Object` or :green:`Function` when the
-``require("module-name")`` syntax is used.
+known as modules.  A module is a compiled C program, a JavaScript file
+which exports an :green:`Object` or :green:`Function`, or a JSON file,
+loaded with the ``require("module-name")`` syntax.
 
 Example for the SQL C Module:
 
@@ -976,12 +991,56 @@ Example for the SQL C Module:
 
    var Sql = require("rampart-sql");
 
-This will search the current directory and the rampart modules directories
-for a module named ``rampart-sql.so`` or ``rampart-sql.js`` and use the
-first one found.  In this case ``rampart-sql.so`` will be found and the SQL
-module and its functions will be usable via the named variable ``Sql``.  See,
-e.g, :ref:`The rampart-sql documentation <rampart-sql:Loading the Javascript Module>` 
+This will search the script's own directory and the rampart modules
+directories for a module named ``rampart-sql``.  In this case
+``rampart-sql.so`` will be found and the SQL module and its functions will
+be usable via the named variable ``Sql``.  See, e.g,
+:ref:`The rampart-sql documentation <rampart-sql:Loading the Javascript Module>`
 for full details.
+
+.. _require-resolution-order:
+
+Resolution order
+""""""""""""""""
+
+When the name given to ``require()`` has no extension, each extension is
+tried in turn, and for each one every search directory is checked before
+moving on to the next extension, in this order: ``.js``, ``.json``,
+``.so``.  If not found, the bare name is tried and loaded as JavaScript.
+
+So a ``foo.js`` found late on the search path is preferred over a
+``foo.so`` found early; give the extension — ``require("foo.so")`` — to
+load a specific file.
+
+A ``.json`` module is parsed and the result becomes ``module.exports``.
+It is cached like any other module, so ``require("conf.json")`` and a
+later ``require("conf")`` return the same object:
+
+.. code-block:: javascript
+
+   /* conf.json contains: {"host":"localhost","port":8088} */
+   var conf = require("conf.json");
+   printf("%s:%d\n", conf.host, conf.port);   /* localhost:8088 */
+
+Requiring a directory
+"""""""""""""""""""""
+
+When the name resolves to a directory, its entry point is the file named
+by ``"main"`` in the directory's ``package.json``, or failing that
+``index.js``, ``index.json`` or ``index.so``.  With none of these,
+resolution fails as usual.
+
+``"main"`` must name a file, though its extension may be omitted
+(``"main": "lib/entry"`` finds ``lib/entry.js``); it is not followed if it
+names a directory.
+
+A trailing slash forces directory resolution, which matters only when a
+file and a directory share a name:
+
+.. code-block:: javascript
+
+   var a = require("./mymod");    // mymod.js
+   var b = require("./mymod/");   // mymod/index.js
 
 Example creating a JavaScript module
 """"""""""""""""""""""""""""""""""""
@@ -1026,8 +1085,14 @@ statement ``require("mod.js")`` will have
        "path": "/path/to/my",
        "exports": {},
        "mtime": 1624904227,
-       "atime": 1624904227
+       "atime": 1624904227,
+       "deps": []
     }
+
+Where ``deps`` is an :green:`Array` of the modules this one has itself
+required.  The ``module`` object additionally has a non-enumerable
+``resolve()`` :green:`Function` (and so is not shown above), which takes a
+module name and returns the full path that ``require()`` would load for it.
 
 
 
@@ -1135,18 +1200,18 @@ Modules are searched for in the following order:
    directory located here is exposed as
    :ref:`process.modulesPath <rampart-main:modulesPath>`\ .)
 
+Note that the current working directory is not on this list; a relative id
+such as ``require("./mod.js")`` is resolved against the requiring script or
+module, not against the directory you happen to be in.
+
 
 Extra JavaScript Functionality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Rampart provides a broad set of ES2015+ standard-library methods and
-globals, so most modern JavaScript runs without
-`babel <ECMAScript 2015+ and Babel.js>`_ or the
-`transpiler <ECMAScript 2015+ with transpiler>`_.  These aim to match
-the ECMAScript specification; only the rampart-specific extensions
-are flagged.  For language *syntax* beyond ES5 (``class``, arrow
-functions, ``async``/``await``, destructuring, ``for…of``,
-``...spread``, etc.), see the
+Rampart adds a number of standard-library methods and globals to those
+Duktape provides.  These aim to match the ECMAScript specification; only
+the rampart-specific extensions are flagged.  For language *syntax*
+beyond ES5, see the
 `transpiler <ECMAScript 2015+ with transpiler>`_.
 
 Object Methods
@@ -1465,7 +1530,10 @@ Prototype methods
   integers and floats (e.g. ``readUInt32BE``, ``writeFloatLE``) are
   provided by duktape's underlying Buffer and behave as in node.
   The ``BigInt`` variants (``readBigInt64BE``, etc.) are not
-  available because duktape does not implement ``BigInt``.
+  available.  Note that this is a gap in the Buffer accessors only:
+  ``BigInt`` itself **is** implemented, so ``BigInt`` values may be
+  used freely in JavaScript; they simply cannot be read from or
+  written to a Buffer with these methods.
 
 Examples
 ''''''''
@@ -1473,6 +1541,7 @@ Examples
 .. code-block:: javascript
 
     /* hashing & base64 round-trip */
+    var crypto = require("rampart-crypto");
     var hash = crypto.sha256("hello world", {returnType: "buffer"});
     var b64  = hash.toString('base64');
     var same = Buffer.from(b64, 'base64').equals(hash);   // true
@@ -1538,6 +1607,12 @@ Both constructors accept any iterable for initial population.
 Iterators produce ``{value, done}`` result objects and are themselves
 iterable.
 
+Note that ``[Symbol.iterator]`` is an equivalent function, but not the
+identical function object -- that is,
+``map[Symbol.iterator] === map.entries`` is ``false``, where the ES2015
+specification requires it to be ``true``.  Iteration behaves correctly;
+only an identity comparison between the two will differ.
+
 console Extras
 """"""""""""""
 
@@ -1559,7 +1634,31 @@ Proxy.revocable
 
 ``Proxy.revocable(target, handler)`` returns ``{proxy, revoke}``.
 Calling ``revoke()`` makes every subsequent trap on ``proxy`` throw
-``TypeError``.
+``TypeError``.  As with ``new Proxy()``, ``handler`` may be empty, in
+which case operations pass through to ``target``.
+
+Reflect
+"""""""
+
+``Reflect`` is available, with ``get``, ``set``, ``has``,
+``deleteProperty``, ``ownKeys`` and the rest of the standard methods.
+
+One limitation: duktape does not implement the optional ``receiver``
+argument of ``Reflect.get()`` and ``Reflect.set()``.  Calling either with
+a ``receiver`` that is not the target throws ``Error: unsupported``:
+
+.. code-block:: javascript
+
+   Reflect.get(obj, "key");                 /* ok */
+   Reflect.get(obj, "key", otherObj);       /* throws Error: unsupported */
+
+   Reflect.set(obj, "key", val);            /* ok */
+   Reflect.set(obj, "key", val, otherObj);  /* throws Error: unsupported */
+
+The ``receiver`` only affects which object ``this`` refers to inside a
+getter or setter, so omitting it matters only for accessor properties.
+``Reflect.has()``, ``Reflect.deleteProperty()`` and ``Reflect.ownKeys()``
+take no ``receiver`` and are unaffected.
 
 WHATWG / W3C Web Platform APIs (experimental)
 """""""""""""""""""""""""""""""""""""""""""""
@@ -1637,7 +1736,8 @@ Where:
 * ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
-    An id which may be used with `clearTimeout()`_\ .
+    An id (an :green:`Object`, not a :green:`Number`) which may be used with
+    `clearTimeout()`_\ .
 
 Example:
 
@@ -1700,7 +1800,8 @@ Where:
 * ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
-    An id which may be used with `clearInterval()`_\ .
+    An id (an :green:`Object`, not a :green:`Number`) which may be used with
+    `clearInterval()`_\ .
 
 Example:
 
@@ -1759,7 +1860,8 @@ Where:
 * ``argX`` are arguments to be passed to the callback function. 
 
 Return Value:
-    An id which may be used with `clearMetronome()`_\ .
+    An id (an :green:`Object`, not a :green:`Number`) which may be used with
+    `clearMetronome()`_\ .
 
 Example:
 
@@ -1856,7 +1958,7 @@ Babel License
 """""""""""""
 
 Babel.js is 
-`MIT licensed <https://github.com/babel/babel/blob/main/LICENSE>`_. 
+`MIT licensed <https://github.com/babel/babel/blob/main/LICENSE>`__. 
 
 Activating Babel
 """"""""""""""""
@@ -1947,8 +2049,8 @@ Note that babel does not actually do any type checking.  See
 `this caveat <https://babeljs.io/docs/en/babel-plugin-transform-typescript#caveats>`_.
 
 For a list of tested and supported syntax, see the 
-``/usr/local/rampart/tests/babel-test.js`` file (also available
-`here <https://github.com/aflin/rampart/blob/main/test/babel-test.js>`_\ .
+``/usr/local/rampart/test/babel-test.js`` file (also available
+`here <https://github.com/aflin/rampart/blob/main/test/babel-test.js>`__\ .
 
 How it works
 """"""""""""
@@ -2027,7 +2129,9 @@ for this indispensable library.
 Tree-sitter License
 """""""""""""""""""
 
-Tree-sitter is `MIT licensed <https://github.com/tree-sitter/tree-sitter-javascript?tab=MIT-1-ov-file#readme>`_\ .
+Tree-sitter is `MIT licensed <https://github.com/tree-sitter/tree-sitter-javascript?tab=MIT-1-ov-file#readme>`__\ .
+
+.. _activating-the-transpiler:
 
 Activating the Transpiler
 """""""""""""""""""""""""

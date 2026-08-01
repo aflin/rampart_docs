@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-server HTTP module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-server HTTP module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-auth module" href="rampart-auth.html"/>
         <link rel="prev" title="The rampart-sql Command Line Utilities" href="sql-utils.html"/> 
 
@@ -382,12 +382,16 @@ statement:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>It returns an <span class="green">Object</span> with a single function:</p>
+<p>It returns an <span class="green">Object</span> with two functions:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="n">start</span><span class="p">:</span>    <span class="p">{</span><span class="n">_func</span><span class="p">:</span><span class="n">true</span><span class="p">}</span>
+   <span class="n">start</span><span class="p">:</span>    <span class="p">{</span><span class="n">_func</span><span class="p">:</span><span class="n">true</span><span class="p">},</span>
+   <span class="n">getMime</span><span class="p">:</span>  <span class="p">{</span><span class="n">_func</span><span class="p">:</span><span class="n">true</span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">getMime(extension)</span></code> returns the mime type the server would use for
+the given filename extension (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;html&quot;</span></code>), or <code class="docutils literal notranslate"><span class="pre">undefined</span></code> if the
+extension is unknown.</p>
 </div>
 <div class="section" id="configuring-and-starting-the-server">
 <h3>Configuring and Starting the Server<a class="headerlink" href="#configuring-and-starting-the-server" title="Permalink to this headline">¶</a></h3>
@@ -481,7 +485,9 @@ options object.</li>
 <p><strong>Bind and listener</strong></p>
 <ul>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">bind</span></code> <em>(per-listener)</em> - An <span class="green">Array</span> of <span class="green">Strings</span>, with
-each <span class="green">String</span> representing an ip address and port.  If not
+each <span class="green">String</span> representing an ip address and port.  A single
+<span class="green">String</span> is also accepted, and is equivalent to an
+<span class="green">Array</span> of one.  If not
 specified, the server will bind to port 8088 on the loopback device
 (i.e. 127.0.0.1, which is only accessible from the same machine), using
 the following default value:</p>
@@ -591,12 +597,14 @@ if the server is not using multiple threads.  A low number will slow
 down the writing of data over the specified size. Default is
 <code class="docutils literal notranslate"><span class="pre">65536</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code> <em>(per-listener)</em> - A <span class="green">Number</span>, the maximum
-size in bytes of an HTTP request body.  If a request body exceeds
+size in bytes of an HTTP request body.  If a request body reaches
 this limit, the server will stop reading the body and return a
-<code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Entity</span> <span class="pre">Too</span> <span class="pre">Large</span></code> response to the client.  For WebSocket
-connections, this limits the maximum size of a single message.
-Default is <code class="docutils literal notranslate"><span class="pre">52428800</span></code> (50 MB).  Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to disable the limit
-(not recommended).</li>
+<code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Entity</span> <span class="pre">Too</span> <span class="pre">Large</span></code> response to the client.  Note that the
+limit is inclusive: a body of exactly <code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code> bytes is
+rejected, and only a body of <code class="docutils literal notranslate"><span class="pre">maxBodySize</span> <span class="pre">-</span> <span class="pre">1</span></code> bytes or fewer is
+accepted.  For WebSocket connections, this limits the maximum size
+of a single message.  Default is <code class="docutils literal notranslate"><span class="pre">52428800</span></code> (50 MB).  Set to <code class="docutils literal notranslate"><span class="pre">0</span></code>
+to disable the limit (not recommended).</li>
 <li><code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code> <em>(top-level)</em> - a <span class="green">Number</span> (range 0.01
 to 1000).  Set the default range size when sending a <code class="docutils literal notranslate"><span class="pre">206</span> <span class="pre">Partial</span>
 <span class="pre">Content</span></code> response to an open ended request (e.g. <code class="docutils literal notranslate"><span class="pre">range:</span> <span class="pre">0-</span></code>),
@@ -669,12 +677,12 @@ mapping to a filesystem path may also include headers.</p>
     <span class="nx">bind</span><span class="o">:</span> <span class="p">[</span> <span class="s2">&quot;[::]:8088&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0.0.0:8088&quot;</span> <span class="p">],</span> <span class="cm">/* bind to all */</span>
     <span class="nx">map</span> <span class="o">:</span>
     <span class="p">{</span>
-        <span class="s2">&quot;/&quot;</span><span class="o">:</span>            <span class="s2">&quot;/usr/local/etc/httpd/htdocs&quot;</span>  <span class="cm">/* map all file requests */</span>
+        <span class="s2">&quot;/&quot;</span><span class="o">:</span>            <span class="s2">&quot;/usr/local/etc/httpd/htdocs&quot;</span><span class="p">,</span>  <span class="cm">/* map all file requests */</span>
         <span class="s2">&quot;/search.html&quot;</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">},</span>         <span class="cm">/* search function */</span>
         <span class="s2">&quot;/images/&quot;</span><span class="o">:</span>     <span class="p">{</span>
                             <span class="nx">path</span><span class="o">:</span> <span class="s2">&quot;/path/to/my/jpgs/&quot;</span><span class="p">,</span>
                             <span class="nx">headers</span><span class="o">:</span> <span class="p">{</span>
-                                <span class="s2">&quot;Content-Control&quot;</span><span class="o">:</span> <span class="s2">&quot;max-age=31556952, public&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;Cache-Control&quot;</span><span class="o">:</span> <span class="s2">&quot;max-age=31556952, public&quot;</span><span class="p">,</span>
                                 <span class="s2">&quot;X-Custom-Header&quot;</span><span class="o">:</span> <span class="mi">1</span>
                             <span class="p">}</span>
                         <span class="p">}</span>
@@ -711,7 +719,12 @@ sort the mapped paths given as keys to the <span class="green">Object</span> pas
 <span class="green">Object</span> will be matched in the order they are given.</p>
 <p>Note that regardless of this setting, paths are matched by type of path
 with Exact paths tested first, then regular expression paths and lastly
-glob paths.  However, it is usually desirable for longer paths to have
+glob paths.  Be aware that a mapped <em>directory</em> is itself an Exact path,
+and so is tested before any regular expression: mapping <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> to a
+directory will shadow a regular expression key that would otherwise have
+matched (glob keys are unaffected).  Where both are needed, map the
+directory to a more specific prefix rather than to <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code>.
+However, it is usually desirable for longer paths to have
 priority over shorter ones.  For example, if <code class="docutils literal notranslate"><span class="pre">/</span></code> and <code class="docutils literal notranslate"><span class="pre">/search.html</span></code>
 are both specified (both are “Exact” paths), <code class="docutils literal notranslate"><span class="pre">/search.html</span></code> should be
 checked first, otherwise <code class="docutils literal notranslate"><span class="pre">/</span></code> will match and <code class="docutils literal notranslate"><span class="pre">/search.html</span></code> will
@@ -719,7 +732,10 @@ never match.  When <code class="docutils literal notranslate"><span class="pre">
 sorted by length.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span> to handle
-<code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span></code> responses.  See <a class="reference internal" href="#mapped-functions">Mapped Functions</a> below.</p>
+<code class="docutils literal notranslate"><span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found</span></code> responses.  Note that it is invoked for files not
+found under a mapped filesystem path; a request whose URL matches no
+<code class="docutils literal notranslate"><span class="pre">map</span></code> entry at all receives the default 404 response instead.
+See <a class="reference internal" href="#mapped-functions">Mapped Functions</a> below.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">directoryFunc</span></code> <em>(top-level)</em> - A <span class="green">Function</span> to handle
 directory listings from the filesystem, if no <code class="docutils literal notranslate"><span class="pre">index.html</span></code> file
@@ -766,6 +782,13 @@ connections, it is run after websockets disconnects and after the
 object, modifying it has no effect and return value from <code class="docutils literal notranslate"><span class="pre">endFunc</span></code>
 has no effect.  End function is never run on file requests.  The
 default value is <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">endFunc</span></code> runs when the mapped callback returns, which for
+a deferred reply (a callback that returns <code class="docutils literal notranslate"><span class="pre">{defer:</span> <span class="pre">true}</span></code> and later
+calls <code class="docutils literal notranslate"><span class="pre">req.reply()</span></code>) is <em>before</em> the real content exists.  In that
+case <code class="docutils literal notranslate"><span class="pre">req.reply</span></code> holds the deferred stub rather than what is
+eventually sent, and the actual payload never passes through
+<code class="docutils literal notranslate"><span class="pre">endFunc</span></code>.  A deferred handler that needs post-processing or logging
+of its own output should do it at the point it calls <code class="docutils literal notranslate"><span class="pre">req.reply()</span></code>.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">authMod</span></code> <em>(top-level)</em> - A <span class="green">Boolean</span>, <span class="green">String</span>, or
 <span class="green">Function</span>.  Enable session-based authentication.</p>
@@ -900,6 +923,9 @@ changed as follows:</p>
 </pre></div>
 </div>
 <p>For a complete list of defaults, see <a class="reference internal" href="#key-to-mime-mappings">Key to Mime Mappings</a> below.</p>
+<p>Note that although <code class="docutils literal notranslate"><span class="pre">mimeMap</span></code> is given per <code class="docutils literal notranslate"><span class="pre">server.start()</span></code>, the mapping
+table it modifies is process-wide: the additions are also seen by
+<code class="docutils literal notranslate"><span class="pre">server.getMime()</span></code> and by any other server started in the same process.</p>
 </li>
 </ul>
 <p><strong>Static-file behaviour</strong></p>
@@ -928,6 +954,14 @@ Default is <code class="docutils literal notranslate"><span class="pre">false</s
 file extensions which will be compressed.  If <code class="docutils literal notranslate"><span class="pre">true</span></code> - the following
 default <span class="green">Array</span> of extensions will be used:
 <code class="docutils literal notranslate"><span class="pre">[&quot;html&quot;,</span> <span class="pre">&quot;css&quot;,</span> <span class="pre">&quot;js&quot;,</span> <span class="pre">&quot;json&quot;,</span> <span class="pre">&quot;xml&quot;,</span> <span class="pre">&quot;txt&quot;,</span> <span class="pre">&quot;text&quot;,</span> <span class="pre">&quot;htm&quot;]</span></code>.</p>
+<p>Compression is applied only when the client asks for it by sending an
+<code class="docutils literal notranslate"><span class="pre">Accept-Encoding</span></code> header that includes <code class="docutils literal notranslate"><span class="pre">gzip</span></code>, and only when the
+file is at least <code class="docutils literal notranslate"><span class="pre">compressMinSize</span></code> bytes.</p>
+<p>This setting also covers a file returned from a script using the
+<code class="docutils literal notranslate"><span class="pre">&#64;filename</span></code> form (see <a class="reference internal" href="#the-return-object">The Return Object</a> below) - such a reply is
+served through the same file-sending code, and so is compressed if its
+extension is in the list.  Script output that is <em>not</em> a file is
+governed by <code class="docutils literal notranslate"><span class="pre">compressScripts</span></code> instead.</p>
 <p>Note that compressed files will be cached in a directory named
 <code class="docutils literal notranslate"><span class="pre">.gzipcache/</span></code> in the directory in which the files are located.
 Compressed cached files are updated based on the date of the original.
@@ -984,8 +1018,10 @@ place of normal logging (<code class="docutils literal notranslate"><span class=
 function will be passed two parameters (i.e.
 <code class="docutils literal notranslate"><span class="pre">myloggingfunc</span> <span class="pre">(logdata,</span> <span class="pre">logline)</span></code>) where the first is an
 <span class="green">Object</span> with the following properties: <code class="docutils literal notranslate"><span class="pre">addr</span></code>, <code class="docutils literal notranslate"><span class="pre">dateStr</span></code>,
-<code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">protocol</span></code> and <code class="docutils literal notranslate"><span class="pre">code</span></code>.  All are
-<span class="green">Strings</span>, except <code class="docutils literal notranslate"><span class="pre">code</span></code>, which is a <span class="green">Number</span> (i.e.
+<code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">methodRaw</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">protocol</span></code>, <code class="docutils literal notranslate"><span class="pre">code</span></code>,
+<code class="docutils literal notranslate"><span class="pre">length</span></code>, <code class="docutils literal notranslate"><span class="pre">referer</span></code> and <code class="docutils literal notranslate"><span class="pre">userAgent</span></code>.  All are
+<span class="green">Strings</span>, except <code class="docutils literal notranslate"><span class="pre">code</span></code> and <code class="docutils literal notranslate"><span class="pre">length</span></code>, which are
+<span class="green">Numbers</span> (i.e.
 <code class="docutils literal notranslate"><span class="pre">200</span></code>); the second parameter is the log line that would normally
 be written but for this function.  The filehandles
 <code class="docutils literal notranslate"><span class="pre">rampart.utils.accessLog</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart.utils.errorLog</span></code> can be
@@ -1217,9 +1253,9 @@ directory exists.</p>
 directories.  Note also that keys for mapped directories are always
 treated as directories and have a trailing <code class="docutils literal notranslate"><span class="pre">/</span></code> added if not present.
 If, e.g., <code class="docutils literal notranslate"><span class="pre">map:{&quot;/file.html&quot;:&quot;/my/dir&quot;}</span></code> was specified,
-<code class="docutils literal notranslate"><span class="pre">http://localhost:8088/file.html</span></code> would return “NOT FOUND” but URLs
-beginning with <code class="docutils literal notranslate"><span class="pre">http://localhost:8088/file.html/</span></code> would return files
-from <code class="docutils literal notranslate"><span class="pre">/my/dir/</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">http://localhost:8088/file.html</span></code> would be redirected (<code class="docutils literal notranslate"><span class="pre">302</span></code>) to
+<code class="docutils literal notranslate"><span class="pre">http://localhost:8088/file.html/</span></code>, and URLs beginning with
+<code class="docutils literal notranslate"><span class="pre">http://localhost:8088/file.html/</span></code> would return files from <code class="docutils literal notranslate"><span class="pre">/my/dir/</span></code>.</p>
 </div></blockquote>
 </div>
 </div>
@@ -1318,7 +1354,12 @@ posted form as well as the <code class="docutils literal notranslate"><span clas
 will also be copied to <code class="docutils literal notranslate"><span class="pre">params</span></code>, so long as there are no name
 collisions between those keys and variables set from cookies, headers or
 query parameters.  The raw posted content will be returned in the
-property <code class="docutils literal notranslate"><span class="pre">body</span></code> as a <span class="green">Buffer</span>.  Example:</p>
+property <code class="docutils literal notranslate"><span class="pre">body</span></code> as a <span class="green">Buffer</span>.  On requests with no posted
+content (e.g. a <code class="docutils literal notranslate"><span class="pre">GET</span></code>), <code class="docutils literal notranslate"><span class="pre">body</span></code> is a zero-length <span class="green">Buffer</span>;
+it is always a <span class="green">Buffer</span>, so passing it to <code class="docutils literal notranslate"><span class="pre">bufferToString()</span></code>
+is safe and yields <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.  (Note that a zero-length <span class="green">Buffer</span>
+is rendered as <code class="docutils literal notranslate"><span class="pre">{}</span></code> by <code class="docutils literal notranslate"><span class="pre">%J</span></code>, which can make it look like an empty
+<span class="green">Object</span>.)  Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span>
 <span class="p">{</span>
     <span class="p">...,</span>
@@ -1798,7 +1839,7 @@ property <code class="docutils literal notranslate"><span class="pre">fsPath</sp
         <span class="nx">html</span><span class="o">+=</span> <span class="s1">&#39;&lt;tr&gt;&lt;td&gt;&lt;a href=&quot;../&quot;&gt;Parent Directory&lt;/a&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;-&lt;/td&gt;&lt;/tr&gt;&#39;</span><span class="p">;</span>
     <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">fsPath</span><span class="p">).</span><span class="nx">sort</span><span class="p">().</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">d</span><span class="p">){</span>
         <span class="kd">var</span> <span class="nx">st</span><span class="o">=</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">fsPath</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="nx">d</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">st</span><span class="p">.</span><span class="nx">isDirectory</span><span class="p">())</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">st</span><span class="p">.</span><span class="nx">isDirectory</span><span class="p">)</span>
             <span class="nx">d</span><span class="o">+=</span><span class="s1">&#39;/&#39;</span><span class="p">;</span>
         <span class="nx">html</span><span class="o">=</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">sprintf</span><span class="p">(</span><span class="s1">&#39;%s&lt;tr&gt;&lt;td&gt;&lt;a href=&quot;%s&quot;&gt;%s&lt;/a&gt;&lt;/td&gt;&lt;td&gt;%s&lt;/td&gt;&lt;td&gt;%s&lt;/td&gt;&lt;/tr&gt;&#39;</span><span class="p">,</span>
             <span class="nx">html</span><span class="p">,</span> <span class="nx">d</span><span class="p">,</span> <span class="nx">d</span><span class="p">,</span> <span class="nx">st</span><span class="p">.</span><span class="nx">mtime</span><span class="p">.</span><span class="nx">toLocaleString</span><span class="p">()</span> <span class="p">,</span><span class="nx">hsize</span><span class="p">(</span><span class="nx">st</span><span class="p">.</span><span class="nx">size</span><span class="p">));</span>
@@ -1899,7 +1940,7 @@ to the client.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">mycallback</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="p">...</span>
-    <span class="kd">var</span> <span class="nx">pos</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">rewind</span><span class="p">(</span><span class="nx">pos</span><span class="p">);</span>
+    <span class="nx">req</span><span class="p">.</span><span class="nx">rewind</span><span class="p">(</span><span class="nx">pos</span><span class="p">);</span>
     <span class="p">...</span>
 <span class="p">}</span>
 </pre></div>
@@ -1995,7 +2036,8 @@ buffer.</p>
 <span class="cm">        present in the directory.  Added to the normal request object</span>
 <span class="cm">        will be the property (string) &quot;fsPath&quot; (req.fsPath), which can be used</span>
 <span class="cm">        to create a directory listing.  See function dirlist() above.</span>
-<span class="cm">        It is substantially equivalent to the built-in server.defaultDirList function.</span>
+<span class="cm">        It is substantially equivalent to the built-in listing produced by</span>
+<span class="cm">        setting directoryFunc to true.</span>
 
 <span class="cm">        If directoryFunc is not set, a url pointing to a directory without an index.htm(l)</span>
 <span class="cm">        will return a 403 Forbidden error.</span>
@@ -2037,7 +2079,7 @@ buffer.</p>
         <span class="p">},</span>
 
         <span class="cm">/* directory for scripts */</span>
-        <span class="s2">&quot;/scripts/&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;modulePath&quot;</span> <span class="o">:</span> <span class="s2">&quot;/var/www/scripts&quot;</span> <span class="p">}</span>
+        <span class="s2">&quot;/scripts/&quot;</span><span class="o">:</span> <span class="p">{</span> <span class="s2">&quot;modulePath&quot;</span> <span class="o">:</span> <span class="s2">&quot;/var/www/scripts&quot;</span> <span class="p">},</span>
 
         <span class="cm">/* static content */</span>
         <span class="s2">&quot;/&quot;</span> <span class="o">:</span> <span class="s2">&quot;/var/www/html&quot;</span>
@@ -2077,9 +2119,9 @@ chunk to be written.</p>
 <span class="kd">function</span> <span class="nx">mycallback</span><span class="p">(</span><span class="nx">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="p">...</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="nx">chunk</span><span class="o">:</span>      <span class="kc">true</span>
+        <span class="nx">chunk</span><span class="o">:</span>      <span class="kc">true</span><span class="p">,</span>
         <span class="nx">chunkDelay</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span>
-        <span class="nx">mp4</span><span class="o">:</span>        <span class="nx">send_mp4</span>
+        <span class="nx">mp4</span><span class="o">:</span>        <span class="nx">send_mp4_chunk</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -2807,7 +2849,11 @@ must be placed somewhere in the file outside other functions.</p>
 <p>NOTE:
 Except for multipart form data, all values returned will be strings.
 If value is repeated in posted form data or in the query, then it will be
-returned as a JSON string.  E.g:</p>
+returned as a JSON string.  This string behavior applies to these C get
+functions only — in a JavaScript handler, <code class="docutils literal notranslate"><span class="pre">req.query</span></code>/<code class="docutils literal notranslate"><span class="pre">req.params</span></code>
+deliver repeated parameters as actual <span class="green">Arrays</span> and bracketed
+parameters as actual <span class="green">Objects</span> (e.g. <code class="docutils literal notranslate"><span class="pre">req.query.x</span> <span class="pre">=</span>
+<span class="pre">[&quot;val1&quot;,&quot;val2&quot;]</span></code>), not JSON strings.  E.g:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>http://localhost:8088/apps/my_mod/?x=val1&amp;x=val2
     x = &quot;[\&quot;val1\&quot;, \&quot;val2\&quot;]&quot;
 
@@ -3789,7 +3835,7 @@ from the filesystem which end in <code class="docutils literal notranslate"><spa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

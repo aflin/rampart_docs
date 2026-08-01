@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-lmdb module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-lmdb module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-redis module" href="rampart-redis.html"/>
         <link rel="prev" title="The rampart-curl module" href="rampart-curl.html"/> 
 
@@ -799,13 +799,12 @@ transaction below is open.</p>
 <span class="cm">        cursorNext:  {_func: true},</span>
 <span class="cm">        cursorPrev:  {_func: true},</span>
 <span class="cm">        commit:      {_func: true},</span>
-<span class="cm">        abort:       {_func: true},</span>
-<span class="cm">        lmdb:        {} //the above lmdb object</span>
+<span class="cm">        abort:       {_func: true}</span>
 <span class="cm">    }</span>
 <span class="cm">*/</span>
 
 <span class="cm">/* use connection, then commit or abort */</span>
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -865,14 +864,17 @@ transactions should be closed as soon as all writes are finished.</p>
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is an optional database handle as returned from <a class="reference internal" href="#opendb">openDb</a>().
+If given, it overrides the database the transaction was opened on for
+this call.</li>
 <li><code class="docutils literal notranslate"><span class="pre">key</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span>, the key of the item
 to be retrieved.</li>
 <li><code class="docutils literal notranslate"><span class="pre">return_string</span></code> is a <span class="green">Boolean</span>. If <code class="docutils literal notranslate"><span class="pre">true</span></code> the return value
@@ -900,7 +902,7 @@ will be a <span class="green">Buffer</span>.</li>
 
 <span class="cm">/* use res here */</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 
 <span class="cm">/* res data is invalid and buffer is reset to zero length */</span>
 </pre></div>
@@ -969,7 +971,7 @@ by the <span class="green">Object’s</span> keys.</p>
 
 <span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1004,7 +1006,7 @@ be automatically decoded.</li>
 
 <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1039,14 +1041,18 @@ return the key and value of the item at the cursor’s new position.</p>
 <span class="cm">/* open read only if only reading in this transaction */</span>
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="kc">false</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
 <blockquote>
 <div><ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dbase</span></code> is an optional database handle as returned from <a class="reference internal" href="#opendb">openDb</a>().
+If given, it overrides the database the transaction was opened on for
+this call.</p>
+</li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">op</span></code> is a flag, which specifies the operation mode and is one of the following:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1102,7 +1108,7 @@ by the given key.  Move cursor to the item’s location.</p>
 
 <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1138,7 +1144,7 @@ be automatically decoded.</li>
 <span class="cm">/* delete item at cursor position */</span>
 <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">();</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -1160,7 +1166,7 @@ be automatically decoded.</li>
 <span class="cm">/* position the cursor at next item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorNext</span><span class="p">([</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1185,7 +1191,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <span class="cm">/* position the cursor at next item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The exception is that if the cursor is already at the last item,
@@ -1210,7 +1216,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
     <span class="cm">/* do something with res */</span>
 <span class="p">}</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -1233,7 +1239,7 @@ is at the last item (in which case <code class="docutils literal notranslate"><s
 <span class="cm">/* position the cursor at previous item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPrev</span><span class="p">([</span><span class="nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -1258,7 +1264,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
 <span class="cm">/* position the cursor at previous item*/</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class="nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">op_prev</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>The exception is that if the cursor is already at the first item,
@@ -1283,7 +1289,7 @@ If <code class="docutils literal notranslate"><span class="pre">false</span></co
     <span class="cm">/* do something with res */</span>
 <span class="p">}</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -1303,9 +1309,9 @@ associated mutex lock is released.</p>
 
 <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="nx">open_rw</span><span class="p">);</span>
 
-<span class="cm">/* use tnx here */</span>
+<span class="cm">/* use txn here */</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -1325,10 +1331,10 @@ associated mutex lock is released.</p>
 
  <span class="kd">var</span> <span class="nx">txn</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">lmdb</span><span class="p">.</span><span class="nx">transaction</span><span class="p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="nx">open_rw</span><span class="p">);</span>
 
- <span class="cm">/* use tnx here */</span>
+ <span class="cm">/* use txn here */</span>
 
 <span class="cm">/* discard any/all changes */</span>
- <span class="nx">tnx</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
+ <span class="nx">txn</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -1496,7 +1502,7 @@ significantly improved.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

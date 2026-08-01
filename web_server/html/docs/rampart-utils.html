@@ -936,9 +936,11 @@
                                 <code class="docutils literal notranslate"><span class="pre">%H</span></code> - html
                                 encode (or if <code class="docutils literal notranslate"><span class=
                                 "pre">!</span></code> flag present, decode) a <span class="green">String</span> or
-                                <span class="green">Buffer</span>. Without the <code class=
-                                "docutils literal notranslate"><span class="pre">!</span></code> flag, <span class=
-                                "green">Objects</span> are converted to JSON first.
+                                <span class="green">Buffer</span>. Unlike <code class=
+                                "docutils literal notranslate"><span class="pre">%U</span></code> above, <span class=
+                                "green">Objects</span> are not accepted and will throw an error; convert with
+                                <code class="docutils literal notranslate"><span class=
+                                "pre">JSON.stringify()</span></code> first if needed.
                               </p>
                             </li>
                             <li>
@@ -1360,13 +1362,13 @@
                           <div class="highlight json-custom">
                             <pre style="padding:0.6em;&quot;">
 {
-   <span class="nt0">Number"</span>: <span class="n0">1.23</span>,
+   <span class="nt0">"Number"</span>: <span class="n0">1.23</span>,
    <span class="nt0">"Bool"</span>: <span class="b0">true</span>,
    <span class="nt0">"String"</span>: <span class="s0">"Hello World!"</span>,
    <span class="nt0">"Null"</span>: <span class="N0">null</span>
 }
 {
-   <span class="nt1">Number"</span>: <span class="n1">1.23</span>,
+   <span class="nt1">"Number"</span>: <span class="n1">1.23</span>,
    <span class="nt1">"Bool"</span>: <span class="b1">true</span>,
    <span class="nt1">"String"</span>: <span class="s1">"Hello World!"</span>,
    <span class="nt1">"Null"</span>: <span class="N1">null</span>
@@ -1609,14 +1611,17 @@
                               to this length and the formatted output is then appended (so any bytes of <code class=
                               "docutils literal notranslate"><span class="pre">oldbuf</span></code> at and after
                               <code class="docutils literal notranslate"><span class="pre">start</span></code> are
-                              discarded). For example, <code class="docutils literal notranslate"><span class=
-                              "pre">abprintf("hello",</span> <span class="pre">2,</span> <span class=
+                              discarded). For example, if <code class="docutils literal notranslate"><span class=
+                              "pre">oldbuf</span></code> holds <code class="docutils literal notranslate"><span class=
+                              "pre">"hello"</span></code>, <code class="docutils literal notranslate"><span class=
+                              "pre">abprintf(oldbuf,</span> <span class="pre">2,</span> <span class=
                               "pre">"XX")</span></code> yields <code class="docutils literal notranslate"><span class=
-                              "pre">"heXX"</span></code>. Default is the end of <code class=
-                              "docutils literal notranslate"><span class="pre">oldbuf</span></code> (nothing truncated
-                              – a plain append). May be a negative number, signifying how many bytes from the end of
-                              <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> to
-                              truncate before appending.
+                              "pre">"heXX"</span></code> (note that the first argument must be a <span class=
+                              "green">Buffer</span>; a <span class="green">String</span> will throw). Default is the
+                              end of <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code>
+                              (nothing truncated – a plain append). May be a negative number, signifying how many bytes
+                              from the end of <code class="docutils literal notranslate"><span class=
+                              "pre">oldbuf</span></code> to truncate before appending.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">fmt,</span> <span class=
@@ -1782,7 +1787,7 @@
                           "p">.</span><span class="nx">utils</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">strintToNumber</span><span class="p">(</span><span class="s2">"five"</span><span class="p">);</span>
+"nx">stringToNumber</span><span class="p">(</span><span class="s2">"five"</span><span class="p">);</span>
 <span class="c1">// res = 5</span>
 
 <span class="nx">res</span> <span class="o">=</span> <span class="nx">stringToNumber</span><span class=
@@ -1836,7 +1841,8 @@
 <span class="cm">      "min": 0.5,</span>
 <span class="cm">      "max": 20,</span>
 <span class="cm">      "rem": "is our range"</span>
-<span class="cm">   }  */</span>
+<span class="cm">   }</span>
+<span class="cm">   note: range results carry min/max in place of op  */</span>
 </pre>
                         </div>
                       </div>
@@ -2677,12 +2683,12 @@
 <span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class=
 "nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
 "nx">readFile</span><span class="p">({</span>
-   <span class="nx">filename</span><span class="o">:</span>  <span class="s2">"/tmp/file.txt"</span><span class=
+   <span class="nx">file</span><span class="o">:</span>         <span class="s2">"/tmp/file.txt"</span><span class=
 "p">,</span>
-   <span class="nx">offset</span><span class="o">:</span>    <span class="mi">10</span><span class="p">,</span>
-   <span class="nx">length</span><span class="o">:</span>    <span class="o">-</span><span class=
+   <span class="nx">offset</span><span class="o">:</span>       <span class="mi">10</span><span class="p">,</span>
+   <span class="nx">length</span><span class="o">:</span>       <span class="o">-</span><span class=
 "mi">6</span><span class="p">,</span>
-   <span class="nx">retString</span><span class="o">:</span> <span class="kc">true</span>
+   <span class="nx">returnString</span><span class="o">:</span> <span class="kc">true</span>
 <span class="p">});</span>
 
 <span class="cm">/* or var txt = rampart.utils.readFile("/tmp/file.txt", 10, -6, true); */</span>
@@ -3736,8 +3742,8 @@
                           "nx">pipe2</span><span class="p">,</span> <span class="p">...,</span> <span class=
                           "nx">pipeX</span><span class="p">]);</span>
 
-<span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="o">=-</span><span class=
-"mi">1</span><span class="p">)</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">pid</span> <span class="o">==</span> <span class=
+"o">-</span><span class="mi">1</span><span class="p">)</span>
    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
 "p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class=
 "p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class=
@@ -3885,7 +3891,7 @@
    <span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class=
 "nx">pipe</span><span class="p">.</span><span class="nx">read</span><span class="p">();</span>
    <span class="k">if</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class=
-"nx">err</span><span class="p">)</span>
+"nx">error</span><span class="p">)</span>
       <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class=
 "p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class=
 "p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class=
@@ -4106,6 +4112,29 @@
 </pre>
                                 </div>
                               </div>
+                              <p>
+                                A <code class="docutils literal notranslate"><span class="pre">data</span></code>
+                                callback is expected to consume the data by calling <code class=
+                                "docutils literal notranslate"><span class="pre">pty.read()</span></code>. If a
+                                callback returns without reading anything, the <code class=
+                                "docutils literal notranslate"><span class="pre">data</span></code> event is paused and
+                                no further <code class="docutils literal notranslate"><span class=
+                                "pre">data</span></code> callbacks are made until <code class=
+                                "docutils literal notranslate"><span class="pre">pty.read()</span></code> is called
+                                again, at which point it resumes. Nothing is lost: the unread bytes stay in the
+                                pseudo-terminal and are returned by that next <code class=
+                                "docutils literal notranslate"><span class="pre">read()</span></code>. A callback that
+                                throws also reads nothing, and so pauses the event in the same way.
+                              </p>
+                              <p>
+                                An error thrown inside a <code class="docutils literal notranslate"><span class=
+                                "pre">data</span></code> or <code class="docutils literal notranslate"><span class=
+                                "pre">close</span></code> callback is reported on stderr as <code class=
+                                "docutils literal notranslate"><span class="pre">Error</span> <span class=
+                                "pre">in</span> <span class="pre">forkpty</span> <span class="pre">'data'</span>
+                                <span class="pre">callback:</span></code> followed by a stack trace. It does not stop
+                                the script.
+                              </p>
                             </li>
                           </ul>
                           <p>
@@ -4132,6 +4161,36 @@
 "nx">msg</span><span class="p">);</span>
 <span class="k">else</span>
    <span class="nx">do_cleanup</span><span class="p">();</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            This applies to <code class="docutils literal notranslate"><span class=
+                            "pre">pty.read()</span></code> as well: a <code class=
+                            "docutils literal notranslate"><span class="pre">data</span></code> event may arrive just
+                            as the child exits, so guard with <code class="docutils literal notranslate"><span class=
+                            "pre">if(pty.read)</span></code> inside the handler too. Note that on that final event the
+                            guard will still pass - <code class="docutils literal notranslate"><span class=
+                            "pre">read()</span></code> is removed only once it has detected that the child is gone - so
+                            the return value should be checked as well:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="nx">pty</span><span class="p">.</span><span class=
+                              "nx">on</span><span class="p">(</span><span class="s1">'data'</span><span class=
+                              "p">,</span> <span class="kd">function</span><span class="p">()</span> <span class=
+                              "p">{</span>
+   <span class="k">if</span><span class="p">(</span><span class="nx">pty</span><span class="p">.</span><span class=
+"nx">read</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class=
+"nx">pty</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class=
+"mi">4096</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class=
+"p">)</span>            <span class="cm">/* undefined on the last event */</span>
+         <span class="nx">process_data</span><span class="p">(</span><span class="nx">data</span><span class=
+"p">);</span>
+   <span class="p">}</span>
+<span class="p">});</span>
 </pre>
                             </div>
                           </div>
@@ -4427,6 +4486,15 @@
                         "pre">path</span></code> will also be removed. Throws an error if the directory cannot be
                         removed (e.g., not empty or lacking permission).
                       </p>
+                      <p>
+                        Note that <code class="docutils literal notranslate"><span class="pre">recurse</span></code>
+                        removes parent directories, not children – it does not delete the contents of <code class=
+                        "docutils literal notranslate"><span class="pre">path</span></code>. Take care when combining
+                        it with an absolute path: every empty parent directory up the tree is removed in turn, stopping
+                        only where removal fails (which then throws). Prefer a relative path, or omit <code class=
+                        "docutils literal notranslate"><span class="pre">recurse</span></code> and remove the levels
+                        you intend explicitly.
+                      </p>
                       <dl class="docutils">
                         <dt>
                           Return Value:
@@ -4468,9 +4536,15 @@
                         <div class="highlight">
                           <pre><span></span><span class="kd">var</span> <span class="nx">files</span> <span class=
                           "o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class=
-                          "nx">utils</span><span class="p">.</span><span class="nx">readdir</span><span class=
+                          "nx">utils</span><span class="p">.</span><span class="nx">readDir</span><span class=
                           "p">(</span><span class="nx">path</span> <span class="p">[,</span> <span class=
                           "nx">showhidden</span><span class="p">]);</span>
+
+<span class="cm">/* readdir (all lowercase) is an equivalent alias */</span>
+<span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class=
+"nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
+"nx">readdir</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span> <span class=
+"nx">showhidden</span><span class="p">]);</span>
 </pre>
                         </div>
                       </div>
@@ -4481,7 +4555,9 @@
                         "green">Boolean</span>, which if <code class="docutils literal notranslate"><span class=
                         "pre">true</span></code>, files or directories beginning with <code class=
                         "docutils literal notranslate"><span class="pre">.</span></code> (hidden files) will be
-                        included in the return value.
+                        included in the return value. Note that this includes the <code class=
+                        "docutils literal notranslate"><span class="pre">.</span></code> and <code class=
+                        "docutils literal notranslate"><span class="pre">..</span></code> directory entries themselves.
                       </p>
                       <dl class="docutils">
                         <dt>
@@ -4684,7 +4760,10 @@
                       </p>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">
-                          <pre><span></span><span class="cm">/* All .js files anywhere below ./src */</span>
+                          <pre><span></span><span class="cm">/* All .js files anywhere below ./src.</span>
+<span class="cm">   Returned paths are prefixed with the cwd as given, so this yields</span>
+<span class="cm">   e.g. "./src/main.js", not "main.js".  An absolute cwd likewise</span>
+<span class="cm">   yields absolute paths. */</span>
 <span class="kd">var</span> <span class="nx">src</span> <span class="o">=</span> <span class=
 "nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class=
 "nx">glob</span><span class="p">(</span><span class="s2">"**/*.js"</span><span class="p">,</span> <span class=
@@ -4983,7 +5062,10 @@
                           Return Value:
                         </dt>
                         <dd>
-                          <span class="green">Number</span>. The count of entries actually written to disk.
+                          <span class="green">Number</span>. The count of entries actually written to disk. Directory
+                          entries in the archive are not counted; only files (and symlinks, if extracted) contribute to
+                          the total, so the number may be lower than the entry count reported by <a class=
+                          "reference internal" href="#ziplist">zipList</a>().
                         </dd>
                       </dl>
                       <p>
@@ -8891,8 +8973,8 @@
                           "nx">utils</span><span class="p">.</span><span class="nx">fgets</span><span class=
                           "p">([</span><span class="nx">handle</span><span class="o">|</span><span class=
                           "nx">file</span><span class="p">]</span> <span class="p">[,</span> <span class=
-                          "nx">options</span><span class="p">[,</span> <span class="nx">max_size</span><span class=
-                          "p">]]);</span>
+                          "nx">options</span><span class="p">]</span> <span class="p">[,</span> <span class=
+                          "nx">max_size</span><span class="p">]);</span>
 </pre>
                         </div>
                       </div>
@@ -8901,7 +8983,11 @@
                         "pre">max_size</span></code> bytes (default <code class=
                         "docutils literal notranslate"><span class="pre">1</span></code>), stopping at and including
                         the first <code class="docutils literal notranslate"><span class="pre">\n</span></code> or the
-                        end of the file.
+                        end of the file. Note that with the default <code class=
+                        "docutils literal notranslate"><span class="pre">max_size</span></code> a single byte is
+                        returned; to read a full line, pass a <code class="docutils literal notranslate"><span class=
+                        "pre">max_size</span></code> larger than the longest expected line (or use <a class=
+                        "reference internal" href="#readline">readLine</a>()).
                       </p>
                       <p>
                         If <code class="docutils literal notranslate"><span class="pre">options</span></code> is
@@ -8915,7 +9001,8 @@
                           Return Value:
                         </dt>
                         <dd>
-                          A <span class="green">String</span>.
+                          A <span class="green">String</span>, or <code class=
+                          "docutils literal notranslate"><span class="pre">null</span></code> at end of file.
                         </dd>
                       </dl>
                     </div>
@@ -9140,7 +9227,9 @@
                       <p>
                         Return file status for the open handle. Equivalent to calling <a class="reference internal"
                         href="#stat">stat</a>() on the path the handle was opened with, but works on the underlying
-                        file descriptor – useful when the file may have been renamed or unlinked after opening.
+                        file descriptor – useful when the file may have been renamed or unlinked after opening. Note
+                        that buffered writes are not reflected in the reported size until <a class="reference internal"
+                        href="#fflush">fflush</a>() (or a close) pushes them to the file descriptor.
                       </p>
                       <p>
                         Usage:
@@ -10397,9 +10486,11 @@
                     <p>
                       For node-style asynchronous variants, plus the legacy stream classes (<code class=
                       "docutils literal notranslate"><span class="pre">zlib.Deflate</span></code>, <code class=
-                      "docutils literal notranslate"><span class="pre">zlib.Gzip</span></code>, etc.), see <span class=
-                      "xref std std-ref">require(‘zlib’)</span> in the nodeshim docs. The synchronous functions below
-                      are the implementation those wrappers delegate to.
+                      "docutils literal notranslate"><span class="pre">zlib.Gzip</span></code>, etc.), see <code class=
+                      "docutils literal notranslate"><span class="pre">zlib</span></code> under <a class=
+                      "reference internal" href="rampart-extras.html#rampart-nodeshim-module"><span class=
+                      "std std-ref">rampart-nodeshim Module</span></a>. The synchronous functions below are the
+                      implementation those wrappers delegate to.
                     </p>
                     <div class="section" id="gzip">
                       <h3>
@@ -11185,7 +11276,10 @@
                       <p>
                         Where <code class="docutils literal notranslate"><span class="pre">value</span></code> is a
                         <span class="green">String</span>, <span class="green">Buffer</span> or an array of
-                        <span class="green">Strings</span> and/or <span class="green">Buffers</span>.
+                        <span class="green">Strings</span> and/or <span class="green">Buffers</span>. A <span class=
+                        "green">Buffer</span> value would typically come from, e.g., <a class="reference internal"
+                        href="#readfile">readFile</a> or <a class="reference internal" href=
+                        "#stringtobuffer">stringToBuffer</a>.
                       </p>
                       <dl class="docutils">
                         <dt>

@@ -91,9 +91,11 @@ new rampart.thread()
               ``rampart.vector``, etc.).
             - The ``process`` global.
             - The ``require()`` function.
-            - WHATWG / Web platform globals (``URL``, ``crypto``, ``Blob``,
-              etc.) — these are not installed and their lazy getters are
-              not present.
+            - Most WHATWG / Web platform globals (``URL``, ``crypto``,
+              ``fetch``, ``setTimeout``, etc.) — these are not installed and
+              their lazy getters are not present.  Note that a few remain
+              available in a bare thread: ``Blob``, ``File``,
+              ``TextEncoder``, ``TextDecoder`` and ``console``.
             - Any properties from the parent thread's ``globalThis`` —
               the normal "copy of globals at thread creation" step is
               skipped (compare to the bullet under `thr.exec()`_
@@ -239,11 +241,12 @@ thr.exec()
           ``notcopied`` will not be copied since it was set after the thread was
           created.
 
-        * In the positional form, optional arguments cannot be skipped with
-          ``null``/``undefined`` placeholders --
-          ``thr.exec(threadFunc, threadArg, null, threadDelay)`` throws.  To
-          set ``threadDelay`` without a ``callbackFunc``, use the
-          ``options`` :green:`Object` form instead.
+        * In the positional form, optional arguments cannot be skipped with a
+          ``null`` placeholder --
+          ``thr.exec(threadFunc, threadArg, null, threadDelay)`` throws.
+          ``undefined`` *is* accepted in that position, but for clarity use
+          the ``options`` :green:`Object` form to set ``threadDelay`` without
+          a ``callbackFunc``.
 
         * A ``callbackFunc`` runs in the event loop of the thread that called
           ``new rampart.thread()``.  If that is the main thread, it will not

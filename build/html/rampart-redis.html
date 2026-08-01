@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-redis module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-redis module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-totext module" href="rampart-totext.html"/>
         <link rel="prev" title="The rampart-lmdb module" href="rampart-lmdb.html"/> 
 
@@ -362,7 +362,7 @@ asynchronous commands.</p>
 <div class="section" id="async-commands">
 <h3>_async Commands<a class="headerlink" href="#async-commands" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><code class="docutils literal notranslate"><span class="pre">blmove_async</span></code>, <code class="docutils literal notranslate"><span class="pre">brpop_async</span></code>, <code class="docutils literal notranslate"><span class="pre">bzpopmax_async</span></code>,
+<div><code class="docutils literal notranslate"><span class="pre">blmove_async</span></code>, <code class="docutils literal notranslate"><span class="pre">blpop_async</span></code>, <code class="docutils literal notranslate"><span class="pre">brpop_async</span></code>, <code class="docutils literal notranslate"><span class="pre">bzpopmax_async</span></code>,
 <code class="docutils literal notranslate"><span class="pre">bzpopmin_async</span></code> and <code class="docutils literal notranslate"><span class="pre">format_async</span></code> are equivalent to
 their non-async counterparts with the <code class="docutils literal notranslate"><span class="pre">options</span></code> <span class="green">Object</span> set to
 <code class="docutils literal notranslate"><span class="pre">{async:true}</span></code>.</div></blockquote>
@@ -430,16 +430,21 @@ of format codes are available:</p>
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">%s</span></code> - the corresponding parameter is and will be sent as a
 <span class="green">String</span></li>
-<li><code class="docutils literal notranslate"><span class="pre">%c</span></code> - the corresponding parameter is a <span class="green">String</span>, the
-first character of which will be sent as a single character.</li>
-<li><code class="docutils literal notranslate"><span class="pre">%i</span></code> - the corresponding parameter is a <span class="green">Number</span> and
-will be converted and sent as an integer.</li>
 <li><code class="docutils literal notranslate"><span class="pre">%d</span></code>  the corresponding parameter is a <span class="green">Number</span> and
-will be sent as a double float.</li>
+will be converted and sent as an integer.  <code class="docutils literal notranslate"><span class="pre">%u</span></code> sends it as
+an unsigned integer, and <code class="docutils literal notranslate"><span class="pre">%lld</span></code>/<code class="docutils literal notranslate"><span class="pre">%llu</span></code> as a long long.</li>
+<li><code class="docutils literal notranslate"><span class="pre">%f</span></code>  the corresponding parameter is a <span class="green">Number</span> and
+will be sent as a double float.  <code class="docutils literal notranslate"><span class="pre">%lf</span></code> and <code class="docutils literal notranslate"><span class="pre">%ld</span></code> are
+equivalent.</li>
 <li><code class="docutils literal notranslate"><span class="pre">%b</span></code>  the corresponding parameter is a <span class="green">Buffer</span> or a
-<span class="green">String</span> and will be sent as buffer data.</li>
+<span class="green">String</span> and will be sent as buffer data.  <code class="docutils literal notranslate"><span class="pre">%b</span></code>
+consumes <strong>two</strong> parameters: the data, followed by a
+<span class="green">Number</span> giving its length.</li>
+<li><code class="docutils literal notranslate"><span class="pre">%%</span></code>  a literal percent sign.</li>
 </ul>
 </div></blockquote>
+<p>Note that there is no <code class="docutils literal notranslate"><span class="pre">%c</span></code> or <code class="docutils literal notranslate"><span class="pre">%i</span></code> code; using either results
+in <code class="docutils literal notranslate"><span class="pre">Invalid</span> <span class="pre">%</span> <span class="pre">code</span> <span class="pre">in</span> <span class="pre">sendRespCommand()</span></code>.</p>
 </li>
 </ul>
 </div></blockquote>
@@ -912,9 +917,17 @@ to and from <a class="reference external" href="https://duktape.org/guide.html#b
 which limits what can be stored (no <span class="green">Dates</span> or
 <span class="green">Functions</span>);</p>
 </li>
+<li><p class="first">Because the values are CBOR encoded, a Proxy Object’s Redis Hash must
+not also be written with the ordinary hash commands (<code class="docutils literal notranslate"><span class="pre">hset</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hmset</span></code>, etc.), nor read with them and expected to be meaningful.
+Use one or the other for a given key;</p>
+</li>
 <li><p class="first">Proxy Objects are saved to the Redis Key specified when the object is
 created (i.e. <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rcl.proxyObj(redisKeyName)</span></code>).  If the Redis Key
-already exists and is not a Redis Hash, an error will be thrown.</p>
+already exists and is not a Redis Hash, an error will be thrown.  A key
+that does not yet exist, or that already holds a Redis Hash, is
+accepted – attaching to an existing Hash is how a second script picks
+up shared data;</p>
 </li>
 <li><p class="first">Any Proxy Object key that begins with <code class="docutils literal notranslate"><span class="pre">_</span></code> (underscore) will not be
 saved to the Redis Hash and will only exist locally.  The following
@@ -1013,7 +1026,7 @@ not work as intended.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

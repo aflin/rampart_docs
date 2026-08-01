@@ -578,6 +578,12 @@
 "nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span> <span class=
 "nx">url</span><span class="o">|</span><span class="nx">url_list</span><span class="p">[,</span> <span class=
 "nx">options</span><span class="p">][,</span> <span class="nx">callback</span><span class="p">]);</span>
+
+<span class="cm">/* the options may equivalently be given first */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
+"nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span> <span class=
+"nx">options</span><span class="p">,</span> <span class="nx">url</span><span class="o">|</span><span class=
+"nx">url_list</span><span class="p">[,</span> <span class="nx">callback</span><span class="p">]);</span>
 </pre>
                             </div>
                           </div>
@@ -675,6 +681,12 @@
                                 "docutils literal notranslate"><span class="pre">true</span></code> (see <a class=
                                 "reference internal" href="#curl-options">Curl Options</a> below).
                               </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class=
+                                "pre">effectiveUrlUnicode</span></code> - the same as <code class=
+                                "docutils literal notranslate"><span class="pre">effectiveUrl</span></code>, with any
+                                internationalized (punycode) host name converted back to unicode.
+                              </li>
                             </ul>
                             <p>
                               Other possible properties of the results <span class="green">Object</span> are (not all
@@ -698,7 +710,7 @@
                                 <code class="docutils literal notranslate"><span class="pre">false</span></code>.
                               </li>
                               <li>
-                                <code class="docutils literal notranslate"><span class="pre">localIp</span></code> - a
+                                <code class="docutils literal notranslate"><span class="pre">localIP</span></code> - a
                                 <span class="green">String</span>, the IP address used to connect to the remote server.
                               </li>
                               <li>
@@ -706,7 +718,7 @@
                                 a <span class="green">Number</span>, the port used to connect to the remote server.
                               </li>
                               <li>
-                                <code class="docutils literal notranslate"><span class="pre">serverIp</span></code> - a
+                                <code class="docutils literal notranslate"><span class="pre">serverIP</span></code> - a
                                 <span class="green">String</span>, the IP address of the remote server.
                               </li>
                               <li>
@@ -736,7 +748,11 @@
                               </li>
                               <li>
                                 <code class="docutils literal notranslate"><span class="pre">cookies</span></code> - an
-                                <span class="green">Array</span>, a list of cookies sent from the remote server.
+                                <span class="green">Array</span>, a list of cookies sent from the remote server. Only
+                                present if the <code class="docutils literal notranslate"><span class=
+                                "pre">cookie</span></code> or <code class="docutils literal notranslate"><span class=
+                                "pre">cookie-jar</span></code> option was used for the request. Each entry is a line in
+                                Netscape cookie-jar format, not a parsed <span class="green">Object</span>.
                               </li>
                             </ul>
                           </div>
@@ -831,8 +847,8 @@
                         <dd>
                           <code class="docutils literal notranslate"><span class="pre">submit()</span></code> is
                           preferred over <code class="docutils literal notranslate"><span class=
-                          "pre">fetch()</span></code> when retrieving multiple urls which neet to have different option
-                          apply to each url.
+                          "pre">fetch()</span></code> when retrieving multiple urls which need to have different
+                          options apply to each url.
                         </dd>
                       </dl>
                     </div>
@@ -1174,7 +1190,8 @@
                               "o">=</span> <span class="nx">curl</span><span class="p">.</span><span class=
                               "nx">encode</span><span class="p">(</span><span class=
                               "s1">'hello world&amp;foo=bar'</span><span class="p">);</span>
-<span class="c1">// "hello%20world%26foo%3Dbar"</span>
+<span class="c1">// "hello+world%26foo%3dbar"</span>
+<span class="c1">// (spaces become '+', hex escapes are lower case)</span>
 </pre>
                             </div>
                           </div>
@@ -2178,6 +2195,15 @@
                                 the current chunk of data and res.text is not present. This function will return chunks
                                 of data regardless of whether <code class="docutils literal notranslate"><span class=
                                 "pre">Content-Encoding:</span> <span class="pre">chunked</span></code> is being used.
+                                Note that a <code class="docutils literal notranslate"><span class=
+                                "pre">chunkCallback</span></code> requires a main callback as well; supplying it to a
+                                synchronous <code class="docutils literal notranslate"><span class=
+                                "pre">fetch()</span></code> throws <code class=
+                                "docutils literal notranslate"><span class="pre">fetch:</span> <span class=
+                                "pre">chunkCallback</span> <span class="pre">cannot</span> <span class="pre">be</span>
+                                <span class="pre">used</span> <span class="pre">without</span> <span class=
+                                "pre">a</span> <span class="pre">normal</span> <span class="pre">Callback</span>
+                                <span class="pre">function</span></code>.
                               </p>
                             </li>
                             <li>
@@ -2272,8 +2298,8 @@
 "p">,</span> <span class="nx">unit</span> <span class="p">);</span>
             <span class="k">else</span>
                 <span class="nx">out</span><span class="o">=</span><span class="nx">sprintf</span><span class=
-"p">(</span><span class="s2">"    %d bytes"</span><span class="p">,</span> <span class="nx">o</span><span class=
-"p">.</span><span class="nx">file</span><span class="p">,</span> <span class="nx">tot</span><span class="p">);</span>
+"p">(</span><span class="s2">"    %d bytes"</span><span class="p">,</span> <span class="nx">tot</span><span class=
+"p">);</span>
             <span class="nx">printf</span><span class="p">(</span><span class="s1">'%M'</span><span class=
 "p">,</span> <span class="p">[</span><span class="sb">`downloading file </span><span class="si">${</span><span class=
 "nx">myurl</span><span class="si">}</span><span class="sb"> -&gt;`</span><span class="p">,</span> <span class=
@@ -2448,6 +2474,16 @@
                                       redirects)
                                     </td>
                                   </tr>
+                                  <tr class="row-odd">
+                                    <td>
+                                      <code class="docutils literal notranslate"><span class=
+                                      "pre">urlUnicode</span></code>
+                                    </td>
+                                    <td>
+                                      same as <code class="docutils literal notranslate"><span class=
+                                      "pre">url</span></code>, with any punycode host name converted back to unicode
+                                    </td>
+                                  </tr>
                                 </tbody>
                               </table>
                               <p>
@@ -2457,10 +2493,16 @@
                                 "pre">CURLE_ABORTED_BY_CALLBACK</span></code>; the final callback’s <code class=
                                 "docutils literal notranslate"><span class="pre">r.errMsg</span></code> will contain
                                 <code class="docutils literal notranslate"><span class="pre">"curl</span> <span class=
-                                "pre">failed:</span> <span class="pre">Operation</span> <span class="pre">was</span>
-                                <span class="pre">aborted</span> <span class="pre">by</span> <span class=
-                                "pre">an</span> <span class="pre">application</span> <span class=
-                                "pre">callback"</span></code>.
+                                "pre">failed</span> <span class="pre">for</span> <span class=
+                                "pre">'&lt;url&gt;':</span> <span class="pre">Operation</span> <span class=
+                                "pre">was</span> <span class="pre">aborted</span> <span class="pre">by</span>
+                                <span class="pre">an</span> <span class="pre">application</span> <span class=
+                                "pre">callback"</span></code>. Note that errors reported to a callback are prefixed
+                                with the url of the transfer they belong to (several transfers may be in flight at
+                                once); errors returned from a synchronous <code class=
+                                "docutils literal notranslate"><span class="pre">fetch()</span></code> are not, and
+                                read simply <code class="docutils literal notranslate"><span class="pre">"curl</span>
+                                <span class="pre">failed:</span> <span class="pre">..."</span></code>.
                               </p>
                               <p>
                                 Returning any other value — including <code class=
@@ -2969,7 +3011,7 @@
                           <ul class="simple">
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">0</span></code> - same as
-                              <code class="docutils literal notranslate"><span class="pre">http-1.0</span></code>.
+                              <code class="docutils literal notranslate"><span class="pre">http1.0</span></code>.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">1</span></code> - same as
@@ -3345,8 +3387,9 @@
                       <p>
                         There may be cases where, while fetching HTML pages, more resources are discovered and can be
                         added to the list of URLs that <code class="docutils literal notranslate"><span class=
-                        "pre">fetch()</span></code> will retrieve. The following example uses <span class=
-                        "xref std std-ref">the rampart-html module</span> to extract links from the <code class=
+                        "pre">fetch()</span></code> will retrieve. The following example uses <a class=
+                        "reference internal" href="rampart-html.html#the-rampart-html-module"><span class=
+                        "std std-ref">the rampart-html module</span></a> to extract links from the <code class=
                         "docutils literal notranslate"><span class="pre">index.html</span></code> page on a sample
                         website (using <a class="reference external" href=
                         "https://github.com/dragdropsite/mPurpose">this</a> example) and “crawl” the rest of the site.

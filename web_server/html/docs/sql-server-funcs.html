@@ -619,10 +619,14 @@
                         "docutils literal notranslate"><span class="pre">f16</span></code>
                       </p>
                       <p>
-                        Performs the same distance calculation as <span class="xref std std-ref">rampart-vector:Vector
-                        Distance Function</span> with the exception that <code class=
-                        "docutils literal notranslate"><span class="pre">type</span></code> must be a buffer type and
-                        cannot be <code class="docutils literal notranslate"><span class="pre">numbers</span></code>.
+                        Performs the same distance calculation as <a class="reference internal" href=
+                        "rampart-vector.html#distance-function"><span class="std std-ref">Distance Function</span></a>
+                        with the exception that <code class="docutils literal notranslate"><span class=
+                        "pre">type</span></code> must be a buffer type and cannot be <code class=
+                        "docutils literal notranslate"><span class="pre">numbers</span></code>. Note that when the
+                        column is a typed <code class="docutils literal notranslate"><span class=
+                        "pre">varvec*</span></code>, the <code class="docutils literal notranslate"><span class=
+                        "pre">type</span></code> argument is redundant and is ignored; the column’s own type is used.
                       </p>
                       <p>
                         With semantic embedding vectors, it can be used to rerank likep results.
@@ -656,46 +660,140 @@
                         Compute a semantic embedding vector for a piece of text using the connection’s currently-loaded
                         embedding model (<a class="reference internal" href="sql-set.html#llamaembed"><span class=
                         "std std-ref">llamaEmbed</span></a> — a <code class="docutils literal notranslate"><span class=
-                        "pre">llama.cpp</span></code> GGUF — or <a class="reference internal" href=
+                        "pre">llama.cpp</span></code> GGUF — <a class="reference internal" href=
                         "sql-set.html#onnxembed"><span class="std std-ref">onnxEmbed</span></a> — an ONNX model
-                        directory).
+                        directory — or <a class="reference internal" href="sql-set.html#clipembed"><span class=
+                        "std std-ref">clipEmbed</span></a> — a CLIP model, which can also embed
+                        <strong>images</strong>).
                       </p>
                       <div class="highlight-sql notranslate">
                         <div class="highlight">
                           <pre><span></span><span class="n">embed</span><span class="p">(</span><span class=
                           "nb">text</span> <span class="p">[,</span> <span class="n">dtype</span><span class=
-                          "p">])</span>
+                          "p">]</span> <span class="p">[,</span> <span class="n">kind</span> <span class=
+                          "p">[,</span> <span class="n">title</span><span class="p">]])</span>
 </pre>
                         </div>
                       </div>
-                      <ul class="simple">
+                      <ul>
                         <li>
-                          <code class="docutils literal notranslate"><span class="pre">text</span></code> is a
-                          <span class="green">String</span> column, bound parameter, literal, or any expression that
-                          evaluates to text. <code class="docutils literal notranslate"><span class=
-                          "pre">NULL</span></code> and the empty string produce <code class=
-                          "docutils literal notranslate"><span class="pre">NULL</span></code>.
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">text</span></code> is a
+                            <span class="green">String</span> column, bound parameter, literal, or any expression that
+                            evaluates to text. <code class="docutils literal notranslate"><span class=
+                            "pre">NULL</span></code> and the empty string produce <code class=
+                            "docutils literal notranslate"><span class="pre">NULL</span></code>. With <code class=
+                            "docutils literal notranslate"><span class="pre">kind</span></code> = <code class=
+                            "docutils literal notranslate"><span class="pre">'image'</span></code> it is instead an
+                            image <strong>file path</strong> or a <span class="green">Buffer</span> of image bytes.
+                          </p>
                         </li>
                         <li>
-                          <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is an
-                          optional <span class="green">String</span> naming the result vec dtype. One of <code class=
-                          "docutils literal notranslate"><span class="pre">'f16'</span></code> (default), <code class=
-                          "docutils literal notranslate"><span class="pre">'f32'</span></code>, <code class=
-                          "docutils literal notranslate"><span class="pre">'f64'</span></code>, or <code class=
-                          "docutils literal notranslate"><span class="pre">'bf16'</span></code>. <code class=
-                          "docutils literal notranslate"><span class="pre">''</span></code> and <code class=
-                          "docutils literal notranslate"><span class="pre">'auto'</span></code> are accepted
-                          placeholders for the default — useful in the three-argument <code class=
-                          "docutils literal notranslate"><span class="pre">chunkembed()</span></code>/<code class=
-                          "docutils literal notranslate"><span class="pre">chunkavg()</span></code> forms where a later
-                          argument follows the dtype. The named dtype propagates to the result column type:
-                          <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
-                          "pre">'f32')</span></code> returns a <code class="docutils literal notranslate"><span class=
-                          "pre">varvecF32</span></code>, <code class="docutils literal notranslate"><span class=
-                          "pre">embed(?)</span></code> returns a <code class=
-                          "docutils literal notranslate"><span class="pre">varvecF16</span></code>.
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is an
+                            optional <span class="green">String</span> naming the result vec dtype. One of <code class=
+                            "docutils literal notranslate"><span class="pre">'f16'</span></code> (default),
+                            <code class="docutils literal notranslate"><span class="pre">'f32'</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">'f64'</span></code>, or
+                            <code class="docutils literal notranslate"><span class="pre">'bf16'</span></code>.
+                            <code class="docutils literal notranslate"><span class="pre">''</span></code> and
+                            <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> are
+                            accepted placeholders for the default — useful in the three-argument <code class=
+                            "docutils literal notranslate"><span class="pre">chunkembed()</span></code>/<code class=
+                            "docutils literal notranslate"><span class="pre">chunkavg()</span></code> forms where a
+                            later argument follows the dtype. The named dtype propagates to the result column type:
+                            <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                            "pre">'f32')</span></code> returns a <code class=
+                            "docutils literal notranslate"><span class="pre">varvecF32</span></code>, <code class=
+                            "docutils literal notranslate"><span class="pre">embed(?)</span></code> returns a
+                            <code class="docutils literal notranslate"><span class="pre">varvecF16</span></code>.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">kind</span></code> is an
+                            optional <span class="green">String</span> saying <strong>what the value is</strong>. It
+                            may be given directly as the second argument (<code class=
+                            "docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                            "pre">'query')</span></code>) or after a dtype (<code class=
+                            "docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                            "pre">'f32',</span> <span class="pre">'query')</span></code>).
+                          </p>
+                          <p>
+                            <code class="docutils literal notranslate"><span class="pre">'query'</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">'document'</span></code> and
+                            <code class="docutils literal notranslate"><span class="pre">'raw'</span></code> select a
+                            model’s asymmetric retrieval prompt (see <a class="reference internal" href=
+                            "sql-set.html#retrieval-prompts"><span class="std std-ref">Retrieval prompts</span></a>).
+                            <code class="docutils literal notranslate"><span class="pre">'text'</span></code> is an
+                            explicit synonym for <code class="docutils literal notranslate"><span class=
+                            "pre">'raw'</span></code> — text content, no prompt — and exists so the modality reads
+                            symmetrically against <code class="docutils literal notranslate"><span class=
+                            "pre">'image'</span></code>. <code class="docutils literal notranslate"><span class=
+                            "pre">embed(text)</span></code> embeds verbatim, exactly as before prompts existed; with no
+                            prompts configured, every one of these embeds verbatim.
+                          </p>
+                          <p>
+                            <code class="docutils literal notranslate"><span class="pre">'image'</span></code> selects
+                            a different <strong>encoder</strong> rather than a prompt: the value is an image file path
+                            or a <span class="green">Buffer</span> of image bytes, and it is embedded by the vision
+                            tower of a <a class="reference internal" href="sql-set.html#clipembed"><span class=
+                            "std std-ref">clipEmbed</span></a> model into the same vector space as that model’s text
+                            output. Using <code class="docutils literal notranslate"><span class=
+                            "pre">'image'</span></code> on a text-only engine is an error — embedding the path <em>as
+                            text</em> would store a plausible but meaningless vector.
+                          </p>
+                          <p>
+                            All kind words are accepted by every engine (<code class=
+                            "docutils literal notranslate"><span class="pre">'text'</span></code> under an ONNX model
+                            simply means “no prompt”), so a statement keeps parsing when a connection’s engine changes.
+                          </p>
+                        </li>
+                        <li>
+                          <p class="first">
+                            <code class="docutils literal notranslate"><span class="pre">title</span></code> is an
+                            optional <span class="green">String</span>, valid only with <code class=
+                            "docutils literal notranslate"><span class="pre">'document'</span></code>: <code class=
+                            "docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                            "pre">'document',</span> <span class="pre">?)</span></code> folds the title into the
+                            document prompt (models whose prompt has a title slot use it; others get prompt + title +
+                            newline + text).
+                          </p>
                         </li>
                       </ul>
+                      <p>
+                        With an asymmetric model loaded, single-vector inserts should use <code class=
+                        "docutils literal notranslate"><span class="pre">embed(?,</span> <span class=
+                        "pre">'document')</span></code> so stored vectors match the query side — <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> with a string
+                        automatically applies the query prompt, and <code class=
+                        "docutils literal notranslate"><span class="pre">chunkembed()</span></code> automatically
+                        applies the document prompt.
+                      </p>
+                      <p>
+                        With a <a class="reference internal" href="sql-set.html#clipembed"><span class=
+                        "std std-ref">clipEmbed</span></a> model, images and text share one vector space, so images are
+                        stored and then found by text:
+                      </p>
+                      <div class="highlight-sql notranslate">
+                        <div class="highlight">
+                          <pre><span></span><span class="k">insert</span> <span class="k">into</span> <span class=
+                          "n">images</span> <span class="k">values</span> <span class="p">(</span><span class=
+                          "o">?</span><span class="p">,</span> <span class="o">?</span><span class=
+                          "p">,</span> <span class="n">embed</span><span class="p">(</span><span class=
+                          "o">?</span><span class="p">,</span> <span class="s1">'image'</span><span class=
+                          "p">));</span>
+<span class="k">select</span> <span class="n">Path</span> <span class="k">from</span> <span class=
+"n">images</span> <span class="k">where</span> <span class="n">Vec</span> <span class="n">likev</span> <span class=
+"s1">'a dog catching a frisbee'</span><span class="p">;</span>
+</pre>
+                        </div>
+                      </div>
+                      <p>
+                        <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> and
+                        friends are <strong>not</strong> available with a CLIP model (one vector per image; nothing to
+                        chunk).
+                      </p>
                       <p>
                         The model is configured via <a class="reference internal" href=
                         "sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> or <a class=
@@ -725,15 +823,16 @@
                       <p>
                         <code class="docutils literal notranslate"><span class="pre">embed()</span></code> requires the
                         engine’s module (<code class="docutils literal notranslate"><span class=
-                        "pre">rampart-llamacpp</span></code> or <code class="docutils literal notranslate"><span class=
-                        "pre">rampart-onnx</span></code>) to be installed. <code class=
+                        "pre">rampart-llamacpp</span></code>, <code class="docutils literal notranslate"><span class=
+                        "pre">rampart-onnx</span></code> or <code class="docutils literal notranslate"><span class=
+                        "pre">rampart-clip</span></code>) to be installed. <code class=
                         "docutils literal notranslate"><span class="pre">rampart-sql</span></code> auto-loads it on the
                         first <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span>
                         <span class="pre">...})</span></code> / <code class="docutils literal notranslate"><span class=
-                        "pre">sql.set({onnxEmbed:</span> <span class="pre">...})</span></code> call (trying the
-                        canonical name, then <code class="docutils literal notranslate"><span class=
-                        "pre">_cuda</span></code>, then <code class="docutils literal notranslate"><span class=
-                        "pre">_cpu</span></code>). To force a specific variant, <code class=
+                        "pre">sql.set({onnxEmbed:</span> <span class="pre">...})</span></code> / <code class=
+                        "docutils literal notranslate"><span class="pre">sql.set({clipEmbed:</span> <span class=
+                        "pre">...})</span></code> call, using the canonical module name — which the installer points at
+                        the installed build variant. To force a specific variant, <code class=
                         "docutils literal notranslate"><span class="pre">require()</span></code> it first. See
                         <a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class=
                         "std std-ref">Generating embeddings</span></a> for the full dependency and install notes.
@@ -842,8 +941,21 @@ SELECT embed('chocolate cake recipe', 'f32');
                         </div>
                       </div>
                       <p>
-                        Search-side queries need no change — the query string embeds without a prefix; the stored chunk
+                        Search-side queries need no change — the query string embeds without a title; the stored chunk
                         vectors simply carry the document’s name in their semantics.
+                      </p>
+                      <p>
+                        With an asymmetric model’s <a class="reference internal" href=
+                        "sql-set.html#retrieval-prompts"><span class="std std-ref">retrieval prompts</span></a> in
+                        effect, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>
+                        folds the model’s <strong>document</strong> prompt around this title automatically — a model
+                        whose prompt has a <code class="docutils literal notranslate"><span class=
+                        "pre">{title}</span></code> slot fills it, others get <code class=
+                        "docutils literal notranslate"><span class="pre">&lt;document</span> <span class=
+                        "pre">prompt&gt;&lt;title&gt;</span></code> as the per-chunk prefix — and <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code>’s string auto-embedding
+                        applies the <strong>query</strong> prompt. Both sides stay consistent with no change to the
+                        SQL.
                       </p>
                       <p>
                         Stored in a vector-indexed column, a chunked value gives <code class=
@@ -932,6 +1044,17 @@ SELECT embed('chocolate cake recipe', 'f32');
 </pre>
                         </div>
                       </div>
+                      <p>
+                        The offsets are UTF-8 <strong>bytes</strong>, not JavaScript string indices. A JS string
+                        position counts <em>characters</em>, so offsets taken from <code class=
+                        "docutils literal notranslate"><span class="pre">.indexOf()</span></code>/<code class=
+                        "docutils literal notranslate"><span class="pre">.length</span></code> arithmetic are only
+                        correct for pure-ASCII documents and silently drift on any multi-byte text. Compute byte
+                        positions instead (e.g. sum the UTF-8 byte lengths of the pieces). Mis-computed spans never
+                        error: <code class="docutils literal notranslate"><span class="pre">abstract()</span></code>
+                        clamps them to the text and aligns its cuts to whole UTF-8 characters — the snippet simply
+                        comes from the wrong part of the document.
+                      </p>
                       <p>
                         Without spans, custom-chunked rows still rank normally under <code class=
                         "docutils literal notranslate"><span class="pre">LIKEV</span></code>; their abstracts fall back
@@ -2071,6 +2194,22 @@ SELECT embed('chocolate cake recipe', 'f32');
                           <code class="docutils literal notranslate"><span class="pre">lowerInclusivity</span></code>:
                           Returns the inclusive/exclusive operator for the lower bound, e.g. “{” or “”
                         </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">lowerBound</span></code>:
+                          Returns the lower bound of the range, e.g. “10”
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">rangeOperator</span></code>:
+                          Returns the range operator, e.g. “..”
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">upperBound</span></code>:
+                          Returns the upper bound of the range, e.g. “20”
+                        </li>
+                        <li>
+                          <code class="docutils literal notranslate"><span class="pre">upperInclusivity</span></code>:
+                          Returns the inclusive/exclusive operator for the upper bound, e.g. “}” or “”
+                        </li>
                       </ul>
                       <p>
                         If a requested part is not present, an empty string is returned for that part. The
@@ -2176,8 +2315,14 @@ SELECT embed('chocolate cake recipe', 'f32');
                       </div>
                       <p>
                         Note that Texis <code class="docutils literal notranslate"><span class=
-                        "pre">isNull</span></code> behavior differs from some other SQL implementations; see also
-                        <a class="reference internal" href="#ifnull">ifNull</a>.
+                        "pre">isNull</span></code> behavior differs from some other SQL implementations: ordinary
+                        columns are non-nullable (an unset <code class="docutils literal notranslate"><span class=
+                        "pre">varchar</span></code> is an empty string, not NULL, and a <code class=
+                        "docutils literal notranslate"><span class="pre">NULL</span></code> literal is not accepted in
+                        <code class="docutils literal notranslate"><span class="pre">INSERT</span></code>), so
+                        <code class="docutils literal notranslate"><span class="pre">isNull</span></code> returns 1
+                        only for values that are genuinely SQL NULL, which rarely arise from Rampart JavaScript. See
+                        also <a class="reference internal" href="#ifnull">ifNull</a>.
                       </p>
                     </div>
                   </div>
@@ -2510,10 +2655,15 @@ SELECT embed('chocolate cake recipe', 'f32');
                         </div>
                       </div>
                       <p>
-                        The abstract will be less than <code class="docutils literal notranslate"><span class=
-                        "pre">maxsize</span></code> characters long, and will attempt to end at a word boundary. If
-                        <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> is not
-                        specified (or is less than or equal to 0) then a default size of 230 characters is used.
+                        The abstract text will be cut to <code class="docutils literal notranslate"><span class=
+                        "pre">maxsize</span></code> bytes, and will attempt to end at a word boundary (a multi-byte
+                        UTF-8 character is never split, so the cut always falls on a whole character). If <code class=
+                        "docutils literal notranslate"><span class="pre">maxsize</span></code> is not specified (or is
+                        less than or equal to 0) then a default size of 230 bytes is used. Note that when text is cut,
+                        a trailing <code class="docutils literal notranslate"><span class="pre">"</span> <span class=
+                        "pre">..."</span></code> is appended, so the returned string may be up to four bytes longer
+                        than <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> (a
+                        truncated default-size abstract is 233 bytes).
                       </p>
                       <p>
                         The <code class="docutils literal notranslate"><span class="pre">style</span></code> argument
@@ -2587,13 +2737,22 @@ SELECT embed('chocolate cake recipe', 'f32');
                       </div>
                       <p>
                         <strong>Vector (best-chunk) snippets</strong> — the optional 5th argument names the row’s
-                        vector column. In a query whose <code class="docutils literal notranslate"><span class=
-                        "pre">WHERE</span></code> clause contains <code class=
-                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> on that column, and where
-                        the column holds <em>chunked</em> values (<a class="reference internal" href=
-                        "#chunkembed"><span class="std std-ref">chunkembed()</span></a>), the abstract is seeded from
-                        the text span of the row’s <strong>best-matching chunk</strong> — the same chunk that produced
-                        the row’s <code class="docutils literal notranslate"><span class="pre">$rank</span></code>:
+                        vector column. When the column holds <em>chunked</em> values (<a class="reference internal"
+                        href="#chunkembed"><span class="std std-ref">chunkembed()</span></a>), the abstract is seeded
+                        from the text span of the row’s <strong>best-matching chunk</strong>: with a non-empty
+                        <code class="docutils literal notranslate"><span class="pre">query</span></code> string,
+                        <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> embeds
+                        the query itself (a cache hit when the surrounding query’s <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> used the same string) and
+                        scores the row’s chunks with the same scorer <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> uses — so it works in any
+                        query shape, including per-row <code class="docutils literal notranslate"><span class=
+                        "pre">id</span> <span class="pre">=</span> <span class="pre">?</span></code> lookups with no
+                        <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> at all. With
+                        an empty <code class="docutils literal notranslate"><span class="pre">query</span></code>
+                        string it instead uses the winning chunk recorded by a <code class=
+                        "docutils literal notranslate"><span class="pre">LIKEV</span></code> in the same query’s
+                        <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause:
                       </p>
                       <div class="highlight-sql notranslate">
                         <div class="highlight">
@@ -2607,13 +2766,30 @@ SELECT embed('chocolate cake recipe', 'f32');
                         With an empty <code class="docutils literal notranslate"><span class="pre">query</span></code>
                         string (<code class="docutils literal notranslate"><span class="pre">''</span></code>) the
                         snippet is centered purely on the winning chunk; with a real query string, keyword hits are
-                        merged with the chunk span (hybrid). The chunk’s byte span is recomputed from the text by the
-                        loaded embedding model’s chunker, so the same engine (<a class="reference internal" href=
+                        merged with the chunk span (hybrid). The winning chunk’s byte span is read directly from the
+                        vector value: <code class="docutils literal notranslate"><span class=
+                        "pre">chunkembed()</span></code> records the spans in the value’s header — automatically for
+                        the built-in chunker, and from the caller-supplied 4th argument for custom chunkings — so no
+                        chunker runs at query time and any embedding engine may serve the query. Only for older,
+                        <em>headerless</em> values is the span recomputed from the text by the loaded embedding model’s
+                        chunker; for those rows the same engine (<a class="reference internal" href=
                         "sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> / <a class=
                         "reference internal" href="sql-set.html#onnxembed"><span class=
                         "std std-ref">onnxEmbed</span></a>) must be set at query time. See <a class=
                         "reference internal" href="rampart-sql.html#chunked-documents-multi-vector-rows"><span class=
                         "std std-ref">Chunked documents (multi-vector rows)</span></a>.
+                      </p>
+                      <p>
+                        The vec form works directly in a hybrid rank-fused query (<code class=
+                        "docutils literal notranslate"><span class="pre">Doc</span> <span class="pre">LIKEP</span>
+                        <span class="pre">?</span> <span class="pre">OR</span> <span class="pre">Vec</span>
+                        <span class="pre">LIKEV</span> <span class="pre">?</span></code> — see <a class=
+                        "reference internal" href="rampart-sql.html#hybrid-rank-fusion"><span class=
+                        "std std-ref">Hybrid keyword + vector queries (rank fusion)</span></a>), where best-chunk
+                        snippets seed normally even for rows only the keyword side contributed (abstract scores that
+                        row’s chunks itself). Do not add an <code class="docutils literal notranslate"><span class=
+                        "pre">ORDER</span> <span class="pre">BY</span></code> to such a query — see the performance
+                        note in the hybrid section.
                       </p>
                       <p>
                         See also the Rampart JavaScript <a class="reference internal" href=
@@ -3201,8 +3377,19 @@ SELECT embed('chocolate cake recipe', 'f32');
                       </li>
                       <li>
                         <code class="docutils literal notranslate"><span class="pre">bitsize(a)</span></code> Returns
-                        the total number of bits in <code class="docutils literal notranslate"><span class=
-                        "pre">a</span></code>, i.e. the highest bit number plus 1.
+                        the total number of bits addressable in <code class="docutils literal notranslate"><span class=
+                        "pre">a</span></code> – that is, the width of the underlying value, not the position of its
+                        highest set bit. For an ordinary integer this is <code class=
+                        "docutils literal notranslate"><span class="pre">32</span></code> regardless of the value (so
+                        <code class="docutils literal notranslate"><span class="pre">bitsize(0)</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">bitsize(1)</span></code> and
+                        <code class="docutils literal notranslate"><span class="pre">bitsize(5)</span></code> all
+                        return <code class="docutils literal notranslate"><span class="pre">32</span></code>), growing
+                        as higher bits are set (e.g. <code class="docutils literal notranslate"><span class=
+                        "pre">bitsize(bitset(5,40))</span></code> returns <code class=
+                        "docutils literal notranslate"><span class="pre">64</span></code>). For the position of the
+                        highest set bit, see <code class="docutils literal notranslate"><span class=
+                        "pre">bitmax()</span></code> below.
                       </li>
                       <li>
                         <code class="docutils literal notranslate"><span class="pre">bitcount(a)</span></code> Returns
@@ -3224,7 +3411,12 @@ SELECT embed('chocolate cake recipe', 'f32');
                         the list of bit numbers of <code class="docutils literal notranslate"><span class=
                         "pre">a</span></code>, in ascending order, that are set to 1, as a <code class=
                         "docutils literal notranslate"><span class="pre">varint</span></code>. Returns a single -1 if
-                        no bits are set to 1.
+                        no bits are set to 1. Note that a multi-value <code class=
+                        "docutils literal notranslate"><span class="pre">varint</span></code> displays as its first
+                        element when selected directly; use <code class="docutils literal notranslate"><span class=
+                        "pre">convert(bitlist(a),'varchar')</span></code> to see the whole list (e.g. <code class=
+                        "docutils literal notranslate"><span class="pre">"0,2"</span></code> for <code class=
+                        "docutils literal notranslate"><span class="pre">bitlist(5)</span></code>).
                       </li>
                       <li>
                         <code class="docutils literal notranslate"><span class="pre">bitshiftleft(a,</span>
@@ -3270,7 +3462,10 @@ SELECT embed('chocolate cake recipe', 'f32');
                         "docutils literal notranslate"><span class="pre">n</span></code> (e.g. <code class=
                         "docutils literal notranslate"><span class="pre">bitset(5,</span> <span class=
                         "pre">40)</span></code> will return a <code class="docutils literal notranslate"><span class=
-                        "pre">varint(2)</span></code>).
+                        "pre">varint(2)</span></code>). Note that a multi-integer <code class=
+                        "docutils literal notranslate"><span class="pre">varint</span></code> result retrieved from
+                        JavaScript currently yields only the first integer; convert in SQL (e.g. to <code class=
+                        "docutils literal notranslate"><span class="pre">varchar</span></code>) to see the full value.
                       </li>
                       <li>
                         <code class="docutils literal notranslate"><span class="pre">bitclear(a,</span> <span class=
@@ -3389,7 +3584,14 @@ SELECT embed('chocolate cake recipe', 'f32');
                         <code class="docutils literal notranslate"><span class="pre">inetclass(inet)</span></code>
                         Returns class of <code class="docutils literal notranslate"><span class=
                         "pre">inet</span></code>, e.g. A, B, C, D, E or classless if a different netmask is used (or
-                        the address is IPv6). Empty string is returned on error.
+                        the address is IPv6). Empty string is returned on error. Note that a bare host address with no
+                        explicit netmask (e.g. <code class="docutils literal notranslate"><span class=
+                        "pre">1.2.3.4</span></code>) has its netmask auto-extended to <code class=
+                        "docutils literal notranslate"><span class="pre">/32</span></code> and therefore returns
+                        <code class="docutils literal notranslate"><span class="pre">classless</span></code>; to get
+                        the class of the network, include the classful netmask (e.g. <code class=
+                        "docutils literal notranslate"><span class="pre">1.2.3.4/8</span></code> returns <code class=
+                        "docutils literal notranslate"><span class="pre">A</span></code>).
                       </li>
                       <li>
                         <code class="docutils literal notranslate"><span class="pre">inet2int(inet)</span></code>
@@ -3946,7 +4148,11 @@ SELECT embed('chocolate cake recipe', 'f32');
                         <code class="docutils literal notranslate"><span class="pre">geocode2lon</span></code>
                         functions decode a geocode into a latitude or longitude coordinate, respectively. The returned
                         coordinate is in the decimal degrees format. An invalid geocode value (e.g. -1) will return NaN
-                        (Not a Number).
+                        (Not a Number). Note that when a NaN result is retrieved from JavaScript (or serialized as
+                        JSON, e.g. with <code class="docutils literal notranslate"><span class="pre">%J</span></code>),
+                        it surfaces as <code class="docutils literal notranslate"><span class="pre">null</span></code>;
+                        use <code class="docutils literal notranslate"><span class="pre">isNaN()</span></code> in SQL
+                        to test for it.
                       </p>
                       <p>
                         If you want <span class="math notranslate nohighlight">\(DDDMMSS\)</span> “degrees minutes
@@ -4306,7 +4512,7 @@ SELECT embed('chocolate cake recipe', 'f32');
                         <li>INDENT(N) - print the JSON with each object or array member on a new line, indented by N
                         spaces to show structure
                         </li>
-                        <li>SORT-KEYS - sort the keys in the object. By default the order is preserved
+                        <li>SORT_KEYS - sort the keys in the object. By default the order is preserved
                         </li>
                         <li>EMBED - omit the enclosing <code class="docutils literal notranslate"><span class=
                         "pre">{}</span></code> or <code class="docutils literal notranslate"><span class=
@@ -5024,8 +5230,18 @@ json_merge_patch('[1,2]', '{"a":"b", "c":null}')
                         using JSON fields can allow for greater flexibility.
                       </p>
                       <p>
-                        Note also that any index made on a JSON virtual field will be treated as text or a <span class=
-                        "green">String</span>. Numbers will not sort properly or be selectable based on range.
+                        Note also that within SQL, JSON virtual field values (and any index made on one) are treated as
+                        text or a <span class="green">String</span>. A bare comparison or <code class=
+                        "docutils literal notranslate"><span class="pre">ORDER</span> <span class=
+                        "pre">BY</span></code> on a numeric JSON field compares lexicographically, so numbers will not
+                        sort properly or be selectable based on range. To compare or sort numerically, wrap the field
+                        in <a class="reference internal" href="#convert"><span class="std std-ref">convert</span></a>
+                        (e.g. <code class="docutils literal notranslate"><span class="pre">where</span> <span class=
+                        "pre">convert(EmpData.$.salary,</span> <span class="pre">'float')</span> <span class=
+                        "pre">&gt;</span> <span class="pre">50000</span></code>), as shown in the example above. Values
+                        returned to JavaScript from a bare <code class="docutils literal notranslate"><span class=
+                        "pre">select</span></code> of a JSON field keep their JSON types (numbers arrive as
+                        <span class="green">Numbers</span>, booleans as <span class="green">Booleans</span>, etc.).
                       </p>
                     </div>
                   </div>

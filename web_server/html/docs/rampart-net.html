@@ -394,6 +394,9 @@
                         <a class="reference internal" href="#net-createserver">net.createServer()</a>
                       </li>
                       <li class="toctree-l3">
+                        <a class="reference internal" href="#net-setcacert">net.setCaCert()</a>
+                      </li>
+                      <li class="toctree-l3">
                         <a class="reference internal" href="#net-resolve-async">net.resolve_async()</a>
                       </li>
                       <li class="toctree-l3">
@@ -1430,7 +1433,15 @@
                         <div>
                           <p>
                             The <code class="docutils literal notranslate"><span class="pre">socket</span></code>
-                            <span class="green">Object</span> may include these possible status properties:
+                            <span class="green">Object</span> may include these possible status properties. Note that
+                            they are set as the socket changes state, so a property may be <code class=
+                            "docutils literal notranslate"><span class="pre">undefined</span></code> rather than
+                            <code class="docutils literal notranslate"><span class="pre">false</span></code> before the
+                            relevant event has occurred (<code class="docutils literal notranslate"><span class=
+                            "pre">connecting</span></code> and <code class="docutils literal notranslate"><span class=
+                            "pre">destroyed</span></code>, for example, are <code class=
+                            "docutils literal notranslate"><span class="pre">undefined</span></code> until a connection
+                            has been attempted):
                           </p>
                           <ul class="simple">
                             <li>
@@ -1443,7 +1454,7 @@
                               <span class="green">Boolean</span>. Whether the connection has been established.
                             </li>
                             <li>
-                              <code class="docutils literal notranslate"><span class="pre">tsl</span></code> -
+                              <code class="docutils literal notranslate"><span class="pre">tls</span></code> -
                               <span class="green">Boolean</span>. Whether this is a secure connection.
                             </li>
                             <li>
@@ -1487,8 +1498,8 @@
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">remoteFamily</span></code> -
                               <span class="green">String</span>. IP version used for connection (<code class=
-                              "docutils literal notranslate"><span class="pre">ipv4</span></code> or <code class=
-                              "docutils literal notranslate"><span class="pre">ipv6</span></code>).
+                              "docutils literal notranslate"><span class="pre">IPv4</span></code> or <code class=
+                              "docutils literal notranslate"><span class="pre">IPv6</span></code>).
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">_hostPort</span></code> -
@@ -1999,6 +2010,14 @@
                           <p>
                             Get the number of connected clients.
                           </p>
+                          <p>
+                            Note that the count is updated as connections are fully established and fully torn down.
+                            Inside a <code class="docutils literal notranslate"><span class=
+                            "pre">connection</span></code> callback the connection being reported is not yet counted
+                            (so a first connection reads <code class="docutils literal notranslate"><span class=
+                            "pre">0</span></code>), and a closed connection may still be counted until the following
+                            event-loop cycle.
+                          </p>
                           <dl class="docutils">
                             <dt>
                               Return Value:
@@ -2021,6 +2040,13 @@
                             Set the maximum number of connections concurrently connected. The server will drop new
                             connections if this number is reached. This function can be called at any time to set or
                             adjust the connection limit.
+                          </p>
+                          <p>
+                            Note that <code class="docutils literal notranslate"><span class=
+                            "pre">maxConnections</span></code> is a function, not a readable property: the limit can be
+                            set or changed, but not read back. Use <a class="reference internal" href=
+                            "#server-connectioncount">server.connectionCount()</a> for the number of clients currently
+                            connected.
                           </p>
                           <p>
                             Usage:
@@ -2066,15 +2092,15 @@
                           <ul class="simple">
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">listening</span></code> -
-                              <span class="green">Boolean</span>. Whether the connection has been initiated, but not
-                              yet established.
+                              <span class="green">Boolean</span>. Whether the server is bound and listening for
+                              connections.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">_events</span></code> -
                               <span class="green">Object</span>. Registered callbacks for events.
                             </li>
                             <li>
-                              <code class="docutils literal notranslate"><span class="pre">tsl</span></code> -
+                              <code class="docutils literal notranslate"><span class="pre">tls</span></code> -
                               <span class="green">Boolean</span>. Whether server accepts secure connections.
                             </li>
                             <li>
@@ -2082,14 +2108,8 @@
                               <span class="green">String</span>. The SSL/TLS key file, if provided
                             </li>
                             <li>
-                              <code class="docutils literal notranslate"><span class="pre">sslCertFil</span></code> -
+                              <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> -
                               <span class="green">String</span>. The SSL/TLS cert file, if provided.
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">maxConnections</span></code>
-                              - <span class="green">Number</span>. <code class=
-                              "docutils literal notranslate"><span class="pre">maxConnections</span></code> value, if
-                              set.
                             </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">_hostAddrs</span></code> -
@@ -3350,7 +3370,7 @@
 
 <span class="cm">/* res =</span>
 <span class="cm">    {</span>
-<span class="cm">       "errMsg": "Host not found"</span>
+<span class="cm">       "errMsg": "Unknown host"</span>
 <span class="cm">    }</span>
 <span class="cm">*/</span>
 </pre>
@@ -3575,6 +3595,54 @@
 </pre>
                             </div>
                           </div>
+                        </div>
+                      </blockquote>
+                    </div>
+                    <div class="section" id="net-setcacert">
+                      <h3>
+                        net.setCaCert()<a class="headerlink" href="#net-setcacert" title=
+                        "Permalink to this headline">¶</a>
+                      </h3>
+                      <blockquote>
+                        <div>
+                          <p>
+                            Set the Certificate Authority bundle used to verify peer certificates for secure
+                            (<code class="docutils literal notranslate"><span class="pre">tls</span></code>)
+                            connections.
+                          </p>
+                          <p>
+                            Usage:
+                          </p>
+                          <div class="highlight-javascript notranslate">
+                            <div class="highlight">
+                              <pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class=
+                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                              "s2">"rampart-net"</span><span class="p">);</span>
+
+<span class="nx">net</span><span class="p">.</span><span class="nx">setCaCert</span><span class=
+"p">(</span><span class="nx">path</span><span class="p">);</span>
+</pre>
+                            </div>
+                          </div>
+                          <p>
+                            Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a
+                            <span class="green">String</span>, the location of a CA bundle file. An error is thrown if
+                            the file does not exist or cannot be read.
+                          </p>
+                          <p>
+                            The bundle in effect is also readable as the <span class="green">String</span> property
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">net.default_ca_file</span></code>, which is set at load time to the system bundle if
+                            one was found.
+                          </p>
+                          <dl class="docutils">
+                            <dt>
+                              Return Value:
+                            </dt>
+                            <dd>
+                              <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.
+                            </dd>
+                          </dl>
                         </div>
                       </blockquote>
                     </div>

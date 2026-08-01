@@ -7,12 +7,18 @@ Preface
 Acknowledgment
 ~~~~~~~~~~~~~~
 
-The rampart-langtools package provides four modules built on
+The rampart-langtools package provides five modules built on
 best-in-class machine-learning libraries:
 
 *  The rampart-llamacpp module is built on
    `llama.cpp <https://github.com/ggml-org/llama.cpp>`_, the C/C++
    LLM inference engine created by Georgi Gerganov and contributors.
+
+*  The rampart-clip module is built on
+   `clip.cpp <https://github.com/monatis/clip.cpp>`_, a CLIP
+   inference implementation by Yusuf Sarıgöz, ported onto the same
+   `ggml <https://github.com/ggml-org/ggml>`_ tensor library that
+   rampart-llamacpp uses.
 
 *  The rampart-onnx module is built on
    `ONNX Runtime <https://onnxruntime.ai/>`_, the cross-platform
@@ -37,6 +43,9 @@ License
 
 The llama.cpp library is licensed under the
 `MIT License <https://github.com/ggml-org/llama.cpp/blob/master/LICENSE>`__\ .
+The clip.cpp implementation (and the ggml library it uses) is licensed
+under the
+`MIT License <https://github.com/monatis/clip.cpp/blob/main/LICENSE>`__\ .
 The ONNX Runtime library is licensed under the
 `MIT License <https://github.com/microsoft/onnxruntime/blob/main/LICENSE>`__\ .
 The FAISS library is licensed under the
@@ -60,6 +69,11 @@ search and local LLM inference inside Rampart:
    (`onnx.initEmbed`_\ ) and reranking (`onnx.initRerank`_\ ) with
    the same handle API as rampart-llamacpp, plus a general-purpose
    session API (`onnx.initSession`_\ ) for running any ONNX model.
+
+*  **rampart-clip** runs CLIP models: it embeds **images and text
+   into one shared vector space** (`clip.initEmbed`_\ ), so a text query
+   can search a collection of images, or an image can find similar
+   images — cross-modal semantic search.
 
 *  **rampart-faiss** builds, trains, saves and searches vector
    indexes, from small exact-search indexes to compressed indexes
@@ -118,6 +132,39 @@ on Linux (it is not included in the packages built for older
 distributions), and its CUDA support requires an NVIDIA driver
 supporting CUDA 12 or later — see
 `CPU and GPU (runtime selection)`_\ .
+
+Errors, Warnings and Logs
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The modules never write to ``stdout`` or ``stderr``.  Instead:
+
+*  A **failure** throws a JavaScript :green:`Error` (a model that
+   cannot be loaded, a malformed tensor, a session used after
+   ``destroy()``).  Catch it as usual.
+
+*  A **warning** — a non-fatal problem that did not stop the call —
+   is placed in an ``errMsg`` property, exactly as rampart-sql does.
+   The property is set on the object the call was made on: the module
+   object for ``onnx.initEmbed()``, a handle for a handle method.  It
+   is **cleared at the start of every call**, so it always describes
+   the most recent one, and it is ``undefined`` when the call had
+   nothing to report.  Typical warnings are a GPU that could not be
+   used and silently fell back to the CPU, or an unusable
+   ``RAMPART_ONNX_RUNTIME`` override.
+
+.. code-block:: javascript
+
+    var emb = onnx.initEmbed(model);
+    if (onnx.errMsg)                       // e.g. "no usable GPU; using CPU"
+        console.log("warning: " + onnx.errMsg);
+
+``errMsg`` is deliberately kept separate from `getLog`_ /
+`onnx.getLog / onnx.clearLog`_\ , which capture the *informational*
+output of the underlying libraries (ggml/llama.cpp and ONNX Runtime).
+That log is verbose — a single embedding can produce thousands of
+lines — and a warning placed there would be lost in it.  Use
+``errMsg`` to find out whether something went wrong, and ``getLog()``
+when you want the engine's own diagnostics.
 
 The rampart-llamacpp module
 ---------------------------
@@ -453,6 +500,23 @@ initRerank
     Return Value:
         An :green:`Object` (the reranker handle) with the functions
         `rr.rerank()`_ and ``destroy()`` (as in `emb.destroy()`_\ ).
+
+    Note:
+        Instruct-style rerankers — the
+        `Qwen3-Reranker <https://huggingface.co/Qwen/Qwen3-Reranker-0.6B>`_
+        family — judge relevance by answering a yes/no question inside
+        a chat prompt rather than through a bert-style classifier
+        head.  ``initRerank`` detects them by model architecture and
+        wraps each (query, document) pair in the required prompt
+        automatically.  Their scores are the probability of "yes"
+        (roughly 0.5 – 1.0 for plausible documents) rather than the
+        wide-range scores of bert-style rerankers; orderings are
+        comparable, magnitudes are not.  Beware that many community
+        GGUF conversions of these models were made as plain
+        language models and lack the ranking head — such a file loads
+        but scores every document identically.  The catalog's
+        ``models.ggufGet("qwen3-reranker-0.6b")`` is pinned to a
+        verified conversion.
 
     Example:
 
@@ -1270,7 +1334,9 @@ onnx.initRerank
           (``[CLS] query [SEP] document [SEP]`` with token types) or
           ``"roberta"`` (``[bos] query [eos eos] document [eos]``).
           Default: ``"bert"`` when the tokenizer is WordPiece, else
-          ``"roberta"``.
+          ``"roberta"``.  Instruct-style rerankers (the Qwen3-Reranker
+          family) are not supported here — use the rampart-llamacpp
+          `initRerank`_ for those.
 
        *  ``sigmoid`` - A :green:`Boolean`.  If ``true`` (the
           default), scores are passed through a sigmoid and lie in
@@ -1718,6 +1784,182 @@ Converting a model to float16 or int8
     A ``.onnx`` saved with external data keeps its weights in a
     sidecar file (``model_fp16.onnx.data``); keep the two together.
 
+The rampart-clip module
+-----------------------
+
+Loading the module is a simple matter of using the ``require()``
+function:
+
+.. code-block:: javascript
+
+    var clip = require("rampart-clip");
+
+CLIP (Contrastive Language–Image Pre-training) maps **images and
+text into a single shared vector space**, so similar concepts land
+close together regardless of modality.  That makes it possible to
+search a collection of images with a text query, find images similar
+to a reference image, or score how well a caption matches a picture —
+all with plain dot-product similarity on the vectors it returns.
+
+The module is built on a CLIP implementation ported onto the same
+ggml tensor library rampart-llamacpp uses, so it links no second copy
+of ggml and — like the other langtools modules — a loaded model is
+**shared across rampart threads**: every thread copy of a model
+object shares one read-only set of weights and does its own
+computation, so a model may be handed to a worker thread and used
+there directly (see `CLIP and threads`_).
+
+Models
+~~~~~~
+
+rampart-clip loads CLIP models in the GGUF format used by
+`clip.cpp <https://github.com/monatis/clip.cpp>`_ — standard OpenAI
+and LAION CLIP models converted to GGUF, available pre-converted on
+HuggingFace (e.g. the ``mys/ggml_CLIP-ViT-*`` repositories).  The
+``q8_0`` quantization is a good default: nearly identical to ``f16``
+in quality at roughly half the size.
+
+The `The rampart-models module`_ helper can fetch one into the standard
+location for you:
+
+.. code-block:: javascript
+
+    var models = require("rampart-models");
+    var path   = models.get("clip-vit-b-32-laion:q8_0");   // -> local .gguf path
+
+clip.initEmbed
+~~~~~~~~~~~~~~
+
+    ``clip.initEmbed(modelPath[, options])`` (alias: ``clip.load``)
+
+    Load a CLIP GGUF model and return a **model object** carrying the
+    image+text embedding methods below.  ``modelPath`` is the path to a
+    ``.gguf`` file (typically from `The rampart-models module`_).  Named
+    ``initEmbed`` to match the other langtools modules
+    (`initEmbed`_/`initGen`_/`onnx.initEmbed`_); ``clip.load`` is a
+    backward-compatible alias for the same call.
+
+    The optional ``options`` object accepts:
+
+    *  ``nThreads`` – *Number*.  CPU threads for inference.
+
+    A given model file is loaded once per process and shared: calling
+    ``clip.initEmbed`` again with the same path (on any thread) returns a
+    handle onto the already-resident weights rather than reloading
+    them.
+
+    .. code-block:: javascript
+
+        var model = clip.initEmbed(path);
+        model.dimension;            // 512 for ViT-B/32, 768 for ViT-L/14, ...
+
+model.dimension
+~~~~~~~~~~~~~~~
+
+    Read-only *Number*: the dimension of the shared embedding space
+    (the length of every vector this model produces).
+
+model.embedImageToNumbers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ``model.embedImageToNumbers(image)``
+
+    Embed an image and return the vector as a JavaScript ``Array`` of
+    ``Number``.  ``image`` is **either** a ``String`` file path **or** a
+    ``Buffer`` holding the image bytes — a JPEG/PNG/… blob such as a
+    ``readFile()`` result, a ``fetch()`` body, or a rampart-sql
+    ``varbyte`` column.  A String is always taken as a path and a Buffer
+    always as image bytes (never the reverse).  Any buffer flavor is
+    accepted (a plain buffer, ``Uint8Array``, ``ArrayBuffer``, or a Node
+    ``Buffer``).  Either way the image is decoded, resized and
+    center-cropped to the model's input size automatically; supported
+    formats include JPEG, PNG, BMP, GIF (first frame), TGA, PSD, HDR,
+    PIC and PNM.  The returned vector is L2-normalized.  (Contrast the
+    ``embedText*`` methods below, where a Buffer means *text* stored in a
+    buffer, not an image.)
+
+model.embedImageToFp16Buf / embedImageToFp32Buf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ``model.embedImageToFp16Buf(image)`` /
+    ``model.embedImageToFp32Buf(image)``
+
+    As above — ``image`` is a path ``String`` or a ``Buffer`` of image
+    bytes — but return the vector as a ``Buffer`` of fp16 (2 bytes per
+    element) or fp32 (4 bytes per element) values — the compact forms to
+    store in a `The rampart-faiss module`_ index or a rampart-sql vector
+    column.
+
+model.embedTextToNumbers / embedTextToFp16Buf / embedTextToFp32Buf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ``model.embedTextToNumbers(text)`` (and the ``Fp16Buf`` /
+    ``Fp32Buf`` variants)
+
+    Embed a text string into the **same** space as the image methods,
+    so an image vector and a text vector can be compared directly.
+    Return types match the image methods.
+
+model.similarity
+~~~~~~~~~~~~~~~~
+
+    ``model.similarity(vec1, vec2)``
+
+    Cosine similarity (a ``Number`` from -1 to 1) between two vectors,
+    each an fp16 **or** fp32 ``Buffer`` as returned by the ``*Buf``
+    methods (both must be the same type).  Because the vectors are
+    L2-normalized this is simply their dot product; higher means more
+    similar.
+
+model.destroy
+~~~~~~~~~~~~~
+
+    Release this model object.  The object must not be used
+    afterward (any method then throws).  The underlying weights stay
+    resident in the process for reuse, exactly as rampart-onnx and
+    rampart-llamacpp keep embedding models loaded — so a subsequent
+    ``clip.initEmbed`` of the same path is instant.
+
+CLIP and threads
+~~~~~~~~~~~~~~~~
+
+    A model object is **thread-safe to copy**: it may be passed into
+    a ``rampart.thread`` worker (or is copied automatically when a
+    server hands a request to a worker) and used there.  All copies
+    share one read-only set of weights; each thread builds its own
+    small compute context on first use.  This is the recommended way
+    to embed in parallel — the heavy weights are not duplicated.
+
+    Warnings and errors follow the langtools convention described in
+    `Errors, Warnings and Logs`_: a failure throws a JavaScript
+    ``Error``, a non-fatal problem is placed in ``errMsg``, and
+    nothing is written to ``stdout`` or ``stderr``.
+
+Example: search images by text
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: javascript
+
+    var clip   = require("rampart-clip");
+    var models = require("rampart-models");
+    var printf = rampart.utils.printf;
+
+    var model = clip.initEmbed(models.get("clip-vit-b-32-laion:q8_0"));
+
+    // embed a set of images once
+    var images = ["cat.jpg", "dog.jpg", "beach.jpg"].map(function(f) {
+        return { name: f, vec: model.embedImageToFp32Buf(f) };
+    });
+
+    // rank them against a text query
+    var q = model.embedTextToFp32Buf("a dog playing outside");
+    images
+        .map(function(im) { return { name: im.name, score: model.similarity(im.vec, q) }; })
+        .sort(function(a, b) { return b.score - a.score; })
+        .forEach(function(r) { printf("  %-12s %.4f\n", r.name, r.score); });
+
+    model.destroy();
+
 The rampart-faiss module
 ------------------------
 
@@ -1809,8 +2051,10 @@ openFactory
 
         /* search: top 2 results for a query vector */
         var res = idx.searchFp32(new Float32Array([0.9,0.1,0,0]).buffer, 2);
-        /* res = [ { id: 101, distance: 0.9 },
-                   { id: 102, distance: 0.1 } ]  */
+        /* res = [ { id: 101, distance: 0.8999999761581421 },
+                   { id: 102, distance: 0.10000000149011612 } ]
+           (distances come back as 32-bit floats widened to JavaScript
+           doubles, so they carry fp32 rounding) */
 
         idx.save("myindex.faiss");
 
@@ -1902,8 +2146,20 @@ idx.addFp32()
        larger than the float precision of a :green:`Number`), the
        64-bit id to associate with the vector.  Pass ``-1`` to have
        an id assigned sequentially (``0``, ``1``, ``2``, ...).
-       Arbitrary (non-sequential) ids require an ``IDMap``/
-       ``IDMap2`` index — see `openFactory`_\ .
+
+       The two forms are mutually exclusive, and which one applies is
+       decided by the index type:
+
+       *  An ``IDMap``/``IDMap2`` index stores your own ids, and so
+          **requires** an explicit ``id``; passing ``-1`` throws.
+
+       *  Any other index type (e.g. a plain ``Flat``) has no id map
+          and so **requires** ``-1``; passing an explicit ``id``
+          throws.
+
+       In other words, use ``IDMap``/``IDMap2`` when you need
+       arbitrary ids, and a bare index when sequential ids are
+       sufficient — see `openFactory`_\ .
 
     *  ``buffer`` is a :green:`Buffer` of ``4 * dimension`` bytes:
        the vector packed as little-endian 32-bit floats (e.g. from
@@ -2273,7 +2529,7 @@ rampart-sql :ref:`llamaEmbed <sql-set:llamaEmbed>` /
     var gen  = llamacpp.initGen( models.get("qwen3-4b") );      // gen = gguf
 
 Models live under ``~/.rampart/models/<category>/`` (categories:
-``embed``, ``rerank``, ``gen``; plain URLs go to ``other``).  If the
+``embed``, ``rerank``, ``gen``, ``clip``; plain URLs go to ``other``).  If the
 model is already on disk its path is returned immediately with no
 network access; otherwise it is downloaded from
 `HuggingFace <https://huggingface.co/>`_ with resume, retries and a
@@ -2282,10 +2538,14 @@ single-line progress display.
 A short name is resolved in this order:
 
 1. Already on disk under ``~/.rampart/models/``.
-2. The embedded catalog — ~70 curated models (embedding, reranking
-   and text-generation), each pinned to a specific repository
-   revision.  ``models.list()`` (or ``--list`` on the command line)
-   shows them.
+2. The embedded catalog — currently 81 curated models (embedding,
+   reranking, text-generation and CLIP), each pinned to a specific
+   repository revision.  Embedding entries also record the model's vector
+   dimension and its retrieval prompts, when it has them (see
+   `Retrieval prompt sidecars`_ below).  ``models.list()`` (or
+   ``--list`` on the command line) shows them; it returns an
+   :green:`Object` keyed by category, each value an :green:`Array` of the
+   model names in that category.
 3. A name containing ``/`` is used as an exact HuggingFace
    ``org/repo`` — no search.
 4. A live HuggingFace search (exact-name match first, model-family
@@ -2413,7 +2673,8 @@ models.resolve()
 ~~~~~~~~~~~~~~~~
 
     Resolve a name to its catalog-shaped entry — repository, pinned
-    revision, available quants, license, category — **without
+    revision, available quants, license, category, and (for embedding
+    models) vector dimension and retrieval prompts — **without
     downloading**.
 
     Usage:
@@ -2439,6 +2700,37 @@ models.list()
     The module also exposes ``models.catalog`` (the raw catalog
     :green:`Object`) and ``models.modelsDir`` (the
     ``~/.rampart/models`` path).
+
+Retrieval prompt sidecars
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Many embedding models are *asymmetric*: they expect a short prefix
+    on queries, on documents, or on both (e.g.
+    ``nomic-embed-text-v1.5``'s ``"search_query: "`` /
+    ``"search_document: "``, or the e5 family's ``"query: "`` /
+    ``"passage: "``).  Using such a model without its prompts costs
+    retrieval quality.
+
+    The catalog records each model's published prompts, and every
+    download writes them into a small sidecar file next to the model:
+    ``<file>.gguf.prompts.json`` beside a GGUF file, and
+    ``<name>.prompts.json`` beside an ONNX model directory.  Fetching
+    the path of an already-downloaded model refreshes the sidecar, so
+    models downloaded before this feature gain one on their next
+    ``models.get()``.
+
+    The rampart-sql :ref:`llamaEmbed <sql-set:llamaEmbed>` and
+    :ref:`onnxEmbed <sql-set:onnxEmbed>` settings read the sidecar
+    automatically — ``likev`` queries, ``chunkembed()`` and
+    ``embed(?, 'query'|'document')`` then apply the right prompt with
+    no further configuration.  See :ref:`Retrieval prompts
+    <sql-set:Retrieval prompts>` for how the prompts are applied and
+    how to override or disable them.  Symmetric models (e.g.
+    ``all-minilm-l6-v2``) have no prompts and embed text verbatim.
+
+    The module-level engines embed exactly the text they are given:
+    when calling `initEmbed`_ / `onnx.initEmbed`_ directly, prepending
+    a model's prompts is the caller's responsibility.
 
 Command line
 ~~~~~~~~~~~~
@@ -2512,3 +2804,54 @@ returns its local path immediately thereafter.
 For a larger, trained index (tens of millions of vectors) see the
 `idx.trainer()`_ example above; for improving the final ordering of
 the top results, see `initRerank`_\ .
+
+Integration with rampart-sql
+----------------------------
+
+The rampart-sql module has this whole pipeline built in, so vectors can
+be generated, indexed and searched **inside the SQL engine** — the
+langtools modules are the engines under the hood, with no application
+glue required.
+
+**Embedding — the** ``embed()`` **SQL function.**  A value is turned into
+a vector by an embedding engine loaded once per connection with
+``sql.set()``:
+
+*  :ref:`llamaEmbed <sql-set:llamaEmbed>` runs a GGUF model through
+   rampart-llamacpp (`initEmbed`_) — the CPU / macOS default.
+*  :ref:`onnxEmbed <sql-set:onnxEmbed>` runs an ONNX model through
+   rampart-onnx (`onnx.initEmbed`_) — GPU acceleration is available only on
+   NVIDIA.
+*  :ref:`clipEmbed <sql-set:clipEmbed>` runs a CLIP model through
+   rampart-clip (`clip.initEmbed`_) — images and text in one shared space,
+   so an **image** table can be searched by a **text** query (see below).
+
+The text engines (``llamaEmbed`` / ``onnxEmbed``) use the structure-aware
+chunking and pooling described under
+:ref:`Generating embeddings <rampart-sql:Generating embeddings>`; all three
+share one loaded model across the SQL worker threads — the thread-copyable,
+refcounted handle design these modules use makes that safe.
+
+**Indexing and search — FAISS vector indexes.**  ``CREATE VECTOR INDEX``
+builds a compressed IVFPQ index and the ``LIKEV`` operator searches it by
+vector similarity, both backed by rampart-faiss
+(`The rampart-faiss module`_) inside the engine.  See
+:ref:`Vector Indexes <rampart-sql:Vector Indexes>` and
+:ref:`Vector Search <rampart-sql:Vector Search>`.  The typical flow embeds
+documents with ``embed()``, stores the vectors in a column, indexes that
+column, and answers ``… WHERE vec LIKEV 'a natural-language query'``.
+
+**Cross-modal image search — clipEmbed.**  Because CLIP embeds images and
+text into the *same* space, an image table is searched by a plain text
+query.  An image is stored with ``embed(?, 'image')`` — the bytes (a
+``Buffer`` from a column, or a file path) go through CLIP's **vision**
+encoder — and found with an ordinary ``… WHERE Vec LIKEV 'a dog catching a
+frisbee'``, where the query text goes through CLIP's **text** encoder.
+Image ``Buffer`` parameters are embedded in the calling process before the
+statement is bound, so a multi-megabyte blob is never shipped to the SQL
+helper and back.  See :ref:`clipEmbed <sql-set:clipEmbed>` for the details.
+
+**Reordering — reranking.**  For the highest-precision top results a
+cross-encoder reranker (`initRerank`_ / `onnx.initRerank`_) can reorder a
+short candidate list after the vector search — a little more latency for a
+better final ordering.

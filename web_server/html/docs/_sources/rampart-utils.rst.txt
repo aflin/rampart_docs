@@ -89,8 +89,9 @@ Extended (non-standard) formats:
      converted to JSON first.
 
    * ``%H`` - html encode (or if ``!`` flag present, decode) a :green:`String`
-     or :green:`Buffer`.  Without the ``!`` flag, :green:`Objects` are
-     converted to JSON first.
+     or :green:`Buffer`.  Unlike ``%U`` above, :green:`Objects` are not
+     accepted and will throw an error; convert with ``JSON.stringify()``
+     first if needed.
 
    * ``%P`` - pretty print a :green:`String` or :green:`Buffer`.  Expects
      text with white space.  Format is ``%[!][-][i][.w]P`` where:
@@ -265,13 +266,13 @@ Colors with ``%J`` format:
 
        <div class="highlight json-custom"><pre style=padding:0.6em;">
        {
-          <span class="nt0">Number"</span>: <span class="n0">1.23</span>,
+          <span class="nt0">"Number"</span>: <span class="n0">1.23</span>,
           <span class="nt0">"Bool"</span>: <span class="b0">true</span>,
           <span class="nt0">"String"</span>: <span class="s0">"Hello World!"</span>,
           <span class="nt0">"Null"</span>: <span class="N0">null</span>
        }
        {
-          <span class="nt1">Number"</span>: <span class="n1">1.23</span>,
+          <span class="nt1">"Number"</span>: <span class="n1">1.23</span>,
           <span class="nt1">"Bool"</span>: <span class="b1">true</span>,
           <span class="nt1">"String"</span>: <span class="s1">"Hello World!"</span>,
           <span class="nt1">"Null"</span>: <span class="N1">null</span>
@@ -434,8 +435,10 @@ Where:
 
     * ``start`` is an optional :green:`Number`.  ``oldbuf`` is first truncated
       to this length and the formatted output is then appended (so any bytes of
-      ``oldbuf`` at and after ``start`` are discarded).  For example,
-      ``abprintf("hello", 2, "XX")`` yields ``"heXX"``.  Default is the end of
+      ``oldbuf`` at and after ``start`` are discarded).  For example, if
+      ``oldbuf`` holds ``"hello"``, ``abprintf(oldbuf, 2, "XX")`` yields
+      ``"heXX"`` (note that the first argument must be a :green:`Buffer`; a
+      :green:`String` will throw).  Default is the end of
       ``oldbuf`` (nothing truncated -- a plain append).  May be a negative
       number, signifying how many bytes from the end of ``oldbuf`` to truncate
       before appending.
@@ -522,7 +525,7 @@ Examples:
 
    rampart.globalize(rampart.utils);
 
-   var res = strintToNumber("five");
+   var res = stringToNumber("five");
    // res = 5
 
    res = stringToNumber("three and a half");
@@ -564,7 +567,8 @@ Examples:
          "min": 0.5,
          "max": 20,
          "rem": "is our range"
-      }  */
+      }
+      note: range results carry min/max in place of op  */
 
 
 stringToBuffer
@@ -591,7 +595,7 @@ If no ``buftype`` is given and ``data`` is a :green:`Buffer`, the same type of :
 is returned.  If no ``buftype`` is given and ``data`` is a :green:`String`, a "fixed"
 :green:`Buffer` is returned.
 
-See `Duktape documentation <https://wiki.duktape.org/howtobuffers2x>`_ for
+See `Duktape documentation <https://wiki.duktape.org/howtobuffers2x>`__ for
 more information on different types of :green:`Buffers`.
 
 Return Value:
@@ -603,7 +607,7 @@ bufferToString
 Performs a 1:1 copy of the contents of a :green:`Buffer` to a :green:`String`.
 
 See ``duk_buffer_to_string()`` in the
-`Duktape documentation <https://wiki.duktape.org/howtobuffers2x#buffer-to-string-conversion>`_
+`Duktape documentation <https://wiki.duktape.org/howtobuffers2x#buffer-to-string-conversion>`__
 
 Usage:
 
@@ -983,10 +987,10 @@ Example:
    rampart.utils.fprintf("/tmp/file.txt","This is a text file\n");
 
    var txt = rampart.utils.readFile({
-      filename:  "/tmp/file.txt",
-      offset:    10,
-      length:    -6,
-      retString: true
+      file:         "/tmp/file.txt",
+      offset:       10,
+      length:       -6,
+      returnString: true
    });
 
    /* or var txt = rampart.utils.readFile("/tmp/file.txt", 10, -6, true); */
@@ -1518,7 +1522,7 @@ Usage:
 
    var pid = rampart.utils.fork([pipe, pipe2, ..., pipeX]);
 
-   if(pid=-1)
+   if(pid == -1)
       rampart.utils.fprintf(rampart.utils.stderr, "error forking\n");
 
    if(pid) {
@@ -1602,7 +1606,7 @@ Example:
       //child
 
       var msg = pipe.read();
-      if(msg.err)
+      if(msg.error)
          rampart.utils.fprintf(rampart.utils.stderr, "error reading- %s\n", msg.error);
       else
          rampart.utils.printf("msg = '%s'\n", msg.value);
@@ -1697,6 +1701,17 @@ Return Value:
 
 	pty.on(['data'|'close'], callback);
 
+     A ``data`` callback is expected to consume the data by calling
+     ``pty.read()``.  If a callback returns without reading anything, the
+     ``data`` event is paused and no further ``data`` callbacks are made
+     until ``pty.read()`` is called again, at which point it resumes.
+     Nothing is lost: the unread bytes stay in the pseudo-terminal and are
+     returned by that next ``read()``.  A callback that throws also reads
+     nothing, and so pauses the event in the same way.
+
+     An error thrown inside a ``data`` or ``close`` callback is reported on
+     stderr as ``Error in forkpty 'data' callback:`` followed by a stack
+     trace.  It does not stop the script.
 
    If there is an initial error executing ``command``, ``forkpty()`` will throw an
    error.  When the command exits, the functions in the return object will be deleted.
@@ -1711,6 +1726,22 @@ Return Value:
          pty.write(msg);
       else
          do_cleanup();
+
+   This applies to ``pty.read()`` as well: a ``data`` event may arrive
+   just as the child exits, so guard with ``if(pty.read)`` inside the
+   handler too.  Note that on that final event the guard will still pass -
+   ``read()`` is removed only once it has detected that the child is gone -
+   so the return value should be checked as well:
+
+   .. code-block:: javascript
+
+      pty.on('data', function() {
+         if(pty.read) {
+            var data = pty.read(4096, true);
+            if(data)            /* undefined on the last event */
+               process_data(data);
+         }
+      });
 
    An example for using ``forkpty()`` with websockets to run a terminal in
    a web browser can be found
@@ -1863,6 +1894,12 @@ optional :green:`Boolean`, which if ``true``, parent directories explicitly pres
 ``path`` will also be removed.  Throws an error if the directory cannot be
 removed (e.g., not empty or lacking permission).
 
+Note that ``recurse`` removes parent directories, not children -- it does not
+delete the contents of ``path``.  Take care when combining it with an absolute
+path: every empty parent directory up the tree is removed in turn, stopping
+only where removal fails (which then throws).  Prefer a relative path, or omit
+``recurse`` and remove the levels you intend explicitly.
+
 Return Value:
    ``undefined``.
 
@@ -1888,11 +1925,15 @@ Usage:
 
 .. code-block:: javascript
 
+   var files = rampart.utils.readDir(path [, showhidden]);
+
+   /* readdir (all lowercase) is an equivalent alias */
    var files = rampart.utils.readdir(path [, showhidden]);
 
 Where ``path`` is a :green:`String`, the directory whose content will be listed and
 ``showhidden`` is a :green:`Boolean`, which if ``true``, files or directories
 beginning with ``.`` (hidden files) will be included in the return value.
+Note that this includes the ``.`` and ``..`` directory entries themselves.
 
 Return Value:
    :green:`Array`.  An :green:`Array` of :green:`Strings`, each filename in the directory.
@@ -1987,7 +2028,10 @@ Example:
 
 .. code-block:: javascript
 
-   /* All .js files anywhere below ./src */
+   /* All .js files anywhere below ./src.
+      Returned paths are prefixed with the cwd as given, so this yields
+      e.g. "./src/main.js", not "main.js".  An absolute cwd likewise
+      yields absolute paths. */
    var src = rampart.utils.glob("**/*.js", {cwd: "./src"});
 
    /* Absolute pattern */
@@ -2097,7 +2141,10 @@ Where:
      that directory tree; bare names match exactly.
 
 Return Value:
-   :green:`Number`.  The count of entries actually written to disk.
+   :green:`Number`.  The count of entries actually written to disk.  Directory
+   entries in the archive are not counted; only files (and symlinks, if
+   extracted) contribute to the total, so the number may be lower than the
+   entry count reported by `zipList`_\ ().
 
 Notes:
 
@@ -4050,18 +4097,20 @@ Usage:
 
 .. code-block:: javascript
 
-    var data = rampart.utils.fgets([handle|file] [, options[, max_size]]);
+    var data = rampart.utils.fgets([handle|file] [, options] [, max_size]);
 
 
 Read data from file, up to ``max_size`` bytes (default ``1``), stopping at
-and including the first ``\n`` or the end of the file.
+and including the first ``\n`` or the end of the file.  Note that with the
+default ``max_size`` a single byte is returned; to read a full line, pass a
+``max_size`` larger than the longest expected line (or use `readLine`_\ ()).
 
 If ``options`` is included, it must be an :green:`Object`, where if set to ``{"echo":false}``, and reading from
 ``stdin``, echoing typed characters on the terminal will be disabled (e.g., for entering
 passwords).
 
 Return Value:
-    A :green:`String`.
+    A :green:`String`, or ``null`` at end of file.
 
 fwrite
 ''''''
@@ -4157,7 +4206,9 @@ fh.fstat
 Return file status for the open handle.  Equivalent to calling
 `stat`_\ () on the path the handle was opened with, but works on the
 underlying file descriptor -- useful when the file may have been
-renamed or unlinked after opening.
+renamed or unlinked after opening.  Note that buffered writes are not
+reflected in the reported size until `fflush`_\ () (or a close) pushes
+them to the file descriptor.
 
 Usage:
 
@@ -4731,9 +4782,10 @@ is one-shot only -- pass the full input as a single :green:`String` or
 :green:`Buffer`).
 
 For node-style asynchronous variants, plus the legacy stream classes
-(``zlib.Deflate``, ``zlib.Gzip``, etc.), see :ref:`require('zlib')
-<rampart-nodeshim:zlib>` in the nodeshim docs.  The synchronous functions
-below are the implementation those wrappers delegate to.
+(``zlib.Deflate``, ``zlib.Gzip``, etc.), see ``zlib`` under
+:ref:`rampart-nodeshim Module <rampart-extras:rampart-nodeshim Module>`.
+The synchronous functions below are the implementation those wrappers
+delegate to.
 
 gzip
 ''''
@@ -5133,6 +5185,8 @@ Usage:
    myhll.add(value);
 
 Where ``value`` is a :green:`String`, :green:`Buffer` or an array of :green:`Strings` and/or :green:`Buffers`.
+A :green:`Buffer` value would typically come from, e.g., `readFile`_ or
+`stringToBuffer`_\ .
 
 Return Value:
    The `hll` :green:`Object`.

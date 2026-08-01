@@ -146,7 +146,7 @@ Basic CommonMark
 
 .. code-block:: javascript
 
-    var cmark = require(“rampart-cmark”);
+    var cmark = require("rampart-cmark");
 
     var out = cmark.toHtml(`
     This is an H1
@@ -160,7 +160,7 @@ Basic CommonMark
     > Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.
     >
     > Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse
-    > id -- sem “consectetuer” libero luctus adipiscing.
+    > id -- sem "consectetuer" libero luctus adipiscing.
     `,
         {
             sourcePos: true,
@@ -172,14 +172,14 @@ Basic CommonMark
     console.log(out);
 
     /* expected output
-    <h1 data-sourcepos=”2:1-4:0”>This is an H1</h1>
-    <h2 data-sourcepos=”5:1-7:71”>This is an H2</h2>
-    <blockquote data-sourcepos=”7:1-12:52”>
-    <p data-sourcepos=”7:3-9:72”>This is a blockquote with two paragraphs. Lorem
+    <h1 data-sourcepos="2:1-4:0">This is an H1</h1>
+    <h2 data-sourcepos="5:1-7:71">This is an H2</h2>
+    <blockquote data-sourcepos="7:1-12:52">
+    <p data-sourcepos="7:3-9:72">This is a blockquote with two paragraphs. Lorem
     ipsum dolor sit amet,<br />
     consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.<br />
     Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.</p>
-    <p data-sourcepos=”11:3-12:52”>Donec sit amet nisl. Aliquam semper ipsum sit
+    <p data-sourcepos="11:3-12:52">Donec sit amet nisl. Aliquam semper ipsum sit
     amet velit. Suspendisse<br />
     id – sem “consectetuer” libero luctus adipiscing.</p>
     </blockquote>
@@ -190,7 +190,7 @@ GitHub Flavored Markdown Extensions
 
 .. code-block:: javascript
 
-    var cmark = require(“rampart-cmark”);
+    var cmark = require("rampart-cmark");
 
     var out = cmark.toHtml(`
     # Project Status
@@ -241,11 +241,11 @@ GitHub Flavored Markdown Extensions
     </table>
     <h2>Checklist</h2>
     <ul>
-    <li><input type=”checkbox” checked=”” disabled=”” /> Write the code</li>
-    <li><input type=”checkbox” checked=”” disabled=”” /> Review changes</li>
-    <li><input type=”checkbox” disabled=”” /> Deploy to production</li>
+    <li><input type="checkbox" checked="" disabled="" /> Write the code</li>
+    <li><input type="checkbox" checked="" disabled="" /> Review changes</li>
+    <li><input type="checkbox" disabled="" /> Deploy to production</li>
     </ul>
-    <p>Visit <a href=”https://example.com”>https://example.com</a> for details.</p>
+    <p>Visit <a href="https://example.com">https://example.com</a> for details.</p>
     */
 
 Client-Side Rendering
@@ -271,7 +271,7 @@ add a configuration block before loading the library:
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
         };
     </script>
-    <script src=”https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js”>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
 
 Display math using ``$$...$$`` works without any extra configuration.
@@ -286,10 +286,10 @@ mode).
 
 .. code-block:: html
 
-    <link rel=”stylesheet”
-      href=”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css”>
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css">
     <script
-      src=”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js”>
+      src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js">
     </script>
     <script>hljs.highlightAll();</script>
 
@@ -324,12 +324,12 @@ Tables and General GitHub Styling — github-markdown-css
 `github-markdown-css <https://github.com/sindresorhus/github-markdown-css>`_
 is a community-maintained stylesheet that closely replicates GitHub's Markdown
 rendering appearance, including tables, code blocks, blockquotes, and more.
-Wrap your content in a ``<div class=”markdown-body”>`` for it to apply.
+Wrap your content in a ``<div class="markdown-body">`` for it to apply.
 
 .. code-block:: html
 
-    <link rel=”stylesheet”
-      href=”https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css”>
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
 
 Full Minimal Page
 ~~~~~~~~~~~~~~~~~
@@ -342,12 +342,12 @@ with GitHub-like styling:
     <!DOCTYPE html>
     <html>
     <head>
-        <link rel=”stylesheet”
-          href=”https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css”>
-        <link rel=”stylesheet”
-          href=”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css”>
+        <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
+        <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github.min.css">
         <script
-          src=”https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js”>
+          src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js">
         </script>
         <script>
             MathJax = {
@@ -355,7 +355,7 @@ with GitHub-like styling:
             };
         </script>
         <script
-          src=”https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js”>
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
         </script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -378,7 +378,7 @@ with GitHub-like styling:
         </script>
     </head>
     <body>
-        <div class=”markdown-body”>
+        <div class="markdown-body">
             <!-- your cmark-gfm HTML output here -->
         </div>
     </body>

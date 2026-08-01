@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rampart.utils &mdash; Rampart 0.7.0 documentation</title>
+  <title>rampart.utils &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="Rampart Thread Functions" href="rampart-thread.html"/>
         <link rel="prev" title="Introduction to Rampart" href="rampart-main.html"/> 
 
@@ -416,8 +416,9 @@ or <span class="green">Buffer</span>.  Without the <code class="docutils literal
 converted to JSON first.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">%H</span></code> - html encode (or if <code class="docutils literal notranslate"><span class="pre">!</span></code> flag present, decode) a <span class="green">String</span>
-or <span class="green">Buffer</span>.  Without the <code class="docutils literal notranslate"><span class="pre">!</span></code> flag, <span class="green">Objects</span> are
-converted to JSON first.</p>
+or <span class="green">Buffer</span>.  Unlike <code class="docutils literal notranslate"><span class="pre">%U</span></code> above, <span class="green">Objects</span> are not
+accepted and will throw an error; convert with <code class="docutils literal notranslate"><span class="pre">JSON.stringify()</span></code>
+first if needed.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">%P</span></code> - pretty print a <span class="green">String</span> or <span class="green">Buffer</span>.  Expects
 text with white space.  Format is <code class="docutils literal notranslate"><span class="pre">%[!][-][i][.w]P</span></code> where:</p>
@@ -574,13 +575,13 @@ or outside of that range will default to <code class="docutils literal notransla
 </div>
 <div class="highlight json-custom"><pre style=padding:0.6em;">
 {
-   <span class="nt0">Number"</span>: <span class="n0">1.23</span>,
+   <span class="nt0">"Number"</span>: <span class="n0">1.23</span>,
    <span class="nt0">"Bool"</span>: <span class="b0">true</span>,
    <span class="nt0">"String"</span>: <span class="s0">"Hello World!"</span>,
    <span class="nt0">"Null"</span>: <span class="N0">null</span>
 }
 {
-   <span class="nt1">Number"</span>: <span class="n1">1.23</span>,
+   <span class="nt1">"Number"</span>: <span class="n1">1.23</span>,
    <span class="nt1">"Bool"</span>: <span class="b1">true</span>,
    <span class="nt1">"String"</span>: <span class="s1">"Hello World!"</span>,
    <span class="nt1">"Null"</span>: <span class="N1">null</span>
@@ -733,8 +734,10 @@ or outside of that range will default to <code class="docutils literal notransla
 <li><code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> is a <span class="green">Buffer</span> - the <span class="green">Buffer</span> to be appended.</li>
 <li><code class="docutils literal notranslate"><span class="pre">start</span></code> is an optional <span class="green">Number</span>.  <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> is first truncated
 to this length and the formatted output is then appended (so any bytes of
-<code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> at and after <code class="docutils literal notranslate"><span class="pre">start</span></code> are discarded).  For example,
-<code class="docutils literal notranslate"><span class="pre">abprintf(&quot;hello&quot;,</span> <span class="pre">2,</span> <span class="pre">&quot;XX&quot;)</span></code> yields <code class="docutils literal notranslate"><span class="pre">&quot;heXX&quot;</span></code>.  Default is the end of
+<code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> at and after <code class="docutils literal notranslate"><span class="pre">start</span></code> are discarded).  For example, if
+<code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> holds <code class="docutils literal notranslate"><span class="pre">&quot;hello&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">abprintf(oldbuf,</span> <span class="pre">2,</span> <span class="pre">&quot;XX&quot;)</span></code> yields
+<code class="docutils literal notranslate"><span class="pre">&quot;heXX&quot;</span></code> (note that the first argument must be a <span class="green">Buffer</span>; a
+<span class="green">String</span> will throw).  Default is the end of
 <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> (nothing truncated – a plain append).  May be a negative
 number, signifying how many bytes from the end of <code class="docutils literal notranslate"><span class="pre">oldbuf</span></code> to truncate
 before appending.</li>
@@ -805,7 +808,7 @@ byte in the binary string.</dd>
 <p>Examples:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">strintToNumber</span><span class="p">(</span><span class="s2">&quot;five&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">stringToNumber</span><span class="p">(</span><span class="s2">&quot;five&quot;</span><span class="p">);</span>
 <span class="c1">// res = 5</span>
 
 <span class="nx">res</span> <span class="o">=</span> <span class="nx">stringToNumber</span><span class="p">(</span><span class="s2">&quot;three and a half&quot;</span><span class="p">);</span>
@@ -847,7 +850,8 @@ byte in the binary string.</dd>
 <span class="cm">      &quot;min&quot;: 0.5,</span>
 <span class="cm">      &quot;max&quot;: 20,</span>
 <span class="cm">      &quot;rem&quot;: &quot;is our range&quot;</span>
-<span class="cm">   }  */</span>
+<span class="cm">   }</span>
+<span class="cm">   note: range results carry min/max in place of op  */</span>
 </pre></div>
 </div>
 </div>
@@ -1232,10 +1236,10 @@ May be truncated if the file contains null characters.</td>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="s2">&quot;/tmp/file.txt&quot;</span><span class="p">,</span><span class="s2">&quot;This is a text file\n&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">({</span>
-   <span class="nx">filename</span><span class="o">:</span>  <span class="s2">&quot;/tmp/file.txt&quot;</span><span class="p">,</span>
-   <span class="nx">offset</span><span class="o">:</span>    <span class="mi">10</span><span class="p">,</span>
-   <span class="nx">length</span><span class="o">:</span>    <span class="o">-</span><span class="mi">6</span><span class="p">,</span>
-   <span class="nx">retString</span><span class="o">:</span> <span class="kc">true</span>
+   <span class="nx">file</span><span class="o">:</span>         <span class="s2">&quot;/tmp/file.txt&quot;</span><span class="p">,</span>
+   <span class="nx">offset</span><span class="o">:</span>       <span class="mi">10</span><span class="p">,</span>
+   <span class="nx">length</span><span class="o">:</span>       <span class="o">-</span><span class="mi">6</span><span class="p">,</span>
+   <span class="nx">returnString</span><span class="o">:</span> <span class="kc">true</span>
 <span class="p">});</span>
 
 <span class="cm">/* or var txt = rampart.utils.readFile(&quot;/tmp/file.txt&quot;, 10, -6, true); */</span>
@@ -1656,14 +1660,19 @@ as well.</dd>
 </div>
 <div class="section" id="shell">
 <h3>shell<a class="headerlink" href="#shell" title="Permalink to this headline">¶</a></h3>
-<p>Execute <span class="green">String</span> in a bash shell. Equivalent to
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.exec(&quot;bash&quot;,</span> <span class="pre">&quot;-c&quot;,</span> <span class="pre">shellcmd);</span></code>.</p>
+<p>Execute <span class="green">String</span> in a shell.  Equivalent to
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.exec(shell,</span> <span class="pre">&quot;-c&quot;,</span> <span class="pre">shellcmd);</span></code>, where <code class="docutils literal notranslate"><span class="pre">shell</span></code> is the
+first of these that exists: <code class="docutils literal notranslate"><span class="pre">$SHELL</span></code>, <code class="docutils literal notranslate"><span class="pre">/bin/bash</span></code>, <code class="docutils literal notranslate"><span class="pre">/bin/sh</span></code>.  If
+none is found, an error is thrown.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">shell</span><span class="p">(</span><span class="nx">shellcmd</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">shellcmd</span></code> is a <span class="green">String</span> containing the command and arguments to be
-passed to bash and <code class="docutils literal notranslate"><span class="pre">options</span></code> are the same as specified for <a class="reference internal" href="#exec">exec</a>.</p>
+passed to the shell and <code class="docutils literal notranslate"><span class="pre">options</span></code> are the same as specified for <a class="reference internal" href="#exec">exec</a>.</p>
+<p>Since <code class="docutils literal notranslate"><span class="pre">$SHELL</span></code> takes precedence, a command that relies on <code class="docutils literal notranslate"><span class="pre">bash</span></code>
+features may fail for a user whose shell is <code class="docutils literal notranslate"><span class="pre">dash</span></code>, <code class="docutils literal notranslate"><span class="pre">zsh</span></code> or similar.
+Where the shell matters, name it: <code class="docutils literal notranslate"><span class="pre">exec(&quot;/bin/bash&quot;,</span> <span class="pre">&quot;-c&quot;,</span> <span class="pre">shellcmd)</span></code>.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>Same as <a class="reference internal" href="#exec">exec</a>().</dd>
@@ -1690,7 +1699,7 @@ passed to bash and <code class="docutils literal notranslate"><span class="pre">
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">pid</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fork</span><span class="p">([</span><span class="nx">pipe</span><span class="p">,</span> <span class="nx">pipe2</span><span class="p">,</span> <span class="p">...,</span> <span class="nx">pipeX</span><span class="p">]);</span>
 
-<span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">if</span><span class="p">(</span><span class="nx">pid</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
    <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error forking\n&quot;</span><span class="p">);</span>
 
 <span class="k">if</span><span class="p">(</span><span class="nx">pid</span><span class="p">)</span> <span class="p">{</span>
@@ -1768,7 +1777,7 @@ process will produce or throw an error.</li>
    <span class="c1">//child</span>
 
    <span class="kd">var</span> <span class="nx">msg</span> <span class="o">=</span> <span class="nx">pipe</span><span class="p">.</span><span class="nx">read</span><span class="p">();</span>
-   <span class="k">if</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">err</span><span class="p">)</span>
+   <span class="k">if</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">error</span><span class="p">)</span>
       <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fprintf</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stderr</span><span class="p">,</span> <span class="s2">&quot;error reading- %s\n&quot;</span><span class="p">,</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
    <span class="k">else</span>
       <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;msg = &#39;%s&#39;\n&quot;</span><span class="p">,</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
@@ -1857,6 +1866,16 @@ called when the process exits.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">pty</span><span class="p">.</span><span class="nx">on</span><span class="p">([</span><span class="s1">&#39;data&#39;</span><span class="o">|</span><span class="s1">&#39;close&#39;</span><span class="p">],</span> <span class="nx">callback</span><span class="p">);</span>
 </pre></div>
 </div>
+<p>A <code class="docutils literal notranslate"><span class="pre">data</span></code> callback is expected to consume the data by calling
+<code class="docutils literal notranslate"><span class="pre">pty.read()</span></code>.  If a callback returns without reading anything, the
+<code class="docutils literal notranslate"><span class="pre">data</span></code> event is paused and no further <code class="docutils literal notranslate"><span class="pre">data</span></code> callbacks are made
+until <code class="docutils literal notranslate"><span class="pre">pty.read()</span></code> is called again, at which point it resumes.
+Nothing is lost: the unread bytes stay in the pseudo-terminal and are
+returned by that next <code class="docutils literal notranslate"><span class="pre">read()</span></code>.  A callback that throws also reads
+nothing, and so pauses the event in the same way.</p>
+<p>An error thrown inside a <code class="docutils literal notranslate"><span class="pre">data</span></code> or <code class="docutils literal notranslate"><span class="pre">close</span></code> callback is reported on
+stderr as <code class="docutils literal notranslate"><span class="pre">Error</span> <span class="pre">in</span> <span class="pre">forkpty</span> <span class="pre">'data'</span> <span class="pre">callback:</span></code> followed by a stack
+trace.  It does not stop the script.</p>
 </li>
 </ul>
 <p>If there is an initial error executing <code class="docutils literal notranslate"><span class="pre">command</span></code>, <code class="docutils literal notranslate"><span class="pre">forkpty()</span></code> will throw an
@@ -1869,6 +1888,20 @@ closed:</p>
    <span class="nx">pty</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span>
 <span class="k">else</span>
    <span class="nx">do_cleanup</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>This applies to <code class="docutils literal notranslate"><span class="pre">pty.read()</span></code> as well: a <code class="docutils literal notranslate"><span class="pre">data</span></code> event may arrive
+just as the child exits, so guard with <code class="docutils literal notranslate"><span class="pre">if(pty.read)</span></code> inside the
+handler too.  Note that on that final event the guard will still pass -
+<code class="docutils literal notranslate"><span class="pre">read()</span></code> is removed only once it has detected that the child is gone -
+so the return value should be checked as well:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">pty</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">if</span><span class="p">(</span><span class="nx">pty</span><span class="p">.</span><span class="nx">read</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">pty</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="mi">4096</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+      <span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>            <span class="cm">/* undefined on the last event */</span>
+         <span class="nx">process_data</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+   <span class="p">}</span>
+<span class="p">});</span>
 </pre></div>
 </div>
 <p class="last">An example for using <code class="docutils literal notranslate"><span class="pre">forkpty()</span></code> with websockets to run a terminal in
@@ -1999,6 +2032,11 @@ or is not writable).</dd>
 optional <span class="green">Boolean</span>, which if <code class="docutils literal notranslate"><span class="pre">true</span></code>, parent directories explicitly present in
 <code class="docutils literal notranslate"><span class="pre">path</span></code> will also be removed.  Throws an error if the directory cannot be
 removed (e.g., not empty or lacking permission).</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">recurse</span></code> removes parent directories, not children – it does not
+delete the contents of <code class="docutils literal notranslate"><span class="pre">path</span></code>.  Take care when combining it with an absolute
+path: every empty parent directory up the tree is removed in turn, stopping
+only where removal fails (which then throws).  Prefer a relative path, or omit
+<code class="docutils literal notranslate"><span class="pre">recurse</span></code> and remove the levels you intend explicitly.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
@@ -2017,12 +2055,16 @@ removed (e.g., not empty or lacking permission).</p>
 <h3>readDir<a class="headerlink" href="#readdir" title="Permalink to this headline">¶</a></h3>
 <p>Get listing of directory files.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span> <span class="nx">showhidden</span><span class="p">]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readDir</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span> <span class="nx">showhidden</span><span class="p">]);</span>
+
+<span class="cm">/* readdir (all lowercase) is an equivalent alias */</span>
+<span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">path</span> <span class="p">[,</span> <span class="nx">showhidden</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where <code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the directory whose content will be listed and
 <code class="docutils literal notranslate"><span class="pre">showhidden</span></code> is a <span class="green">Boolean</span>, which if <code class="docutils literal notranslate"><span class="pre">true</span></code>, files or directories
-beginning with <code class="docutils literal notranslate"><span class="pre">.</span></code> (hidden files) will be included in the return value.</p>
+beginning with <code class="docutils literal notranslate"><span class="pre">.</span></code> (hidden files) will be included in the return value.
+Note that this includes the <code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">..</span></code> directory entries themselves.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd><span class="green">Array</span>.  An <span class="green">Array</span> of <span class="green">Strings</span>, each filename in the directory.</dd>
@@ -2105,7 +2147,10 @@ are included in matches.</li>
 <dd><span class="green">Array</span> of <span class="green">Strings</span>, the matching paths (may be empty).</dd>
 </dl>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* All .js files anywhere below ./src */</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* All .js files anywhere below ./src.</span>
+<span class="cm">   Returned paths are prefixed with the cwd as given, so this yields</span>
+<span class="cm">   e.g. &quot;./src/main.js&quot;, not &quot;main.js&quot;.  An absolute cwd likewise</span>
+<span class="cm">   yields absolute paths. */</span>
 <span class="kd">var</span> <span class="nx">src</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">glob</span><span class="p">(</span><span class="s2">&quot;**/*.js&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="s2">&quot;./src&quot;</span><span class="p">});</span>
 
 <span class="cm">/* Absolute pattern */</span>
@@ -2232,7 +2277,10 @@ that directory tree; bare names match exactly.</li>
 </div></blockquote>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd><span class="green">Number</span>.  The count of entries actually written to disk.</dd>
+<dd><span class="green">Number</span>.  The count of entries actually written to disk.  Directory
+entries in the archive are not counted; only files (and symlinks, if
+extracted) contribute to the total, so the number may be lower than the
+entry count reported by <a class="reference internal" href="#ziplist">zipList</a>().</dd>
 </dl>
 <p>Notes:</p>
 <blockquote>
@@ -3015,8 +3063,8 @@ on the given date.</p>
 <span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">use</span><span class="p">.</span><span class="nx">sql</span><span class="p">;</span> <span class="c1">//same as var Sql = require(&quot;rampart-sql&quot;);</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">use</span></code> <span class="green">Object</span> is a proxy object which uses the property name referenced (here <code class="docutils literal notranslate"><span class="pre">&quot;sql</span></code>) and searches for
-a module named <code class="docutils literal notranslate"><span class="pre">&quot;rampart-sql&quot;</span></code>.  Failing that it will search for a module named (<code class="docutils literal notranslate"><span class="pre">&quot;sql&quot;</span></code>).  It will then call
+<p>The <code class="docutils literal notranslate"><span class="pre">use</span></code> <span class="green">Object</span> is a proxy object which uses the property name referenced (here <code class="docutils literal notranslate"><span class="pre">&quot;sql&quot;</span></code>) and searches for
+a module named <code class="docutils literal notranslate"><span class="pre">&quot;rampart-sql&quot;</span></code>.  Failing that it will search for a module named <code class="docutils literal notranslate"><span class="pre">&quot;sql&quot;</span></code>.  It will then call
 the <a class="reference internal" href="rampart-main.html#using-the-require-function-to-import-modules"><span class="std std-ref">require</span></a> function to import and return that value.
 If no module can be found, it will throw an error.</p>
 <dl class="docutils">
@@ -4130,17 +4178,19 @@ if not specified.</td>
 <div class="section" id="fgets">
 <h3>fgets<a class="headerlink" href="#fgets" title="Permalink to this headline">¶</a></h3>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fgets</span><span class="p">([</span><span class="nx">handle</span><span class="o">|</span><span class="nx">file</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">[,</span> <span class="nx">max_size</span><span class="p">]]);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fgets</span><span class="p">([</span><span class="nx">handle</span><span class="o">|</span><span class="nx">file</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]</span> <span class="p">[,</span> <span class="nx">max_size</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Read data from file, up to <code class="docutils literal notranslate"><span class="pre">max_size</span></code> bytes (default <code class="docutils literal notranslate"><span class="pre">1</span></code>), stopping at
-and including the first <code class="docutils literal notranslate"><span class="pre">\n</span></code> or the end of the file.</p>
+and including the first <code class="docutils literal notranslate"><span class="pre">\n</span></code> or the end of the file.  Note that with the
+default <code class="docutils literal notranslate"><span class="pre">max_size</span></code> a single byte is returned; to read a full line, pass a
+<code class="docutils literal notranslate"><span class="pre">max_size</span></code> larger than the longest expected line (or use <a class="reference internal" href="#readline">readLine</a>()).</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">options</span></code> is included, it must be an <span class="green">Object</span>, where if set to <code class="docutils literal notranslate"><span class="pre">{&quot;echo&quot;:false}</span></code>, and reading from
 <code class="docutils literal notranslate"><span class="pre">stdin</span></code>, echoing typed characters on the terminal will be disabled (e.g., for entering
 passwords).</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>A <span class="green">String</span>.</dd>
+<dd>A <span class="green">String</span>, or <code class="docutils literal notranslate"><span class="pre">null</span></code> at end of file.</dd>
 </dl>
 </div>
 <div class="section" id="fwrite">
@@ -4248,7 +4298,9 @@ fd-keyed functions in the next section.  Each method is invoked as
 <p>Return file status for the open handle.  Equivalent to calling
 <a class="reference internal" href="#stat">stat</a>() on the path the handle was opened with, but works on the
 underlying file descriptor – useful when the file may have been
-renamed or unlinked after opening.</p>
+renamed or unlinked after opening.  Note that buffered writes are not
+reflected in the reported size until <a class="reference internal" href="#fflush">fflush</a>() (or a close) pushes
+them to the file descriptor.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">st</span> <span class="o">=</span> <span class="nx">handle</span><span class="p">.</span><span class="nx">fstat</span><span class="p">();</span>
 </pre></div>
@@ -4806,8 +4858,10 @@ synchronous and throw on error; no streaming API is exposed (libdeflate
 is one-shot only – pass the full input as a single <span class="green">String</span> or
 <span class="green">Buffer</span>).</p>
 <p>For node-style asynchronous variants, plus the legacy stream classes
-(<code class="docutils literal notranslate"><span class="pre">zlib.Deflate</span></code>, <code class="docutils literal notranslate"><span class="pre">zlib.Gzip</span></code>, etc.), see <span class="xref std std-ref">require(‘zlib’)</span> in the nodeshim docs.  The synchronous functions
-below are the implementation those wrappers delegate to.</p>
+(<code class="docutils literal notranslate"><span class="pre">zlib.Deflate</span></code>, <code class="docutils literal notranslate"><span class="pre">zlib.Gzip</span></code>, etc.), see <code class="docutils literal notranslate"><span class="pre">zlib</span></code> under
+<a class="reference internal" href="rampart-extras.html#rampart-nodeshim-module"><span class="std std-ref">rampart-nodeshim Module</span></a>.
+The synchronous functions below are the implementation those wrappers
+delegate to.</p>
 <div class="section" id="gzip">
 <h3>gzip<a class="headerlink" href="#gzip" title="Permalink to this headline">¶</a></h3>
 <p>Compress data into the gzip container format (RFC 1952).</p>
@@ -5142,7 +5196,9 @@ functions are thread-safe.</p>
 <span class="nx">myhll</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">value</span></code> is a <span class="green">String</span>, <span class="green">Buffer</span> or an array of <span class="green">Strings</span> and/or <span class="green">Buffers</span>.</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">value</span></code> is a <span class="green">String</span>, <span class="green">Buffer</span> or an array of <span class="green">Strings</span> and/or <span class="green">Buffers</span>.
+A <span class="green">Buffer</span> value would typically come from, e.g., <a class="reference internal" href="#readfile">readFile</a> or
+<a class="reference internal" href="#stringtobuffer">stringToBuffer</a>.</p>
 <dl class="docutils">
 <dt>Return Value:</dt>
 <dd>The <cite>hll</cite> <span class="green">Object</span>.</dd>
@@ -5262,7 +5318,7 @@ the <cite>hll</cite> to disk using a command such as <a class="reference interna
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

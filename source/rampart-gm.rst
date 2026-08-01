@@ -331,8 +331,9 @@ list()
         var info = images.list();
 
     Return Value:
-        An :green:`Array` of :green:`Objects` describing each image in the
-        *Image Object*.
+        An :green:`Array` of :green:`Strings`, the file name of each image in
+        the *Image Object*.  For a full description of an image, see
+        :ref:`identify() <gm_identify>`.
 
     Example:
 
@@ -342,6 +343,13 @@ list()
         var images = gm.open(["/path/to/image1.jpg", "/path/to/image2.jpg"]);
 
         rampart.utils.printf("%3J\n", images.list());
+
+        /* expected output:
+           [
+              "/path/to/image1.jpg",
+              "/path/to/image2.jpg"
+           ]
+        */
 
 
 .. _gm_getCount:

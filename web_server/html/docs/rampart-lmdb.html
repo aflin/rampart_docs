@@ -1609,13 +1609,12 @@
 <span class="cm">        cursorNext:  {_func: true},</span>
 <span class="cm">        cursorPrev:  {_func: true},</span>
 <span class="cm">        commit:      {_func: true},</span>
-<span class="cm">        abort:       {_func: true},</span>
-<span class="cm">        lmdb:        {} //the above lmdb object</span>
+<span class="cm">        abort:       {_func: true}</span>
 <span class="cm">    }</span>
 <span class="cm">*/</span>
 
 <span class="cm">/* use connection, then commit or abort */</span>
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -1733,10 +1732,11 @@
 "kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class=
-"nx">key</span> <span class="p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
+"nx">txn</span><span class="p">.</span><span class="nx">get</span><span class="p">([</span><span class=
+"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">key</span> <span class=
+"p">[,</span> <span class="nx">return_string</span><span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -1746,6 +1746,12 @@
                       <blockquote>
                         <div>
                           <ul class="simple">
+                            <li>
+                              <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is an
+                              optional database handle as returned from <a class="reference internal" href=
+                              "#opendb">openDb</a>(). If given, it overrides the database the transaction was opened on
+                              for this call.
+                            </li>
                             <li>
                               <code class="docutils literal notranslate"><span class="pre">key</span></code> is a
                               <span class="green">String</span> or <span class="green">Buffer</span>, the key of the
@@ -1806,7 +1812,7 @@
 
 <span class="cm">/* use res here */</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 
 <span class="cm">/* res data is invalid and buffer is reset to zero length */</span>
 </pre>
@@ -1927,7 +1933,7 @@
 <span class="nx">txn</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class=
 "nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2003,7 +2009,7 @@
 "nx">txn</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class=
 "nx">key</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2077,12 +2083,13 @@
 "kc">false</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class=
-"nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class=
-"nx">op</span> <span class="p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class=
-"p">[,</span> <span class="nx">key_is_string</span> <span class="p">[,</span> <span class=
-"nx">val_is_string</span><span class="p">]</span> <span class="p">]);</span>
+"nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">([</span><span class=
+"nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">op</span> <span class=
+"p">[,</span> <span class="nx">key</span><span class="p">]</span> <span class="p">[,</span> <span class=
+"nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class=
+"p">]</span> <span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2092,6 +2099,14 @@
                       <blockquote>
                         <div>
                           <ul>
+                            <li>
+                              <p class="first">
+                                <code class="docutils literal notranslate"><span class="pre">dbase</span></code> is an
+                                optional database handle as returned from <a class="reference internal" href=
+                                "#opendb">openDb</a>(). If given, it overrides the database the transaction was opened
+                                on for this call.
+                              </p>
+                            </li>
                             <li>
                               <p class="first">
                                 <code class="docutils literal notranslate"><span class="pre">op</span></code> is a
@@ -2222,7 +2237,7 @@
 <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorPut</span><span class=
 "p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2298,7 +2313,7 @@
 <span class="cm">/* delete item at cursor position */</span>
 <span class="nx">txn</span><span class="p">.</span><span class="nx">cursorDel</span><span class="p">();</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2345,7 +2360,7 @@
 "nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class=
 "p">]</span> <span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2403,7 +2418,7 @@
 "nx">txn</span><span class="p">.</span><span class="nx">cursorGet</span><span class="p">(</span><span class=
 "nx">lmdb</span><span class="p">.</span><span class="nx">op_next</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2446,7 +2461,7 @@
     <span class="cm">/* do something with res */</span>
 <span class="p">}</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2496,7 +2511,7 @@
 "nx">key_is_string</span> <span class="p">[,</span> <span class="nx">val_is_string</span><span class=
 "p">]</span> <span class="p">]);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2555,7 +2570,7 @@
 "nx">dbase</span><span class="p">,</span> <span class="p">]</span> <span class="nx">lmdb</span><span class=
 "p">.</span><span class="nx">op_prev</span><span class="p">);</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2598,7 +2613,7 @@
     <span class="cm">/* do something with res */</span>
 <span class="p">}</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2641,9 +2656,9 @@
 "p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="nx">open_rw</span><span class=
 "p">);</span>
 
-<span class="cm">/* use tnx here */</span>
+<span class="cm">/* use txn here */</span>
 
-<span class="nx">tnx</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+<span class="nx">txn</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>
@@ -2683,10 +2698,10 @@
 "p">([</span><span class="nx">dbase</span><span class="p">],</span> <span class="nx">open_rw</span><span class=
 "p">);</span>
 
- <span class="cm">/* use tnx here */</span>
+ <span class="cm">/* use txn here */</span>
 
 <span class="cm">/* discard any/all changes */</span>
- <span class="nx">tnx</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
+ <span class="nx">txn</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
 </pre>
                         </div>
                       </div>

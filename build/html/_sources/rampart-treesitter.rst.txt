@@ -8,14 +8,14 @@ Acknowledgment
 ~~~~~~~~~~~~~~
 
 The rampart-treesitter module is built on the
-`Tree-sitter <https://tree-sitter.github.io/tree-sitter/>`_ parser
+`Tree-sitter <https://tree-sitter.github.io/tree-sitter/>`__ parser
 generator and incremental parsing library, originally created by
 Max Brunsfeld.  The authors of Rampart extend our thanks to the
 Tree-sitter authors and contributors and to the individual
 maintainers of each bundled grammar.
 
 The module bundles the following language grammars, sourced from
-the official `tree-sitter <https://github.com/tree-sitter>`_
+the official `tree-sitter <https://github.com/tree-sitter>`__
 organization where available and well-maintained community
 repositories otherwise:
 
@@ -256,8 +256,10 @@ extractSymbols
            *  ``column`` - A :green:`Number`, the 1-based column.
 
            *  ``signature`` - A :green:`String`, the source text
-              covering the symbol's node, truncated at the first
-              ``{`` or after 256 bytes (whichever comes first).
+              covering the symbol's node.  Nodes of 256 bytes or fewer
+              are returned in full; longer nodes are cut at the last
+              ``{`` before the 256-byte limit (or hard-cut at the limit
+              if there is none) and suffixed with ``...``.
               Suitable for display and for indexing.
 
            *  ``startByte`` - A :green:`Number`, the byte offset
@@ -270,6 +272,29 @@ extractSymbols
            parsed tree contains any ``ERROR`` node.  When ``true``,
            the symbol list may be incomplete; tree-sitter's
            error-recovery may have skipped sections of the source.
+
+        *  ``extract`` - A :green:`Function`.  A convenience method
+           that returns the source text of a symbol without the
+           caller re-slicing ``source`` by hand.  It is called as
+           ``result.extract(which)`` where ``which`` is either:
+
+           *  A :green:`Number`, an index into the ``symbols`` array;
+              or
+           *  A :green:`String`, a symbol name.  The **first** symbol
+              with a matching ``name`` is used.
+
+           It returns a :green:`String`, the exact bytes
+           ``[startByte, endByte)`` of the chosen symbol - equivalent
+           to
+           ``rampart.utils.readFile(file, symbol.startByte, symbol.endByte - symbol.startByte, true)``
+           but sliced directly from the already-parsed source, so it
+           does not re-read the file and is immune to source/offset
+           drift.  It throws if the index is out of range or no symbol
+           has the given name.
+
+           The retained source is held internally by reference (a
+           refcounted, interned string - not a copy), and is not an
+           enumerable property of the result.
 
 parse
 ~~~~~
@@ -379,6 +404,32 @@ Extracting Symbols
     class_declaration 'Greeter' at line 4
     method_definition 'greet' at line 5
     */
+
+Extracting a Symbol's Source
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``extract`` method on the result returns the full source text of a
+symbol, selected by index or by name.  This is convenient for pulling a
+function or class body straight out of a large file after locating it:
+
+.. code-block:: javascript
+
+    var ts = require("rampart-treesitter");
+    rampart.globalize(rampart.utils);
+
+    var src = readFile("/path/to/module.js", true);
+    var result = ts.extractSymbols(src, "javascript");
+
+    /* by index */
+    console.log(result.extract(0));
+
+    /* by name - returns the first symbol so named */
+    console.log(result.extract("greet"));
+
+    /* equivalent to slicing the source yourself: */
+    var s = result.symbols[0];
+    var same = result.extract(0) ===
+               src.substring(s.startByte, s.endByte);   /* true */
 
 Inspecting the AST
 ~~~~~~~~~~~~~~~~~~

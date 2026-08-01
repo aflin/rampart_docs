@@ -71,6 +71,9 @@ Return value:
 
     {
         connection:    {_func:true},
+        connect:       {_func:true},
+        init:          {_func:true},
+        list:          {_func:true},
         stringFormat:  {_func:true},
         abstract:      {_func:true},
         sandr:         {_func:true},
@@ -89,15 +92,15 @@ The returned :green:`Object` contains :green:`Functions` that can be split into 
 Database Functions
 ------------------
 
-init() constructor
-~~~~~~~~~~~~~~~~~~
+Module Functions
+~~~~~~~~~~~~~~~~
 
-DEPRECATED: see connection() below.
+Functions on the :green:`Object` returned by ``require("rampart-sql")``.
 
 .. _connection_const:
 
 connection() constructor
-~~~~~~~~~~~~~~~~~~~~~~~~
+''''''''''''''''''''''''
 
 The ``connection`` constructor function takes a :green:`String`, the path to the database
 and an optional :green:`Boolean` as parameters. It returns an :green:`Object` representing a
@@ -156,18 +159,20 @@ Return Value:
 .. code-block:: none
 
     {
-        exec:          {_func:true},
-        query:         {_func:true},
-        one:           {_func:true},
-        set:           {_func:true},
-        reset:         {_func:true},
-        close:         {_func:true}
-        addTable:      {_func:true},
-        importCsv:     {_func:true},
-        importCsvFile: {_func:true},
-        errMsg:        "",
-        db:            "/path/to/db",
-        selectMaxRows: 10
+        exec:            {_func:true},
+        query:           {_func:true},
+        one:             {_func:true},
+        set:             {_func:true},
+        reset:           {_func:true},
+        close:           {_func:true},
+        addTable:        {_func:true},
+        importCsv:       {_func:true},
+        importCsvFile:   {_func:true},
+        scheduleUpdate:  {_func:true},
+        scheduleRebuild: {_func:true},
+        errMsg:          "",
+        db:              "/path/to/db",
+        selectMaxRows:   10
     }
 
 Example:
@@ -185,7 +190,7 @@ the current user.
 
 
 connect()
-~~~~~~~~~
+'''''''''
 
 A shortcut for ``new Sql.connection``
 
@@ -199,8 +204,64 @@ Example:
 	var sql = Sql.connect("/path/to/my/db", true);
 
 
+init() constructor
+''''''''''''''''''
+
+DEPRECATED: see connection() below.
+
+.. _sqllist:
+
+list() - IN-list parameters
+'''''''''''''''''''''''''''
+
+To bind a JavaScript :green:`Array` of values as a SQL ``IN (?)`` list,
+wrap it with ``Sql.list()``.  The wrapper carries an explicit signal
+that the parameter should be expanded into a list rather than treated
+as a single scalar:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+    var sql = new Sql.connection("./mytestdb");
+
+    /* numeric IN against an int or double column */
+    var res = sql.exec(
+        "select * from employees where Id in (?)",
+        [ Sql.list([101, 205, 309]) ]
+    );
+
+    /* string IN against a varchar column */
+    var res = sql.exec(
+        "select * from employees where Name in (?)",
+        [ Sql.list(["Alice", "Bob", "Carol"]) ]
+    );
+
+The argument to ``Sql.list()`` must be a non-empty :green:`Array` whose
+elements are **all** :green:`Numbers` or **all** :green:`Strings`.  Mixed
+types, ``NaN``, ``Infinity``, ``null``, or :green:`Boolean` values throw
+an error at the ``Sql.list()`` call.
+
+Numeric lists are bound as a SQL ``DOUBLE`` array; the underlying
+column may be any numeric type (``int``, ``int64``, ``uint64``,
+``double``, etc.) and Texis will convert at compare time.  String lists
+are bound as a Texis ``strlst`` (string list); ``WHERE varchcol IN (?)``
+matches when the column value is one of the strings in the list.
+
+.. note::
+    Values outside the JavaScript safe-integer range (``±2``\ :sup:`53`\ )
+    have already lost precision in JavaScript before reaching
+    ``Sql.list()``.  For exact comparisons against ``int64``/``uint64``
+    columns with values larger than 2\ :sup:`53`, pass the values as
+    :green:`Strings`: ``Sql.list(["9007199254740993", ...])``.
+
+Connection Functions
+~~~~~~~~~~~~~~~~~~~~
+
+Functions on a connection :green:`Object`, as returned by the
+`connection() constructor`_ or `connect()`_\ .
+
 exec()
-~~~~~~
+''''''
 
 The exec :green:`Function` executes a sql statement on the database opened
 with :ref:`connection() <connection_const>`.  It takes a :green:`String` containing a sql
@@ -226,6 +287,9 @@ parameters, an optional :green:`Object` of options and an optional callback
 +--------------+------------------+--------------------------------------------------------+
 |callback      |:green:`Function` | a function to handle data one row at a time.           |
 +--------------+------------------+--------------------------------------------------------+
+
+The arguments after ``statement`` are identified by type and may be given
+in any order.
 
 Statement:
     A statement is a :green:`String` containing a single sql statement to be
@@ -271,51 +335,6 @@ The use of Parameters can make the handling of user input safe from
 Note that if there is only one parameter, it still must be contained in an
 :green:`Array` or :green:`Object`.
 
-.. _sqllist:
-
-Sql.list() - IN-list parameters
-'''''''''''''''''''''''''''''''
-
-To bind a JavaScript :green:`Array` of values as a SQL ``IN (?)`` list,
-wrap it with ``Sql.list()``.  The wrapper carries an explicit signal
-that the parameter should be expanded into a list rather than treated
-as a single scalar:
-
-.. code-block:: javascript
-
-    var Sql = require("rampart-sql");
-    var sql = new Sql.connection("./mytestdb");
-
-    /* numeric IN against an int or double column */
-    var res = sql.exec(
-        "select * from employees where Id in (?)",
-        [ Sql.list([101, 205, 309]) ]
-    );
-
-    /* string IN against a varchar column */
-    var res = sql.exec(
-        "select * from employees where Name in (?)",
-        [ Sql.list(["Alice", "Bob", "Carol"]) ]
-    );
-
-The argument to ``Sql.list()`` must be a non-empty :green:`Array` whose
-elements are **all** :green:`Numbers` or **all** :green:`Strings`.  Mixed
-types, ``NaN``, ``Infinity``, ``null``, or :green:`Boolean` values throw
-an error at the ``Sql.list()`` call.
-
-Numeric lists are bound as a SQL ``DOUBLE`` array; the underlying
-column may be any numeric type (``int``, ``int64``, ``uint64``,
-``double``, etc.) and Texis will convert at compare time.  String lists
-are bound as a Texis ``strlst`` (string list); ``WHERE varchcol IN (?)``
-matches when the column value is one of the strings in the list.
-
-.. note::
-    Values outside the JavaScript safe-integer range (``±2``\ :sup:`53`\ )
-    have already lost precision in JavaScript before reaching
-    ``Sql.list()``.  For exact comparisons against ``int64``/``uint64``
-    columns with values larger than 2\ :sup:`53`, pass the values as
-    :green:`Strings`: ``Sql.list(["9007199254740993", ...])``.
-
 .. _execopts:
 
 Options:
@@ -359,7 +378,7 @@ Options:
    * ``returnRows`` (:green:`Boolean`): If set ``true``, performs the same
      function as ``{returnType: "object"}`` above.  If set ``false``,
      performs the same function as ``{returnType: "novars"}`` above.  This
-     setting overrides the ``returnType`` setting if both are present.
+     If both are present, the ``returnType`` setting takes precedence.
 
    * ``includeCounts`` (:green:`Boolean`): whether to include count
      information in the return :green:`Object`.  Default is ``false``.  The
@@ -443,8 +462,12 @@ Callback:
      aliases selected and returned in results.
 
    * ``countInfo``: an :green:`Object` as described below in `countinfo`_ if the
-     ``includeCounts`` option is set ``true``.  Otherwise it will be
-     ``undefined``.
+     ``includeCounts`` option is set ``true``.  Otherwise an empty
+     :green:`Object` is passed.  Note that this differs from the return value
+     of ``exec()``, where the ``countInfo`` property is genuinely absent when
+     ``includeCounts`` is not set; a callback testing ``if(countInfo)`` will
+     always see a truthy value, so test a property such as
+     ``countInfo.indexCount`` instead.
 
    * ``user_argument``: a variable that is supplied to the callback after
      being set in the :ref:`options <execopts>` ``argument``
@@ -847,7 +870,7 @@ Below is a full example of ``exec()`` functionality:
    */
 
 query()
-~~~~~~~
+'''''''
 
 ``sql.query()`` performs in the same manner as `exec()`_\ , except it will not throw JavaScript errors
 when there are sql errors that would otherwise do so in `exec()`_ (see `Error Messages <rampart-sql.html#errormsgs>`_
@@ -946,7 +969,7 @@ Example:
     functions.
 
 one()
-~~~~~
+'''''
 
 The ``one`` :green:`Function` is a shortcut for executing sql
 where only one row is desired and the extra information normally
@@ -983,7 +1006,7 @@ can be used in an ``if`` statement to test the existence of a row:
       console.log("user " + user_name + " does not exist in the database.");
 
 set()
-~~~~~
+'''''
 
 The ``set`` :green:`Function` sets Texis server properties.  For a full listing, see
 :ref:`sql-set:Server Properties`.  Arguments are given as keys with
@@ -1031,7 +1054,7 @@ Example:
 	*/		                        	
 
 reset()
-~~~~~~~
+'''''''
 
 Reset all settings set with `set()`_ above to their original default values.
 
@@ -1052,7 +1075,7 @@ Example:
    sql.reset(); //reset all to default
 
 importCsvFile()
-~~~~~~~~~~~~~~~
+'''''''''''''''
 
 The importCsvFile :green:`Function` imports data from a csv
 formatted file 
@@ -1139,7 +1162,7 @@ options:
 	the default is ``true``.
 
       * ``progressFunc`` - :green:`Function`: A function to monitor the progress
-        of the passes over the csv data.  It takes as arguments ``function (stage, i)``
+        of the passes over the csv data.  It takes as arguments ``function (i, stage)``
         The variable ``stage`` is ``0`` for the initial counting of rows, ``1`` for the parsing
         of the cells in each row and ``2+`` optionally if ``normalize`` is ``true`` for the
         two stages of the analysis of each column in the csv (e.g. ``2`` for column 0 first pass,
@@ -1207,7 +1230,7 @@ Example:
    */
 
 importCsv()
-~~~~~~~~~~~
+'''''''''''
 
 Same as `importCsvFile()`_ except instead of a file name, a :green:`String` or
 :green:`Buffer` containing the csv data is passed as a parameter.
@@ -1269,18 +1292,8 @@ Example:
    2 ["logistics",30,"iPad Air",300,9000,100,"Duktape",1.5,150,9150]
    */
 
-close()
-~~~~~~~
-
-In general it is not necessary to use ``close()`` as the "connection" to the
-database is not over a socket.  However, if resources to a database are no
-longer needed, ``close()`` will clean up some of those resources.  Note that
-even after calling ``sql.close()``, using the ``sql.*`` :green:`Functions`
-will re-open handles to the database and continue to operate as expected and
-in the same manner as when the "connection" was first opened.
-
 addTable()
-~~~~~~~~~~
+''''''''''
 
 Add a table to the current database.
 
@@ -1301,6 +1314,16 @@ Note:
    will need to be recreated.
 
 See also: :ref:`The addtable command line utility <sql-utils:The addtable Command Line Utility>`.
+
+close()
+'''''''
+
+In general it is not necessary to use ``close()`` as the "connection" to the
+database is not over a socket.  However, if resources to a database are no
+longer needed, ``close()`` will clean up some of those resources.  Note that
+even after calling ``sql.close()``, using the ``sql.*`` :green:`Functions`
+will re-open handles to the database and continue to operate as expected and
+in the same manner as when the "connection" was first opened.
 
 Column Data Types
 -----------------
@@ -1425,7 +1448,10 @@ Date and time
    * - Type
      - Description
    * - ``date``
-     - Seconds since 1970-01-01 UTC; accepts most date/time string forms on insert.
+     - Seconds since 1970-01-01 UTC; accepts most date/time string forms on
+       insert.  A string without a timezone is parsed as system local time;
+       values are retrieved in JavaScript as :green:`Date` objects (which
+       serialize as UTC/ISO strings).
    * - ``datestamp``
      - Date-only stamp.
    * - ``timestamp``
@@ -1444,8 +1470,6 @@ Identifier and special
      - Description
    * - ``counter``
      - 8-byte unique row identifier combining a timestamp and a sequence.
-   * - ``counteri``
-     - Indirect/secondary counter.
    * - ``recid``
      - Internal row identifier.
 
@@ -1454,7 +1478,7 @@ Vector
 
 Vector types store an ordered sequence of numeric elements. They power
 ``LIKEV`` similarity queries and ``CREATE VECTOR INDEX`` (see
-:ref:`CREATE VECTOR INDEX <sql-utils:CREATE VECTOR INDEX>`).
+`Vector Indexes`_ below).
 
 .. list-table::
    :widths: 28 14 58
@@ -1523,7 +1547,7 @@ There are several versions and variations of `Regular Indexes`, as listed
 below.
 
 Non-Unique Index
-""""""""""""""""
+''''''''''''''''
 
 A non unique index is an index which may be used on any column or columns
 of a table in order to speed up lookup.
@@ -1574,7 +1598,7 @@ This will print a progress meter to ``stdout`` as the index is being
 created.
 
 Unique Index
-""""""""""""
+''''''''''''
 
 A Unique Index indexes a column just as above, except that duplicate entries
 cannot be inserted into the table.
@@ -1619,11 +1643,11 @@ The following example illustrates the properties of a unique index:
     */
 
 Inverted Index
-""""""""""""""
+''''''''''''''
 
 An Inverted Index may be used on ``UNSIGNED INT`` or ``DATE`` fields to speed up
 ``ORDER BY`` operations.  See
-`this section <https://docs.thunderstone.com/site/texisman/creating_an_inverted_index.html>`_
+`this section <https://docs.thunderstone.com/site/texisman/creating_an_inverted_index.html>`__
 of the `Texis Manual <https://docs.thunderstone.com/site/texisman/>`_ for more information.
 
 Fulltext Indexes
@@ -1634,9 +1658,9 @@ using the ``WHERE column-name likep 'keyword keyword'`` syntax.
 
 A Fulltext index is also known as a "Metamorph Inverted Index".
 More information can be found
-`here <https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html>`_
+`here <https://docs.thunderstone.com/site/texisman/creating_a_metamorph_index.html>`__
 and
-`here <https://docs.thunderstone.com/site/vortexman/create_index_with_options.html>`_\ .
+`here <https://docs.thunderstone.com/site/vortexman/create_index_with_options.html>`__\ .
 
 Unlike Regular Indexes, Fulltext indexes do not automatically update when
 inserting, deleting or updating rows.  However, the ``likep`` search will
@@ -1644,11 +1668,11 @@ still function as normal, new and updated rows will be linearly scanned in
 order to find matches.
 
 A Fulltext index may be manually updated at any time
-and while the database and index is in use.  See `Updating A Fulltext
-Index`_ below.
+and while the database and index is in use.  See :ref:`Updating A Fulltext
+Index <updating-a-fulltext-index>` below.
 
 Creating A Fulltext Index
-"""""""""""""""""""""""""
+'''''''''''''''''''''''''
 
 The syntax for creating a Fulltext index is as follows:
 
@@ -1681,7 +1705,7 @@ Note that in Rampart Javascript, the backslash (``\``) needs to be escaped:
     sql.exec("create fulltext index employees_NameBio_text on employees(Name\\Bio);");
 
 Variations of Fulltext Indexes
-""""""""""""""""""""""""""""""
+''''''''''''''''''''''''''''''
 
 Though a ``LIKEP`` search on a ``FULLTEXT`` index (created as described above)
 is the most common and most capable version, there are two other versions
@@ -1704,8 +1728,10 @@ searches which are available:
   Created with ``create fulltext index ... WITH COUNTS 'on';``.
   see `Texis Documentation for Metamorph Counter Indexes <https://docs.thunderstone.com/site/texisman/counter.html>`_ \.
 
+.. _updating-a-fulltext-index:
+
 Updating A Fulltext Index
-"""""""""""""""""""""""""
+'''''''''''''''''''''''''
 
 After a Fulltext Index is created, and more rows are inserted, the index may
 be optimized by using the *exact* same command used to create the index above:
@@ -1721,7 +1747,7 @@ Alternatively, ``ALTER INDEX`` syntax may be used.
     alter index employees_Bio_text OPTIMIZE;
 
 Word Expressions
-""""""""""""""""
+''''''''''''''''
 
 A Fulltext index is created by matching the definition of a "word"
 using `rex()`_ regular expressions.  As used above, with no extra
@@ -1784,7 +1810,7 @@ NOTE:
 
 
 Text Index Maintenance
-""""""""""""""""""""""
+''''''''''''''''''''''
 
 If a Fulltext index is large, the time and CPU resources it takes to update
 the index may be more than is desirable during active use of the database.
@@ -1813,7 +1839,7 @@ Then adding a crontab entry like the following would execute the script at 2 am 
 
 
 scheduleUpdate()
-""""""""""""""""
+''''''''''''''''
 
 Auto Maintenance (currently experimental) of a fulltext or vector index is accomplished by
 scheduling a time for an ``OPTIMIZE`` pass using ``sql.scheduleUpdate()``.
@@ -1909,7 +1935,7 @@ Example viewing progress:
 
 
 scheduleRebuild()
-"""""""""""""""""
+'''''''''''''''''
 
 Like ``scheduleUpdate()``, but schedules a full ``REBUILD`` instead of an ``OPTIMIZE``.
 
@@ -1977,7 +2003,7 @@ similarity search.  Two backends are available:
 * **HNSW** — usearch graph index.  In-RAM; no minimum size; near-exact
   distances out of the box.
 
-See `Choosing a backend`_ below for when each is appropriate.
+See :ref:`Choosing a backend <choosing-a-backend>` below for when each is appropriate.
 
 Per-row ``INSERT``, ``UPDATE``, and ``DELETE`` automatically update
 the index.  Search-time consistency is maintained without per-row
@@ -1986,7 +2012,7 @@ to the sealed index; see `Maintenance`_ for the periodic OPTIMIZE
 step that folds those back in.
 
 Quick start
-"""""""""""
+'''''''''''
 
 .. code-block:: javascript
 
@@ -2013,8 +2039,10 @@ The supported column types for the vector data are listed in
 their dimensionality; ``byte`` and ``varbyte`` columns require
 ``WITH vec_dtype '<dtype>'``.
 
+.. _choosing-a-backend:
+
 Choosing a backend
-""""""""""""""""""
+''''''''''''''''''
 
 .. list-table::
    :widths: 25 35 40
@@ -2050,7 +2078,7 @@ the index entirely below ~2,000 rows (brute force is fine), HNSW
 between ~2k and ~10k rows, IVFPQ above that.
 
 Creating a Vector Index
-"""""""""""""""""""""""
+'''''''''''''''''''''''
 
 .. code-block:: sql
 
@@ -2127,8 +2155,10 @@ Common options (both backends):
    * - ``indexmeter``
      - ``'on'``, ``'off'``, ``'always'``, ...
      - process default
-     - Build-time progress meter.  Also honored on
-       ``ALTER INDEX OPTIMIZE`` / ``REBUILD`` and on re-CREATE.
+     - Build-time progress meter.  A ``CREATE``-time option, also honored
+       on re-CREATE (which is silently an OPTIMIZE).  ``ALTER INDEX``
+       accepts no ``WITH`` clause; use ``sql.set({indexMeter: ...})``
+       before ``OPTIMIZE`` / ``REBUILD``.
 
 HNSW-only options:
 
@@ -2151,7 +2181,7 @@ HNSW-only options:
    * - ``vec_scale``, ``vec_zero_point``, ``vec_calibrate``
      - see below
      - see below
-     - i8/u8 quantization controls.  See `i8 / u8 quantized indexes`_.
+     - i8/u8 quantization controls.  See :ref:`i8 / u8 quantized indexes <i8-u8-quantized-indexes>`.
 
 IVFPQ-only options:
 
@@ -2236,8 +2266,10 @@ Examples:
     -- byte / varbyte column with explicit dtype
     CREATE VECTOR INDEX emb_vec ON emb (v) WITH vec_dtype 'f16';
 
+.. _i8-u8-quantized-indexes:
+
 i8 / u8 quantized indexes
-"""""""""""""""""""""""""
+'''''''''''''''''''''''''
 
 **HNSW only.**  IVFPQ does its own product quantization (8-bit codes
 per subquantizer) regardless of column dtype — the ``vec_dtype``
@@ -2261,8 +2293,10 @@ them from a pre-scan at build time.
 Native ``varvecI8`` / ``varvecU8`` columns are indexable directly;
 no conversion happens.
 
+.. _querying-with-likev:
+
 Querying with LIKEV
-"""""""""""""""""""
+'''''''''''''''''''
 
 Basic top-K:
 
@@ -2288,6 +2322,8 @@ Basic top-K:
   indexed search and never needs ``allinear``.
 * ``$rank`` is the per-row score, scaled to ``[-100000, 100000]``.
   With unit-norm vectors the practical range is ``[0, 100000]``.
+  (In a hybrid keyword-OR-vector query this same value is available
+  per row as ``$vrank`` — see `Per-side scores: $krank and $vrank`_.)
 * Use the ``maxRows`` parameter of ``exec()`` to retrieve top-K.
 * If the index exists but can't serve the query — wrong column type,
   dimension mismatch, unreadable index files — ``LIKEV`` falls back to
@@ -2328,8 +2364,10 @@ Basic top-K:
   IVFPQ, raise :ref:`likevPqNprobe <sql-set:likevPqNprobe>` — these
   surface more candidates that ``$rank`` will then exact-score.
 
+.. _hybrid-rank-fusion:
+
 Hybrid keyword + vector queries (rank fusion)
-"""""""""""""""""""""""""""""""""""""""""""""
+'''''''''''''''''''''''''''''''''''''''''''''
 
 A single ``OR`` combines a full-text (``LIKEP``) and a vector
 (``LIKEV``) search into one hybrid query, ranked by **Reciprocal Rank
@@ -2346,18 +2384,13 @@ When **both** columns are indexed (a metamorph index on ``doc``, a
 vector index on ``v``), the engine takes each side's ranked candidate
 list — the keyword list capped by :ref:`likeprows <sql-set:likeprows>`,
 the vector list capped by :ref:`likevRows <sql-set:likevRows>` and
-already re-scored by exact distance — and fuses them by list
-*position*:
-
-.. code-block:: text
-
-    $rank  =  sum over lists of   1000000 / (60 + position)
-
-so no score calibration between the two retrievers is needed, and a
-document found by **both** gets additive credit: a row ranked #1 by
-both sides scores 32787, always beating a row that is merely #1 in
-one list.  The fused ``$rank``'s practical range is about
-``[3000, 32787]``.
+already re-scored by exact distance — and fuses them with a
+**modified Reciprocal Rank Fusion**: each side contributes by its list
+position, so no score calibration between the two retrievers is
+needed; a document found by **both** sides outranks documents found by
+only one, and on otherwise-equal evidence the keyword match wins.
+The fused ``$rank`` is a positional score, not a calibrated relevance
+value.
 
 Rows are returned **automatically ordered by the fused rank**, best
 first — no ``ORDER BY`` needed, exactly as a single ``LIKEP`` or
@@ -2365,6 +2398,43 @@ first — no ``ORDER BY`` needed, exactly as a single ``LIKEP`` or
 without the vector index: a missing index only makes the vector side
 a (slower) linear scan producing the same ranked candidate list, so
 results are identical — if they arrive too slowly, build the index.
+
+Per-side scores: $krank and $vrank
+""""""""""""""""""""""""""""""""""
+
+The fused ``$rank`` is built from list *positions*, so it does not
+reveal how strong each side's match actually was.  Two additional
+columns expose the native scores that produced those positions:
+
+.. code-block:: sql
+
+    SELECT $rank, $krank, $vrank, id, title
+      FROM docs
+     WHERE doc LIKEP ? OR v LIKEV ?;
+
+* ``$krank`` — the keyword side's metamorph rank for this row, scaled
+  ``[0, 1000]``: **exactly the value a solitary** ``LIKEP`` **query's**
+  ``$rank`` **would show**.  ``0`` means the row is not in the keyword
+  candidate pool (the top ``likeprows``).
+* ``$vrank`` — the vector side's similarity, scaled ``[0, 100000]``:
+  exactly the value a solitary ``LIKEV`` query's ``$rank`` would show.
+  ``0`` means the row is not in the vector pool (the top
+  ``likevRows``).
+
+A consensus row carries both; a single-sided row carries one, with
+``0`` in the other.  Typical uses: displaying each retriever's own
+score beside a result, or application-side re-scoring experiments
+that blend the native scales differently than RRF does.
+
+Both columns are meaningful **in the SELECT list only**.  They are
+accepted in ``WHERE`` and ``ORDER BY`` without complaint, but have no
+effect there — a ``WHERE $krank > 0`` neither filters nor errors — so
+they should not be used in those clauses.  In a non-hybrid query they
+read ``0`` on a freshly opened handle; there they add nothing, since a
+solitary ``LIKEP``'s or ``LIKEV``'s ``$rank`` *is* that native score
+already.  Note that after a hybrid query on the same handle, a later
+non-hybrid ``SELECT`` may report the previous query's values rather
+than ``0``.
 
 Notes:
 
@@ -2418,7 +2488,7 @@ Notes:
   unchanged — fusion applies only to the mixed keyword/vector shape.
 
 When to use vecdist()
-"""""""""""""""""""""
+'''''''''''''''''''''
 
 ``vecdist()`` is a standalone distance function, not a re-rank
 companion to LIKEV.  It is useful when you want:
@@ -2451,7 +2521,7 @@ The vector predicate uses the index; other predicates filter the
 returned candidates.
 
 INSERT, UPDATE, DELETE
-""""""""""""""""""""""
+''''''''''''''''''''''
 
 A vector index participates in the standard SQL update path:
 
@@ -2466,10 +2536,16 @@ sealed index file).  Over time the newrec/tombstone btrees grow and
 search latency drifts up; ``ALTER INDEX … OPTIMIZE`` folds them back
 into sealed.  See `Maintenance`_.
 
-A note on type matching: a typed ``varvec*`` column requires the
-inserted ``rampart.vector`` to be of the matching dtype.  The vector
-object's :ref:`conversion methods <rampart-vector:Vector Object Conversion Functions>`
-(``.toF32()``, ``.toF16()``, etc.) make the adjustment explicit:
+A note on type matching: a typed ``varvec*`` column should be given a
+``rampart.vector`` of the matching dtype.  A vector of a different dtype is
+**not** rejected -- it is silently converted to the column's declared type
+(the element count is preserved, so a 3-element ``f16`` vector inserted into a
+``varvecF32(3)`` column is stored as 3 ``f32`` elements).  Since that
+conversion is lossy in one direction and merely wasteful in the other, it is
+better to be explicit: the vector object's
+:ref:`conversion methods <rampart-vector:Vector Object Conversion Functions>`
+(``.toF32()``, ``.toF16()``, etc.) make the adjustment visible at the call
+site, and make an unintended dtype obvious when reading the code:
 
 .. code-block:: javascript
 
@@ -2480,7 +2556,7 @@ A ``byte`` or ``varbyte`` column accepts the raw bytes via
 ``.toRaw()``.
 
 Maintenance
-"""""""""""
+'''''''''''
 
 ``ALTER INDEX <name> OPTIMIZE`` folds the accumulated newrec /
 tombstone delta back into the sealed segment.  Searches stay live
@@ -2506,11 +2582,16 @@ against an existing index of the same table+column is silently a
     -- Heavy re-build (after distribution shift, model swap, etc.)
     ALTER INDEX emb_vec REBUILD;
 
-    -- With progress meter
-    ALTER INDEX emb_vec OPTIMIZE WITH indexmeter 'on';
+``ALTER INDEX`` takes no ``WITH`` clause.  To show a progress meter while
+optimizing or rebuilding, set it on the connection first:
+
+.. code-block:: javascript
+
+    sql.set({indexMeter: 'percent'});
+    sql.exec("ALTER INDEX emb_vec OPTIMIZE;");
 
 Removing a Vector Index
-"""""""""""""""""""""""
+'''''''''''''''''''''''
 
 .. code-block:: sql
 
@@ -2550,8 +2631,8 @@ If an index is no longer needed, it may be removed using the following syntax:
 
     DROP INDEX index-name;
 
-Further Reading
-~~~~~~~~~~~~~~~
+Further Reading on Indexing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Detailed information about indexing and options can be found on the
 `Texis Documentation Website <https://docs.thunderstone.com/site/texisman/indexing_for_increased.html>`_\ .
@@ -2597,12 +2678,14 @@ The typical end-to-end pipeline:
         sql.exec("insert into docs values (?, ?, embed(?))",
                  [rows[i].id, rows[i].text, rows[i].text]);
 
-    // 4. (optional) Build an ANN index for top-K search on large tables
+    // 4. Build an ANN index for top-K search.  (Index-less LIKEV is a
+    //    linear scan and requires sql.set({allinear:true}) first --
+    //    otherwise the query returns zero rows with the reason in
+    //    sql.errMsg.)
     sql.exec("create vector index docs_vec on docs (v) with backend 'hnsw';");
 
     // 5. Query.  A string on the right-hand side of LIKEV is auto-coerced
-    //    to embed(?).  Rows arrive rank-ordered (best first) with or
-    //    without the index -- the index only makes it fast.
+    //    to embed(?).  Rows arrive rank-ordered (best first).
     var hits = sql.exec(
         "select id, text, $rank from docs where v likev ?",
         ["chocolate cake recipe"],
@@ -2788,8 +2871,10 @@ separate chunk table: one document, one row.
              [id, doc, doc, title]);
 
     // no vec_dim needed: chunkembed()'s value header records the
-    // per-chunk dim, and the first row's header sets the index
-    sql.exec("create vector index docs_vec on docs (v);");
+    // per-chunk dim, and the first row's header sets the index.
+    // 'hnsw' works at any table size; the default (IVFPQ) backend
+    // needs ~10,000 vectors of training data before it can build.
+    sql.exec("create vector index docs_vec on docs (v) with backend 'hnsw';");
 
     // rank by each document's best-matching chunk; snip is the text of
     // the chunk that won
@@ -2869,7 +2954,7 @@ Querying
 ~~~~~~~~
 
 Similarity queries use the ``LIKEV`` predicate.  See
-:ref:`Querying with LIKEV <rampart-sql:Querying with LIKEV>` for the
+:ref:`Querying with LIKEV <querying-with-likev>` for the
 authoritative reference; a brief overview:
 
 .. code-block:: sql
@@ -2917,7 +3002,9 @@ Indexing
 ~~~~~~~~
 
 For small tables (rule of thumb: below ~2,000 rows of 384-dim vectors), a
-brute-force scan is fine — ``LIKEV`` works without an index, just slower.
+brute-force scan is fine — ``LIKEV`` works without an index, just slower
+(set ``sql.set({allinear:true})`` first, or the index-less query returns
+zero rows with the reason in ``sql.errMsg``).
 Above that, build an ANN index:
 
 .. code-block:: sql
@@ -3008,7 +3095,7 @@ Return Value:
    The formatted :green:`String`.
 
 Escape Sequences
-""""""""""""""""
+''''''''''''''''
 
 The following escape sequences are recognized in the format :green:`String`:
 
@@ -3025,7 +3112,7 @@ The following escape sequences are recognized in the format :green:`String`:
 *   ``\ooo`` Octal escape. ooo is 1 to 3 octal digits.
 
 Standard Formats
-""""""""""""""""
+''''''''''''''''
 
 A format code is a ``%`` (percent sign), followed by zero or more flag characters,
 an optional width and/or precision size, and the format character itself. The
@@ -3069,7 +3156,7 @@ A simple example (with its output):
    /* output = "This is test number 42 (in hex: 2a)." */
 
 Standard Flags
-""""""""""""""
+''''''''''''''
 After the ``%`` sign (and before the format code letter), zero or more of the
 following flags may appear:
 
@@ -3131,7 +3218,7 @@ Examples:
 
 Following any flags, an optional width :green:`Number` may be given.  This indicates
 the minimum field width to print the value in (unless using the ``m`` flag;
-see `Metamorph Hit Mark-up`_).  If the printed value is narrower, the output
+see :ref:`Metamorph Hit Mark-up <metamorph-hit-markup>`).  If the printed value is narrower, the output
 will be padded with spaces on the left.  Note the horizontal spacing in this
 example:
 
@@ -3182,12 +3269,12 @@ Example (note spacing):
 
 An ``h`` or ``l`` (el) flag may appear immediately before the format code
 for numeric formats, indicating a short or long value (``l`` has a different
-meaning for ``%H``, ``%/`` and ``%:``, see `Extended Flags`_).  These flags
+meaning for ``%H``, ``%/`` and ``%:``, see :ref:`Extended Flags <extended-flags>`).  These flags
 are for compatibility with the C function printf(), and are not generally
 needed.
 
 Printing Date/Time Values
-"""""""""""""""""""""""""
+'''''''''''''''''''''''''
 
 Dates can be printed with ``stringFormat()`` by using the ``%at`` format.
 The ``t`` code indicates a time is being printed, and the a flag indicates
@@ -3267,7 +3354,7 @@ CAVEAT:
 
 
 Latitude, Longitude and Location
-""""""""""""""""""""""""""""""""
+''''''''''''''''''''''''''''''''
 
 The ``%L`` code may be used with ``stringFormat`` to print a latitude, longitude
 or location (geocode) value, in a manner similar to how date/time values are
@@ -3363,7 +3450,7 @@ Examples:
 
 
 Other Format Codes
-""""""""""""""""""
+''''''''''''''''''
 
 In addition to the standard printf() formatting codes, other
 ``stringFormat`` codes are available:
@@ -3387,7 +3474,7 @@ In addition to the standard printf() formatting codes, other
     spaces are encoded as ``%20`` instead of ``+``.  With the ``q`` flag,
     ``/`` (slash) and ``@`` (at-sign) are encoded as well (or only
     unreserved/safe chars are decoded, if ``!``  too).
-    See `Extended Flags`_.
+    See :ref:`Extended Flags <extended-flags>`.
 
 *   ``%V`` (upper-case vee) Prints its string argument, encoding 8-bit
     ISO-8859-1 chars for UTF-8 (compressed Unicode).  With the ``!``  flag,
@@ -3488,8 +3575,10 @@ Examples:
   );
   /* 5 3/4 */
 
+.. _extended-flags:
+
 Extended Flags
-""""""""""""""
+''''''''''''''
 
 The following flags are available for format codes, in addition to the standard
 printf() flags described above:
@@ -3552,7 +3641,7 @@ printf() flags described above:
     chars, ``<``, ``>``) in the output.  If given three times (e.g.
     ``hhh``), just HTML-escapes 7-bit values; does not also decode HTML
     entities in the input.  Note that the ``h`` flag is also used in another
-    context as a sub-flag for `Metamorph Hit Mark-up`_.
+    context as a sub-flag for :ref:`Metamorph Hit Mark-up <metamorph-hit-markup>`.
 
 *   ``j`` (jay)   For the ``%s``, ``%H``, ``%v``, ``%V``, ``%B`` and ``%Q``
     format codes (and their ``!``-decode variants), also do newline
@@ -3611,8 +3700,10 @@ Example:
    var output = Sql.stringFormat("You owe $%10.2kf to us.", 56387.34);
    /* output  = "You owe $ 56,387.34 to us." */
 
+.. _metamorph-hit-markup:
+
 Metamorph Hit Mark-up
-"""""""""""""""""""""
+'''''''''''''''''''''
 
 The ``%s``, ``%H``, ``%V`` and ``%v`` stringFormat codes can execute Metamorph queries on the
 :green:`String` argument and mark-up the resulting hits.  An ``m`` flag to these codes
@@ -3695,7 +3786,7 @@ to be HTML-safe, use:
 above example, if you did not want to match "formatting" from the query term
 "format" but still wanted to highlight "javascript" where "format" is not
 present (``@0`` for zero intersections; see
-`this section <https://docs.thunderstone.com/site/texisman/specifying_fewer_intersections.html>`_
+`this section <https://docs.thunderstone.com/site/texisman/specifying_fewer_intersections.html>`__
 of the Texis documentation for full explanation),
 the following could be used:
 
@@ -3832,21 +3923,21 @@ The abstract function generates an abstract of a given portion of text.
     var abstract = Sql.abstract(text [,max [,style [,query [,markup]]]]);
 
 
-+--------+------------------+---------------------------------------------------+
-|Argument|Type              |Description                                        |
-+========+==================+===================================================+
-|text    |:green:`String`   | The text from which an abstract will be generated.|
-+--------+------------------+---------------------------------------------------+
-|max     |:green:`Number`   | Maximum length in bytes of the abstract.          |
-+--------+------------------+---------------------------------------------------+
-|style   |:green:`String`   | Method used to generate the abstract.             |
-+--------+------------------+---------------------------------------------------+
-|query   |:green:`String`   | query or keywords used to center the abstract.    |
-+--------+------------------+---------------------------------------------------+
-|markup  |:green:`String` or| perform markup as `Metamorph Hit Mark-up`_ above. |
-|        |:green:`Boolean`  | May be ``true`` for "%mbH" or a :green:`String`   |
-|        |                  | for a custom format (such as "%mCH").             |
-+--------+------------------+---------------------------------------------------+
++--------+------------------+-----------------------------------------------------------------------------+
+|Argument|Type              |Description                                                                  |
++========+==================+=============================================================================+
+|text    |:green:`String`   | The text from which an abstract will be generated.                          |
++--------+------------------+-----------------------------------------------------------------------------+
+|max     |:green:`Number`   | Maximum length in bytes of the abstract.                                    |
++--------+------------------+-----------------------------------------------------------------------------+
+|style   |:green:`String`   | Method used to generate the abstract.                                       |
++--------+------------------+-----------------------------------------------------------------------------+
+|query   |:green:`String`   | query or keywords used to center the abstract.                              |
++--------+------------------+-----------------------------------------------------------------------------+
+|markup  |:green:`String` or| perform markup as :ref:`Metamorph Hit Mark-up <metamorph-hit-markup>` above.|
+|        |:green:`Boolean`  | May be ``true`` for "%mbH" or a :green:`String`                             |
+|        |                  | for a custom format (such as "%mCH").                                       |
++--------+------------------+-----------------------------------------------------------------------------+
 
 Return Value:
    :green:`String`. The abstract text.
@@ -3939,10 +4030,10 @@ Example:
    });
    /* abstract =
       The world will little note, nor long remember what we say here, but it can
-      never forget what they did here. <span class="query">It is for us the living,
-      rather, to be dedicated here to the <span class="queryset1">unfinished</span>
-      <span class="queryset2">work</span> which they who fought here have thus far
-      so nobly advanced. </span>It is ...
+      never forget what they did here. It is for us the living,
+      rather, to be dedicated here to the <span class="query queryset1">unfinished</span>
+      <span class="query queryset2">work</span> which they who fought here have thus far
+      so nobly advanced. It is ...
    */
 
 sandr()
@@ -3986,7 +4077,7 @@ Return Value:
    replacements made.
 
 Replacement Strings:
-""""""""""""""""""""
+''''''''''''''''''''
 
    *   The characters ``?`` ``#`` ``{`` ``}`` ``+`` and ``\`` are special.
        To use them literally, precede them with the escapement character
@@ -4056,21 +4147,21 @@ substrings in text.
    var ret = Sql.rex(expr, data [, callback] [, options]);
 
 
-+--------+-----------------------------------------------------+---------------------------------------------------------------+
-|Argument|Type                                                 |Description                                                    |
-+========+=====================================================+===============================================================+
-|expr    |:green:`String`/:green:`Array` of :green:`Strings`   | ``rex`` `Expressions`_ to search for                          |
-+--------+-----------------------------------------------------+---------------------------------------------------------------+
-|data    |:green:`String`/Buffer/:green:`Array`                | string(s)/buffers() as input text to be searched              |
-+--------+-----------------------------------------------------+---------------------------------------------------------------+
-|callback|:green:`Function`                                    | Optional callback Function                                    |
-+--------+-----------------------------------------------------+---------------------------------------------------------------+
-|options |:green:`Object`                                      | ``exclude`` and ``submatches`` options                        |
-+--------+-----------------------------------------------------+---------------------------------------------------------------+
++--------+-----------------------------------------------------+-------------------------------------------------------------------------------------+
+|Argument|Type                                                 |Description                                                                          |
++========+=====================================================+=====================================================================================+
+|expr    |:green:`String`/:green:`Array` of :green:`Strings`   | ``rex`` :ref:`Expressions <sql-expressions>` to search for                          |
++--------+-----------------------------------------------------+-------------------------------------------------------------------------------------+
+|data    |:green:`String`/Buffer/:green:`Array`                | string(s)/buffers() as input text to be searched                                    |
++--------+-----------------------------------------------------+-------------------------------------------------------------------------------------+
+|callback|:green:`Function`                                    | Optional callback Function                                                          |
++--------+-----------------------------------------------------+-------------------------------------------------------------------------------------+
+|options |:green:`Object`                                      | ``exclude`` and ``submatches`` options                                              |
++--------+-----------------------------------------------------+-------------------------------------------------------------------------------------+
 
 expr:
    A :green:`String` or :green:`Array` of :green:`Strings` of ``rex`` regular expressions used to match
-   the text in ``data``. See `Expressions`_ below for full syntax.
+   the text in ``data``. See :ref:`Expressions <sql-expressions>` below for full syntax.
 
 data:
    A :green:`String`, buffer or an :green:`Array` with :green:`Strings` and/or
@@ -4164,10 +4255,10 @@ Callback:
 .. code-block:: javascript
 
    var ret = Sql.rex(search, txt,
-      function(match, submatches, index)
+      function(match, info, index)
       {
       	console.log(index,  'matched string "' + match +'"')
-      	console.log("    ", 'submatches: ', submatches);
+      	console.log("    ", 'submatches: ', info.submatches);
       }
    );
 
@@ -4180,10 +4271,16 @@ Callback:
 
 *   ``match`` - the current :green:`String` matched.
 
-*   ``submatches`` - :green:`Array` of submatches (one per substring matched with a
-    ``+``, ``*``, ``=`` or ``{x,y}``) from search expression in the order
-    specified in the search pattern.  For ``*`` or ``{0,y}``, this may be an
-    empty :green:`String` (``""``).
+*   ``info`` - an :green:`Object` with the following properties:
+
+    *   ``submatches`` - :green:`Array` of submatches (one per substring
+        matched with a ``+``, ``*``, ``=`` or ``{x,y}``) from the search
+        expression in the order specified in the search pattern.  For
+        ``*`` or ``{0,y}``, this may be an empty :green:`String` (``""``).
+
+    *   ``expressionIndex`` - :green:`Number`, the index into the
+        expression :green:`Array` (if ``expression`` was given as an
+        :green:`Array`) of the expression that produced this match.
 
 *   ``index`` - ordinal position of current match.
 
@@ -4193,8 +4290,10 @@ Return Value:
 
    If a callback function is specified, a :green:`Number`, the number of matches is returned.
 
+.. _sql-expressions:
+
 Expressions
-"""""""""""
+'''''''''''
 
 *   Expressions are composed of characters and operators.  Operators
     are characters with special meaning to REX.  The following
@@ -4299,7 +4398,7 @@ Expressions
     of ``finish``.
 
 Repetition Operators
-""""""""""""""""""""
+''''''''''''''''''''
 *   A regular expression may be followed by a repetition operator in
     order to indicate the number of times it may be repeated.
 
@@ -4323,7 +4422,7 @@ Repetition Operators
     Read as: "One occurrence."
 
 Discussion
-""""""""""
+''''''''''
 ``rex`` is a highly optimized pattern recognition tool that has been modeled
 after the Unix family of tools: GREP, EGREP, FGREP, and LEX.  Wherever
 possible its syntax has been held consistent with these tools, but
@@ -4596,19 +4695,20 @@ Example:
 
    rampart.utils.printf("%3J\n", res);
 
-   /* expected output:
+   /* expected output (offsets are byte positions in the source file and so
+      depend on its exact wrapping):
    [
       {
          "offset": 359,
-         "match": " We have come to dedicate a portion of that\nfield, as a final resting place for those who here gave their lives that\nthat nation might live. "
+         "match": "We have come to dedicate a portion of that\nfield, as a final resting place for those who here gave their lives that\nthat nation might live."
       },
       {
          "offset": 668,
-         "match": " The brave men, living and dead, who\nstruggled here, have consecrated it, far above our poor power to add or\ndetract. "
+         "match": "The brave men, living and dead, who\nstruggled here, have consecrated it, far above our poor power to add or\ndetract."
       },
       {
          "offset": 895,
-         "match": " It is for us the living,\nrather, to be dedicated here to the unfinished work which they who fought\nhere have thus far so nobly advanced. "
+         "match": "It is for us the living,\nrather, to be dedicated here to the unfinished work which they who fought\nhere have thus far so nobly advanced."
       }
    ]
    */

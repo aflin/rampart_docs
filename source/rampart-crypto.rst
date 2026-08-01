@@ -800,8 +800,8 @@ Where:
         * ``mgfHash`` - a :green:`String`, MGF1 hash name used for
           PSS.  Defaults to ``hash``.
         * ``saltLength`` - a :green:`Number`, PSS salt length.
-          ``-1`` (default) = digest length, ``-2`` = maximum, ``0``+ =
-          explicit byte count.
+          ``-1`` (default) = digest length, ``-2`` = maximum; a value of
+          ``0`` or greater = explicit byte count.
         * ``password`` - a :green:`String`, the private-key password
           if encrypted.
 
@@ -932,23 +932,20 @@ Usage:
 
 .. code-block:: javascript
 
-    var key = crypto.ec_import_priv_key(oldprivate_key[, opts]);
-
-    /* or */
-
     var key = crypto.ec_import_priv_key(oldprivate_key[, oldpass][, newpass]);
 
 Where:
 
     * ``oldprivate_key`` is a :green:`String` (PEM) or :green:`Buffer`
       (DER).  Format is auto-detected.
-    * ``opts`` is an :green:`Object` with the properties
-      ``{decryptPassword: "oldpass", encryptPassword: "newpass"}``.
-      For raw scalar input, also accepts ``{key, curve, format:"raw"}``.
     * ``oldpass`` is the password to decrypt ``oldprivate_key`` (if
-      encrypted).
+      encrypted), or ``null``.
     * ``newpass`` is the optional password to encrypt the returned
       private-key PEMs.
+
+    Note that unlike `rsa_import_priv_key`_, this function does not
+    accept an options-:green:`Object` form; passwords must be passed
+    positionally.
 
 Return Value:
     The same shape as `ec_gen_key`_:
@@ -1182,10 +1179,6 @@ Usage:
 
     var key = crypto.x25519_import_priv_key(oldprivate_key[, oldpass[, newpass]]);
 
-    /* or */
-
-    var key = crypto.x25519_import_priv_key(oldprivate_key, {decryptPassword, encryptPassword});
-
     /* or for raw 32-byte scalar: */
 
     var key = crypto.x25519_import_priv_key({key: raw32, format: "raw"});
@@ -1194,9 +1187,13 @@ Where:
 
     * ``oldprivate_key`` is a :green:`String` (PEM) or :green:`Buffer`
       (DER).
-    * ``oldpass`` is the password to decrypt the input (if encrypted).
+    * ``oldpass`` is the password to decrypt the input (if encrypted),
+      or ``null``.
     * ``newpass`` is the optional password to encrypt the returned
       private-key PEM.
+
+    Note that passwords must be passed positionally; there is no
+    ``{decryptPassword, encryptPassword}`` options form.
 
 Return Value:
     An :green:`Object` with ``public`` and ``private`` PEM strings
@@ -2128,7 +2125,10 @@ Where:
           the S parameter for domain separation.
         * ``functionName`` - a :green:`String` or :green:`Buffer`,
           the N parameter (typically reserved by other NIST functions
-          built on cSHAKE, such as KMAC).
+          built on cSHAKE, such as KMAC).  Note that OpenSSL accepts
+          only the empty string (the default) or ``"KMAC"`` here; any
+          other value raises ``Provider routines::invalid function
+          name``.
         * ``returnType`` - optional :green:`String`, same as for
           `pbkdf2`_.
 
@@ -2253,8 +2253,8 @@ Example:
     var alice = crypto.ec_gen_key({curve: "P-256"});
     var bob   = crypto.ec_gen_key({curve: "P-256"});
     var sharedSecret = crypto.ecdh({
-        privateKey: alice.privateKey,
-        publicKey:  bob.publicKey
+        private: alice.private,
+        public:  bob.public
     });
     var aesKey = crypto.hkdf({
         ikm:    sharedSecret,
@@ -2513,7 +2513,7 @@ BigInt
 
 The rampart-crypto module includes functions which handle arbitrarily long
 integers using openssl's ``BIGNUM`` library.  It is designed to be compatible with the 
-`JSBI <https://github.com/GoogleChromeLabs/jsbi>`_ library and includes the
+`JSBI <https://github.com/GoogleChromeLabs/jsbi>`__ library and includes the
 same published functions.  See `JSBI Node Module <https://www.npmjs.com/package/jsbi>`_
 for more information.
 
@@ -2554,7 +2554,7 @@ JSBI Compatible functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 JSBI functions aspire to operate in a manner that mirrors the 
-`JSBI <https://www.npmjs.com/package/jsbi>`_ library.  Please
+`JSBI <https://www.npmjs.com/package/jsbi>`__ library.  Please
 see that library for details.  Available commands include:
 
 ``JSBI.BigInt(num).toString()``, ``JSBI.toNumber()``, ``JSBI.asIntN()``, ``JSBI.asUintN()``,

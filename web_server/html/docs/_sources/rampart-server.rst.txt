@@ -83,13 +83,18 @@ statement:
 
    var server = require("rampart-server");
 
-It returns an :green:`Object` with a single function:
+It returns an :green:`Object` with two functions:
 
 ::
 
    {
-      start:    {_func:true}
+      start:    {_func:true},
+      getMime:  {_func:true}
    }
+
+``getMime(extension)`` returns the mime type the server would use for
+the given filename extension (e.g. ``"html"``), or ``undefined`` if the
+extension is unknown.
 
 
 Configuring and Starting the Server
@@ -199,7 +204,9 @@ Each option below is tagged with its *scope*:
 **Bind and listener**
 
 * ``bind`` *(per-listener)* - An :green:`Array` of :green:`Strings`, with
-  each :green:`String` representing an ip address and port.  If not
+  each :green:`String` representing an ip address and port.  A single
+  :green:`String` is also accepted, and is equivalent to an
+  :green:`Array` of one.  If not
   specified, the server will bind to port 8088 on the loopback device
   (i.e. 127.0.0.1, which is only accessible from the same machine), using
   the following default value:
@@ -320,12 +327,14 @@ Each option below is tagged with its *scope*:
   ``65536``.
 
 * ``maxBodySize`` *(per-listener)* - A :green:`Number`, the maximum
-  size in bytes of an HTTP request body.  If a request body exceeds
+  size in bytes of an HTTP request body.  If a request body reaches
   this limit, the server will stop reading the body and return a
-  ``413 Entity Too Large`` response to the client.  For WebSocket
-  connections, this limits the maximum size of a single message.
-  Default is ``52428800`` (50 MB).  Set to ``0`` to disable the limit
-  (not recommended).
+  ``413 Entity Too Large`` response to the client.  Note that the
+  limit is inclusive: a body of exactly ``maxBodySize`` bytes is
+  rejected, and only a body of ``maxBodySize - 1`` bytes or fewer is
+  accepted.  For WebSocket connections, this limits the maximum size
+  of a single message.  Default is ``52428800`` (50 MB).  Set to ``0``
+  to disable the limit (not recommended).
 
 * ``defaultRangeMBytes`` *(top-level)* - a :green:`Number` (range 0.01
   to 1000).  Set the default range size when sending a ``206 Partial
@@ -410,12 +419,12 @@ Each option below is tagged with its *scope*:
         bind: [ "[::]:8088", "0.0.0.0:8088" ], /* bind to all */
         map :
         {
-            "/":            "/usr/local/etc/httpd/htdocs"  /* map all file requests */
+            "/":            "/usr/local/etc/httpd/htdocs",  /* map all file requests */
             "/search.html": function (req) { ... },         /* search function */
             "/images/":     {
                                 path: "/path/to/my/jpgs/",
                                 headers: {
-                                    "Content-Control": "max-age=31556952, public",
+                                    "Cache-Control": "max-age=31556952, public",
                                     "X-Custom-Header": 1
                                 }
                             }
@@ -456,7 +465,12 @@ Each option below is tagged with its *scope*:
 
   Note that regardless of this setting, paths are matched by type of path
   with Exact paths tested first, then regular expression paths and lastly
-  glob paths.  However, it is usually desirable for longer paths to have
+  glob paths.  Be aware that a mapped *directory* is itself an Exact path,
+  and so is tested before any regular expression: mapping ``"/"`` to a
+  directory will shadow a regular expression key that would otherwise have
+  matched (glob keys are unaffected).  Where both are needed, map the
+  directory to a more specific prefix rather than to ``"/"``.
+  However, it is usually desirable for longer paths to have
   priority over shorter ones.  For example, if ``/`` and ``/search.html``
   are both specified (both are "Exact" paths), ``/search.html`` should be
   checked first, otherwise ``/`` will match and ``/search.html`` will
@@ -464,7 +478,10 @@ Each option below is tagged with its *scope*:
   sorted by length.
 
 * ``notFoundFunc`` *(top-level)* - A :green:`Function` to handle
-  ``404 Not Found`` responses.  See `Mapped Functions`_ below.
+  ``404 Not Found`` responses.  Note that it is invoked for files not
+  found under a mapped filesystem path; a request whose URL matches no
+  ``map`` entry at all receives the default 404 response instead.
+  See `Mapped Functions`_ below.
 
 * ``directoryFunc`` *(top-level)* - A :green:`Function` to handle
   directory listings from the filesystem, if no ``index.html`` file
@@ -511,6 +528,14 @@ Each option below is tagged with its *scope*:
   object, modifying it has no effect and return value from ``endFunc``
   has no effect.  End function is never run on file requests.  The
   default value is ``undefined``.
+
+  Note that ``endFunc`` runs when the mapped callback returns, which for
+  a deferred reply (a callback that returns ``{defer: true}`` and later
+  calls ``req.reply()``) is *before* the real content exists.  In that
+  case ``req.reply`` holds the deferred stub rather than what is
+  eventually sent, and the actual payload never passes through
+  ``endFunc``.  A deferred handler that needs post-processing or logging
+  of its own output should do it at the point it calls ``req.reply()``.
 
 * ``authMod`` *(top-level)* - A :green:`Boolean`, :green:`String`, or
   :green:`Function`.  Enable session-based authentication.
@@ -658,6 +683,10 @@ Each option below is tagged with its *scope*:
 
   For a complete list of defaults, see `Key to Mime Mappings`_ below.
 
+  Note that although ``mimeMap`` is given per ``server.start()``, the mapping
+  table it modifies is process-wide: the additions are also seen by
+  ``server.getMime()`` and by any other server started in the same process.
+
 **Static-file behaviour**
 
 * ``cacheControl`` *(top-level)* - A :green:`String` or a :green:`Boolean`.
@@ -685,6 +714,16 @@ Each option below is tagged with its *scope*:
   file extensions which will be compressed.  If ``true`` - the following
   default :green:`Array` of extensions will be used:
   ``["html", "css", "js", "json", "xml", "txt", "text", "htm"]``.
+
+  Compression is applied only when the client asks for it by sending an
+  ``Accept-Encoding`` header that includes ``gzip``, and only when the
+  file is at least ``compressMinSize`` bytes.
+
+  This setting also covers a file returned from a script using the
+  ``@filename`` form (see `The Return Object`_ below) - such a reply is
+  served through the same file-sending code, and so is compressed if its
+  extension is in the list.  Script output that is *not* a file is
+  governed by ``compressScripts`` instead.
 
   Note that compressed files will be cached in a directory named
   ``.gzipcache/`` in the directory in which the files are located.
@@ -741,8 +780,10 @@ Each option below is tagged with its *scope*:
   function will be passed two parameters (i.e.
   ``myloggingfunc (logdata, logline)``) where the first is an
   :green:`Object` with the following properties: ``addr``, ``dateStr``,
-  ``method``, ``path``, ``query``, ``protocol`` and ``code``.  All are
-  :green:`Strings`, except ``code``, which is a :green:`Number` (i.e.
+  ``method``, ``methodRaw``, ``path``, ``query``, ``protocol``, ``code``,
+  ``length``, ``referer`` and ``userAgent``.  All are
+  :green:`Strings`, except ``code`` and ``length``, which are
+  :green:`Numbers` (i.e.
   ``200``); the second parameter is the log line that would normally
   be written but for this function.  The filehandles
   ``rampart.utils.accessLog`` and ``rampart.utils.errorLog`` can be
@@ -994,9 +1035,9 @@ Mapped Directories
   directories.  Note also that keys for mapped directories are always
   treated as directories and have a trailing ``/`` added if not present.
   If, e.g., ``map:{"/file.html":"/my/dir"}`` was specified,
-  ``http://localhost:8088/file.html`` would return "NOT FOUND" but URLs
-  beginning with ``http://localhost:8088/file.html/`` would return files
-  from ``/my/dir/``.
+  ``http://localhost:8088/file.html`` would be redirected (``302``) to
+  ``http://localhost:8088/file.html/``, and URLs beginning with
+  ``http://localhost:8088/file.html/`` would return files from ``/my/dir/``.
 
 The Request Object
 ~~~~~~~~~~~~~~~~~~
@@ -1098,7 +1139,12 @@ Posting Form Data
     will also be copied to ``params``, so long as there are no name
     collisions between those keys and variables set from cookies, headers or
     query parameters.  The raw posted content will be returned in the
-    property ``body`` as a :green:`Buffer`.  Example:
+    property ``body`` as a :green:`Buffer`.  On requests with no posted
+    content (e.g. a ``GET``), ``body`` is a zero-length :green:`Buffer`;
+    it is always a :green:`Buffer`, so passing it to ``bufferToString()``
+    is safe and yields ``""``.  (Note that a zero-length :green:`Buffer`
+    is rendered as ``{}`` by ``%J``, which can make it look like an empty
+    :green:`Object`.)  Example:
 
     .. code-block:: javascript
 
@@ -1173,7 +1219,7 @@ Posting Form Data
 Posting Multipart Form Data
 """""""""""""""""""""""""""
 
-    Multipart form data will also be returned in the property ``formData``
+    Multipart form data will also be returned in the property ``postData``
     and will have the ``Content-Type`` property set to
     ``"multipart/form-data"``.  The ``content`` property will contain an
     array of objects, one object for each "part" of the form data.  The key
@@ -1602,7 +1648,7 @@ Built-in Directory Function
                 html+= '<tr><td><a href="../">Parent Directory</a></td><td></td><td>-</td></tr>';
             rampart.utils.readdir(req.fsPath).sort().forEach(function(d){
                 var st=rampart.utils.stat(req.fsPath+'/'+d);
-                if (st.isDirectory())
+                if (st.isDirectory)
                     d+='/';
                 html=rampart.utils.sprintf('%s<tr><td><a href="%s">%s</a></td><td>%s</td><td>%s</td></tr>',
                     html, d, d, st.mtime.toLocaleString() ,hsize(st.size));
@@ -1716,7 +1762,7 @@ Usage:
 
     function mycallback(req) {
         ...
-        var pos = req.rewind(pos);
+        req.rewind(pos);
         ...
     }
 
@@ -1814,7 +1860,8 @@ Below is a full example:
             present in the directory.  Added to the normal request object
             will be the property (string) "fsPath" (req.fsPath), which can be used
             to create a directory listing.  See function dirlist() above.
-            It is substantially equivalent to the built-in server.defaultDirList function.
+            It is substantially equivalent to the built-in listing produced by
+            setting directoryFunc to true.
 
             If directoryFunc is not set, a url pointing to a directory without an index.htm(l)
             will return a 403 Forbidden error.
@@ -1856,7 +1903,7 @@ Below is a full example:
             },
 
             /* directory for scripts */
-            "/scripts/": { "modulePath" : "/var/www/scripts" }
+            "/scripts/": { "modulePath" : "/var/www/scripts" },
 
             /* static content */
             "/" : "/var/www/html"
@@ -1903,9 +1950,9 @@ Example Callback Return Object:
     function mycallback(req) {
         ...
         return {
-            chunk:      true
+            chunk:      true,
             chunkDelay: 100,
-            mp4:        send_mp4
+            mp4:        send_mp4_chunk
         }
     }
 
@@ -2723,7 +2770,11 @@ For an explanation of the logical layout of request variables, see
 NOTE:
 Except for multipart form data, all values returned will be strings.
 If value is repeated in posted form data or in the query, then it will be
-returned as a JSON string.  E.g:
+returned as a JSON string.  This string behavior applies to these C get
+functions only — in a JavaScript handler, ``req.query``/``req.params``
+deliver repeated parameters as actual :green:`Arrays` and bracketed
+parameters as actual :green:`Objects` (e.g. ``req.query.x =
+["val1","val2"]``), not JSON strings.  E.g:
 
 ::
 

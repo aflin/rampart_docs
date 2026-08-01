@@ -34,7 +34,7 @@ The tsql utility also provides facilities for doing many administrative tasks.
 
     Options:
       --install-dir[-force]{=| }dir    Alternate installation dir
-                                   (default is `/usr/local/morph3')
+                                   (default is `')
       --texis-conf{=| }file            Alternate conf/texis.ini file
       -a command       Enter Admin mode; respects -d -u -p
           Commands:
@@ -207,8 +207,15 @@ similar to the :ref:`searchFile <rampart-sql:searchFile()>` command.
 ::
 
    Usage:
-        metamorph [-option=value [...]] "query" filename(s)
+        mmex1 [-option=value [...]] "query" filename(s)
    Where:
         "query" is any valid Metamorph query
         filename is the name of the file(s) to be searched. (default stdin)
+
+(The usage line printed by the command names it ``mmex1``; it is installed
+as ``metamorph``.)
+
+Note that ``metamorph`` may exit with a non-zero status even when
+matches are found; scripts should test its output rather than its exit
+code.
 

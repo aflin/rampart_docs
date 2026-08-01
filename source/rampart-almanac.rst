@@ -97,7 +97,8 @@ Example:
     */
     /* get sunrise as a local time by using '%z' */
     var sunrise = rampart.utils.dateFmt("%c %z\n", times.sunrise);
-    /* sunrise = "Mon Jan  1 07:25:03 2024 -0800" */
+    /* sunrise = "Mon 01 Jan 2024 07:25:04 AM PST -0800"
+       (the ``%c`` portion is locale-dependent and will vary by system) */
 
 almanac.moontimes()
 ~~~~~~~~~~~~~~~~~~~
@@ -191,7 +192,7 @@ Example:
               "currentAzimuth": 231.2447789386162,
               "currentAltitude": 9.200955835755252,
               "nextRise": "2024-01-01T15:25:03.000Z",
-              "nextSet": "2024-01-02T01:01:23.000Z"
+              "nextSet": "2024-01-01T01:00:35.000Z"
            },
            "moon": {
               "currentRightAscension": 10.585655630489418,
@@ -199,14 +200,14 @@ Example:
               "currentAzimuth": 358.2427660196457,
               "currentAltitude": -39.911128386544675,
               "nextRise": "2024-01-01T05:39:21.000Z",
-              "nextSet": "2024-01-01T19:02:42.000Z"
+              "nextSet": "2024-01-01T19:02:43.000Z"
            },
            "mercury": {
               "currentRightAscension": 17.42857713438222,
               "currentDeclination": -20.134230004864982,
               "currentAzimuth": 245.65820797921364,
               "currentAltitude": -1.1285066854169088,
-              "nextRise": "2024-01-01T13:56:35.000Z",
+              "nextRise": "2024-01-01T13:56:36.000Z",
               "nextSet": "2024-01-01T23:48:43.000Z"
            },
            "venus": {
@@ -223,7 +224,7 @@ Example:
               "currentAzimuth": 239.58535957726625,
               "currentAltitude": 0.013586371580359469,
               "nextRise": "2024-01-01T14:34:09.000Z",
-              "nextSet": "2024-01-01T23:59:15.000Z"
+              "nextSet": "2024-01-01T00:00:02.000Z"
            },
            "jupiter": {
               "currentRightAscension": 2.224206624688085,
@@ -231,23 +232,23 @@ Example:
               "currentAzimuth": 101.66782757086347,
               "currentAltitude": 34.25711749414994,
               "nextRise": "2024-01-01T20:58:35.000Z",
-              "nextSet": "2024-01-02T10:19:59.000Z"
+              "nextSet": "2024-01-01T10:23:51.000Z"
            },
            "saturn": {
               "currentRightAscension": 22.363992244102082,
               "currentDeclination": -11.961562816580198,
               "currentAzimuth": 182.50892699669285,
               "currentAltitude": 40.37470253011248,
-              "nextRise": "2024-01-01T18:23:44.000Z",
-              "nextSet": "2024-01-02T05:13:29.000Z"
+              "nextRise": "2024-01-01T18:23:45.000Z",
+              "nextSet": "2024-01-01T05:16:58.000Z"
            },
            "uranus": {
               "currentRightAscension": 3.1122566235436486,
               "currentDeclination": 17.187443780343074,
               "currentAzimuth": 88.20667075806635,
               "currentAltitude": 26.70533930046701,
-              "nextRise": "2024-01-01T21:34:37.000Z",
-              "nextSet": "2024-01-02T11:30:03.000Z"
+              "nextRise": "2024-01-01T21:34:38.000Z",
+              "nextSet": "2024-01-01T11:34:04.000Z"
            },
            "neptune": {
               "currentRightAscension": 23.711146313700397,
@@ -255,7 +256,7 @@ Example:
               "currentAzimuth": 153.3716388125294,
               "currentAltitude": 45.795412016162715,
               "nextRise": "2024-01-01T19:16:31.000Z",
-              "nextSet": "2024-01-02T07:01:13.000Z"
+              "nextSet": "2024-01-01T07:05:07.000Z"
            },
            "pluto": {
               "currentRightAscension": 20.118773598789403,
@@ -263,7 +264,7 @@ Example:
               "currentAzimuth": 214.92988354299945,
               "currentAltitude": 20.68436892218172,
               "nextRise": "2024-01-01T16:48:25.000Z",
-              "nextSet": "2024-01-02T02:19:56.000Z"
+              "nextSet": "2024-01-01T02:23:45.000Z"
            }
         }
     */
@@ -296,22 +297,27 @@ Example:
     var seasons = almanac.seasons(2025);
     /*  seasons = 
         {
-           "spring": "2025-03-20T09:01:26.000Z",
-           "summer": "2025-06-21T02:42:17.000Z",
-           "autumn": "2025-09-22T18:19:33.000Z",
-           "winter": "2025-12-21T15:03:03.000Z"
+           "spring": "2025-03-20T09:01:27.000Z",
+           "summer": "2025-06-21T02:42:18.000Z",
+           "autumn": "2025-09-22T18:19:34.000Z",
+           "winter": "2025-12-21T15:03:04.000Z"
         }
     */
     console.log( dateFmt("Happy Nowruz! %c %z", seasons.spring) );
-        /* Happy Nowruz! Thu Mar 20 02:01:26 2025 -0700 */
+        /* Happy Nowruz! Thu 20 Mar 2025 02:01:27 AM PDT -0700 */
+
+Note that ``%c`` renders according to the current locale, so its exact
+appearance will differ between systems; use an explicit format string such as
+``"%Y-%m-%d %H:%M:%S %z"`` when a stable layout is needed.
 
 Holidays
 --------
 
-new almanac.Holiday()
-~~~~~~~~~~~~~~~~~~~~~
+new almanac.holidays()
+~~~~~~~~~~~~~~~~~~~~~~
 
-Create a new ``Holidays`` object.
+Create a new ``holidays`` object.  Note that the constructor name is
+lowercase.
 
 Usage:
 
@@ -319,11 +325,11 @@ Usage:
 
     var almanac = require("rampart-almanac");
 
-    var hd = new almanac.Holidays();
+    var hd = new almanac.holidays();
 
     /* or */
 
-    var hd = new almanac.Holidays(countryCode [, LocaleCode [, LocaleCode]]);
+    var hd = new almanac.holidays(countryCode [, LocaleCode [, LocaleCode]]);
 
     hd.getHolidays(year);
 
@@ -462,8 +468,10 @@ Usage:
 Where ``options`` is an :green:`Object` which may contain any of the following:
 
 * ``lmdbCache`` - :green:`String` or ``null``.  Path to the LMDB cache
-  directory.  If not set, defaults to ``/tmp/rampart-open-meteo-cache``.
-  If set to ``null``, caching is disabled entirely.
+  directory.  If not set, defaults to ``~/.rampart/open-meteo-cache`` when
+  a home directory is available, otherwise falling back to a writable
+  temporary directory (``$TMPDIR``, ``/tmp`` or ``/var/tmp``).  If set to
+  ``null``, caching is disabled entirely.
 
 * ``units`` - :green:`String`.  Set to ``"imperial"`` for Fahrenheit, mph
   and inches, or ``"metric"`` for Celsius, km/h and mm.

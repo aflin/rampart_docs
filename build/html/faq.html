@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Frequently Asked Questions &mdash; Rampart 0.7.0 documentation</title>
+  <title>Frequently Asked Questions &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="prev" title="Building a Pi News Aggregator" href="tutorial-pi_news.html"/> 
 
   
@@ -154,6 +154,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#what-is-texis-and-how-does-it-compare-to-sqlite">What is Texis and how does it compare to SQLite?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-does-full-text-index-maintenance-work">How does full-text index maintenance work?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-build-a-full-text-search-over-documents-pdf-docx-etc">How do I build a full-text search over documents (PDF, DOCX, etc.)?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-do-semantic-vector-search">How do I do semantic (vector) search?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#which-embedding-engine-should-i-use">Which embedding engine should I use?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-combine-keyword-and-semantic-search">How do I combine keyword and semantic search?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#when-should-i-use-rampart-sql-vs-rampart-lmdb-vs-rampart-redis">When should I use rampart-sql vs rampart-lmdb vs rampart-redis?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-is-sql-one-and-when-should-i-use-it">What is sql.one() and when should I use it?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-is-the-difference-between-sql-exec-and-sql-query">What is the difference between sql.exec() and sql.query()?</a></li>
@@ -179,6 +182,9 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#interoperability">Interoperability</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#can-i-call-python-code-from-rampart">Can I call Python code from Rampart?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-use-browser-apis-like-fetch-url-or-blob">Can I use browser APIs like fetch, URL or Blob?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-run-code-written-for-node-js">Can I run code written for Node.js?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-run-ai-models-directly-without-the-database">Can I run AI models directly, without the database?</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#vibe-coding-with-rampart">Vibe Coding with Rampart</a><ul>
@@ -256,24 +262,48 @@
 <h2>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="how-do-i-install-rampart">
 <h3>How do I install Rampart?<a class="headerlink" href="#how-do-i-install-rampart" title="Permalink to this headline">¶</a></h3>
-<p>Download the latest binary for your platform from
+<p>The quickest way is the install script, which detects your platform,
+downloads the matching build, verifies its checksum and runs the
+installer:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -fsSL https://get.rampart.dev/ <span class="p">|</span> sh
+</pre></div>
+</div>
+<p>It supports Linux x86_64 and aarch64 (glibc 2.31 or newer), macOS 11
+(Big Sur) or newer, and FreeBSD 14 or newer.  On any
+other system it stops with a specific reason rather than installing
+something that will not run.</p>
+<p>Run without <code class="docutils literal notranslate"><span class="pre">sudo</span></code>, it installs to <code class="docutils literal notranslate"><span class="pre">~/.rampart</span></code>.  For a system-wide
+install to <code class="docutils literal notranslate"><span class="pre">/usr/local/rampart</span></code>, pipe to <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">sh</span></code> instead:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -fsSL https://get.rampart.dev/ <span class="p">|</span> sudo sh
+</pre></div>
+</div>
+<p>The files are still left owned by the user who invoked <code class="docutils literal notranslate"><span class="pre">sudo</span></code>, not by
+root, so ongoing maintenance — including <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--install</span></code> below —
+does not need <code class="docutils literal notranslate"><span class="pre">sudo</span></code> afterwards.</p>
+<p>To place the files yourself instead, download a <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> for your
+platform from
 <a class="reference external" href="https://rampart.dev/downloads/latest/">rampart.dev/downloads/latest/</a>
-as a <code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> file.  Extract it and change to the <code class="docutils literal notranslate"><span class="pre">rampart/</span></code>
-directory:</p>
+and extract it:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tar xzf rampart-&lt;version&gt;-&lt;platform&gt;.tar.gz
 <span class="nb">cd</span> rampart
 </pre></div>
 </div>
-<p>From there you have two options:</p>
-<ul class="simple">
-<li><strong>Run the installer</strong> — execute <code class="docutils literal notranslate"><span class="pre">./install.sh</span></code>, which will guide you
-through the installation process.</li>
-<li><strong>Run in place</strong> — Rampart is designed to run from any directory, so
-long as the directory structure of the extracted distribution is
-maintained.  No installation step is required; you can run
-<code class="docutils literal notranslate"><span class="pre">./bin/rampart</span></code> directly or add the <code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory to your
-<code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</li>
-</ul>
+<p>From there, either run the bundled <code class="docutils literal notranslate"><span class="pre">./install.sh</span></code>, or run in place —
+Rampart needs no installation step so long as the extracted directory
+structure is kept intact.  Run <code class="docutils literal notranslate"><span class="pre">./bin/rampart</span></code> directly, or add the
+<code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p><strong>Adding optional modules.</strong>  The base install carries the core
+modules.  Others — Python interop, langtools, tree-sitter, chromeview
+and so on — are downloaded on demand:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rampart --install --list                        <span class="c1"># show what is available</span>
+rampart --install rampart-python rampart-sql    <span class="c1"># install named modules</span>
+rampart --install all                           <span class="c1"># install everything available</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">--install</span></code> works only on official builds — the ones the
+install script and the download page provide.  A Rampart you compiled
+yourself will refuse, since the distribution packages are not
+necessarily ABI-compatible with it.</p>
 </div>
 <div class="section" id="what-is-rampart-and-how-does-it-differ-from-node-js">
 <h3>What is Rampart and how does it differ from Node.js?<a class="headerlink" href="#what-is-rampart-and-how-does-it-differ-from-node-js" title="Permalink to this headline">¶</a></h3>
@@ -342,11 +372,33 @@ consuming considerably fewer resources.</p>
 </div>
 <div class="section" id="can-i-use-npm-packages-with-rampart">
 <h3>Can I use npm packages with Rampart?<a class="headerlink" href="#can-i-use-npm-packages-with-rampart" title="Permalink to this headline">¶</a></h3>
-<p>No.  Rampart does not use V8 or the Node.js runtime, so npm packages
-that depend on Node.js built-in modules (<code class="docutils literal notranslate"><span class="pre">fs</span></code>, <code class="docutils literal notranslate"><span class="pre">http</span></code>, <code class="docutils literal notranslate"><span class="pre">stream</span></code>,
-etc.) will not work.</p>
-<p>In practice, most of the functionality you would reach for npm to provide
-is already included in the Rampart distribution.</p>
+<p>Some of them.  The experimental
+<a class="reference internal" href="rampart-extras.html#rampart-nodeshim-module"><span class="std std-ref">rampart-nodeshim</span></a> module
+provides node’s core modules (<code class="docutils literal notranslate"><span class="pre">fs</span></code>, <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">stream</span></code>, <code class="docutils literal notranslate"><span class="pre">events</span></code>
+and others), which is enough to run many pure-JavaScript npm packages —
+<code class="docutils literal notranslate"><span class="pre">axios</span></code>, <code class="docutils literal notranslate"><span class="pre">cheerio</span></code>, <code class="docutils literal notranslate"><span class="pre">commander</span></code>, <code class="docutils literal notranslate"><span class="pre">markdown-it</span></code>, <code class="docutils literal notranslate"><span class="pre">pino</span></code>,
+<code class="docutils literal notranslate"><span class="pre">yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">zod</span></code> among those tested.</p>
+<p>Three things to know before relying on it:</p>
+<ul class="simple">
+<li><strong>You install the packages with npm yourself.</strong>  Rampart does not
+fetch dependencies; run <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code> to produce a
+<code class="docutils literal notranslate"><span class="pre">node_modules/</span></code> tree and Rampart resolves from it by bare name.</li>
+<li><strong>It requires the transpiler.</strong>  npm packages are almost always
+written in modern JavaScript, which Duktape’s ES5 parser will not
+accept, so in practice you need the <code class="docutils literal notranslate"><span class="pre">-t</span></code> flag.</li>
+<li><strong>It is not fully compatible.</strong>  There is no ESM, no compiled native
+add-ons (<code class="docutils literal notranslate"><span class="pre">.node</span></code> binaries), and core-module coverage is partial.
+Whether a given package works is best-effort, so test before
+committing to one.</li>
+</ul>
+<p>See the
+<a class="reference internal" href="rampart-extras.html#rampart-nodeshim-module"><span class="std std-ref">rampart-nodeshim</span></a> section
+for the full list of submodules, the known gaps, and the tested
+libraries.</p>
+<p>That said, prefer Rampart’s own modules where they cover the task —
+they are written in C and are considerably faster than the equivalent
+npm package running through the shim.  Most of what you would reach for
+npm to provide is already in the distribution.</p>
 <p>Some functionality is <strong>built into the rampart executable</strong> and is always
 available without <code class="docutils literal notranslate"><span class="pre">require()</span></code>:</p>
 <ul class="simple">
@@ -374,9 +426,8 @@ distribution and are loaded with <code class="docutils literal notranslate"><spa
 <li><strong>URL parsing</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-url</span></code></li>
 <li><strong>robots.txt</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code></li>
 </ul>
-<p>Pure-JavaScript libraries with no Node.js dependencies may work, but you
-should test carefully.  You can also write your own C modules using the
-Duktape C API (see <a class="reference internal" href="#how-do-i-write-a-c-module-for-rampart">How do I write a C module for Rampart?</a>).</p>
+<p>You can also write your own C modules using the Duktape C API (see
+<a class="reference internal" href="#how-do-i-write-a-c-module-for-rampart">How do I write a C module for Rampart?</a>).</p>
 </div>
 <div class="section" id="what-version-of-ecmascript-does-rampart-support">
 <h3>What version of ECMAScript does Rampart support?<a class="headerlink" href="#what-version-of-ecmascript-does-rampart-support" title="Permalink to this headline">¶</a></h3>
@@ -575,6 +626,27 @@ cc -I/usr/local/rampart/include -dynamiclib <span class="se">\</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">x3</span><span class="p">(</span><span class="mi">7</span><span class="p">));</span>  <span class="c1">// 21</span>
 </pre></div>
 </div>
+<p>For something small, you can skip the separate build step entirely.
+<a class="reference internal" href="rampart-extras.html#rampart-cmodule"><span class="std std-ref">rampart-cmodule</span></a> compiles C
+source at run time and hands back a callable JavaScript function:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cmodule</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-cmodule.js&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">timesThree</span> <span class="o">=</span> <span class="nx">cmodule</span><span class="p">(</span><span class="s2">&quot;timesThree&quot;</span><span class="p">,</span> <span class="sb">`</span>
+<span class="sb">{</span>
+<span class="sb">    double val = REQUIRE_NUMBER(ctx, 0, &quot;timesThree: argument 1 must be a Number&quot;);</span>
+<span class="sb">    duk_push_number(ctx, val * 3);</span>
+<span class="sb">    return 1;</span>
+<span class="sb">}`</span><span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">timesThree</span><span class="p">(</span><span class="mi">7</span><span class="p">));</span>  <span class="c1">// 21</span>
+</pre></div>
+</div>
+<p>You supply only <code class="docutils literal notranslate"><span class="pre">#include</span></code> lines and the function body — no signature.
+The generated <code class="docutils literal notranslate"><span class="pre">.c</span></code> and <code class="docutils literal notranslate"><span class="pre">.so</span></code> are written to the current directory,
+so a later <code class="docutils literal notranslate"><span class="pre">cmodule(&quot;timesThree&quot;)</span></code> loads the built module instead of
+recompiling.  A C compiler must be present on the machine.  See
+<a class="reference internal" href="rampart-extras.html#rampart-cmodule"><span class="std std-ref">rampart-cmodule</span></a> for support
+functions, compiler flags and libraries.</p>
 <p>The full Duktape C API documentation is available at
 <a class="reference external" href="https://duktape.org/api.html">duktape.org/api.html</a>.</p>
 </div>
@@ -1386,6 +1458,68 @@ content — for example, from a file uploaded via the HTTP server:</p>
 MIME type detection via the <code class="docutils literal notranslate"><span class="pre">details</span></code> parameter, see the
 <code class="docutils literal notranslate"><span class="pre">rampart-totext</span></code> documentation.</p>
 </div>
+<div class="section" id="how-do-i-do-semantic-vector-search">
+<h3>How do I do semantic (vector) search?<a class="headerlink" href="#how-do-i-do-semantic-vector-search" title="Permalink to this headline">¶</a></h3>
+<p>Embedding happens <strong>inside</strong> the SQL engine.  Load a model once on the
+connection; <code class="docutils literal notranslate"><span class="pre">embed()</span></code> and the <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> operator then use it
+automatically.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s2">&quot;/path/to/model.gguf&quot;</span><span class="p">});</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE TABLE docs (title varchar(128), doc varchar(8000), v varvecF32(384))&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;INSERT INTO docs VALUES(?,?,embed(?))&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">title</span><span class="p">,</span> <span class="nx">body</span><span class="p">,</span> <span class="nx">body</span><span class="p">]);</span>
+
+<span class="c1">// LIKEV takes a vector, or a String which is embedded with the same model</span>
+<span class="kd">var</span> <span class="nx">hits</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;SELECT title, $rank FROM docs WHERE v LIKEV ?&quot;</span><span class="p">,</span>
+                    <span class="p">[</span><span class="s2">&quot;what I am looking for&quot;</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Rows come back already ordered by <code class="docutils literal notranslate"><span class="pre">$rank</span></code>, best first — no <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code>
+needed.  For large tables add a vector index (<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span> <span class="pre">INDEX</span></code>);
+without one a <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> is refused rather than scanned, and the only
+sign is a soft error in <code class="docutils literal notranslate"><span class="pre">sql.errMsg</span></code>.</p>
+<p>Three engines are available, one per connection: <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code>
+(llama.cpp GGUF), <code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code> (an ONNX model directory) and
+<code class="docutils literal notranslate"><span class="pre">clipEmbed</span></code> (CLIP image/text models).  See
+<a class="reference internal" href="rampart-sql.html#vector-search"><span class="std std-ref">Vector Search</span></a> in the rampart-sql
+documentation — in particular <a class="reference internal" href="rampart-sql.html#vector-indexes"><span class="std std-ref">Vector Indexes</span></a> and
+<a class="reference internal" href="rampart-sql.html#querying-with-likev"><span class="std std-ref">Querying with LIKEV</span></a> — and the knobs in
+<a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">sql-set</span></a>.</p>
+</div>
+<div class="section" id="which-embedding-engine-should-i-use">
+<h3>Which embedding engine should I use?<a class="headerlink" href="#which-embedding-engine-should-i-use" title="Permalink to this headline">¶</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> unless you have a reason not to.  It is the more
+mature path and is GPU-accelerated on every supported platform — Metal
+on Apple Silicon, CUDA on Linux.</p>
+<p><code class="docutils literal notranslate"><span class="pre">onnxEmbed</span></code> accelerates only through CUDA, so on macOS it always runs
+on the CPU.  It is the right choice when you already have an ONNX model,
+or need ONNX-only features.</p>
+<p><code class="docutils literal notranslate"><span class="pre">clipEmbed</span></code> is for CLIP models, where images and text share one vector
+space — <code class="docutils literal notranslate"><span class="pre">embed(?,</span> <span class="pre">'image')</span></code> takes an image path, so you can search
+images with a text query.</p>
+<p>Model files can be fetched by short name rather than path with
+<code class="docutils literal notranslate"><span class="pre">rampart-models</span></code>: <code class="docutils literal notranslate"><span class="pre">models.get(&quot;bge-m3:q8_0&quot;)</span></code>.  See
+<a class="reference internal" href="rampart-langtools.html#the-rampart-models-module"><span class="std std-ref">rampart-langtools</span></a>.</p>
+</div>
+<div class="section" id="how-do-i-combine-keyword-and-semantic-search">
+<h3>How do I combine keyword and semantic search?<a class="headerlink" href="#how-do-i-combine-keyword-and-semantic-search" title="Permalink to this headline">¶</a></h3>
+<p>Put both in one <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> with <code class="docutils literal notranslate"><span class="pre">OR</span></code>.  Texis fuses the two ranked lists
+with Reciprocal Rank Fusion, which usually beats either retriever alone:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
+    <span class="s2">&quot;SELECT id, title, $rank, $krank, $vrank FROM docs &quot;</span> <span class="o">+</span>
+    <span class="s2">&quot;WHERE doc LIKEP ? OR v LIKEV ?&quot;</span><span class="p">,</span>
+    <span class="p">[</span><span class="nx">terms</span><span class="p">,</span> <span class="nx">terms</span><span class="p">],</span> <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">20</span><span class="p">});</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">$rank</span></code> is the fused score (a positional value, not a calibrated
+relevance).  <code class="docutils literal notranslate"><span class="pre">$krank</span></code> and <code class="docutils literal notranslate"><span class="pre">$vrank</span></code> expose what each side scored on
+its own, and are <code class="docutils literal notranslate"><span class="pre">0</span></code> when that side did not match — useful for seeing
+which retriever found a row.  They are meaningful in the <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> list
+only.</p>
+<p>Pool sizes are set with <code class="docutils literal notranslate"><span class="pre">likepRows</span></code> and <code class="docutils literal notranslate"><span class="pre">likevRows</span></code>.  For documents
+too long for a single vector, <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> stores every chunk’s
+vector in one column, so a match on any chunk finds the row.</p>
+<p>See <a class="reference internal" href="rampart-sql.html#hybrid-rank-fusion"><span class="std std-ref">Hybrid keyword + vector queries (rank fusion)</span></a> in the rampart-sql documentation.</p>
+</div>
 <div class="section" id="when-should-i-use-rampart-sql-vs-rampart-lmdb-vs-rampart-redis">
 <h3>When should I use rampart-sql vs rampart-lmdb vs rampart-redis?<a class="headerlink" href="#when-should-i-use-rampart-sql-vs-rampart-lmdb-vs-rampart-redis" title="Permalink to this headline">¶</a></h3>
 <p>Each serves a different purpose:</p>
@@ -1580,19 +1714,26 @@ specifiers plus several useful extensions:</p>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">%U</span></code></td>
 <td>URL encode</td>
-<td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%U&quot;,</span> <span class="pre">&quot;a</span> <span class="pre">b&quot;)</span></code> → <code class="docutils literal notranslate"><span class="pre">a%20b</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%U&quot;,</span> <span class="pre">&quot;a</span> <span class="pre">b&quot;)</span></code> → <code class="docutils literal notranslate"><span class="pre">a+b</span></code></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">%B</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">%!U</span></code></td>
+<td>URL decode</td>
+<td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%!U&quot;,</span> <span class="pre">&quot;a+b&quot;)</span></code> → <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code>
+(also decodes <code class="docutils literal notranslate"><span class="pre">a%20b</span></code>)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">%B</span></code></td>
 <td>Base64 encode</td>
 <td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%B&quot;,</span> <span class="pre">data)</span></code></td>
 </tr>
-<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">%!B</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">%!B</span></code></td>
 <td>Base64 decode</td>
 <td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%!B&quot;,</span> <span class="pre">b64str)</span></code></td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">%P</span></code></td>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">%P</span></code></td>
 <td>Pretty-print with wrapping</td>
-<td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%40P&quot;,</span> <span class="pre">longText)</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">sprintf(&quot;%0.60P&quot;,</span> <span class="pre">longText)</span></code> — the
+<em>precision</em> is the wrap width; a leading
+number is the indent</td>
 </tr>
 </tbody>
 </table>
@@ -1614,7 +1755,7 @@ specifiers plus several useful extensions:</p>
 <div class="section" id="how-do-i-run-external-commands">
 <h3>How do I run external commands?<a class="headerlink" href="#how-do-i-run-external-commands" title="Permalink to this headline">¶</a></h3>
 <p>Use <code class="docutils literal notranslate"><span class="pre">rampart.utils.exec()</span></code> for fine-grained control, or
-<code class="docutils literal notranslate"><span class="pre">rampart.utils.shell()</span></code> for quick bash commands:</p>
+<code class="docutils literal notranslate"><span class="pre">rampart.utils.shell()</span></code> for quick shell commands:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
 
 <span class="c1">// exec() — run a command with arguments</span>
@@ -1630,7 +1771,7 @@ specifiers plus several useful extensions:</p>
     <span class="nx">cd</span><span class="o">:</span> <span class="s2">&quot;/working/dir&quot;</span>       <span class="c1">// change directory before executing</span>
 <span class="p">},</span> <span class="s2">&quot;arg1&quot;</span><span class="p">,</span> <span class="s2">&quot;arg2&quot;</span><span class="p">);</span>
 
-<span class="c1">// shell() — run a bash command string</span>
+<span class="c1">// shell() — run a command string in $SHELL (or bash, or sh)</span>
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">shell</span><span class="p">(</span><span class="s2">&quot;cat /etc/hostname | tr -d &#39;\\n&#39;&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -1755,9 +1896,9 @@ Buffer</th>
 <td>Yes</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">.slice()</span></code></td>
-<td>No</td>
 <td>Yes</td>
-<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 <td>No</td>
 <td>Yes</td>
 </tr>
@@ -1769,9 +1910,9 @@ Buffer</th>
 <td>Yes</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">.fill()</span></code></td>
+<td>Yes</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
 <td>No</td>
 <td>Yes</td>
 </tr>
@@ -1824,12 +1965,13 @@ Buffer</th>
 <td>Yes</td>
 <td>Yes</td>
 </tr>
-<tr class="row-odd"><td>forEach/map/filter/etc.</td>
+<tr class="row-odd"><td>forEach/map/filter/sort/
+reduce/indexOf/keys/values</td>
+<td>Yes</td>
 <td>No</td>
+<td>Yes</td>
 <td>No</td>
-<td>No</td>
-<td>No</td>
-<td>No</td>
+<td>Yes</td>
 </tr>
 </tbody>
 </table>
@@ -1852,16 +1994,17 @@ plain (non-Buffer) byte buffers.</li>
 <li><code class="docutils literal notranslate"><span class="pre">buf.indexOf()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.lastIndexOf()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.includes()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">buf.swap16()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.swap32()</span></code>, <code class="docutils literal notranslate"><span class="pre">buf.swap64()</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">Buffer.isEncoding()</span></code> are available. <code class="docutils literal notranslate"><span class="pre">buf.keys()</span></code> /
-<code class="docutils literal notranslate"><span class="pre">buf.values()</span></code> / <code class="docutils literal notranslate"><span class="pre">buf.entries()</span></code> return arrays (Node returns
-iterators).</li>
+<code class="docutils literal notranslate"><span class="pre">buf.values()</span></code> / <code class="docutils literal notranslate"><span class="pre">buf.entries()</span></code> return iterators, as in Node.</li>
 <li><code class="docutils literal notranslate"><span class="pre">buf.readBigInt64BE()</span></code> / <code class="docutils literal notranslate"><span class="pre">writeBigInt64BE()</span></code> and the other
-<code class="docutils literal notranslate"><span class="pre">BigInt</span></code> variants are <strong>not</strong> available — Duktape does not
-implement <code class="docutils literal notranslate"><span class="pre">BigInt</span></code>. Use the 32-bit accessors and combine, or use
-<code class="docutils literal notranslate"><span class="pre">crypto.JSBI</span></code> from rampart-crypto where a bignum representation
-is needed.</li>
-<li>TypedArrays do <strong>not</strong> have higher-order methods (<code class="docutils literal notranslate"><span class="pre">forEach</span></code>,
-<code class="docutils literal notranslate"><span class="pre">map</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">reduce</span></code>, <code class="docutils literal notranslate"><span class="pre">sort</span></code>, <code class="docutils literal notranslate"><span class="pre">indexOf</span></code>, etc.).
-Convert to an <span class="green">Array</span> first if needed.</li>
+<code class="docutils literal notranslate"><span class="pre">BigInt</span></code> accessors are <strong>not</strong> available.  This is a gap in the
+Buffer methods only: <code class="docutils literal notranslate"><span class="pre">BigInt</span></code> itself <em>is</em> implemented, so
+<code class="docutils literal notranslate"><span class="pre">BigInt</span></code> values may be used freely in JavaScript.  Read a 64-bit
+value with the 32-bit accessors and combine.</li>
+<li>Plain buffers, TypedArrays and node <code class="docutils literal notranslate"><span class="pre">Buffer</span></code>s all have the usual
+higher-order methods — <code class="docutils literal notranslate"><span class="pre">forEach</span></code>, <code class="docutils literal notranslate"><span class="pre">map</span></code>, <code class="docutils literal notranslate"><span class="pre">filter</span></code>, <code class="docutils literal notranslate"><span class="pre">reduce</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sort</span></code>, <code class="docutils literal notranslate"><span class="pre">indexOf</span></code> and friends all work.  Note that <code class="docutils literal notranslate"><span class="pre">map</span></code>,
+<code class="docutils literal notranslate"><span class="pre">filter</span></code> and <code class="docutils literal notranslate"><span class="pre">slice</span></code> return another buffer of the same type, not
+an <span class="green">Array</span>.</li>
 </ul>
 <p><strong>Concatenating buffers:</strong> Use <code class="docutils literal notranslate"><span class="pre">bprintf('%s%s',</span> <span class="pre">buf1,</span> <span class="pre">buf2)</span></code> — works
 with any buffer type and returns a plain buffer.</p>
@@ -2049,6 +2192,55 @@ available to both <code class="docutils literal notranslate"><span class="pre">p
 </pre></div>
 </div>
 </div>
+<div class="section" id="can-i-use-browser-apis-like-fetch-url-or-blob">
+<h3>Can I use browser APIs like fetch, URL or Blob?<a class="headerlink" href="#can-i-use-browser-apis-like-fetch-url-or-blob" title="Permalink to this headline">¶</a></h3>
+<p>Yes, for a substantial subset.  <code class="docutils literal notranslate"><span class="pre">fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">URL</span></code>, <code class="docutils literal notranslate"><span class="pre">Headers</span></code> /
+<code class="docutils literal notranslate"><span class="pre">Request</span></code> / <code class="docutils literal notranslate"><span class="pre">Response</span></code> / <code class="docutils literal notranslate"><span class="pre">FormData</span></code>, <code class="docutils literal notranslate"><span class="pre">Blob</span></code> / <code class="docutils literal notranslate"><span class="pre">File</span></code>, the
+stream family, <code class="docutils literal notranslate"><span class="pre">WebSocket</span></code>, <code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto</span></code> (Web
+Crypto), <code class="docutils literal notranslate"><span class="pre">structuredClone</span></code> and <code class="docutils literal notranslate"><span class="pre">localStorage</span></code> are all present.</p>
+<p>They are <strong>lazy-loaded</strong>: nothing is initialized until a script first
+references one of the names, so scripts that never use them pay no
+startup cost.  There is nothing to <code class="docutils literal notranslate"><span class="pre">require()</span></code>.</p>
+<p>Conformance is partial and experimental — strongest for the APIs that do
+not assume a browser or DOM.  <code class="docutils literal notranslate"><span class="pre">Intl</span></code> (vendored ICU4C) is available the
+same way.  See <a class="reference internal" href="rampart-main.html#whatwg-w3c-web-platform-apis-experimental"><span class="std std-ref">WHATWG / W3C Web Platform APIs (experimental)</span></a>.</p>
+</div>
+<div class="section" id="can-i-run-code-written-for-node-js">
+<h3>Can I run code written for Node.js?<a class="headerlink" href="#can-i-run-code-written-for-node-js" title="Permalink to this headline">¶</a></h3>
+<p>Often, yes.  <code class="docutils literal notranslate"><span class="pre">rampart-nodeshim</span></code> is a compatibility layer that makes
+<code class="docutils literal notranslate"><span class="pre">require('fs')</span></code>, <code class="docutils literal notranslate"><span class="pre">require('path')</span></code>, <code class="docutils literal notranslate"><span class="pre">require('http')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">require('stream')</span></code>, <code class="docutils literal notranslate"><span class="pre">require('child_process')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">require('worker_threads')</span></code> and similar names resolve.</p>
+<p>Two things to know:</p>
+<ul class="simple">
+<li>Code going through the shim needs the <strong>transpiler</strong> — run with
+<code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">-t</span></code> (or add a <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> pragma) in nearly all
+cases.</li>
+<li>Coverage is partial and the shim is slower than the native APIs.</li>
+</ul>
+<p>It exists so that third-party libraries written for Node can run.  For
+your own code, prefer <code class="docutils literal notranslate"><span class="pre">rampart.utils</span></code> and the <code class="docutils literal notranslate"><span class="pre">rampart-*</span></code> modules.
+See <a class="reference internal" href="rampart-extras.html#rampart-nodeshim-module"><span class="std std-ref">rampart-nodeshim Module</span></a> for the per-submodule gaps.</p>
+</div>
+<div class="section" id="can-i-run-ai-models-directly-without-the-database">
+<h3>Can I run AI models directly, without the database?<a class="headerlink" href="#can-i-run-ai-models-directly-without-the-database" title="Permalink to this headline">¶</a></h3>
+<p>Yes.  The langtools modules are ordinary <code class="docutils literal notranslate"><span class="pre">require()</span></code>s, independent of
+the SQL embedding path described under <a class="reference internal" href="#database-and-search">Database and Search</a>:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> — <code class="docutils literal notranslate"><span class="pre">initEmbed()</span></code>, <code class="docutils literal notranslate"><span class="pre">initRerank()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">initGen()</span></code> for text generation, chat and tool calling.  GPU via
+Metal or CUDA.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-onnx</span></code> — <code class="docutils literal notranslate"><span class="pre">initEmbed()</span></code> / <code class="docutils literal notranslate"><span class="pre">initRerank()</span></code>, plus
+<code class="docutils literal notranslate"><span class="pre">initSession()</span></code> to run an arbitrary ONNX model, and tokenizers.
+GPU is CUDA-only.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-clip</span></code> — CLIP image and text embeddings in a shared space.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-faiss</span></code> — a standalone vector index (<code class="docutils literal notranslate"><span class="pre">openFactory()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">addFp32()</span></code>, <code class="docutils literal notranslate"><span class="pre">searchFp32()</span></code>), separate from SQL vector indexes.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-models</span></code> — resolve a short model name to a file, downloading
+it on first use: <code class="docutils literal notranslate"><span class="pre">models.get(&quot;bge-m3:q8_0&quot;)</span></code>.</li>
+</ul>
+<p>All are documented in <a class="reference internal" href="rampart-langtools.html#the-rampart-langtools-modules"><span class="std std-ref">rampart-langtools</span></a>.</p>
+</div>
 </div>
 <div class="section" id="vibe-coding-with-rampart">
 <h2>Vibe Coding with Rampart<a class="headerlink" href="#vibe-coding-with-rampart" title="Permalink to this headline">¶</a></h2>
@@ -2151,7 +2343,7 @@ without writing Node.js code.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

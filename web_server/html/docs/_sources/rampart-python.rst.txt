@@ -85,11 +85,11 @@ python.importString()
 
         var python=require("rampart-python");
 
-        var mymod = python.importString(pyscript[, scriptName);
+        var mymod = python.importString(pyscript[, scriptName]);
 
     Where:
 
-    * ``script`` is a :green:`String`, the python source code
+    * ``pyscript`` is a :green:`String`, the python source code
     * ``scriptName`` is a :green:`String`, an optional name for this script for
       error reporting.  Default is ``"module_from_string"``.
 
@@ -173,7 +173,7 @@ pvar.toValue()
         var python=require("rampart-python");
         var printf = rampart.printf;
 
-        var mymod = python.importString("/path/to/myscript.py");
+        var mymod = python.importFile("/path/to/myscript.py");
 
         var pvar = mymod.makedict("mykey", ["val1", "val2"]);
 
@@ -209,12 +209,27 @@ From Javascript to Python
     +-----------------------+------------------------------------------+
     |  :green:`Buffer`      | Bytes Object                             |
     +-----------------------+------------------------------------------+
-    |  :green:`Date`        | Datetime                                 |
+    |  :green:`TypedArray`, | Bytes Object (the underlying bytes)      |
+    |  :green:`ArrayBuffer`,|                                          |
+    |  :green:`DataView`    |                                          |
+    +-----------------------+------------------------------------------+
+    |  :green:`Date`        | Datetime (naive, in UTC)                 |
     +-----------------------+------------------------------------------+
     |  :green:`Undefined`   | None                                     |
     +-----------------------+------------------------------------------+
     |  :green:`null`        | None                                     |
     +-----------------------+------------------------------------------+
+
+    Note that JavaScript :green:`Numbers` always convert to Python floats.
+    When a Python function requires an integer (common in modules such as
+    ``numpy`` and ``torch``), pass it explicitly as
+    ``{pyType: "int", value: n}``.
+
+    Dates cross the boundary in UTC: a JavaScript :green:`Date` becomes a
+    naive Python datetime holding the UTC time, and a naive datetime
+    returned from Python is read as UTC.  Timezone-aware datetimes are
+    converted using their own offset.  A round trip returns the original
+    time.
 
     Where possible, translations can be specified by creating an
     :green:`Object` with ``pyType`` and ``value`` properties set.
@@ -241,7 +256,7 @@ From Javascript to Python
         mymod.printvar({pyType: "dict",    value: "e"});
 
         /* output:
-            <class 'datetime.datetime'>    1999-12-31 23:59:59.999000
+            <class 'datetime.datetime'>    2000-01-01 07:59:59.999000
             <class 'int'>                  1234567800000000000000000000000000000000000000
             <class 'list'>                 ['a', 'b', 'c']
             <class 'tuple'>                ('d',)
@@ -294,7 +309,7 @@ From Python to JavaScript
         printf("%J\n", ret.toValue());
 
         /* output:
-            "1999-12-31T23:59:59.999Z"
+            "2000-01-01T07:59:59.999Z"
             1.2345678e+45
             ["a","b","c"]
             ["d"]
@@ -324,13 +339,15 @@ Python to Python
             return a+b;
         `;
 
+        var mymod = python.importString(pyscript);
+
         var a = mymod.retvar({pyType: "complex", value: [1,2]});
         var b = mymod.retvar({pyType: "complex", value: [3,4]});
         var ret = mymod.add(a, b);
         printf("%J\n", ret.toValue());
 
         /* output:
-            [3,4]
+            [4,6]
 
            note that var a and b hold the Python variables and are
            not translated when mymod.add(a,b) is called.
@@ -354,6 +371,8 @@ Python Named Arguments
         def add(a,b):
             return a+b;
         `;
+
+        var mymod = python.importString(pyscript);
 
         var comp1 = mymod.retvar({pyType: "complex", value: [1,2]});
         var comp2 = mymod.retvar({pyType: "complex", value: [3,4]});
@@ -482,6 +501,48 @@ rampart.triggerEvent
             Triggervar='Hello from Python'
         */
 
+Installing Python Packages
+--------------------------
+
+    Rampart ships its own Python runtime along with two helper commands in
+    the rampart ``bin`` directory:
+
+    * ``pip3r`` - the bundled pip.  Use it to install packages for the
+      embedded Python (e.g. ``pip3r install numpy``).
+    * ``python3r`` - the bundled Python interpreter, with the same module
+      search path as `python.import()`_.
+
+    Where packages are installed depends on whether the rampart
+    installation is writable:
+
+    * If the rampart installation is writable (e.g. rampart was installed
+      in your home directory, or pip3r is run as root), packages are
+      installed system-wide inside the rampart installation.
+    * Otherwise pip falls back to a per-user installation in
+      ``~/.rampart/modules/python3-lib``.
+
+    Both locations are automatically included in the module search path of
+    the embedded interpreter, with per-user packages taking precedence.
+    The per-user location may be overridden by setting the
+    ``PYTHONUSERBASE`` environment variable before running rampart or
+    ``pip3r``.
+
+    Example, as a normal user with rampart installed in a system location:
+
+    .. code-block:: none
+
+        $ pip3r install requests
+        Defaulting to user installation because normal site-packages is not writeable
+        ...
+        Successfully installed requests-2.32.3
+
+    .. code-block:: javascript
+
+        var python = require('rampart-python');
+
+        /* finds the package installed under ~/.rampart */
+        var requests = python.import('requests');
+
 Example Use Importing Data
 --------------------------
 
@@ -492,7 +553,7 @@ Example Use Importing Data
         var printf = rampart.utils.printf;
 
         /* create the rampart sql db*/
-        var sql = new Sql.connection("./pytest-sql", true);
+        var sql = new Sql.init("./pytest-sql", true);
 
         /* the sqlite db */
         var dbfile="./test.db";

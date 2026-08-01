@@ -564,12 +564,22 @@
                                         <li>The <code class="docutils literal notranslate"><span class=
                                         "pre">require()</span></code> function.
                                         </li>
-                                        <li>WHATWG / Web platform globals (<code class=
+                                        <li>Most WHATWG / Web platform globals (<code class=
                                         "docutils literal notranslate"><span class="pre">URL</span></code>,
                                           <code class="docutils literal notranslate"><span class=
                                           "pre">crypto</span></code>, <code class=
-                                          "docutils literal notranslate"><span class="pre">Blob</span></code>, etc.) —
-                                          these are not installed and their lazy getters are not present.
+                                          "docutils literal notranslate"><span class="pre">fetch</span></code>,
+                                          <code class="docutils literal notranslate"><span class=
+                                          "pre">setTimeout</span></code>, etc.) — these are not installed and their
+                                          lazy getters are not present. Note that a few remain available in a bare
+                                          thread: <code class="docutils literal notranslate"><span class=
+                                          "pre">Blob</span></code>, <code class=
+                                          "docutils literal notranslate"><span class="pre">File</span></code>,
+                                          <code class="docutils literal notranslate"><span class=
+                                          "pre">TextEncoder</span></code>, <code class=
+                                          "docutils literal notranslate"><span class="pre">TextDecoder</span></code>
+                                          and <code class="docutils literal notranslate"><span class=
+                                          "pre">console</span></code>.
                                         </li>
                                         <li>Any properties from the parent thread’s <code class=
                                         "docutils literal notranslate"><span class="pre">globalThis</span></code> — the
@@ -843,17 +853,18 @@
                                 "pre">notcopied</span></code> will not be copied since it was set after the thread was
                                 created.
                                 </li>
-                                <li>In the positional form, optional arguments cannot be skipped with <code class=
-                                "docutils literal notranslate"><span class="pre">null</span></code>/<code class=
-                                "docutils literal notranslate"><span class="pre">undefined</span></code> placeholders –
+                                <li>In the positional form, optional arguments cannot be skipped with a <code class=
+                                "docutils literal notranslate"><span class="pre">null</span></code> placeholder –
                                 <code class="docutils literal notranslate"><span class=
                                 "pre">thr.exec(threadFunc,</span> <span class="pre">threadArg,</span> <span class=
-                                "pre">null,</span> <span class="pre">threadDelay)</span></code> throws. To set
-                                <code class="docutils literal notranslate"><span class="pre">threadDelay</span></code>
-                                without a <code class="docutils literal notranslate"><span class=
-                                "pre">callbackFunc</span></code>, use the <code class=
+                                "pre">null,</span> <span class="pre">threadDelay)</span></code> throws. <code class=
+                                "docutils literal notranslate"><span class="pre">undefined</span></code> <em>is</em>
+                                accepted in that position, but for clarity use the <code class=
                                 "docutils literal notranslate"><span class="pre">options</span></code> <span class=
-                                "green">Object</span> form instead.
+                                "green">Object</span> form to set <code class=
+                                "docutils literal notranslate"><span class="pre">threadDelay</span></code> without a
+                                <code class="docutils literal notranslate"><span class=
+                                "pre">callbackFunc</span></code>.
                                 </li>
                                 <li>A <code class="docutils literal notranslate"><span class=
                                 "pre">callbackFunc</span></code> runs in the event loop of the thread that called

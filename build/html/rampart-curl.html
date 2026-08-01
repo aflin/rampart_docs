@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-curl module &mdash; Rampart 0.7.0 documentation</title>
+  <title>The rampart-curl module &mdash; Rampart 0.7.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.0 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="The rampart-lmdb module" href="rampart-lmdb.html"/>
         <link rel="prev" title="The rampart-crypto module" href="rampart-crypto.html"/> 
 
@@ -293,6 +293,9 @@ optional callback <span class="green">Function</span>.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">curl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-curl&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span> <span class="nx">url</span><span class="o">|</span><span class="nx">url_list</span><span class="p">[,</span> <span class="nx">options</span><span class="p">][,</span> <span class="nx">callback</span><span class="p">]);</span>
+
+<span class="cm">/* the options may equivalently be given first */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">url</span><span class="o">|</span><span class="nx">url_list</span><span class="p">[,</span> <span class="nx">callback</span><span class="p">]);</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -336,6 +339,8 @@ protocols, the status code returned from the server.</li>
 <li><code class="docutils literal notranslate"><span class="pre">effectiveUrl</span></code> - the url as returned from the server, possibly
 different from <code class="docutils literal notranslate"><span class="pre">url</span></code> if <code class="docutils literal notranslate"><span class="pre">location</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> (see
 <a class="reference internal" href="#curl-options">Curl Options</a> below).</li>
+<li><code class="docutils literal notranslate"><span class="pre">effectiveUrlUnicode</span></code> - the same as <code class="docutils literal notranslate"><span class="pre">effectiveUrl</span></code>, with any
+internationalized (punycode) host name converted back to unicode.</li>
 </ul>
 <p>Other possible properties of the results <span class="green">Object</span> are (not all
 apply to non-http requests):</p>
@@ -346,9 +351,9 @@ value equivalent to <code class="docutils literal notranslate"><span class="pre"
 this requires a copy of data, whereas the <code class="docutils literal notranslate"><span class="pre">body</span></code> <span class="green">Buffer</span> is
 directly written to by the Curl library.  If the return data is large,
 it is more efficient to have <code class="docutils literal notranslate"><span class="pre">returnText</span></code> set <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">localIp</span></code> - a <span class="green">String</span>, the IP address used to connect to the remote server.</li>
+<li><code class="docutils literal notranslate"><span class="pre">localIP</span></code> - a <span class="green">String</span>, the IP address used to connect to the remote server.</li>
 <li><code class="docutils literal notranslate"><span class="pre">localPort</span></code> - a <span class="green">Number</span>, the port used to connect to the remote server.</li>
-<li><code class="docutils literal notranslate"><span class="pre">serverIp</span></code> - a <span class="green">String</span>, the IP address of the remote server.</li>
+<li><code class="docutils literal notranslate"><span class="pre">serverIP</span></code> - a <span class="green">String</span>, the IP address of the remote server.</li>
 <li><code class="docutils literal notranslate"><span class="pre">serverPort</span></code> -  a <span class="green">Number</span>, the remote server’s port used for the connection.</li>
 <li><code class="docutils literal notranslate"><span class="pre">rawHeader</span></code> - a <span class="green">String</span>, the raw text of the header section of the reply.</li>
 <li><code class="docutils literal notranslate"><span class="pre">headers</span></code> - an <span class="green">Object</span>, the parsed header keys and values,
@@ -358,7 +363,9 @@ The http version used by the server if URL is an http request.</li>
 <li><code class="docutils literal notranslate"><span class="pre">totalTime</span></code> - a <span class="green">Number</span>, the total time the Curl Library spend fetching the
 requested URL.</li>
 <li><code class="docutils literal notranslate"><span class="pre">cookies</span></code> - an <span class="green">Array</span>, a list of cookies sent from the
-remote server.</li>
+remote server.  Only present if the <code class="docutils literal notranslate"><span class="pre">cookie</span></code> or <code class="docutils literal notranslate"><span class="pre">cookie-jar</span></code>
+option was used for the request.  Each entry is a line in Netscape
+cookie-jar format, not a parsed <span class="green">Object</span>.</li>
 </ul>
 </div></blockquote>
 </div>
@@ -405,7 +412,7 @@ same <span class="green">Object</span> as returned in <a class="reference intern
 <dl class="docutils">
 <dt>NOTE:</dt>
 <dd><code class="docutils literal notranslate"><span class="pre">submit()</span></code> is preferred over <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> when retrieving multiple urls
-which neet to have different option apply to each url.</dd>
+which need to have different options apply to each url.</dd>
 </dl>
 </div>
 <div class="section" id="fetchasync">
@@ -569,7 +576,8 @@ not readable.  The value is also reflected in <code class="docutils literal notr
 <blockquote>
 <div><p>URL-encode a string.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">encoded</span> <span class="o">=</span> <span class="nx">curl</span><span class="p">.</span><span class="nx">encode</span><span class="p">(</span><span class="s1">&#39;hello world&amp;foo=bar&#39;</span><span class="p">);</span>
-<span class="c1">// &quot;hello%20world%26foo%3Dbar&quot;</span>
+<span class="c1">// &quot;hello+world%26foo%3dbar&quot;</span>
+<span class="c1">// (spaces become &#39;+&#39;, hex escapes are lower case)</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -813,7 +821,10 @@ text.  Its sole parameter is the same <code class="docutils literal notranslate"
 used for the main callback, with the exception that  <code class="docutils literal notranslate"><span class="pre">res.body</span></code>
 will contain the current chunk of data and res.text is not present.
 This function will return chunks of data regardless of whether
-<code class="docutils literal notranslate"><span class="pre">Content-Encoding:</span> <span class="pre">chunked</span></code> is being used.</p>
+<code class="docutils literal notranslate"><span class="pre">Content-Encoding:</span> <span class="pre">chunked</span></code> is being used.  Note that a
+<code class="docutils literal notranslate"><span class="pre">chunkCallback</span></code> requires a main callback as well; supplying it to a
+synchronous <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> throws <code class="docutils literal notranslate"><span class="pre">fetch:</span> <span class="pre">chunkCallback</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">used</span>
+<span class="pre">without</span> <span class="pre">a</span> <span class="pre">normal</span> <span class="pre">Callback</span> <span class="pre">function</span></code>.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">progressCallback</span></code> - a <span class="green">Function</span>, a callback to receive
 download progress updates.  Called each time there is a new chunk of
@@ -864,7 +875,7 @@ the file out in chunks using a <code class="docutils literal notranslate"><span 
                 <span class="nx">out</span><span class="o">=</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;    %Ad%%, %d of %d bytes, (%.2f %s)&quot;</span><span class="p">,</span>
                     <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="nx">perc</span><span class="p">,</span> <span class="nx">tot</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">expectedTotal</span><span class="p">,</span> <span class="nx">rate</span><span class="p">,</span> <span class="nx">unit</span> <span class="p">);</span>
             <span class="k">else</span>
-                <span class="nx">out</span><span class="o">=</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;    %d bytes&quot;</span><span class="p">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">file</span><span class="p">,</span> <span class="nx">tot</span><span class="p">);</span>
+                <span class="nx">out</span><span class="o">=</span><span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;    %d bytes&quot;</span><span class="p">,</span> <span class="nx">tot</span><span class="p">);</span>
             <span class="nx">printf</span><span class="p">(</span><span class="s1">&#39;%M&#39;</span><span class="p">,</span> <span class="p">[</span><span class="sb">`downloading file </span><span class="si">${</span><span class="nx">myurl</span><span class="si">}</span><span class="sb"> -&gt;`</span><span class="p">,</span> <span class="sb">`  </span><span class="si">${</span><span class="nx">myfile</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span> <span class="nx">out</span><span class="p">]);</span>
         <span class="p">},</span>
 
@@ -941,12 +952,20 @@ unchanged by any redirect</td>
 <td>effective URL after redirect chain (matches
 <code class="docutils literal notranslate"><span class="pre">originalUrl</span></code> if no redirects)</td>
 </tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">urlUnicode</span></code></td>
+<td>same as <code class="docutils literal notranslate"><span class="pre">url</span></code>, with any punycode host name
+converted back to unicode</td>
+</tr>
 </tbody>
 </table>
 <p>Returning <code class="docutils literal notranslate"><span class="pre">false</span></code> from the callback aborts the transfer.
 libcurl reports the abort via <code class="docutils literal notranslate"><span class="pre">CURLE_ABORTED_BY_CALLBACK</span></code>; the
-final callback’s <code class="docutils literal notranslate"><span class="pre">r.errMsg</span></code> will contain <code class="docutils literal notranslate"><span class="pre">&quot;curl</span> <span class="pre">failed:</span>
-<span class="pre">Operation</span> <span class="pre">was</span> <span class="pre">aborted</span> <span class="pre">by</span> <span class="pre">an</span> <span class="pre">application</span> <span class="pre">callback&quot;</span></code>.</p>
+final callback’s <code class="docutils literal notranslate"><span class="pre">r.errMsg</span></code> will contain <code class="docutils literal notranslate"><span class="pre">&quot;curl</span> <span class="pre">failed</span> <span class="pre">for</span>
+<span class="pre">'&lt;url&gt;':</span> <span class="pre">Operation</span> <span class="pre">was</span> <span class="pre">aborted</span> <span class="pre">by</span> <span class="pre">an</span> <span class="pre">application</span> <span class="pre">callback&quot;</span></code>.
+Note that errors reported to a callback are prefixed with the url
+of the transfer they belong to (several transfers may be in flight
+at once); errors returned from a synchronous <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> are not,
+and read simply <code class="docutils literal notranslate"><span class="pre">&quot;curl</span> <span class="pre">failed:</span> <span class="pre">...&quot;</span></code>.</p>
 <p>Returning any other value — including <code class="docutils literal notranslate"><span class="pre">true</span></code>, an object, or no
 return at all (<code class="docutils literal notranslate"><span class="pre">undefined</span></code>) — continues the transfer. This
 matches rampart’s convention for other callback APIs where
@@ -1157,7 +1176,7 @@ with <code class="docutils literal notranslate"><span class="pre">data</span></c
 <h3>Curl short options<a class="headerlink" href="#curl-short-options" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">0</span></code> - same as <code class="docutils literal notranslate"><span class="pre">http-1.0</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">0</span></code> - same as <code class="docutils literal notranslate"><span class="pre">http1.0</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">1</span></code> - same as <code class="docutils literal notranslate"><span class="pre">tlsv1</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">2</span></code> - same as <code class="docutils literal notranslate"><span class="pre">sslv2</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">3</span></code> - same as <code class="docutils literal notranslate"><span class="pre">sslv3</span></code>.</li>
@@ -1353,7 +1372,7 @@ module</span></a>.</p>
 <h3>Multiple HTTP request with addurl()<a class="headerlink" href="#multiple-http-request-with-addurl" title="Permalink to this headline">¶</a></h3>
 <p>There may be cases where, while fetching HTML pages, more resources are discovered and can be
 added to the list of URLs that <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> will retrieve.  The following example uses
-<span class="xref std std-ref">the rampart-html module</span> to extract
+<a class="reference internal" href="rampart-html.html#the-rampart-html-module"><span class="std std-ref">the rampart-html module</span></a> to extract
 links from the <code class="docutils literal notranslate"><span class="pre">index.html</span></code> page on a sample website (using
 <a class="reference external" href="https://github.com/dragdropsite/mPurpose">this</a> example) and “crawl” the rest of the site.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
@@ -1863,7 +1882,7 @@ inline in the HTML mail.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.0',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

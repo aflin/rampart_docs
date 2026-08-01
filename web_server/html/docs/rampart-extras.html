@@ -365,13 +365,27 @@
                     <a class="reference internal" href="#rampart-email">rampart-email</a>
                     <ul>
                       <li class="toctree-l3">
-                        <a class="reference internal" href="#id2">Loading the module</a>
+                        <a class="reference internal" href="#loading-rampart-email">Loading rampart-email</a>
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#send">send()</a>
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#delivery-methods">Delivery Methods</a>
+                        <ul>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#method-direct">method: “direct”</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#method-relay">method: “relay”</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#method-smtp">method: “smtp”</a>
+                          </li>
+                          <li class="toctree-l4">
+                            <a class="reference internal" href="#method-gmailapp">method: “gmailApp”</a>
+                          </li>
+                        </ul>
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#html-email-with-attachment">HTML email with attachment</a>
@@ -382,7 +396,7 @@
                     <a class="reference internal" href="#rampart-llm">rampart-llm</a>
                     <ul>
                       <li class="toctree-l3">
-                        <a class="reference internal" href="#id4">Loading the module</a>
+                        <a class="reference internal" href="#loading-rampart-llm">Loading rampart-llm</a>
                       </li>
                       <li class="toctree-l3">
                         <a class="reference internal" href="#creating-a-connection">Creating a connection</a>
@@ -633,8 +647,9 @@ usage:
                               on this port for plain <code class="docutils literal notranslate"><span class=
                               "pre">http</span></code> and 301-redirect every request to the <code class=
                               "docutils literal notranslate"><span class="pre">https</span></code> listener. This runs
-                              in-process via the underlying <span class="xref std std-ref">httpRedirect</span> option;
-                              no separate daemon is spawned. The redirect <code class=
+                              in-process via the underlying <a class="reference internal" href=
+                              "rampart-server.html#tls-certificates"><span class="std std-ref">httpRedirect</span></a>
+                              option; no separate daemon is spawned. The redirect <code class=
                               "docutils literal notranslate"><span class="pre">Location:</span></code> header includes
                               the actual <code class="docutils literal notranslate"><span class=
                               "pre">https</span></code> port automatically, so non-standard configurations (e.g. https
@@ -718,6 +733,33 @@ usage:
                           </ul>
                         </div>
                       </blockquote>
+                      <div class="admonition note">
+                        <p class="first admonition-title">
+                          Note
+                        </p>
+                        <p class="last">
+                          <strong>macOS</strong>: <code class="docutils literal notranslate"><span class=
+                          "pre">start</span></code>/<code class="docutils literal notranslate"><span class=
+                          "pre">stop</span></code>/<code class="docutils literal notranslate"><span class=
+                          "pre">restart</span></code>/<code class="docutils literal notranslate"><span class=
+                          "pre">status</span></code> work exactly as described above, but with <code class=
+                          "docutils literal notranslate"><span class="pre">daemon</span></code> set <code class=
+                          "docutils literal notranslate"><span class="pre">true</span></code> the server is daemonized
+                          through a transient, automatically managed <code class=
+                          "docutils literal notranslate"><span class="pre">launchd</span></code> job rather than a
+                          classic <code class="docutils literal notranslate"><span class="pre">fork()</span></code>
+                          daemon (a forked daemon on macOS cannot use system services such as the Metal shader
+                          compiler, which breaks GPU model loading). No plist editing or <code class=
+                          "docutils literal notranslate"><span class="pre">launchctl</span></code> knowledge is
+                          required, and nothing persists across a reboot. Two small differences: with <code class=
+                          "docutils literal notranslate"><span class="pre">monitor</span></code> set <code class=
+                          "docutils literal notranslate"><span class="pre">true</span></code>, a dead server is
+                          relaunched by <code class="docutils literal notranslate"><span class=
+                          "pre">launchd</span></code> (this takes about 10 seconds); and since macOS does not restrict
+                          ports below 1024 to root, a server may bind, e.g., port 443 without being started as root
+                          (though the TLS key/certificate files must be readable by the user starting it).
+                        </p>
+                      </div>
                     </div>
                     <div class="section" id="building-a-command-line-utility">
                       <h3>
@@ -733,14 +775,14 @@ usage:
                           <pre><span></span><span class="kd">var</span> <span class="nx">wserv</span> <span class=
                           "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
                           "s2">"rampart-webserver"</span><span class="p">);</span>
-<span class="nx">webserv</span><span class="p">.</span><span class="nx">cmdLine</span><span class=
+<span class="nx">wserv</span><span class="p">.</span><span class="nx">cmdLine</span><span class=
 "p">(</span><span class="mi">2</span><span class="p">);</span>
 </pre>
                         </div>
                       </div>
                       <p>
                         The <code class="docutils literal notranslate"><span class=
-                        "pre">webserv.cmdLine(2);</span></code> function will process options from command line
+                        "pre">wserv.cmdLine(2);</span></code> function will process options from command line
                         arguments, starting with the second one (skipping argv[0] (<code class=
                         "docutils literal notranslate"><span class="pre">rampart</span></code>) and argv[1]
                         (<code class="docutils literal notranslate"><span class="pre">script_name.js</span></code>). It
@@ -785,10 +827,13 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --logRoot            String. Log directory
 --accessLog          String. Log file name. "" for stdout
 --errorLog           String. error log file name. "" for stderr
+--irohProxy          Bool.   Start the iroh webproxy server for this server
+--selfSign           Bool.   Whether to auto generate a self signed https cert
 --log                Bool.   Whether to log requests and errors
 --rotateLogs         Bool.   Whether to rotate the logs
 --rotateInterval     Number. Interval between log rotations in seconds
 --rotateStart        String. Time to start log rotations
+--rotateCount        Number. Maximum number of old log files to keep (default 30)
 --user               String. If started as root, switch to this user
 --threads            Number. Limit the number of threads used by the server.
                      Default (-1) is the number of cores on the system
@@ -799,7 +844,7 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --letsencrypt        String. If using letsencrypt, the 'domain.tld' name for automatic setup of https
                      (assumes --secure true and looks for '/etc/letsencrypt/live/domain.tld/' directory)
                      (if redir is set, also map ./letsencrypt_wd/.well-known/ --&gt; http://mydom.com/.well-known/)
-                     (if set to "setup", don\'t start https server, but do map ".well-known/" for http)
+                     (if set to "setup", don't start https server, but do map ".well-known/" for http)
                      (sets port:443 unless set otherwise)
 --rootScripts        Bool.   Whether to treat *.js files in htmlRoot as apps (not secure)
 --directoryFunc      Bool.   Whether to provide a directory listing if no index.html is found
@@ -807,6 +852,8 @@ rampart@machine:~&gt;$ rampart --server --lsopts
 --monitor            fork and run a monitor as a daemon which restarts server w/in 10 seconds if it dies
 --scriptTimeout      Number  Max time to wait for a script module to return a reply in seconds (default 20)
 --connectTimeout     Number  Max time to wait for client send request in seconds (default 20)
+--defaultCharset     String. Charset appended to text/* Content-Type headers (default "utf-8").
+                     Use "false" to disable.  Applies to static files and dynamic responses.
 -d                   alias for '--daemon true'
 --detach             alias for '--daemon true'
 --stop               stop the server.  Also stop the monitor and log rotation, if started
@@ -842,6 +889,7 @@ Defaults for --server:
    "rotateLogs": false,
    "rotateInterval": 86400,
    "rotateStart": "00:00",
+   "rotateCount": 30,
    "user": "nobody",
    "threads": -1,
    "sslKeyFile": "",
@@ -857,6 +905,12 @@ Defaults for --server:
    "connectTimeout": 20,
    "quickserver": false,
    "appendProcTitle": false,
+   "beginFunc": false,
+   "beginFuncOnFile": false,
+   "endFunc": false,
+   "irohProxy": false,
+   "selfSign": false,
+   "defaultCharset": "utf-8",
    "serverRoot": "/home/rampart/web_server",
    "fullServer": 1
 }
@@ -871,6 +925,7 @@ Defaults for --quickserver:
    "ipv6Port": 8088,
    "port": -1,
    "redirPort": -1,
+   "redir": false,
    "htmlRoot": "/home/rampart/dir_with_files/",
    "appsRoot": "",
    "wsappsRoot": "",
@@ -882,6 +937,7 @@ Defaults for --quickserver:
    "rotateLogs": false,
    "rotateInterval": 86400,
    "rotateStart": "00:00",
+   "rotateCount": 30,
    "user": "nobody",
    "threads": 1,
    "sslKeyFile": "",
@@ -897,6 +953,12 @@ Defaults for --quickserver:
    "connectTimeout": 20,
    "quickserver": true,
    "appendProcTitle": false,
+   "beginFunc": false,
+   "beginFuncOnFile": false,
+   "endFunc": false,
+   "irohProxy": false,
+   "selfSign": false,
+   "defaultCharset": "utf-8",
    "serverRoot": "/home/rampart/dir_with_files",
    "fullServer": 0
 }
@@ -1230,7 +1292,7 @@ chmod +x mybundle-bin
 "p">.</span><span class="nx">stat</span><span class="p">(</span><span class=
 "s2">":zip:/apps/auth.js"</span><span class="p">);</span>
 <span class="k">if</span> <span class="p">(</span><span class="nx">u</span><span class="p">.</span><span class=
-"nx">fileExists</span><span class="p">(</span><span class="s2">":zip:/data.csv"</span><span class=
+"nx">exists</span><span class="p">(</span><span class="s2">":zip:/data.csv"</span><span class=
 "p">))</span> <span class="p">{</span> <span class="cm">/* ... */</span> <span class="p">}</span>
 
 <span class="kd">var</span> <span class="nx">fh</span> <span class="o">=</span> <span class="nx">u</span><span class=
@@ -1306,7 +1368,7 @@ chmod +x mybundle-bin
                             <code class="docutils literal notranslate"><span class="pre">mtime</span></code> (Date),
                             <code class="docutils literal notranslate"><span class="pre">isFile</span></code>,
                             <code class="docutils literal notranslate"><span class="pre">isDirectory</span></code>,
-                            <code class="docutils literal notranslate"><span class="pre">isSymlink</span></code>,
+                            <code class="docutils literal notranslate"><span class="pre">isSymbolicLink</span></code>,
                             <code class="docutils literal notranslate"><span class="pre">permissions</span></code>
                             etc.).
                           </dd>
@@ -1355,20 +1417,37 @@ chmod +x mybundle-bin
                           A second set works on <strong>any</strong> zip file on disk – not the appended payload – and
                           is always available:
                         </p>
-                        <p>
-                          <code class="docutils literal notranslate"><span class=
-                          "pre">rampart.utils.zipList(zipPath)</span></code> <code class=
-                          "docutils literal notranslate"><span class="pre">rampart.utils.zipGet(zipPath,</span>
-                          <span class="pre">name)</span></code> <code class="docutils literal notranslate"><span class=
-                          "pre">rampart.utils.zipExtract(zipPath,</span> <span class="pre">destDir</span> <span class=
-                          "pre">[,</span> <span class="pre">filterArray])</span></code>
-                        </p>
-                        <blockquote>
-                          <div>
-                            Same filter semantics as <code class="docutils literal notranslate"><span class=
-                            "pre">payloadExtract</span></code>.
-                          </div>
-                        </blockquote>
+                        <dl class="docutils">
+                          <dt>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">rampart.utils.zipList(zipPath)</span></code>
+                          </dt>
+                          <dd>
+                            As <code class="docutils literal notranslate"><span class="pre">payloadList</span></code>,
+                            but for the zip file at <code class="docutils literal notranslate"><span class=
+                            "pre">zipPath</span></code>.
+                          </dd>
+                          <dt>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">rampart.utils.zipGet(zipPath,</span> <span class="pre">name)</span></code>
+                          </dt>
+                          <dd>
+                            As <code class="docutils literal notranslate"><span class="pre">payloadGet</span></code>,
+                            but for the zip file at <code class="docutils literal notranslate"><span class=
+                            "pre">zipPath</span></code>.
+                          </dd>
+                          <dt>
+                            <code class="docutils literal notranslate"><span class=
+                            "pre">rampart.utils.zipExtract(zipPath,</span> <span class="pre">destDir</span>
+                            <span class="pre">[,</span> <span class="pre">filterArray])</span></code>
+                          </dt>
+                          <dd>
+                            As <code class="docutils literal notranslate"><span class=
+                            "pre">payloadExtract</span></code>, but for the zip file at <code class=
+                            "docutils literal notranslate"><span class="pre">zipPath</span></code>. Same filter
+                            semantics.
+                          </dd>
+                        </dl>
                         <p>
                           These are useful for installers, update packages and similar tooling that needs to inspect a
                           zip without unpacking it first.
@@ -1891,9 +1970,10 @@ wsclient.js [ -h header] [-s] url:
                       module</span></a>. It supports direct delivery (MX lookup), local relay, authenticated SMTP, and
                       Gmail with App Passwords.
                     </p>
-                    <div class="section" id="id2">
+                    <div class="section" id="loading-rampart-email">
                       <h3>
-                        Loading the module<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a>
+                        Loading rampart-email<a class="headerlink" href="#loading-rampart-email" title=
+                        "Permalink to this headline">¶</a>
                       </h3>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">
@@ -2044,7 +2124,7 @@ wsclient.js [ -h header] [-s] url:
                                 <code class="docutils literal notranslate"><span class="pre">"relay"</span></code>,
                                 <code class="docutils literal notranslate"><span class="pre">"smtp"</span></code>, or
                                 <code class="docutils literal notranslate"><span class="pre">"gmailApp"</span></code>.
-                                See <a class="reference internal" href="#id3">Delivery Methods</a> below.
+                                See <a class="reference internal" href="#id2">Delivery Methods</a> below.
                               </p>
                             </li>
                             <li>
@@ -2153,66 +2233,71 @@ wsclient.js [ -h header] [-s] url:
                       </blockquote>
                     </div>
                     <div class="section" id="delivery-methods">
-                      <span id="id3"></span>
+                      <span id="id2"></span>
                       <h3>
                         Delivery Methods<a class="headerlink" href="#delivery-methods" title=
                         "Permalink to this headline">¶</a>
                       </h3>
-                      <blockquote>
-                        <div>
-                          <p>
-                            The default method. Looks up MX records for each recipient’s domain using <code class=
-                            "docutils literal notranslate"><span class="pre">net.resolve(domain,</span> <span class=
-                            "pre">"MX")</span></code> and connects directly to the destination mail server on port 25.
-                            Recipients sharing a domain are batched into a single SMTP session.
-                          </p>
-                          <p>
-                            The connection is attempted with verified TLS (STARTTLS) first, then falls back to plain
-                            SMTP. If <code class="docutils literal notranslate"><span class=
-                            "pre">insecure</span></code> is <code class="docutils literal notranslate"><span class=
-                            "pre">true</span></code>, an additional insecure TLS attempt is made between verified TLS
-                            and plain:
-                          </p>
-                          <ul class="simple">
-                            <li>Default: <strong>ssl</strong> → <strong>plain</strong>
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">insecure:</span>
-                              <span class="pre">true</span></code>: <strong>ssl</strong> →
-                              <strong>ssl+insecure</strong> → <strong>plain</strong>
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">requireSsl:</span>
-                              <span class="pre">true</span></code>: <strong>ssl</strong> only
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">requireSsl:</span>
-                              <span class="pre">true</span></code> + <code class=
-                              "docutils literal notranslate"><span class="pre">insecure:</span> <span class=
-                              "pre">true</span></code>: <strong>ssl</strong> → <strong>ssl+insecure</strong>
-                            </li>
-                          </ul>
-                          <p>
-                            If no MX records are found, the domain itself is tried as the mail host per RFC 5321
-                            section 5.1.
-                          </p>
-                          <p>
-                            Additional options:
-                          </p>
-                          <ul class="simple">
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">requireSsl</span></code> -
-                              <span class="green">Boolean</span> - If <code class=
-                              "docutils literal notranslate"><span class="pre">true</span></code>, do not fall back to
-                              plain (unencrypted) SMTP. Default is <code class=
-                              "docutils literal notranslate"><span class="pre">false</span></code>.
-                            </li>
-                          </ul>
-                          <div class="highlight-javascript notranslate">
-                            <div class="highlight">
-                              <pre><span></span><span class="kd">var</span> <span class="nx">email</span> <span class=
-                              "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
-                              "s2">"rampart-email.js"</span><span class="p">);</span>
+                      <div class="section" id="method-direct">
+                        <h4>
+                          method: “direct”<a class="headerlink" href="#method-direct" title=
+                          "Permalink to this headline">¶</a>
+                        </h4>
+                        <blockquote>
+                          <div>
+                            <p>
+                              The default method. Looks up MX records for each recipient’s domain using <code class=
+                              "docutils literal notranslate"><span class="pre">net.resolve(domain,</span> <span class=
+                              "pre">"MX")</span></code> and connects directly to the destination mail server on port
+                              25. Recipients sharing a domain are batched into a single SMTP session.
+                            </p>
+                            <p>
+                              The connection is attempted with verified TLS (STARTTLS) first, then falls back to plain
+                              SMTP. If <code class="docutils literal notranslate"><span class=
+                              "pre">insecure</span></code> is <code class="docutils literal notranslate"><span class=
+                              "pre">true</span></code>, an additional insecure TLS attempt is made between verified TLS
+                              and plain:
+                            </p>
+                            <ul class="simple">
+                              <li>Default: <strong>ssl</strong> → <strong>plain</strong>
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">insecure:</span>
+                                <span class="pre">true</span></code>: <strong>ssl</strong> →
+                                <strong>ssl+insecure</strong> → <strong>plain</strong>
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">requireSsl:</span>
+                                <span class="pre">true</span></code>: <strong>ssl</strong> only
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">requireSsl:</span>
+                                <span class="pre">true</span></code> + <code class=
+                                "docutils literal notranslate"><span class="pre">insecure:</span> <span class=
+                                "pre">true</span></code>: <strong>ssl</strong> → <strong>ssl+insecure</strong>
+                              </li>
+                            </ul>
+                            <p>
+                              If no MX records are found, the domain itself is tried as the mail host per RFC 5321
+                              section 5.1.
+                            </p>
+                            <p>
+                              Additional options:
+                            </p>
+                            <ul class="simple">
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">requireSsl</span></code> -
+                                <span class="green">Boolean</span> - If <code class=
+                                "docutils literal notranslate"><span class="pre">true</span></code>, do not fall back
+                                to plain (unencrypted) SMTP. Default is <code class=
+                                "docutils literal notranslate"><span class="pre">false</span></code>.
+                              </li>
+                            </ul>
+                            <div class="highlight-javascript notranslate">
+                              <div class="highlight">
+                                <pre><span></span><span class="kd">var</span> <span class="nx">email</span> <span class=
+                                "o">=</span> <span class="nx">require</span><span class="p">(</span><span class=
+                                "s2">"rampart-email.js"</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class=
 "nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">({</span>
@@ -2224,40 +2309,46 @@ wsclient.js [ -h header] [-s] url:
     <span class="nx">message</span><span class="o">:</span> <span class="s2">"Hi there"</span>
 <span class="p">});</span>
 </pre>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </blockquote>
-                      <blockquote>
-                        <div>
-                          <p>
-                            Sends all recipients through a local or specified SMTP relay server (e.g. Postfix), which
-                            handles onward delivery, retries, and queuing.
-                          </p>
-                          <p>
-                            Note: the relay accepts the message into its queue immediately (status 250). Delivery
-                            errors occur asynchronously and are reported in the relay’s logs or as bounce emails to the
-                            sender, not in the return value.
-                          </p>
-                          <p>
-                            Additional options:
-                          </p>
-                          <ul class="simple">
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">relay</span></code> -
-                              <span class="green">String</span> - The relay hostname. Default is <code class=
-                              "docutils literal notranslate"><span class="pre">"localhost"</span></code>.
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">relayPort</span></code> -
-                              <span class="green">Number</span> - The relay port. Default is <code class=
-                              "docutils literal notranslate"><span class="pre">25</span></code>.
-                            </li>
-                          </ul>
-                          <div class="highlight-javascript notranslate">
-                            <div class="highlight">
-                              <pre><span></span><span class="nx">email</span><span class="p">.</span><span class=
-                              "nx">send</span><span class="p">({</span>
+                        </blockquote>
+                      </div>
+                      <div class="section" id="method-relay">
+                        <h4>
+                          method: “relay”<a class="headerlink" href="#method-relay" title=
+                          "Permalink to this headline">¶</a>
+                        </h4>
+                        <blockquote>
+                          <div>
+                            <p>
+                              Sends all recipients through a local or specified SMTP relay server (e.g. Postfix), which
+                              handles onward delivery, retries, and queuing.
+                            </p>
+                            <p>
+                              Note: the relay accepts the message into its queue immediately (status 250). Delivery
+                              errors occur asynchronously and are reported in the relay’s logs or as bounce emails to
+                              the sender, not in the return value.
+                            </p>
+                            <p>
+                              Additional options:
+                            </p>
+                            <ul class="simple">
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">relay</span></code> -
+                                <span class="green">String</span> - The relay hostname. Default is <code class=
+                                "docutils literal notranslate"><span class="pre">"localhost"</span></code>.
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">relayPort</span></code> -
+                                <span class="green">Number</span> - The relay port. Default is <code class=
+                                "docutils literal notranslate"><span class="pre">25</span></code>.
+                              </li>
+                            </ul>
+                            <div class="highlight-javascript notranslate">
+                              <div class="highlight">
+                                <pre><span></span><span class="nx">email</span><span class="p">.</span><span class=
+                                "nx">send</span><span class="p">({</span>
     <span class="nx">from</span><span class="o">:</span>    <span class="s2">"me@myserver.com"</span><span class=
 "p">,</span>
     <span class="nx">to</span><span class="o">:</span>      <span class="s2">"them@example.com"</span><span class=
@@ -2267,39 +2358,45 @@ wsclient.js [ -h header] [-s] url:
     <span class="nx">method</span><span class="o">:</span>  <span class="s2">"relay"</span>
 <span class="p">});</span>
 </pre>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </blockquote>
-                      <blockquote>
-                        <div>
-                          <p>
-                            Sends through any authenticated SMTP server. The full URL including protocol and port must
-                            be provided.
-                          </p>
-                          <p>
-                            Additional options:
-                          </p>
-                          <ul class="simple">
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">smtpUrl</span></code> -
-                              <span class="green">String</span> - <strong>Required</strong>. The SMTP server URL (e.g.
-                              <code class="docutils literal notranslate"><span class=
-                              "pre">"smtps://smtp.example.com:465"</span></code>).
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">user</span></code> -
-                              <span class="green">String</span> - The authentication username.
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">pass</span></code> -
-                              <span class="green">String</span> - The authentication password.
-                            </li>
-                          </ul>
-                          <div class="highlight-javascript notranslate">
-                            <div class="highlight">
-                              <pre><span></span><span class="nx">email</span><span class="p">.</span><span class=
-                              "nx">send</span><span class="p">({</span>
+                        </blockquote>
+                      </div>
+                      <div class="section" id="method-smtp">
+                        <h4>
+                          method: “smtp”<a class="headerlink" href="#method-smtp" title=
+                          "Permalink to this headline">¶</a>
+                        </h4>
+                        <blockquote>
+                          <div>
+                            <p>
+                              Sends through any authenticated SMTP server. The full URL including protocol and port
+                              must be provided.
+                            </p>
+                            <p>
+                              Additional options:
+                            </p>
+                            <ul class="simple">
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">smtpUrl</span></code> -
+                                <span class="green">String</span> - <strong>Required</strong>. The SMTP server URL
+                                (e.g. <code class="docutils literal notranslate"><span class=
+                                "pre">"smtps://smtp.example.com:465"</span></code>).
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">user</span></code> -
+                                <span class="green">String</span> - The authentication username.
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">pass</span></code> -
+                                <span class="green">String</span> - The authentication password.
+                              </li>
+                            </ul>
+                            <div class="highlight-javascript notranslate">
+                              <div class="highlight">
+                                <pre><span></span><span class="nx">email</span><span class="p">.</span><span class=
+                                "nx">send</span><span class="p">({</span>
     <span class="nx">from</span><span class="o">:</span>    <span class="s2">"me@example.com"</span><span class=
 "p">,</span>
     <span class="nx">to</span><span class="o">:</span>      <span class="s2">"them@example.com"</span><span class=
@@ -2314,36 +2411,42 @@ wsclient.js [ -h header] [-s] url:
     <span class="nx">pass</span><span class="o">:</span>    <span class="s2">"mypassword"</span>
 <span class="p">});</span>
 </pre>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </blockquote>
-                      <blockquote>
-                        <div>
-                          <p>
-                            Sends through Gmail’s SMTP server (<code class="docutils literal notranslate"><span class=
-                            "pre">smtps://smtp.gmail.com:465</span></code>) using a Google App Password. The SMTP URL
-                            is handled automatically.
-                          </p>
-                          <p>
-                            Additional options:
-                          </p>
-                          <ul class="simple">
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">user</span></code> -
-                              <span class="green">String</span> - <strong>Required</strong>. Your full Gmail or Google
-                              Workspace email address.
-                            </li>
-                            <li>
-                              <code class="docutils literal notranslate"><span class="pre">pass</span></code> -
-                              <span class="green">String</span> - <strong>Required</strong>. The 16-character App
-                              Password.
-                            </li>
-                          </ul>
-                          <div class="highlight-javascript notranslate">
-                            <div class="highlight">
-                              <pre><span></span><span class="nx">email</span><span class="p">.</span><span class=
-                              "nx">send</span><span class="p">({</span>
+                        </blockquote>
+                      </div>
+                      <div class="section" id="method-gmailapp">
+                        <h4>
+                          method: “gmailApp”<a class="headerlink" href="#method-gmailapp" title=
+                          "Permalink to this headline">¶</a>
+                        </h4>
+                        <blockquote>
+                          <div>
+                            <p>
+                              Sends through Gmail’s SMTP server (<code class=
+                              "docutils literal notranslate"><span class="pre">smtps://smtp.gmail.com:465</span></code>)
+                              using a Google App Password. The SMTP URL is handled automatically.
+                            </p>
+                            <p>
+                              Additional options:
+                            </p>
+                            <ul class="simple">
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">user</span></code> -
+                                <span class="green">String</span> - <strong>Required</strong>. Your full Gmail or
+                                Google Workspace email address.
+                              </li>
+                              <li>
+                                <code class="docutils literal notranslate"><span class="pre">pass</span></code> -
+                                <span class="green">String</span> - <strong>Required</strong>. The 16-character App
+                                Password.
+                              </li>
+                            </ul>
+                            <div class="highlight-javascript notranslate">
+                              <div class="highlight">
+                                <pre><span></span><span class="nx">email</span><span class="p">.</span><span class=
+                                "nx">send</span><span class="p">({</span>
     <span class="nx">from</span><span class="o">:</span>    <span class="s2">"me@gmail.com"</span><span class=
 "p">,</span>
     <span class="nx">to</span><span class="o">:</span>      <span class="s2">"them@example.com"</span><span class=
@@ -2356,35 +2459,36 @@ wsclient.js [ -h header] [-s] url:
     <span class="nx">pass</span><span class="o">:</span>    <span class="s2">"xxxx xxxx xxxx xxxx"</span>
 <span class="p">});</span>
 </pre>
+                              </div>
                             </div>
+                            <p>
+                              <strong>Creating a Gmail App Password:</strong>
+                            </p>
+                            <ol class="arabic simple">
+                              <li>Go to <code class="docutils literal notranslate"><span class=
+                              "pre">myaccount.google.com</span></code>.
+                              </li>
+                              <li>Click <strong>Security</strong> in the left sidebar.
+                              </li>
+                              <li>Ensure <strong>2-Step Verification</strong> is enabled under “How you sign in to
+                              Google”.
+                              </li>
+                              <li>Search for <strong>App passwords</strong> in the search bar at the top, or go
+                              directly to <code class="docutils literal notranslate"><span class=
+                              "pre">myaccount.google.com/apppasswords</span></code>.
+                              </li>
+                              <li>Enter a name (e.g. “rampart-email”) and click <strong>Create</strong>.
+                              </li>
+                              <li>Copy the 16-character password shown.
+                              </li>
+                            </ol>
+                            <p>
+                              Note: “App passwords” will not appear if 2-Step Verification is not enabled, or if a
+                              Google Workspace admin has disabled the feature.
+                            </p>
                           </div>
-                          <p>
-                            <strong>Creating a Gmail App Password:</strong>
-                          </p>
-                          <ol class="arabic simple">
-                            <li>Go to <code class="docutils literal notranslate"><span class=
-                            "pre">myaccount.google.com</span></code>.
-                            </li>
-                            <li>Click <strong>Security</strong> in the left sidebar.
-                            </li>
-                            <li>Ensure <strong>2-Step Verification</strong> is enabled under “How you sign in to
-                            Google”.
-                            </li>
-                            <li>Search for <strong>App passwords</strong> in the search bar at the top, or go directly
-                            to <code class="docutils literal notranslate"><span class=
-                            "pre">myaccount.google.com/apppasswords</span></code>.
-                            </li>
-                            <li>Enter a name (e.g. “rampart-email”) and click <strong>Create</strong>.
-                            </li>
-                            <li>Copy the 16-character password shown.
-                            </li>
-                          </ol>
-                          <p>
-                            Note: “App passwords” will not appear if 2-Step Verification is not enabled, or if a Google
-                            Workspace admin has disabled the feature.
-                          </p>
-                        </div>
-                      </blockquote>
+                        </blockquote>
+                      </div>
                     </div>
                     <div class="section" id="html-email-with-attachment">
                       <h3>
@@ -2477,9 +2581,10 @@ wsclient.js [ -h header] [-s] url:
                       The module lives in the <code class="docutils literal notranslate"><span class=
                       "pre">process.modulesPath</span></code> directory.
                     </p>
-                    <div class="section" id="id4">
+                    <div class="section" id="loading-rampart-llm">
                       <h3>
-                        Loading the module<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a>
+                        Loading rampart-llm<a class="headerlink" href="#loading-rampart-llm" title=
+                        "Permalink to this headline">¶</a>
                       </h3>
                       <div class="highlight-javascript notranslate">
                         <div class="highlight">
@@ -4552,11 +4657,13 @@ testing myutil.capitalize basic functionality              - passed
                         </li>
                       </ul>
                       <p class="last">
-                        See <span class="xref std std-ref">the transpiler section</span> for details. Without one of
-                        these, the shim still loads, but your <em>own</em> code is restricted to ES5 syntax. The
-                        submodule implementations themselves are ES5 internally, so the shim’s surface (<code class=
-                        "docutils literal notranslate"><span class="pre">fs.readFileSync(...)</span></code>,
-                        <code class="docutils literal notranslate"><span class="pre">new</span> <span class=
+                        See <a class="reference internal" href=
+                        "rampart-main.html#activating-the-transpiler"><span class="std std-ref">the transpiler
+                        section</span></a> for details. Without one of these, the shim still loads, but your
+                        <em>own</em> code is restricted to ES5 syntax. The submodule implementations themselves are ES5
+                        internally, so the shim’s surface (<code class="docutils literal notranslate"><span class=
+                        "pre">fs.readFileSync(...)</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">new</span> <span class=
                         "pre">EventEmitter()</span></code>, etc.) works either way — it’s <em>your</em> call sites that
                         need the transpiler if they use modern syntax. npm packages are almost always written in modern
                         JavaScript, so in practice running one through nodeshim requires <code class=
@@ -4594,26 +4701,47 @@ testing myutil.capitalize basic functionality              - passed
                         "pre">=</span> <span class="pre">require('rampart-nodeshim').&lt;name&gt;;</span></code>. Full
                         list: <code class="docutils literal notranslate"><span class="pre">assert.js</span></code>,
                         <code class="docutils literal notranslate"><span class="pre">buffer.js</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">child_process.js</span></code>,
                         <code class="docutils literal notranslate"><span class="pre">console.js</span></code>,
                         <code class="docutils literal notranslate"><span class="pre">crypto.js</span></code>,
                         <code class="docutils literal notranslate"><span class="pre">dns.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">events.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">fs.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">http.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">https.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">module.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">net.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">os.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">path.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">perf_hooks.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">process.js</span></code>, <code class=
-                        "docutils literal notranslate"><span class="pre">punycode.js</span></code> (vendored Mathias
-                        Bynens v2.3.1 IDN library — standalone, not part of the <code class=
-                        "docutils literal notranslate"><span class="pre">.so</span></code>), <code class=
                         "docutils literal notranslate"><span class="pre">querystring.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">readline.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">repl.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">stream.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">string_decoder.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">timers.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">tls.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">tty.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">url.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">util.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">vm.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">worker_threads.js</span></code>, <code class=
                         "docutils literal notranslate"><span class="pre">zlib.js</span></code>.
+                      </p>
+                      <p>
+                        A few further modules in <code class="docutils literal notranslate"><span class=
+                        "pre">js_modules/</span></code> are standalone shims rather than one-line re-exports — they are
+                        implemented in JavaScript in the file itself and are not part of the <code class=
+                        "docutils literal notranslate"><span class="pre">.so</span></code>: <code class=
+                        "docutils literal notranslate"><span class="pre">async_hooks.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">constants.js</span></code>, <code class=
+                        "docutils literal notranslate"><span class="pre">diagnostics_channel.js</span></code>,
+                        <code class="docutils literal notranslate"><span class="pre">http2.js</span></code> (a stub;
+                        rampart-nodeshim does not implement HTTP/2), <code class=
+                        "docutils literal notranslate"><span class="pre">v8.js</span></code>, and <code class=
+                        "docutils literal notranslate"><span class="pre">punycode.js</span></code> (vendored Mathias
+                        Bynens v2.3.1 IDN library).
                       </p>
                     </div>
                     <div class="section" id="submodules-and-notable-gaps">

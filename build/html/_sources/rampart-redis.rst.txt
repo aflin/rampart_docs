@@ -162,7 +162,7 @@ The following commands do not map one-to-one to the
 _async Commands
 ~~~~~~~~~~~~~~~
 
-    ``blmove_async``, ``brpop_async``, ``bzpopmax_async``,
+    ``blmove_async``, ``blpop_async``, ``brpop_async``, ``bzpopmax_async``,
     ``bzpopmin_async`` and ``format_async`` are equivalent to
     their non-async counterparts with the ``options`` :green:`Object` set to
     ``{async:true}``.
@@ -233,17 +233,23 @@ format
             * ``%s`` - the corresponding parameter is and will be sent as a
               :green:`String`
 
-            * ``%c`` - the corresponding parameter is a :green:`String`, the
-              first character of which will be sent as a single character.
-
-            * ``%i`` - the corresponding parameter is a :green:`Number` and
-              will be converted and sent as an integer.
-
             * ``%d``  the corresponding parameter is a :green:`Number` and
-              will be sent as a double float.
+              will be converted and sent as an integer.  ``%u`` sends it as
+              an unsigned integer, and ``%lld``/``%llu`` as a long long.
+
+            * ``%f``  the corresponding parameter is a :green:`Number` and
+              will be sent as a double float.  ``%lf`` and ``%ld`` are
+              equivalent.
 
             * ``%b``  the corresponding parameter is a :green:`Buffer` or a
-              :green:`String` and will be sent as buffer data.
+              :green:`String` and will be sent as buffer data.  ``%b``
+              consumes **two** parameters: the data, followed by a
+              :green:`Number` giving its length.
+
+            * ``%%``  a literal percent sign.
+
+          Note that there is no ``%c`` or ``%i`` code; using either results
+          in ``Invalid % code in sendRespCommand()``.
 
     Return Value:
         An :green:`Array`, the return values from the server.  Note that
@@ -713,9 +719,17 @@ Caveats
        which limits what can be stored (no :green:`Dates` or
        :green:`Functions`);
 
+    *  Because the values are CBOR encoded, a Proxy Object's Redis Hash must
+       not also be written with the ordinary hash commands (``hset``,
+       ``hmset``, etc.), nor read with them and expected to be meaningful.
+       Use one or the other for a given key;
+
     *  Proxy Objects are saved to the Redis Key specified when the object is
        created (i.e. ``new rcl.proxyObj(redisKeyName)``).  If the Redis Key
-       already exists and is not a Redis Hash, an error will be thrown.
+       already exists and is not a Redis Hash, an error will be thrown.  A key
+       that does not yet exist, or that already holds a Redis Hash, is
+       accepted -- attaching to an existing Hash is how a second script picks
+       up shared data;
 
     *  Any Proxy Object key that begins with ``_`` (underscore) will not be
        saved to the Redis Hash and will only exist locally.  The following
