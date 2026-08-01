@@ -2479,6 +2479,12 @@ Notes:
   surrounding ``LIKEV``'s per-row scoring state, e.g. vector-literal
   queries with no text.)
 
+  When the output feeds an LLM instead of a results page, swap the
+  snippet column for :ref:`excerpt() <sql-server-funcs:excerpt>` —
+  ``excerpt(doc, 2000, ?, v)`` — which returns the best-matching
+  chunks verbatim, in document order, instead of an ellipsized
+  display abstract.
+
 * An ``AND`` of the two predicates is a **filter**, not a fusion:
   "must match the keywords, ranked by vector similarity" (e.g. an
   exact product code plus semantic ordering).  Its ``$rank`` derives
@@ -2926,6 +2932,11 @@ How the pieces behave with chunked rows:
   text span of the winning chunk.  An empty ``query`` string gives a
   pure vector snippet; a real query merges keyword hits with the chunk
   span.  See :ref:`abstract <sql-server-funcs:abstract>`.
+* **excerpt()** — the retrieval (RAG) companion:
+  ``excerpt(doc, maxsize, query, v[, window])`` returns the document's
+  best-matching chunks *verbatim*, assembled in document order within
+  ``maxsize`` bytes — context for an LLM rather than a display
+  snippet.  See :ref:`excerpt <sql-server-funcs:excerpt>`.
 * **Companion scalars** —
   :ref:`chunkavg() <sql-server-funcs:chunkavg>` returns the document's
   single combined vector (identical to ``embed()`` of the same text)

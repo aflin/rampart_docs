@@ -2716,6 +2716,11 @@ depends on what the surrounding query evaluated.  (Only when the
 abstract query argument is empty does it fall back to the
 surrounding <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>’s per-row scoring state, e.g. vector-literal
 queries with no text.)</p>
+<p>When the output feeds an LLM instead of a results page, swap the
+snippet column for <a class="reference internal" href="sql-server-funcs.html#excerpt"><span class="std std-ref">excerpt()</span></a> —
+<code class="docutils literal notranslate"><span class="pre">excerpt(doc,</span> <span class="pre">2000,</span> <span class="pre">?,</span> <span class="pre">v)</span></code> — which returns the best-matching
+chunks verbatim, in document order, instead of an ellipsized
+display abstract.</p>
 </li>
 <li><p class="first">An <code class="docutils literal notranslate"><span class="pre">AND</span></code> of the two predicates is a <strong>filter</strong>, not a fusion:
 “must match the keywords, ranked by vector similarity” (e.g. an
@@ -3131,6 +3136,12 @@ contains <code class="docutils literal notranslate"><span class="pre">LIKEV</spa
 text span of the winning chunk.  An empty <code class="docutils literal notranslate"><span class="pre">query</span></code> string gives a
 pure vector snippet; a real query merges keyword hits with the chunk
 span.  See <a class="reference internal" href="sql-server-funcs.html#abstract"><span class="std std-ref">abstract</span></a>.</p>
+</li>
+<li><p class="first"><strong>excerpt()</strong> — the retrieval (RAG) companion:
+<code class="docutils literal notranslate"><span class="pre">excerpt(doc,</span> <span class="pre">maxsize,</span> <span class="pre">query,</span> <span class="pre">v[,</span> <span class="pre">window])</span></code> returns the document’s
+best-matching chunks <em>verbatim</em>, assembled in document order within
+<code class="docutils literal notranslate"><span class="pre">maxsize</span></code> bytes — context for an LLM rather than a display
+snippet.  See <a class="reference internal" href="sql-server-funcs.html#excerpt"><span class="std std-ref">excerpt</span></a>.</p>
 </li>
 <li><p class="first"><strong>Companion scalars</strong> —
 <a class="reference internal" href="sql-server-funcs.html#chunkavg"><span class="std std-ref">chunkavg()</span></a> returns the document’s

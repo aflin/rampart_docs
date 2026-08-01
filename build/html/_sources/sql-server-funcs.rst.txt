@@ -1537,6 +1537,80 @@ section.
 See also the Rampart JavaScript :ref:`rampart-sql:abstract()` function.
 
 
+excerpt
+"""""""
+
+Return the passages of a document most relevant to a query — the
+retrieval-side companion to ``abstract()``, sized for feeding an LLM
+(RAG) rather than for display.  The syntax is
+
+.. code-block:: sql
+
+       excerpt(text, maxsize, query, vecColumn[, window])
+
+``vecColumn`` names the row's *chunked* vector column
+(:ref:`chunkembed() <sql-server-funcs:chunkembed>`).  Every chunk is
+scored against the embedded ``query`` (the same scorer ``LIKEV`` uses;
+embedding the query is a cache hit when the surrounding query used the
+same string), and the best-scoring chunks are returned **verbatim**,
+assembled in *document order* within ``maxsize`` bytes.  Discontiguous
+passages are joined with a ``...`` line; chunks adjacent in the
+document (nothing but whitespace between their spans) merge into one
+contiguous passage.  A ``maxsize`` of 0 or less means no limit.
+
+The best chunk (plus its neighbors, see ``window``) is always
+included, truncated at a word boundary if it alone exceeds
+``maxsize``; further chunks are added best-first, only if they fit
+whole.  A bare number as the 5th argument sets ``window``; an options
+string sets any of the selection options (case-insensitive keys,
+underscores in keys ignored — ``kw_hit`` and ``kwhit`` are the same
+key):
+
+*   ``window`` (default 0) — each selected chunk brings this many
+    neighboring chunks per side along with it, favoring longer
+    contiguous context over covering more separate regions.
+
+*   ``kw_hit`` (default 0) — with ``kw_hit=1``, the chunk containing
+    the best *keyword* hit of ``query`` is also guaranteed a place
+    (budget permitting).  Semantic scoring can prefer a chunk that
+    discusses the topic over the one holding a literal fact — a
+    number, a name — that the query asks for; this pulls the literal
+    match in as well.  No effect when the query has no keyword hit in
+    the document.
+
+*   ``lead`` (default 0) — with ``lead=1``, the document's first chunk
+    is also guaranteed a place.  Useful for corpora whose opening
+    sentences define the subject (encyclopedia articles), grounding
+    the excerpt's mid-document passages.
+
+*   ``minsim`` (unset by default) — a score floor: chunks scoring
+    below it are never selected on score, even with budget to spare.
+    When nothing clears the floor the result is the **empty string** —
+    the signal that the document has no relevant chunk.  Guaranteed
+    picks (``kw_hit``, ``lead``) are exempt from the floor.
+
+.. code-block:: sql
+
+    excerpt(Doc, 2000, ?, Vec, 'window=1, kw_hit=1')
+
+Chunk byte spans are located exactly as in ``abstract()``'s vec form
+above: from the vector value's own header, with headerless values
+falling back to the loaded embedding model's chunker.  When chunks
+cannot be scored or located at all — no embedding engine, an empty
+``query``, a non-chunked value — the start of the document is returned
+instead.
+
+Works in any query shape, including the hybrid rank-fused ``LIKEP OR
+LIKEV`` statement, where rows found only by the keyword side still get
+semantically selected excerpts:
+
+.. code-block:: sql
+
+    SELECT Id, Title, excerpt(Doc, 2000, ?, Vec) context
+      FROM docs
+     WHERE Doc LIKEP ? OR Vec LIKEV ? ;
+
+
 text2mm
 """""""
 

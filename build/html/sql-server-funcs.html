@@ -136,6 +136,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#string-functions">String Functions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#abstract">abstract</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#excerpt">excerpt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#text2mm">text2mm</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#keywords">keywords</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#length">length</a></li>
@@ -1425,6 +1426,69 @@ contributed (abstract scores that row’s chunks itself).  Do not add an
 <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> to such a query — see the performance note in the hybrid
 section.</p>
 <p>See also the Rampart JavaScript <a class="reference internal" href="rampart-sql.html#abstract"><span class="std std-ref">abstract()</span></a> function.</p>
+</div>
+<div class="section" id="excerpt">
+<h3>excerpt<a class="headerlink" href="#excerpt" title="Permalink to this headline">¶</a></h3>
+<p>Return the passages of a document most relevant to a query — the
+retrieval-side companion to <code class="docutils literal notranslate"><span class="pre">abstract()</span></code>, sized for feeding an LLM
+(RAG) rather than for display.  The syntax is</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">excerpt</span><span class="p">(</span><span class="nb">text</span><span class="p">,</span> <span class="n">maxsize</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">vecColumn</span><span class="p">[,</span> <span class="n">window</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">vecColumn</span></code> names the row’s <em>chunked</em> vector column
+(<a class="reference internal" href="#chunkembed"><span class="std std-ref">chunkembed()</span></a>).  Every chunk is
+scored against the embedded <code class="docutils literal notranslate"><span class="pre">query</span></code> (the same scorer <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> uses;
+embedding the query is a cache hit when the surrounding query used the
+same string), and the best-scoring chunks are returned <strong>verbatim</strong>,
+assembled in <em>document order</em> within <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> bytes.  Discontiguous
+passages are joined with a <code class="docutils literal notranslate"><span class="pre">...</span></code> line; chunks adjacent in the
+document (nothing but whitespace between their spans) merge into one
+contiguous passage.  A <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> of 0 or less means no limit.</p>
+<p>The best chunk (plus its neighbors, see <code class="docutils literal notranslate"><span class="pre">window</span></code>) is always
+included, truncated at a word boundary if it alone exceeds
+<code class="docutils literal notranslate"><span class="pre">maxsize</span></code>; further chunks are added best-first, only if they fit
+whole.  A bare number as the 5th argument sets <code class="docutils literal notranslate"><span class="pre">window</span></code>; an options
+string sets any of the selection options (case-insensitive keys,
+underscores in keys ignored — <code class="docutils literal notranslate"><span class="pre">kw_hit</span></code> and <code class="docutils literal notranslate"><span class="pre">kwhit</span></code> are the same
+key):</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">window</span></code> (default 0) — each selected chunk brings this many
+neighboring chunks per side along with it, favoring longer
+contiguous context over covering more separate regions.</li>
+<li><code class="docutils literal notranslate"><span class="pre">kw_hit</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">kw_hit=1</span></code>, the chunk containing
+the best <em>keyword</em> hit of <code class="docutils literal notranslate"><span class="pre">query</span></code> is also guaranteed a place
+(budget permitting).  Semantic scoring can prefer a chunk that
+discusses the topic over the one holding a literal fact — a
+number, a name — that the query asks for; this pulls the literal
+match in as well.  No effect when the query has no keyword hit in
+the document.</li>
+<li><code class="docutils literal notranslate"><span class="pre">lead</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">lead=1</span></code>, the document’s first chunk
+is also guaranteed a place.  Useful for corpora whose opening
+sentences define the subject (encyclopedia articles), grounding
+the excerpt’s mid-document passages.</li>
+<li><code class="docutils literal notranslate"><span class="pre">minsim</span></code> (unset by default) — a score floor: chunks scoring
+below it are never selected on score, even with budget to spare.
+When nothing clears the floor the result is the <strong>empty string</strong> —
+the signal that the document has no relevant chunk.  Guaranteed
+picks (<code class="docutils literal notranslate"><span class="pre">kw_hit</span></code>, <code class="docutils literal notranslate"><span class="pre">lead</span></code>) are exempt from the floor.</li>
+</ul>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">excerpt</span><span class="p">(</span><span class="n">Doc</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="n">Vec</span><span class="p">,</span> <span class="s1">&#39;window=1, kw_hit=1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Chunk byte spans are located exactly as in <code class="docutils literal notranslate"><span class="pre">abstract()</span></code>’s vec form
+above: from the vector value’s own header, with headerless values
+falling back to the loaded embedding model’s chunker.  When chunks
+cannot be scored or located at all — no embedding engine, an empty
+<code class="docutils literal notranslate"><span class="pre">query</span></code>, a non-chunked value — the start of the document is returned
+instead.</p>
+<p>Works in any query shape, including the hybrid rank-fused <code class="docutils literal notranslate"><span class="pre">LIKEP</span> <span class="pre">OR</span>
+<span class="pre">LIKEV</span></code> statement, where rows found only by the keyword side still get
+semantically selected excerpts:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">Id</span><span class="p">,</span> <span class="n">Title</span><span class="p">,</span> <span class="n">excerpt</span><span class="p">(</span><span class="n">Doc</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="n">Vec</span><span class="p">)</span> <span class="n">context</span>
+  <span class="k">FROM</span> <span class="n">docs</span>
+ <span class="k">WHERE</span> <span class="n">Doc</span> <span class="n">LIKEP</span> <span class="o">?</span> <span class="k">OR</span> <span class="n">Vec</span> <span class="n">LIKEV</span> <span class="o">?</span> <span class="p">;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="text2mm">
 <h3>text2mm<a class="headerlink" href="#text2mm" title="Permalink to this headline">¶</a></h3>
