@@ -1036,9 +1036,11 @@ Example:
 		likepallmatch: true
 	});
 
-	/* an example with a return value */
+	/* an example with a return value.  addExp appends to the
+	   expression list: the default word expression stays, and code-ish
+	   tokens (emails, flags, identifiers) are additionally indexed. */
 	var lists = sql.set({
-		addExp: [ "[\\alnum\\x80-\\xff]+","[\\alnum\\x80-\\xff,']+"],
+		addExp: "[\\alnum\\$%@\\-_\\+]{2,99}",
 		addIndexTmp: ["/tmp","/var/tmp"],
 		listNoise: true,
 		listIndextemp: true,
@@ -1049,9 +1051,9 @@ Example:
 	   {
 	   	noiseList:        ["a","about",...,"you","your"],
 	   	indexTempList:    ["/tmp","/var/tmp"],
-	   	expressionsList:  ["\\alnum{2,99}", "[\\alnum\\x80-\xff]+", "[\\alnum\\x80-\xff,']+"]
+	   	expressionsList:  ["[\\uword]{2,99}", "[\\alnum\\$%@\\-_\\+]{2,99}"]
 	   }
-	*/		                        	
+	*/
 
 reset()
 '''''''
@@ -1751,9 +1753,10 @@ Word Expressions
 
 A Fulltext index is created by matching the definition of a "word"
 using `rex()`_ regular expressions.  As used above, with no extra
-settings, the default regular expression is ``\alnum{2,99}``.
-This will separate words in text much like the following JavaScript
-splits words into an array:
+settings, the default regular expression is ``[\uword]{2,99}``: two to
+ninety-nine Unicode letters, digits or combining marks.  For English
+text this separates words much like the following JavaScript splits
+words into an array:
 
 .. code-block:: javascript
 
@@ -1762,9 +1765,25 @@ splits words into an array:
     console.log(words);
     /* ["Remember","wherever","you","go","there","you","are"] */
 
-The default expression is sufficient for English text.  However,
-the word expression list must be altered in order to match the
-full UTF-8 character set. The list of word expressions can be
+The ``\uword`` class matches whole UTF-8 characters in any script, with
+the repetition counting characters rather than bytes, so the default is
+also correct for non-English text: Unicode white space, punctuation and
+invisible format characters (such as the zero-width non-joiner)
+separate words.
+
+.. note::
+   Word-level indexing works for every language that separates words
+   with spaces or punctuation — including Arabic, Persian, Hebrew,
+   Cyrillic- and Greek-script languages, and the Indic family.  Scripts
+   written *without* word separators — Chinese, Japanese, Thai, Lao,
+   Khmer, Burmese — are **not yet supported** at the word level: text
+   in those scripts indexes as one term per punctuation-bounded run, so
+   only exact runs (e.g. short titles) match.  Proper support requires
+   dictionary or n-gram segmentation.  For Korean (which does use
+   spaces), consider ``WITH WORDEXPRESSIONS ('[\uword]{1,99}')`` so
+   common single-syllable words are indexed.
+
+The list of word expressions can be
 altered using ``sql.set()`` and the :ref:`lstexp <sql-set:lstexp>`,
 :ref:`addexp <sql-set:addexp>` and :ref:`delexp <sql-set:delexp>` settings.
 
@@ -1774,10 +1793,10 @@ the ``CREATE INDEX`` and the ``WITH`` syntax:
 .. code-block:: sql
 
     CREATE FULLTEXT employees_Bio_text ON employees(Bio)
-    WITH WORDEXPRESSIONS ('[\alnum\x80-\xFF]{2,99}');
+    WITH WORDEXPRESSIONS ('[\uword]{1,99}');
 
-The above will match all UTF-8 encoded characters. It will exclude ASCII white space
-and punctuation.
+which in this example also indexes single-character words that the
+default's two-character minimum would skip.
 
 In some cases, there may be datasets where the matching of a limited amount
 of punctuation is desirable.
@@ -1801,7 +1820,7 @@ and "pthread_mutex_t") by using two expressions:
 .. code-block:: sql
 
     CREATE FULLTEXT cprogs_Snippits_text ON cprogs(Snippits)
-    WITH WORDEXPRESSIONS ( '[\alnum\x80-\xFF]{2,99}', '[_\alnum\x80-\xFF]{2,99}' );
+    WITH WORDEXPRESSIONS ( '[\uword]{1,99}', '[\uword_]{2,99}' );
 
 NOTE:
    Word expressions must be specified when the index is created.  New expressions
@@ -2832,6 +2851,30 @@ The settings below configure it, all documented in detail under
   ``chunkcoherence()`` — or a repeated ``LIKEV`` search string — on the
   *same text* is served from it, so the model runs once per distinct
   text.
+
+A couple of llama.cpp knobs that affect embedding throughput are *not*
+``sql.set`` properties: the SQL path loads the model through
+rampart-llamacpp without passing an options object, so they are set on
+that module instead.  The two worth knowing are the thread count used
+for the multi-token decodes that embedding performs, and whether a
+document's chunks are packed into a single decode:
+
+.. code-block:: javascript
+
+    require('rampart-llamacpp').embedDefaults({
+        threadsBatch: 8,       // else ggml uses 4, whatever the core count
+        batchChunks:  false    // default is auto: on for GPU, off for CPU
+    });
+
+    sql.set({llamaEmbed: '/models/bge-m3-FP16.gguf'});
+
+The order shown is required.  Models are cached by path, so once one is
+loaded, a later ``sql.set({llamaEmbed: ...})`` hands back the existing
+model and an ``embedDefaults()`` call made after that point silently
+does not apply to it.  Batching is worth turning off only to reproduce
+vectors from a build that predates it, or to A/B measure it — see
+:ref:`embedDefaults <rampart-langtools:embedDefaults>` for the full set
+and for what batching does and does not change.
 
 Once a model is loaded, :ref:`embed() <sql-server-funcs:embed>` produces a
 typed vec for use in SELECT projections, INSERT values, or on the

@@ -758,15 +758,16 @@ Texis to print a pretty meter to let you know the progress of your index creatio
 <p>When making a Fulltext index, often it is best to leave most settings as is.  The one exception
 is the <a class="reference internal" href="rampart-sql.html#rex"><span class="std std-ref">rex</span></a> expressions used to define what is a word.
 Often we want to make sure we include utf-8 encoded text.</p>
-<p>The default is <code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>, which is similar to doing <code class="docutils literal notranslate"><span class="pre">mydoc.match(/[a-zA-Z0-9]+/g)</span></code>.
-Since we are processing utf-8 text, and since we have names of places from all over the world,
-we had better accommodate bytes larger than <code class="docutils literal notranslate"><span class="pre">0x79</span></code>.</p>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">[\uword]{2,99}</span></code>: two to ninety-nine Unicode letters,
+digits or combining marks — whole utf-8 characters in any script.  That
+already handles our names of places from all over the world.  However
+some place names, notably in CJK scripts, are a single character, and
+the default’s two-character minimum would leave them out of the index.</p>
 <p>To change the expression used during Fulltext index creation, we can use
 <a class="reference internal" href="sql-set.html#delexp"><span class="std std-ref">delExp</span></a> and <a class="reference internal" href="sql-set.html#addexp"><span class="std std-ref">addExp</span></a>.  However
 as a shortcut, we can specify the expressions that will be used in the SQL
 statement itself by utilizing the <code class="docutils literal notranslate"><span class="pre">WITH</span></code> keyword:</p>
-<p><code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">WORDEXPRESSIONS</span> <span class="pre">('[\\alnum\\x80-\\xFF]{2,99}')</span></code></p>
-<p>That will find words consisting of 7-bit ascii letters and numbers, plus utf-8 multibyte characters as well.</p>
+<p><code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">WORDEXPRESSIONS</span> <span class="pre">('[\\uword]{1,99}')</span></code></p>
 <p>Now we also have a database that does not contain normal text.  It is worth
 thinking about where this might bite us when we perform a search.  Let’s
 look at the <a class="reference internal" href="sql-set.html#noiselist"><span class="std std-ref">list of noise words</span></a>.  The excluded
@@ -796,10 +797,10 @@ create a separate index on <code class="docutils literal notranslate"><span clas
 
     <span class="c1">// make compact index.  Sorting by population, not by likep rank.  See like3 search below.</span>
     <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index cities_place_ftx on cities(place)&quot;</span><span class="o">+</span>
-        <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
+        <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\uword]{1,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
 
     <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index cities_altNames_ftx on cities(alt_names)&quot;</span><span class="o">+</span>
-        <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
+        <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\uword]{1,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -962,10 +963,10 @@ needed.</p>
 
         <span class="c1">// make compact index.  Sorting by population, not by likep rank.  See like3 search below.</span>
         <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index cities_place_ftx on cities(place)&quot;</span><span class="o">+</span>
-            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
+            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\uword]{1,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
 
         <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index cities_altNames_ftx on cities(alt_names)&quot;</span><span class="o">+</span>
-            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
+            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\uword]{1,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
     <span class="p">}</span>
 
     <span class="kd">function</span> <span class="nx">drop_tmp_table</span><span class="p">()</span> <span class="p">{</span>
@@ -1656,10 +1657,10 @@ database when run from the command line as <code class="docutils literal notrans
 
         <span class="c1">// make compact index.  Sorting by population, not by likep rank.  See like3 search below.</span>
         <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index cities_place_ftx on cities(place)&quot;</span><span class="o">+</span>
-            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
+            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\uword]{1,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
 
         <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create fulltext index cities_altNames_ftx on cities(alt_names)&quot;</span><span class="o">+</span>
-            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
+            <span class="s2">&quot; WITH WORDEXPRESSIONS (&#39;[\\uword]{1,99}&#39;) INDEXMETER &#39;on&#39; WORDPOSITIONS &#39;off&#39;;&quot;</span><span class="p">);</span>
     <span class="p">}</span>
 
     <span class="kd">function</span> <span class="nx">drop_tmp_table</span><span class="p">()</span> <span class="p">{</span>

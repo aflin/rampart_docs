@@ -1221,8 +1221,9 @@ beyond SQLite's FTS.
 
     sql.exec("CREATE TABLE docs (title VARCHAR(128), body VARCHAR(8000))");
     sql.exec("INSERT INTO docs VALUES(?, ?)", ["My Title", "The full text..."]);
-    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) " +
-        "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
+    // the default word expression ([\uword]{2,99}) matches whole
+    // utf-8 characters in any script; no options needed
+    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)");
 
     var results = sql.exec(
         "SELECT title FROM docs WHERE body LIKEP 'full text search'",
@@ -1247,8 +1248,7 @@ or frequently updated tables, you should set up index maintenance.
 .. code-block:: javascript
 
     // Rebuild the index
-    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) " +
-        "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
+    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)");
 
     // Or optimize only if enough rows have changed
     sql.exec("ALTER INDEX docs_body_ftx OPTIMIZE HAVING COUNT(NewRows) > 1000");
@@ -1311,8 +1311,7 @@ searchable database:
     }
 
     // Create a full-text index
-    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) " +
-        "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
+    sql.exec("CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)");
 
     // Search
     var results = sql.exec(

@@ -560,7 +560,7 @@ and the indicies on them.</p>
     <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
         <span class="s2">&quot;create fulltext index pipages_text_ftx on pipages(text) &quot;</span> <span class="o">+</span>
         <span class="s2">&quot;WITH WORDEXPRESSIONS &quot;</span><span class="o">+</span>
-        <span class="s2">&quot;(&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;, &#39;[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=&#39;) &quot;</span><span class="o">+</span>
+        <span class="s2">&quot;(&#39;[\\uword]{2,99}&#39;, &#39;[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=&#39;) &quot;</span><span class="o">+</span>
         <span class="s2">&quot;INDEXMETER &#39;on&#39;&quot;</span><span class="p">);</span>
 
 <span class="p">}</span>
@@ -1460,7 +1460,7 @@ articles to be updated based on the <code class="docutils literal notranslate"><
     <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
         <span class="s2">&quot;create fulltext index pipages_text_ftx on pipages(text) &quot;</span> <span class="o">+</span>
         <span class="s2">&quot;WITH WORDEXPRESSIONS &quot;</span><span class="o">+</span>
-        <span class="s2">&quot;(&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;, &#39;[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=&#39;) &quot;</span><span class="o">+</span>
+        <span class="s2">&quot;(&#39;[\\uword]{2,99}&#39;, &#39;[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=&#39;) &quot;</span><span class="o">+</span>
         <span class="s2">&quot;INDEXMETER &#39;on&#39;&quot;</span><span class="p">);</span>
 
 <span class="p">}</span>
@@ -1621,7 +1621,7 @@ styling using Bootstrap:</p>
 <span class="c1">// we want &quot;pi 4&quot; query to match &quot;Check out the new pi 4.&quot;</span>
 <span class="c1">// so we set qminwordlen to 1, the shortest word in a query (normally 2).</span>
 <span class="c1">// We also set wordexpressions to:</span>
-<span class="c1">//      (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;, &#39;[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=&#39;)</span>
+<span class="c1">//      (&#39;[\\uword]{2,99}&#39;, &#39;[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=&#39;)</span>
 <span class="c1">// in the scraping script so that single digits will be indexed.</span>
 <span class="c1">// In another context, this might be counter productive as it polutes the index, but</span>
 <span class="c1">// here we have a small table and a greater need to match single digits.</span>

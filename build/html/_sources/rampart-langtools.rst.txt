@@ -267,7 +267,18 @@ initEmbed
 
        *  ``pooling`` - A :green:`String`, one of ``"none"``,
           ``"mean"``, ``"cls"``, ``"last"`` or ``"rank"``
-          (``--pooling`` in llama-server).  Default: ``"mean"``.
+          (``--pooling`` in llama-server).  Default: the model's own
+          declared pooling, read from its GGUF metadata, falling back
+          to ``"mean"`` only if the model declares none.
+
+          Most embedding models do declare one, and they disagree:
+          the ``bge-*`` family uses ``"cls"``, ``nomic-embed-text``
+          and ``all-MiniLM`` use ``"mean"``, ``Qwen3-Embedding`` uses
+          ``"last"``.  Setting this by hand is therefore usually a
+          mistake — it overrides what the model was trained with and
+          produces vectors unlike the model's intended output.
+          `modelInfo`_ reports what a given file declares, without
+          loading its weights.
 
        *  ``attention`` - A :green:`String`, ``"causal"`` or
           ``"non-causal"`` (``--attention``).
@@ -319,6 +330,13 @@ initEmbed
           (e.g. Thai) fall back to token windows.  Default ``false``:
           enabling it changes chunk boundaries, which tables built
           WITHOUT value headers depend on for snippet spans.
+
+       *  ``batchChunks`` / ``batchTokens`` - Per-handle overrides of
+          the process-wide chunk-batching defaults.  See
+          `embedDefaults`_ for what they control, what they are worth
+          on each backend, and why ``batchTokens`` should not simply
+          be raised.  Given here they apply to this handle only, and
+          take precedence over the ``embedDefaults`` values.
 
        The legacy option names ``nctx``, ``ubatch``, ``nthreads``
        and ``nthreads_batch`` are accepted as aliases for ``nCtx``,
@@ -898,6 +916,119 @@ Common Model and Context Options
          - ``--yarn-orig-ctx``
          - :green:`Number`.
 
+embedDefaults
+~~~~~~~~~~~~~
+
+    The ``embedDefaults`` function gets and sets process-global
+    defaults for embedding.  They seed `initEmbed`_'s options — an
+    option given on the ``initEmbed`` call itself still wins — and
+    they are the **only** way to configure embedding done inside
+    :doc:`rampart-sql <rampart-sql>` (via
+    :ref:`sql.set({llamaEmbed:…}) <sql-set:llamaEmbed>`), which loads
+    the model through this module but takes no options object of its
+    own.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+
+        var settings = llamacpp.embedDefaults([options]);
+
+    Where ``options`` is an optional :green:`Object` with any of the
+    following properties.  Omitting the argument entirely returns the
+    current settings without changing them.
+
+    *  ``batchChunks`` - A :green:`Boolean`, :green:`Number` or
+       :green:`null`.  Controls how many of a document's chunks are
+       packed into a single decode.  ``null`` (the default) means
+       *auto*: batch on a GPU backend, one chunk per decode on CPU.
+       ``true`` packs as many as the context allows, ``false`` packs
+       one at a time, and a :green:`Number` caps the sequences per
+       decode.
+
+       **Experimental.**  Chunk batching is under active development.
+       It has been verified for correctness on CUDA and Metal, but its
+       performance is hardware-dependent and it is untested on some
+       backends, so the defaults may change.  ``false`` always gives
+       the unbatched behavior exactly.
+
+       Auto is the recommended setting.  Batching is measurably
+       faster on a GPU backend and no faster at all on CPU, and it
+       perturbs the resulting vectors slightly — a larger batch
+       selects different matmul kernels, which moves each element on
+       the order of ``1e-3`` (cosine similarity ~0.9999 against the
+       unbatched vector).  It never changes how text is chunked: the
+       chunk count and byte offsets are identical either way.
+
+    *  ``batchTokens`` - A :green:`Number`, the soft cap on total
+       tokens in one packed decode.  Default ``512``.
+
+       Raising it is **not** a way to go faster, and usually does the
+       opposite: a packed batch's attention cost grows quadratically
+       with its token count, while the per-decode overhead batching
+       saves grows only linearly.  Past a few hundred tokens the
+       quadratic wins, and batching can end up slower than not
+       batching at all.  ``512`` is a tuned value — re-measure before
+       changing it.
+
+       A chunk longer than the cap is never split; it goes through on
+       its own.
+
+    *  ``threads`` - A :green:`Number`, the per-token decode thread
+       count (``n_threads``).  Default ``1``.
+
+    *  ``threadsBatch`` - A :green:`Number`, the multi-token decode
+       thread count (``n_threads_batch``).  This is the one that
+       matters for embedding, where every decode is multi-token.
+
+       Default ``-1``, which hands the choice to ggml — and ggml
+       chooses **4 regardless of the machine's core count**.  On
+       anything larger than a 4-core box, set this explicitly.
+
+    Return Value:
+        An :green:`Object` with the settings in effect *after*
+        applying any changes: ``batchChunks``, ``batchTokens``,
+        ``threads``, ``threadsBatch``, plus ``gpuInUse``, a
+        :green:`Boolean` reporting whether a GPU backend is
+        registered in this process — i.e. which way ``batchChunks:
+        null`` will resolve.  ggml registers its GPU backend when the
+        first model loads, so ``gpuInUse`` reads ``false`` on a GPU
+        machine until then; the ``auto`` decision itself is always
+        made after a load and is unaffected.
+
+    Note:
+        **Call this before the model is loaded.**  Models are cached
+        by path: the second and later ``initEmbed`` or
+        ``sql.set({llamaEmbed: …})`` for the same file hand back the
+        already-loaded model unchanged, and an existing context keeps
+        the thread counts it was built with.  An ``embedDefaults``
+        call made afterwards will silently not apply to that model.
+
+    Example — overriding the batching default on the SQL path:
+
+    .. code-block:: javascript
+
+        var Sql = require("rampart-sql");
+
+        /* BEFORE sql.set({llamaEmbed: ...}), and before any other
+           code loads the same model.                              */
+        require("rampart-llamacpp").embedDefaults({
+            batchChunks:  false,   /* one chunk per decode        */
+            threadsBatch: 8        /* else ggml uses 4, always    */
+        });
+
+        var sql = new Sql("/path/to/db");
+        sql.set({llamaEmbed: "/models/bge-m3-FP16.gguf"});
+
+        sql.exec("insert into docs values(?, chunkembed(?))", [id, text]);
+
+    Reasons to turn batching off include reproducing vectors
+    generated by a build that predates it, and A/B measuring the
+    difference on a particular machine.  For ordinary use, leave it
+    at auto.
+
 getLog
 ~~~~~~
 
@@ -966,6 +1097,9 @@ Environment Variables
 
 The rampart-onnx module
 -----------------------
+
+**Experimental.**  rampart-onnx is new in this release.  It is under
+active development and its API may change.
 
 Loading the module is a simple matter of using the ``require()``
 function:
@@ -1787,6 +1921,9 @@ Converting a model to float16 or int8
 The rampart-clip module
 -----------------------
 
+**Experimental.**  rampart-clip is new in this release.  It is under
+active development and its API may change.
+
 Loading the module is a simple matter of using the ``require()``
 function:
 
@@ -2549,6 +2686,9 @@ decode
 
 The rampart-models module
 -------------------------
+
+**Experimental.**  rampart-models is new in this release.  It is under
+active development and its API may change.
 
 Loading the module is a simple matter of using the ``require()``
 function:

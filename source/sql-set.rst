@@ -644,7 +644,7 @@ indexMinSublen
     For binary-index searchable terms, ``indexMinSublen`` is tested
     against the minimum prefix length; e.g. for query “``test.#@``” the
     length tested is 4 (assuming default index word expression of
-    “``\alnum{2,99}``”). For linear-dictionary index searches, the
+    “``[\uword]{2,99}``”). For linear-dictionary index searches, the
     length tested is the total of all non-wildcard characters; e.g. for
     query “``ab*cd*ef``” the length tested is 6.
 
@@ -1505,6 +1505,21 @@ llamaEmbed
     No default — ``embed()`` raises a runtime error if no model has
     been loaded.
 
+    A few llama.cpp embedding knobs have no ``sql.set`` equivalent,
+    because this path loads the model without an options object —
+    notably the decode thread count (``threadsBatch``, which ggml
+    otherwise fixes at 4 no matter how many cores the machine has) and
+    chunk batching (``batchChunks``).  Set them on the module, and set
+    them **before** this property, since a model already loaded is
+    handed back unchanged and will not pick them up:
+
+    .. code-block:: javascript
+
+        require('rampart-llamacpp').embedDefaults({threadsBatch: 8});
+        sql.set({llamaEmbed: '/models/bge-m3-FP16.gguf'});
+
+    See :ref:`embedDefaults <rampart-langtools:embedDefaults>`.
+
 
 llamaEmbedPerThread
 """""""""""""""""""
@@ -1820,7 +1835,7 @@ addExp
     Metamorph index.  This is useful if there are non-English words to be
     searched for, such as part numbers.  When an index is first created, the
     expressions used are stored with it so they will be updated properly.
-    The default expression is ``\alnum{2,99}``.  **Note:** Only the
+    The default expression is ``[\uword]{2,99}``.  **Note:** Only the
     expressions set when the index is initially created (i.e.  the first
     CREATE METAMORPH ...  statement – later statements are index updates)
     are saved.  Expressions set during an update (issuance of “create
@@ -1850,14 +1865,14 @@ lstExp
 
     .. code-block:: javascript
 
-       /* delete the default "\alnum{2,99}" expression,
+       /* delete the default "[\uword]{2,99}" expression,
           add two expressions and list.                  */
 
        var lists = sql.set({
           deleteExpressions: 0,              // delete the default at pos 0
           addExpressions: [
-             "[\\alnum\\x80-\\xff]+",        // letters and numbers
-             "[\\alnum\\$\\%\\@\\-\\_\\+]+"  // letters, numbers and additional chars
+             "[\\uword]+",                   // words in any script
+             "[\\alnum\\$\\%\\@\\-\\_\\+]+"  // code-ish tokens (emails, flags)
           ],
           listExpressions: true
        });
@@ -1867,7 +1882,7 @@ lstExp
        /* expected output
        {
           "expressionsList": [
-             "[\\alnum\\x80-\\xff]+",
+             "[\\uword]+",
              "[\\alnum\\$\\%\\@\\-\\_\\+]+"
           ]
        }

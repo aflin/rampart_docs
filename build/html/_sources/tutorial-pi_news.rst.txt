@@ -374,7 +374,7 @@ and the indicies on them.
         sql.exec(
             "create fulltext index pipages_text_ftx on pipages(text) " +
             "WITH WORDEXPRESSIONS "+
-            "('[\\alnum\\x80-\\xFF]{2,99}', '[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=') "+
+            "('[\\uword]{2,99}', '[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=') "+
             "INDEXMETER 'on'");
 
     }
@@ -1297,7 +1297,7 @@ Putting everything above together, we end up with this script:
         sql.exec(
             "create fulltext index pipages_text_ftx on pipages(text) " +
             "WITH WORDEXPRESSIONS "+
-            "('[\\alnum\\x80-\\xFF]{2,99}', '[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=') "+
+            "('[\\uword]{2,99}', '[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=') "+
             "INDEXMETER 'on'");
 
     }
@@ -1459,7 +1459,7 @@ styling using Bootstrap:
     // we want "pi 4" query to match "Check out the new pi 4."
     // so we set qminwordlen to 1, the shortest word in a query (normally 2).
     // We also set wordexpressions to:
-    //      ('[\\alnum\\x80-\\xFF]{2,99}', '[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=')
+    //      ('[\\uword]{2,99}', '[\\space\\,]\\P=\\digit+\\F[\\space,\\.]=')
     // in the scraping script so that single digits will be indexed.
     // In another context, this might be counter productive as it polutes the index, but
     // here we have a small table and a greater need to match single digits. 

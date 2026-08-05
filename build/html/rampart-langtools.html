@@ -132,6 +132,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#embeddefaults">embedDefaults</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getlog">getLog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resetlog">resetLog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
@@ -520,13 +521,25 @@ embedding model.</p>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting all of
 the settings in <a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a> below,
 plus the following embedding-specific options:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">pooling</span></code> - A <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>,
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">pooling</span></code> - A <span class="green">String</span>, one of <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cls&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;rank&quot;</span></code>
-(<code class="docutils literal notranslate"><span class="pre">--pooling</span></code> in llama-server).  Default: <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">attention</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;causal&quot;</span></code> or
-<code class="docutils literal notranslate"><span class="pre">&quot;non-causal&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">--attention</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">split</span></code> - A <span class="green">String</span> or <span class="green">Function</span>.
+(<code class="docutils literal notranslate"><span class="pre">--pooling</span></code> in llama-server).  Default: the model’s own
+declared pooling, read from its GGUF metadata, falling back
+to <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code> only if the model declares none.</p>
+<p>Most embedding models do declare one, and they disagree:
+the <code class="docutils literal notranslate"><span class="pre">bge-*</span></code> family uses <code class="docutils literal notranslate"><span class="pre">&quot;cls&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">nomic-embed-text</span></code>
+and <code class="docutils literal notranslate"><span class="pre">all-MiniLM</span></code> use <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">Qwen3-Embedding</span></code> uses
+<code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code>.  Setting this by hand is therefore usually a
+mistake — it overrides what the model was trained with and
+produces vectors unlike the model’s intended output.
+<a class="reference internal" href="#modelinfo">modelInfo</a> reports what a given file declares, without
+loading its weights.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">attention</span></code> - A <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">&quot;causal&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;non-causal&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">--attention</span></code>).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">split</span></code> - A <span class="green">String</span> or <span class="green">Function</span>.
 <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default) chunks long text on its structure —
 paragraphs, merged or packed as configured below;
 <code class="docutils literal notranslate"><span class="pre">&quot;window&quot;</span></code> uses plain token windows.  A <span class="green">Function</span>
@@ -548,15 +561,18 @@ built-in chunker, so custom splitters are for JS-side
 pipelines.
 (The built-in chunker is the same as <a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a>’s —
 the two modules share it, so identical options produce
-identical chunk boundaries for the same tokenizer.)</li>
-<li><code class="docutils literal notranslate"><span class="pre">minTokens</span></code> - A <span class="green">Number</span>, the paragraph-fragment
+identical chunk boundaries for the same tokenizer.)</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">minTokens</span></code> - A <span class="green">Number</span>, the paragraph-fragment
 floor: shorter paragraphs are merged with a neighbor.
-<code class="docutils literal notranslate"><span class="pre">-1</span></code> disables merging.</li>
-<li><code class="docutils literal notranslate"><span class="pre">packParagraphs</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> disables merging.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">packParagraphs</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>,
 consecutive paragraphs are packed together up to the token
 window (fewer, fuller chunks) instead of one vector per
-paragraph.</li>
-<li><code class="docutils literal notranslate"><span class="pre">sentenceSplit</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, an
+paragraph.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">sentenceSplit</span></code> - A <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, an
 oversized paragraph (or structureless text) is split at
 <strong>sentence boundaries</strong> and the sentences greedily packed
 to the token window, instead of being cut at raw token
@@ -569,7 +585,15 @@ tiny trailing fragment (so a false boundary after “Mr.”
 can’t take a cut).  Languages without sentence punctuation
 (e.g. Thai) fall back to token windows.  Default <code class="docutils literal notranslate"><span class="pre">false</span></code>:
 enabling it changes chunk boundaries, which tables built
-WITHOUT value headers depend on for snippet spans.</li>
+WITHOUT value headers depend on for snippet spans.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">batchChunks</span></code> / <code class="docutils literal notranslate"><span class="pre">batchTokens</span></code> - Per-handle overrides of
+the process-wide chunk-batching defaults.  See
+<a class="reference internal" href="#embeddefaults">embedDefaults</a> for what they control, what they are worth
+on each backend, and why <code class="docutils literal notranslate"><span class="pre">batchTokens</span></code> should not simply
+be raised.  Given here they apply to this handle only, and
+take precedence over the <code class="docutils literal notranslate"><span class="pre">embedDefaults</span></code> values.</p>
+</li>
 </ul>
 <p>The legacy option names <code class="docutils literal notranslate"><span class="pre">nctx</span></code>, <code class="docutils literal notranslate"><span class="pre">ubatch</span></code>, <code class="docutils literal notranslate"><span class="pre">nthreads</span></code>
 and <code class="docutils literal notranslate"><span class="pre">nthreads_batch</span></code> are accepted as aliases for <code class="docutils literal notranslate"><span class="pre">nCtx</span></code>,
@@ -1147,6 +1171,111 @@ or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;
 </table>
 </div></blockquote>
 </div>
+<div class="section" id="embeddefaults">
+<h3>embedDefaults<a class="headerlink" href="#embeddefaults" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The <code class="docutils literal notranslate"><span class="pre">embedDefaults</span></code> function gets and sets process-global
+defaults for embedding.  They seed <a class="reference internal" href="#initembed">initEmbed</a>’s options — an
+option given on the <code class="docutils literal notranslate"><span class="pre">initEmbed</span></code> call itself still wins — and
+they are the <strong>only</strong> way to configure embedding done inside
+<a class="reference internal" href="rampart-sql.html"><span class="doc">rampart-sql</span></a> (via
+<a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">sql.set({llamaEmbed:…})</span></a>), which loads
+the model through this module but takes no options object of its
+own.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">settings</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">embedDefaults</span><span class="p">([</span><span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> with any of the
+following properties.  Omitting the argument entirely returns the
+current settings without changing them.</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">batchChunks</span></code> - A <span class="green">Boolean</span>, <span class="green">Number</span> or
+<span class="green">null</span>.  Controls how many of a document’s chunks are
+packed into a single decode.  <code class="docutils literal notranslate"><span class="pre">null</span></code> (the default) means
+<em>auto</em>: batch on a GPU backend, one chunk per decode on CPU.
+<code class="docutils literal notranslate"><span class="pre">true</span></code> packs as many as the context allows, <code class="docutils literal notranslate"><span class="pre">false</span></code> packs
+one at a time, and a <span class="green">Number</span> caps the sequences per
+decode.</p>
+<p><strong>Experimental.</strong>  Chunk batching is under active development.
+It has been verified for correctness on CUDA and Metal, but its
+performance is hardware-dependent and it is untested on some
+backends, so the defaults may change.  <code class="docutils literal notranslate"><span class="pre">false</span></code> always gives
+the unbatched behavior exactly.</p>
+<p>Auto is the recommended setting.  Batching is measurably
+faster on a GPU backend and no faster at all on CPU, and it
+perturbs the resulting vectors slightly — a larger batch
+selects different matmul kernels, which moves each element on
+the order of <code class="docutils literal notranslate"><span class="pre">1e-3</span></code> (cosine similarity ~0.9999 against the
+unbatched vector).  It never changes how text is chunked: the
+chunk count and byte offsets are identical either way.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">batchTokens</span></code> - A <span class="green">Number</span>, the soft cap on total
+tokens in one packed decode.  Default <code class="docutils literal notranslate"><span class="pre">512</span></code>.</p>
+<p>Raising it is <strong>not</strong> a way to go faster, and usually does the
+opposite: a packed batch’s attention cost grows quadratically
+with its token count, while the per-decode overhead batching
+saves grows only linearly.  Past a few hundred tokens the
+quadratic wins, and batching can end up slower than not
+batching at all.  <code class="docutils literal notranslate"><span class="pre">512</span></code> is a tuned value — re-measure before
+changing it.</p>
+<p>A chunk longer than the cap is never split; it goes through on
+its own.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">threads</span></code> - A <span class="green">Number</span>, the per-token decode thread
+count (<code class="docutils literal notranslate"><span class="pre">n_threads</span></code>).  Default <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">threadsBatch</span></code> - A <span class="green">Number</span>, the multi-token decode
+thread count (<code class="docutils literal notranslate"><span class="pre">n_threads_batch</span></code>).  This is the one that
+matters for embedding, where every decode is multi-token.</p>
+<p>Default <code class="docutils literal notranslate"><span class="pre">-1</span></code>, which hands the choice to ggml — and ggml
+chooses <strong>4 regardless of the machine’s core count</strong>.  On
+anything larger than a 4-core box, set this explicitly.</p>
+</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with the settings in effect <em>after</em>
+applying any changes: <code class="docutils literal notranslate"><span class="pre">batchChunks</span></code>, <code class="docutils literal notranslate"><span class="pre">batchTokens</span></code>,
+<code class="docutils literal notranslate"><span class="pre">threads</span></code>, <code class="docutils literal notranslate"><span class="pre">threadsBatch</span></code>, plus <code class="docutils literal notranslate"><span class="pre">gpuInUse</span></code>, a
+<span class="green">Boolean</span> reporting whether a GPU backend is
+registered in this process — i.e. which way <code class="docutils literal notranslate"><span class="pre">batchChunks:</span>
+<span class="pre">null</span></code> will resolve.  ggml registers its GPU backend when the
+first model loads, so <code class="docutils literal notranslate"><span class="pre">gpuInUse</span></code> reads <code class="docutils literal notranslate"><span class="pre">false</span></code> on a GPU
+machine until then; the <code class="docutils literal notranslate"><span class="pre">auto</span></code> decision itself is always
+made after a load and is unaffected.</dd>
+<dt>Note:</dt>
+<dd><strong>Call this before the model is loaded.</strong>  Models are cached
+by path: the second and later <code class="docutils literal notranslate"><span class="pre">initEmbed</span></code> or
+<code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">…})</span></code> for the same file hand back the
+already-loaded model unchanged, and an existing context keeps
+the thread counts it was built with.  An <code class="docutils literal notranslate"><span class="pre">embedDefaults</span></code>
+call made afterwards will silently not apply to that model.</dd>
+</dl>
+<p>Example — overriding the batching default on the SQL path:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="cm">/* BEFORE sql.set({llamaEmbed: ...}), and before any other</span>
+<span class="cm">   code loads the same model.                              */</span>
+<span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">).</span><span class="nx">embedDefaults</span><span class="p">({</span>
+    <span class="nx">batchChunks</span><span class="o">:</span>  <span class="kc">false</span><span class="p">,</span>   <span class="cm">/* one chunk per decode        */</span>
+    <span class="nx">threadsBatch</span><span class="o">:</span> <span class="mi">8</span>        <span class="cm">/* else ggml uses 4, always    */</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">(</span><span class="s2">&quot;/path/to/db&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s2">&quot;/models/bge-m3-FP16.gguf&quot;</span><span class="p">});</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into docs values(?, chunkembed(?))&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class="nx">text</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Reasons to turn batching off include reproducing vectors
+generated by a build that predates it, and A/B measuring the
+difference on a particular machine.  For ordinary use, leave it
+at auto.</p>
+</div></blockquote>
+</div>
 <div class="section" id="getlog">
 <h3>getLog<a class="headerlink" href="#getlog" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -1216,6 +1345,8 @@ feature (a marginal performance optimization) enabled.</li>
 </div>
 <div class="section" id="the-rampart-onnx-module">
 <h2>The rampart-onnx module<a class="headerlink" href="#the-rampart-onnx-module" title="Permalink to this headline">¶</a></h2>
+<p><strong>Experimental.</strong>  rampart-onnx is new in this release.  It is under
+active development and its API may change.</p>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
 function:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">onnx</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-onnx&quot;</span><span class="p">);</span>
@@ -1977,6 +2108,8 @@ sidecar file (<code class="docutils literal notranslate"><span class="pre">model
 </div>
 <div class="section" id="the-rampart-clip-module">
 <h2>The rampart-clip module<a class="headerlink" href="#the-rampart-clip-module" title="Permalink to this headline">¶</a></h2>
+<p><strong>Experimental.</strong>  rampart-clip is new in this release.  It is under
+active development and its API may change.</p>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
 function:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">clip</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-clip&quot;</span><span class="p">);</span>
@@ -2683,6 +2816,8 @@ space-separated <span class="green">String</span> of pieces, as produced by
 </div>
 <div class="section" id="the-rampart-models-module">
 <h2>The rampart-models module<a class="headerlink" href="#the-rampart-models-module" title="Permalink to this headline">¶</a></h2>
+<p><strong>Experimental.</strong>  rampart-models is new in this release.  It is under
+active development and its API may change.</p>
 <p>Loading the module is a simple matter of using the <code class="docutils literal notranslate"><span class="pre">require()</span></code>
 function:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>

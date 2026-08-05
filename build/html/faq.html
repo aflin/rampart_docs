@@ -1353,8 +1353,9 @@ STRLST, VARBYTE, INDIRECT, GEOCODE</td>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE TABLE docs (title VARCHAR(128), body VARCHAR(8000))&quot;</span><span class="p">);</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;INSERT INTO docs VALUES(?, ?)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;My Title&quot;</span><span class="p">,</span> <span class="s2">&quot;The full text...&quot;</span><span class="p">]);</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) &quot;</span> <span class="o">+</span>
-    <span class="s2">&quot;WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;)&quot;</span><span class="p">);</span>
+<span class="c1">// the default word expression ([\uword]{2,99}) matches whole</span>
+<span class="c1">// utf-8 characters in any script; no options needed</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
     <span class="s2">&quot;SELECT title FROM docs WHERE body LIKEP &#39;full text search&#39;&quot;</span><span class="p">,</span>
@@ -1374,8 +1375,7 @@ unindexed rows grows, the linear scan portion becomes slower.  For large
 or frequently updated tables, you should set up index maintenance.</p>
 <p><strong>Manual update</strong> — rebuild or optimize the index when convenient:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Rebuild the index</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) &quot;</span> <span class="o">+</span>
-    <span class="s2">&quot;WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;)&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)&quot;</span><span class="p">);</span>
 
 <span class="c1">// Or optimize only if enough rows have changed</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;ALTER INDEX docs_body_ftx OPTIMIZE HAVING COUNT(NewRows) &gt; 1000&quot;</span><span class="p">);</span>
@@ -1429,8 +1429,7 @@ searchable database:</p>
 <span class="p">}</span>
 
 <span class="c1">// Create a full-text index</span>
-<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body) &quot;</span> <span class="o">+</span>
-    <span class="s2">&quot;WITH WORDEXPRESSIONS (&#39;[\\alnum\\x80-\\xFF]{2,99}&#39;)&quot;</span><span class="p">);</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;CREATE FULLTEXT INDEX docs_body_ftx ON docs(body)&quot;</span><span class="p">);</span>
 
 <span class="c1">// Search</span>
 <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>

@@ -1270,9 +1270,11 @@ returned with corresponding keys <code class="docutils literal notranslate"><spa
         <span class="nx">likepallmatch</span><span class="o">:</span> <span class="kc">true</span>
 <span class="p">});</span>
 
-<span class="cm">/* an example with a return value */</span>
+<span class="cm">/* an example with a return value.  addExp appends to the</span>
+<span class="cm">   expression list: the default word expression stays, and code-ish</span>
+<span class="cm">   tokens (emails, flags, identifiers) are additionally indexed. */</span>
 <span class="kd">var</span> <span class="nx">lists</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
-        <span class="nx">addExp</span><span class="o">:</span> <span class="p">[</span> <span class="s2">&quot;[\\alnum\\x80-\\xff]+&quot;</span><span class="p">,</span><span class="s2">&quot;[\\alnum\\x80-\\xff,&#39;]+&quot;</span><span class="p">],</span>
+        <span class="nx">addExp</span><span class="o">:</span> <span class="s2">&quot;[\\alnum\\$%@\\-_\\+]{2,99}&quot;</span><span class="p">,</span>
         <span class="nx">addIndexTmp</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;/tmp&quot;</span><span class="p">,</span><span class="s2">&quot;/var/tmp&quot;</span><span class="p">],</span>
         <span class="nx">listNoise</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
         <span class="nx">listIndextemp</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
@@ -1283,7 +1285,7 @@ returned with corresponding keys <code class="docutils literal notranslate"><spa
 <span class="cm">   {</span>
 <span class="cm">        noiseList:        [&quot;a&quot;,&quot;about&quot;,...,&quot;you&quot;,&quot;your&quot;],</span>
 <span class="cm">        indexTempList:    [&quot;/tmp&quot;,&quot;/var/tmp&quot;],</span>
-<span class="cm">        expressionsList:  [&quot;\\alnum{2,99}&quot;, &quot;[\\alnum\\x80-\xff]+&quot;, &quot;[\\alnum\\x80-\xff,&#39;]+&quot;]</span>
+<span class="cm">        expressionsList:  [&quot;[\\uword]{2,99}&quot;, &quot;[\\alnum\\$%@\\-_\\+]{2,99}&quot;]</span>
 <span class="cm">   }</span>
 <span class="cm">*/</span>
 </pre></div>
@@ -2005,28 +2007,45 @@ be optimized by using the <em>exact</em> same command used to create the index a
 <h3>Word Expressions<a class="headerlink" href="#word-expressions" title="Permalink to this headline">¶</a></h3>
 <p>A Fulltext index is created by matching the definition of a “word”
 using <a class="reference internal" href="#rex">rex()</a> regular expressions.  As used above, with no extra
-settings, the default regular expression is <code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>.
-This will separate words in text much like the following JavaScript
-splits words into an array:</p>
+settings, the default regular expression is <code class="docutils literal notranslate"><span class="pre">[\uword]{2,99}</span></code>: two to
+ninety-nine Unicode letters, digits or combining marks.  For English
+text this separates words much like the following JavaScript splits
+words into an array:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="s2">&quot;Remember, wherever you go, there you are&quot;</span>
 <span class="kd">var</span> <span class="nx">words</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/[a-zA-Z0-9]{2,99}/g</span><span class="p">);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">words</span><span class="p">);</span>
 <span class="cm">/* [&quot;Remember&quot;,&quot;wherever&quot;,&quot;you&quot;,&quot;go&quot;,&quot;there&quot;,&quot;you&quot;,&quot;are&quot;] */</span>
 </pre></div>
 </div>
-<p>The default expression is sufficient for English text.  However,
-the word expression list must be altered in order to match the
-full UTF-8 character set. The list of word expressions can be
+<p>The <code class="docutils literal notranslate"><span class="pre">\uword</span></code> class matches whole UTF-8 characters in any script, with
+the repetition counting characters rather than bytes, so the default is
+also correct for non-English text: Unicode white space, punctuation and
+invisible format characters (such as the zero-width non-joiner)
+separate words.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Word-level indexing works for every language that separates words
+with spaces or punctuation — including Arabic, Persian, Hebrew,
+Cyrillic- and Greek-script languages, and the Indic family.  Scripts
+written <em>without</em> word separators — Chinese, Japanese, Thai, Lao,
+Khmer, Burmese — are <strong>not yet supported</strong> at the word level: text
+in those scripts indexes as one term per punctuation-bounded run, so
+only exact runs (e.g. short titles) match.  Proper support requires
+dictionary or n-gram segmentation.  For Korean (which does use
+spaces), consider <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">WORDEXPRESSIONS</span> <span class="pre">('[\uword]{1,99}')</span></code> so
+common single-syllable words are indexed.</p>
+</div>
+<p>The list of word expressions can be
 altered using <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> and the <a class="reference internal" href="sql-set.html#lstexp"><span class="std std-ref">lstexp</span></a>,
 <a class="reference internal" href="sql-set.html#addexp"><span class="std std-ref">addexp</span></a> and <a class="reference internal" href="sql-set.html#delexp"><span class="std std-ref">delexp</span></a> settings.</p>
 <p>Alternatively, the expression list can also be set for a single SQL statement using
 the <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">INDEX</span></code> and the <code class="docutils literal notranslate"><span class="pre">WITH</span></code> syntax:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">FULLTEXT</span> <span class="n">employees_Bio_text</span> <span class="k">ON</span> <span class="n">employees</span><span class="p">(</span><span class="n">Bio</span><span class="p">)</span>
-<span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span><span class="s1">&#39;[\alnum\x80-\xFF]{2,99}&#39;</span><span class="p">);</span>
+<span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span><span class="s1">&#39;[\uword]{1,99}&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The above will match all UTF-8 encoded characters. It will exclude ASCII white space
-and punctuation.</p>
+<p>which in this example also indexes single-character words that the
+default’s two-character minimum would skip.</p>
 <p>In some cases, there may be datasets where the matching of a limited amount
 of punctuation is desirable.</p>
 <p>Consider the following small snippet of a C Program that might be cataloged in
@@ -2042,7 +2061,7 @@ to be added to the expression.  Further, for maximum flexibility, the index can
 contain both versions to index all desired permutations (i.e., “pthread”, “mutex”
 and “pthread_mutex_t”) by using two expressions:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">FULLTEXT</span> <span class="n">cprogs_Snippits_text</span> <span class="k">ON</span> <span class="n">cprogs</span><span class="p">(</span><span class="n">Snippits</span><span class="p">)</span>
-<span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span> <span class="s1">&#39;[\alnum\x80-\xFF]{2,99}&#39;</span><span class="p">,</span> <span class="s1">&#39;[_\alnum\x80-\xFF]{2,99}&#39;</span> <span class="p">);</span>
+<span class="k">WITH</span> <span class="n">WORDEXPRESSIONS</span> <span class="p">(</span> <span class="s1">&#39;[\uword]{1,99}&#39;</span><span class="p">,</span> <span class="s1">&#39;[\uword_]{2,99}&#39;</span> <span class="p">);</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -3040,6 +3059,27 @@ disables).  Any of <code class="docutils literal notranslate"><span class="pre">
 <em>same text</em> is served from it, so the model runs once per distinct
 text.</li>
 </ul>
+<p>A couple of llama.cpp knobs that affect embedding throughput are <em>not</em>
+<code class="docutils literal notranslate"><span class="pre">sql.set</span></code> properties: the SQL path loads the model through
+rampart-llamacpp without passing an options object, so they are set on
+that module instead.  The two worth knowing are the thread count used
+for the multi-token decodes that embedding performs, and whether a
+document’s chunks are packed into a single decode:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-llamacpp&#39;</span><span class="p">).</span><span class="nx">embedDefaults</span><span class="p">({</span>
+    <span class="nx">threadsBatch</span><span class="o">:</span> <span class="mi">8</span><span class="p">,</span>       <span class="c1">// else ggml uses 4, whatever the core count</span>
+    <span class="nx">batchChunks</span><span class="o">:</span>  <span class="kc">false</span>    <span class="c1">// default is auto: on for GPU, off for CPU</span>
+<span class="p">});</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s1">&#39;/models/bge-m3-FP16.gguf&#39;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>The order shown is required.  Models are cached by path, so once one is
+loaded, a later <code class="docutils literal notranslate"><span class="pre">sql.set({llamaEmbed:</span> <span class="pre">...})</span></code> hands back the existing
+model and an <code class="docutils literal notranslate"><span class="pre">embedDefaults()</span></code> call made after that point silently
+does not apply to it.  Batching is worth turning off only to reproduce
+vectors from a build that predates it, or to A/B measure it — see
+<a class="reference internal" href="rampart-langtools.html#embeddefaults"><span class="std std-ref">embedDefaults</span></a> for the full set
+and for what batching does and does not change.</p>
 <p>Once a model is loaded, <a class="reference internal" href="sql-server-funcs.html#embed"><span class="std std-ref">embed()</span></a> produces a
 typed vec for use in SELECT projections, INSERT values, or on the
 right-hand side of <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> / <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>:</p>

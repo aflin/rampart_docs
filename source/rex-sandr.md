@@ -161,6 +161,42 @@ Case is always respected inside `[]` bracket sets.
 \cntrl   \ascii
 ```
 
+### Unicode (UTF-8) Character Classes
+
+```
+\ualpha   Unicode letters (includes ASCII a-z, A-Z)
+\udigit   Unicode decimal digits (includes ASCII 0-9)
+\ualnum   \ualpha plus \udigit
+\umark    combining marks (accents, Arabic harakat, Indic matras)
+\uspace   Unicode spaces (includes ASCII whitespace)
+\upunct   Unicode punctuation and symbols (includes ASCII punctuation)
+\uword    \ualpha plus \udigit plus \umark — word characters, for
+          tokenizing text in any script
+```
+
+These match whole UTF-8 characters: a repetition such as `[\uword]{2,99}`
+matches two to ninety-nine word characters of any script, counting
+characters rather than bytes.  Invalid or truncated UTF-8 never matches a
+\u class, so matches break cleanly at malformed bytes in dirty data.
+
+Zero-width joiners (ZWNJ/ZWJ), soft hyphens and other invisible format
+characters are deliberately in no class, so `[\uword]+` breaks words at
+them — the correct tokenization for scripts that use them (e.g. Persian
+ZWNJ).
+
+Note that these classes identify word *characters*, not word
+*boundaries*: scripts written without spaces between words — Chinese,
+Japanese, Thai, Lao, Khmer, Burmese — come out as one `[\uword]+`
+match per punctuation-bounded run, not as individual words.  Proper
+word segmentation for those languages requires dictionary or n-gram
+tokenization, which rex does not provide.
+
+Restrictions: a \u class must be a sub-expression of its own — it may
+carry a repetition operator and extra explicit bytes (`[\uword\X5F]+`
+also matches `_`), but it cannot be part of a longer fixed set sequence,
+inverted with `[^...]`, subtracted with `--`, negated with `!`, or used
+with the `{x*}` repetition operator.
+
 ### Special Characters
 
 ```

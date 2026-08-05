@@ -258,11 +258,11 @@ sql.exec("SELECT * FROM docs WHERE body LIKEP ?", {maxRows: 100},
     }
 );
 
-// Full-text search — always include WORDEXPRESSIONS for UTF-8 support
+// Full-text search — \uword indexes whole UTF-8 characters (any script)
 sql.exec("CREATE FULLTEXT INDEX docs_ftx ON docs(body) " +
-    "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')");
+    "WITH WORDEXPRESSIONS ('[\\uword]{1,99}')");
 // or to also match email addresses, URLs, etc.:
-// "WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}', '[\\alnum\\$%@\\-_\\+]{2,99}')"
+// "WITH WORDEXPRESSIONS ('[\\uword]{1,99}', '[\\alnum\\$%@\\-_\\+]{2,99}')"
 var results = sql.exec("SELECT * FROM docs WHERE body LIKEP ?",
     ["search terms"], {maxRows: 50});
 

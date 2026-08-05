@@ -617,18 +617,18 @@ When making a Fulltext index, often it is best to leave most settings as is.  Th
 is the :ref:`rex <rampart-sql:rex()>` expressions used to define what is a word. 
 Often we want to make sure we include utf-8 encoded text.
 
-The default is ``\alnum{2,99}``, which is similar to doing ``mydoc.match(/[a-zA-Z0-9]+/g)``.
-Since we are processing utf-8 text, and since we have names of places from all over the world,
-we had better accommodate bytes larger than ``0x79``.
+The default is ``[\uword]{2,99}``: two to ninety-nine Unicode letters,
+digits or combining marks — whole utf-8 characters in any script.  That
+already handles our names of places from all over the world.  However
+some place names, notably in CJK scripts, are a single character, and
+the default's two-character minimum would leave them out of the index.
 
 To change the expression used during Fulltext index creation, we can use
 :ref:`delExp <sql-set:delExp>` and :ref:`addExp <sql-set:addExp>`.  However
 as a shortcut, we can specify the expressions that will be used in the SQL
 statement itself by utilizing the ``WITH`` keyword:
 
-``WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}')``
-
-That will find words consisting of 7-bit ascii letters and numbers, plus utf-8 multibyte characters as well.
+``WITH WORDEXPRESSIONS ('[\\uword]{1,99}')``
 
 Now we also have a database that does not contain normal text.  It is worth
 thinking about where this might bite us when we perform a search.  Let's
@@ -666,10 +666,10 @@ So, let's see our SQL statements to create the Fulltext indexes in its own funct
 
         // make compact index.  Sorting by population, not by likep rank.  See like3 search below.
         sql.exec("create fulltext index cities_place_ftx on cities(place)"+
-            " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+            " WITH WORDEXPRESSIONS ('[\\uword]{1,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
 
         sql.exec("create fulltext index cities_altNames_ftx on cities(alt_names)"+
-            " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+            " WITH WORDEXPRESSIONS ('[\\uword]{1,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
     }
 
 Note that we also have ``WORDPOSITIONS 'off'``.  This omits the position of
@@ -835,10 +835,10 @@ We put it all together, wrap it in a function, and it looks something like this:
 
             // make compact index.  Sorting by population, not by likep rank.  See like3 search below.
             sql.exec("create fulltext index cities_place_ftx on cities(place)"+
-                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+                " WITH WORDEXPRESSIONS ('[\\uword]{1,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
 
             sql.exec("create fulltext index cities_altNames_ftx on cities(alt_names)"+
-                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+                " WITH WORDEXPRESSIONS ('[\\uword]{1,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
         }
 
         function drop_tmp_table() {
@@ -1587,10 +1587,10 @@ database when run from the command line as ``rampart citysearch.js``.
 
             // make compact index.  Sorting by population, not by likep rank.  See like3 search below.
             sql.exec("create fulltext index cities_place_ftx on cities(place)"+
-                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+                " WITH WORDEXPRESSIONS ('[\\uword]{1,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
 
             sql.exec("create fulltext index cities_altNames_ftx on cities(alt_names)"+
-                " WITH WORDEXPRESSIONS ('[\\alnum\\x80-\\xFF]{2,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
+                " WITH WORDEXPRESSIONS ('[\\uword]{1,99}') INDEXMETER 'on' WORDPOSITIONS 'off';");
         }
 
         function drop_tmp_table() {

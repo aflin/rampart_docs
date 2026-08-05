@@ -884,7 +884,7 @@ linear-table search.</p>
 <p>For binary-index searchable terms, <code class="docutils literal notranslate"><span class="pre">indexMinSublen</span></code> is tested
 against the minimum prefix length; e.g. for query “<code class="docutils literal notranslate"><span class="pre">test.#&#64;</span></code>” the
 length tested is 4 (assuming default index word expression of
-“<code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>”). For linear-dictionary index searches, the
+“<code class="docutils literal notranslate"><span class="pre">[\uword]{2,99}</span></code>”). For linear-dictionary index searches, the
 length tested is the total of all non-wildcard characters; e.g. for
 query “<code class="docutils literal notranslate"><span class="pre">ab*cd*ef</span></code>” the length tested is 6.</p>
 <p>The default for <code class="docutils literal notranslate"><span class="pre">indexminsublen</span></code> is 2.</p>
@@ -1623,6 +1623,18 @@ by the loaded model — typical values are 384
 (<code class="docutils literal notranslate"><span class="pre">OpenAI</span> <span class="pre">Ada</span></code>-class models served via llama.cpp), etc.</p>
 <p>No default — <code class="docutils literal notranslate"><span class="pre">embed()</span></code> raises a runtime error if no model has
 been loaded.</p>
+<p>A few llama.cpp embedding knobs have no <code class="docutils literal notranslate"><span class="pre">sql.set</span></code> equivalent,
+because this path loads the model without an options object —
+notably the decode thread count (<code class="docutils literal notranslate"><span class="pre">threadsBatch</span></code>, which ggml
+otherwise fixes at 4 no matter how many cores the machine has) and
+chunk batching (<code class="docutils literal notranslate"><span class="pre">batchChunks</span></code>).  Set them on the module, and set
+them <strong>before</strong> this property, since a model already loaded is
+handed back unchanged and will not pick them up:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rampart-llamacpp&#39;</span><span class="p">).</span><span class="nx">embedDefaults</span><span class="p">({</span><span class="nx">threadsBatch</span><span class="o">:</span> <span class="mi">8</span><span class="p">});</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s1">&#39;/models/bge-m3-FP16.gguf&#39;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="rampart-langtools.html#embeddefaults"><span class="std std-ref">embedDefaults</span></a>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="llamaembedperthread">
@@ -1925,7 +1937,7 @@ array of additional REX expression to match words to be indexed in a
 Metamorph index.  This is useful if there are non-English words to be
 searched for, such as part numbers.  When an index is first created, the
 expressions used are stored with it so they will be updated properly.
-The default expression is <code class="docutils literal notranslate"><span class="pre">\alnum{2,99}</span></code>.  <strong>Note:</strong> Only the
+The default expression is <code class="docutils literal notranslate"><span class="pre">[\uword]{2,99}</span></code>.  <strong>Note:</strong> Only the
 expressions set when the index is initially created (i.e.  the first
 CREATE METAMORPH …  statement – later statements are index updates)
 are saved.  Expressions set during an update (issuance of “create
@@ -1949,14 +1961,14 @@ return object of <code class="docutils literal notranslate"><span class="pre">sq
 <code class="docutils literal notranslate"><span class="pre">expressionsList</span></code> which will be set to an array with the current list
 of word expressions.</p>
 <p>Example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* delete the default &quot;\alnum{2,99}&quot; expression,</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* delete the default &quot;[\uword]{2,99}&quot; expression,</span>
 <span class="cm">   add two expressions and list.                  */</span>
 
 <span class="kd">var</span> <span class="nx">lists</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
    <span class="nx">deleteExpressions</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>              <span class="c1">// delete the default at pos 0</span>
    <span class="nx">addExpressions</span><span class="o">:</span> <span class="p">[</span>
-      <span class="s2">&quot;[\\alnum\\x80-\\xff]+&quot;</span><span class="p">,</span>        <span class="c1">// letters and numbers</span>
-      <span class="s2">&quot;[\\alnum\\$\\%\\@\\-\\_\\+]+&quot;</span>  <span class="c1">// letters, numbers and additional chars</span>
+      <span class="s2">&quot;[\\uword]+&quot;</span><span class="p">,</span>                   <span class="c1">// words in any script</span>
+      <span class="s2">&quot;[\\alnum\\$\\%\\@\\-\\_\\+]+&quot;</span>  <span class="c1">// code-ish tokens (emails, flags)</span>
    <span class="p">],</span>
    <span class="nx">listExpressions</span><span class="o">:</span> <span class="kc">true</span>
 <span class="p">});</span>
@@ -1966,7 +1978,7 @@ of word expressions.</p>
 <span class="cm">/* expected output</span>
 <span class="cm">{</span>
 <span class="cm">   &quot;expressionsList&quot;: [</span>
-<span class="cm">      &quot;[\\alnum\\x80-\\xff]+&quot;,</span>
+<span class="cm">      &quot;[\\uword]+&quot;,</span>
 <span class="cm">      &quot;[\\alnum\\$\\%\\@\\-\\_\\+]+&quot;</span>
 <span class="cm">   ]</span>
 <span class="cm">}</span>
