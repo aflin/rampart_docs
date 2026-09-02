@@ -109,6 +109,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#external-dependencies">External Dependencies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id2">pdftotext</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">catdoc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rampart-ocr-and-pdftoppm">rampart-ocr and pdftoppm</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#loading-and-using-the-module">Loading and Using the Module</a><ul>
@@ -119,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#convertfile">convertFile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#convert">convert</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#identify">identify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setocr">setOcr</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#output-format">Output Format</a></li>
@@ -232,6 +234,11 @@ from the Xpdf or Poppler utilities package.  For legacy Microsoft Word
 <code class="docutils literal notranslate"><span class="pre">.doc</span></code> conversion, it optionally uses the
 <a class="reference external" href="https://www.wagner.pp.ru/~vitus/software/catdoc/">catdoc</a> utility on
 Linux and FreeBSD, or the built-in <code class="docutils literal notranslate"><span class="pre">textutil</span></code> command on macOS.</p>
+<p>Image files, and PDF pages that carry no text layer (scans), are read
+with optical character recognition through the
+<a class="reference internal" href="rampart-langtools.html#the-rampart-ocr-module"><span class="std std-ref">rampart-ocr module</span></a>
+when a reader has been supplied with <a class="reference internal" href="#setocr">setOcr</a>.  Scanned PDF pages are
+rasterized for it with Poppler’s <code class="docutils literal notranslate"><span class="pre">pdftoppm</span></code>.</p>
 </div>
 <div class="section" id="license">
 <h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
@@ -267,6 +274,15 @@ content is then parsed for text.</li>
 <li><strong>External tool converters</strong> invoke <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> for PDF files and
 <code class="docutils literal notranslate"><span class="pre">catdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">textutil</span></code> for legacy <code class="docutils literal notranslate"><span class="pre">.doc</span></code> files.  If the
 required external tool is not installed, an error is thrown.</li>
+<li><strong>Images and scanned PDFs</strong> go through a rampart-ocr reader, if one
+has been set with <a class="reference internal" href="#setocr">setOcr</a>.  PNG, JPEG, TIFF (including multi-page),
+GIF, BMP, PNM, PSD and HDR files are read in full.  For a PDF,
+<code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> runs first and only the pages that yield no usable text
+are rasterized (<code class="docutils literal notranslate"><span class="pre">pdftoppm</span></code>) and read, so a document mixing born-digital
+and scanned pages comes out whole, and a PDF that already carries an
+OCR text layer is never re-read.  Without a reader, image files and
+PDFs that contain nothing but images throw an error saying so; every
+other PDF converts as before.</li>
 <li><strong>Gzip-compressed files</strong> are transparently decompressed before
 processing.  This is particularly useful for man pages, which are
 typically stored as <code class="docutils literal notranslate"><span class="pre">.1.gz</span></code>, <code class="docutils literal notranslate"><span class="pre">.2.gz</span></code>, etc. on the filesystem.
@@ -380,12 +396,28 @@ and any external dependencies.</p>
 <tr class="row-odd"><td>PDF</td>
 <td><code class="docutils literal notranslate"><span class="pre">.pdf</span></code></td>
 <td><code class="docutils literal notranslate"><span class="pre">%PDF-</span></code></td>
-<td><code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> (external)</td>
+<td><code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> (external); for scanned pages also <code class="docutils literal notranslate"><span class="pre">pdftoppm</span></code>
+and a rampart-ocr reader (see <a class="reference internal" href="#setocr">setOcr</a>)</td>
 </tr>
 <tr class="row-even"><td>Legacy Word (.doc)</td>
 <td><code class="docutils literal notranslate"><span class="pre">.doc</span></code></td>
 <td>OLE2 magic bytes (<code class="docutils literal notranslate"><span class="pre">\xD0\xCF\x11\xE0</span></code>)</td>
 <td><code class="docutils literal notranslate"><span class="pre">catdoc</span></code> (Linux/FreeBSD) or <code class="docutils literal notranslate"><span class="pre">textutil</span></code> (macOS)</td>
+</tr>
+<tr class="row-odd"><td>PNG, JPEG, GIF, BMP, PSD, HDR</td>
+<td><code class="docutils literal notranslate"><span class="pre">.png</span></code>, <code class="docutils literal notranslate"><span class="pre">.jpg</span></code>, <code class="docutils literal notranslate"><span class="pre">.jpeg</span></code>, <code class="docutils literal notranslate"><span class="pre">.gif</span></code>, <code class="docutils literal notranslate"><span class="pre">.bmp</span></code>, <code class="docutils literal notranslate"><span class="pre">.psd</span></code>, <code class="docutils literal notranslate"><span class="pre">.hdr</span></code></td>
+<td>Magic bytes</td>
+<td>a rampart-ocr reader (see <a class="reference internal" href="#setocr">setOcr</a>)</td>
+</tr>
+<tr class="row-even"><td>TIFF (multi-page)</td>
+<td><code class="docutils literal notranslate"><span class="pre">.tif</span></code>, <code class="docutils literal notranslate"><span class="pre">.tiff</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">II*</span></code>, <code class="docutils literal notranslate"><span class="pre">MM*</span></code> (and BigTIFF)</td>
+<td>a rampart-ocr reader (see <a class="reference internal" href="#setocr">setOcr</a>)</td>
+</tr>
+<tr class="row-odd"><td>PNM</td>
+<td><code class="docutils literal notranslate"><span class="pre">.pnm</span></code>, <code class="docutils literal notranslate"><span class="pre">.ppm</span></code>, <code class="docutils literal notranslate"><span class="pre">.pgm</span></code>, <code class="docutils literal notranslate"><span class="pre">.pbm</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">P1</span></code> .. <code class="docutils literal notranslate"><span class="pre">P6</span></code> header</td>
+<td>a rampart-ocr reader (see <a class="reference internal" href="#setocr">setOcr</a>)</td>
 </tr>
 </tbody>
 </table>
@@ -422,6 +454,18 @@ Word <code class="docutils literal notranslate"><span class="pre">.doc</span></c
 <p>If neither <code class="docutils literal notranslate"><span class="pre">catdoc</span></code> nor <code class="docutils literal notranslate"><span class="pre">textutil</span></code> is available and a <code class="docutils literal notranslate"><span class="pre">.doc</span></code> file
 is passed to <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code> or <code class="docutils literal notranslate"><span class="pre">convert()</span></code>, an error will be thrown.</p>
 </div>
+<div class="section" id="rampart-ocr-and-pdftoppm">
+<h3>rampart-ocr and pdftoppm<a class="headerlink" href="#rampart-ocr-and-pdftoppm" title="Permalink to this headline">¶</a></h3>
+<p>Optical character recognition is done by a reader from the
+<a class="reference internal" href="rampart-langtools.html#the-rampart-ocr-module"><span class="std std-ref">rampart-ocr module</span></a>,
+which is part of the separately installed <code class="docutils literal notranslate"><span class="pre">rampart-langtools</span></code> package.
+The reader is supplied with <a class="reference internal" href="#setocr">setOcr</a>; nothing is loaded until then.</p>
+<p>Scanned PDF pages are rasterized with <code class="docutils literal notranslate"><span class="pre">pdftoppm</span></code>, which ships in the
+same package as <code class="docutils literal notranslate"><span class="pre">pdftotext</span></code> (<code class="docutils literal notranslate"><span class="pre">poppler-utils</span></code>; see above).  The
+scanned-page check uses <code class="docutils literal notranslate"><span class="pre">pdfimages</span></code> from that package as well.</p>
+<p>If an image, or a PDF that contains only images, is converted with no
+reader set, an error is thrown that says which call sets one.</p>
+</div>
 </div>
 <div class="section" id="loading-and-using-the-module">
 <h2>Loading and Using the Module<a class="headerlink" href="#loading-and-using-the-module" title="Permalink to this headline">¶</a></h2>
@@ -436,8 +480,8 @@ function:</p>
 </div>
 <div class="section" id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<p>The rampart-totext module exports three functions: <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">convert()</span></code>, and <code class="docutils literal notranslate"><span class="pre">identify()</span></code>.</p>
+<p>The rampart-totext module exports four functions: <code class="docutils literal notranslate"><span class="pre">convertFile()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">convert()</span></code>, <code class="docutils literal notranslate"><span class="pre">identify()</span></code> and <code class="docutils literal notranslate"><span class="pre">setOcr()</span></code>.</p>
 <div class="section" id="convertfile">
 <h3>convertFile<a class="headerlink" href="#convertfile" title="Permalink to this headline">¶</a></h3>
 <p>Extract plain text from a document file on disk.</p>
@@ -446,26 +490,53 @@ function:</p>
 </pre></div>
 </div>
 <p>Where:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span>, the path to the file to convert.
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">filename</span></code> is a <span class="green">String</span>, the path to the file to convert.
 If the file is gzip-compressed (e.g. <code class="docutils literal notranslate"><span class="pre">myfile.1.gz</span></code>), it will be
-transparently decompressed before conversion.</li>
-<li><code class="docutils literal notranslate"><span class="pre">details</span></code> is an optional <span class="green">Boolean</span> or <span class="green">Object</span>.
+transparently decompressed before conversion.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">details</span></code> is an optional <span class="green">Boolean</span> or <span class="green">Object</span>.
 If <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">{details:</span> <span class="pre">true}</span></code> is passed, the function returns
-an <span class="green">Object</span> instead of a <span class="green">String</span> (see below).</li>
+an <span class="green">Object</span> instead of a <span class="green">String</span> (see below).</p>
+<p>The <span class="green">Object</span> form may also carry <code class="docutils literal notranslate"><span class="pre">ocr</span></code>, which controls
+optical character recognition for this call:</p>
+<ul class="simple">
+<li>a reader from <code class="docutils literal notranslate"><span class="pre">rampart-ocr.init()</span></code> — use it for this call,
+instead of whatever <a class="reference internal" href="#setocr">setOcr</a> established;</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default) — read image files, and only those PDF
+pages that have no usable text layer;</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;always&quot;</span></code> — read every PDF page, ignoring any text layer.  For
+PDFs whose embedded text layer is a poor legacy OCR job;</li>
+<li><code class="docutils literal notranslate"><span class="pre">true</span></code> — build the default reader on first need, as
+<code class="docutils literal notranslate"><span class="pre">setOcr(true)</span></code> does.</li>
+</ul>
+</li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd><p class="first">By default, a <span class="green">String</span> containing the extracted plain text.</p>
+<dd><p class="first">By default, a <span class="green">String</span> containing the extracted plain text.
+Multi-page input (a PDF, a multi-page TIFF) has its pages separated
+by form feeds (<code class="docutils literal notranslate"><span class="pre">&quot;\f&quot;</span></code>), whether the text came from a text layer or
+from recognition.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">details</span></code> is set, an <span class="green">Object</span> with the following
 properties:</p>
 <ul class="last simple">
 <li><code class="docutils literal notranslate"><span class="pre">text</span></code> — a <span class="green">String</span>, the extracted plain text.</li>
 <li><code class="docutils literal notranslate"><span class="pre">mimeType</span></code> — a <span class="green">String</span>, the MIME type of the detected
 input format (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;text/html&quot;</span></code>,
-<code class="docutils literal notranslate"><span class="pre">&quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot;</span></code>).
-For unknown formats, the MIME type is
+<code class="docutils literal notranslate"><span class="pre">&quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;image/tiff&quot;</span></code>).  For unknown formats, the MIME type is
 <code class="docutils literal notranslate"><span class="pre">&quot;application/octet-stream&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">ocr</span></code> — a <span class="green">Boolean</span>, whether any of the text came from
+optical character recognition.</li>
+<li><code class="docutils literal notranslate"><span class="pre">pages</span></code> — present when <code class="docutils literal notranslate"><span class="pre">ocr</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>: an <span class="green">Array</span>
+with one entry per recognized page, each the <span class="green">Object</span>
+that
+<a class="reference internal" href="rampart-langtools.html#reader-readtext"><span class="std std-ref">reader.readText()</span></a>
+returned (<code class="docutils literal notranslate"><span class="pre">lines</span></code> with their boxes and confidence scores, and
+<code class="docutils literal notranslate"><span class="pre">text</span></code>), with <code class="docutils literal notranslate"><span class="pre">page</span></code> set to the page’s position in the
+document, counting from <code class="docutils literal notranslate"><span class="pre">0</span></code>.  For a PDF, only the pages that
+were actually recognized appear here.</li>
 </ul>
 </dd>
 </dl>
@@ -519,7 +590,9 @@ with the same behavior as in <code class="docutils literal notranslate"><span cl
 entirely on content inspection.  For ambiguous formats (e.g. plain
 text vs. Markdown), the content heuristic determines the type.</p>
 <p class="last">For PDF and legacy <code class="docutils literal notranslate"><span class="pre">.doc</span></code> formats, the content is passed to the
-external tool via standard input.</p>
+external tool via standard input.  Rasterizing scanned PDF pages for
+recognition needs a file, so in that case the content is written to
+a temporary file for the duration of the call.</p>
 </dd>
 </dl>
 <p>Example:</p>
@@ -572,7 +645,8 @@ decompressed before identification.</p>
 <p><code class="docutils literal notranslate"><span class="pre">&quot;text&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;plaintext&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;html&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;markdown&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;xml&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;latex&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rtf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;man&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;docx&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pptx&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;xlsx&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;odt&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;odp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ods&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;epub&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;doc&quot;</span></code>,
-or <code class="docutils literal notranslate"><span class="pre">&quot;unknown&quot;</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;jpeg&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;tiff&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gif&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bmp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pnm&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;psd&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;hdr&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;unknown&quot;</span></code>.</p>
 <p class="last">The file type is determined primarily by inspecting the content.
 If the content is ambiguous, the file extension is used as a
 fallback (when a filename is provided).</p>
@@ -587,6 +661,64 @@ fallback (when a filename is provided).</p>
 
 <span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;presentation.pptx&quot;</span><span class="p">);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">totext</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="nx">buf</span><span class="p">));</span>  <span class="c1">// &quot;pptx&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setocr">
+<h3>setOcr<a class="headerlink" href="#setocr" title="Permalink to this headline">¶</a></h3>
+<p>Supply the reader used for optical character recognition of image
+files and scanned PDF pages.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">totext</span><span class="p">.</span><span class="nx">setOcr</span><span class="p">(</span><span class="nx">reader</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="nx">totext</span><span class="p">.</span><span class="nx">setOcr</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+<span class="nx">totext</span><span class="p">.</span><span class="nx">setOcr</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+
+<span class="cm">/* or */</span>
+
+<span class="nx">totext</span><span class="p">.</span><span class="nx">setOcr</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">reader</span></code> is the <span class="green">Object</span> returned by
+<a class="reference internal" href="rampart-langtools.html#ocr-init"><span class="std std-ref">rampart-ocr.init()</span></a>.  This is the
+usual form: you choose the model, GPU and thread settings.</li>
+<li><code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">options</span></code> asks the module to build a reader itself the
+first time one is needed, from the <code class="docutils literal notranslate"><span class="pre">ppocr-v5</span></code> model resolved
+through rampart-models (downloading it on first use), with
+<code class="docutils literal notranslate"><span class="pre">options</span></code> passed to <code class="docutils literal notranslate"><span class="pre">rampart-ocr.init()</span></code>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> is the same
+as <code class="docutils literal notranslate"><span class="pre">{}</span></code>.  Note that rampart-ocr’s own default is a single thread;
+pass <code class="docutils literal notranslate"><span class="pre">{threads:</span> <span class="pre">0}</span></code> to use every core.</li>
+<li><code class="docutils literal notranslate"><span class="pre">false</span></code> (or nothing) removes the reader.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
+</dl>
+<p>The reader is stored on the module <span class="green">Object</span> itself.  A
+<span class="green">Function</span> called on that object — <code class="docutils literal notranslate"><span class="pre">totext.convertFile(...)</span></code>
+rather than a detached <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">cf</span> <span class="pre">=</span> <span class="pre">totext.convertFile</span></code> — finds it, and
+so does a thread that received the object as a copied global.  A fresh
+<code class="docutils literal notranslate"><span class="pre">require(&quot;rampart-totext&quot;)</span></code> inside a thread yields a new module
+<span class="green">Object</span> with no reader; call <code class="docutils literal notranslate"><span class="pre">setOcr()</span></code> on that one, or pass
+<code class="docutils literal notranslate"><span class="pre">{ocr:</span> <span class="pre">reader}</span></code> per call.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">totext</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-totext&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ocr</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-ocr&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
+
+<span class="nx">totext</span><span class="p">.</span><span class="nx">setOcr</span><span class="p">(</span><span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">),</span> <span class="p">{</span><span class="nx">threads</span><span class="o">:</span> <span class="mi">0</span><span class="p">}));</span>
+
+<span class="cm">/* a scanned, multi-page TIFF */</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s2">&quot;/scans/deposition-0042.tif&quot;</span><span class="p">);</span>
+
+<span class="cm">/* a PDF: text pages come from pdftotext, scanned pages are read */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">totext</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s2">&quot;/scans/production.pdf&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nx">details</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">ocr</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;recognized pages:&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">pages</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">p</span><span class="p">){</span> <span class="k">return</span> <span class="nx">p</span><span class="p">.</span><span class="nx">page</span><span class="p">;</span> <span class="p">}));</span>
 </pre></div>
 </div>
 </div>

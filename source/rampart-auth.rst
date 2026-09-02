@@ -129,6 +129,9 @@ are supported.  It exports an object with the following properties:
         sessionRefresh: 300,        // min interval between refreshes (default: 5min)
         sessionRefreshUrgent: 3600, // always refresh if < this remaining (default: 1h)
 
+        // Revalidation of OPEN websockets (default: 20; 0 = every frame)
+        wsRecheckSeconds: 20,
+
         // Account lockout
         lockoutAttempts: 5,     // max failed attempts before lockout (default: 5)
         lockoutWindow:   300,   // time window in seconds (default: 5 min)
@@ -232,6 +235,21 @@ Configuration Properties
     * ``sessionRefreshUrgent`` — :green:`Number`.  If fewer than this
       many seconds remain before the session expires, refresh immediately
       regardless of ``sessionRefresh`` (default: ``3600``).
+
+    * ``wsRecheckSeconds`` — :green:`Number`.  How often an already-open
+      websocket is revalidated, in seconds.  The upgrade itself is always
+      authorised against ``protectedPaths`` before the handshake is
+      generated; this setting governs only how long a session that is
+      revoked or expires *mid-connection* may keep using a socket that is
+      already open.  A denied frame closes the socket with a websocket
+      close frame (status 1008, policy violation) rather than an HTTP
+      response, which a peer in framing mode cannot parse.
+
+      ``0`` revalidates on every frame the client sends — exact, but it
+      roughly halves frame throughput, because the whole ``req`` object
+      is passed through the auth function each time.  Note that an
+      **idle** socket is not revalidated at any setting: nothing runs
+      until the client sends data (default: ``20``).
 
     * ``lockoutAttempts`` — :green:`Number`.  Maximum failed login
       attempts before the account is temporarily locked.  Set to ``0`` to

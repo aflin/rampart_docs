@@ -539,7 +539,7 @@ Return Value:
   the ``countInfo`` :green:`Object` contains the following:
 
    * ``indexCount`` (:green:`Number`): a single value estimating the number
-     of matching rows.
+     of matching rows (for a vector search, see below).
 
    * ``rowsMatchedMin`` (:green:`Number`): Minimum number of rows matched **before**
      any `group by <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ ,
@@ -564,6 +564,15 @@ Return Value:
      :ref:`sql-set:likeprows`,
      :`aggregates <https://docs.thunderstone.com/site/texisman/summarizing_values.html>`_\ , or
      :ref:`sql-set:multivaluetomultirow` are applied.
+
+  **Vector searches** (``LIKEV``, including a fused ``LIKEP OR LIKEV``):
+  the ``rowsMatched``/``rowsReturned`` values are ``-1``/``-2``
+  (unknown).  Every row has some similarity to the query, so there is no
+  match set to count; the index returns a candidate pool capped by
+  :ref:`likevRows <sql-set:likevRows>` (default ``1000``).
+  ``indexCount`` stays valid and is that pool -- keyword hits plus up to
+  ``likevRows`` candidates -- so it is a retrieval budget, not a result
+  total, and changes if you change ``likevRows``.
 
   If a callback :green:`Function` is specified, a :green:`Number` (the
   number of rows retrieved) is returned.  The callback is given the above
@@ -1454,12 +1463,27 @@ Date and time
        insert.  A string without a timezone is parsed as system local time;
        values are retrieved in JavaScript as :green:`Date` objects (which
        serialize as UTC/ISO strings).
-   * - ``datestamp``
-     - Date-only stamp.
-   * - ``timestamp``
-     - Date+time stamp.
-   * - ``datetime``
-     - Higher-resolution date+time.
+   * - ``udate``
+     - Signed 64-bit count of **microseconds** since 1970-01-01 UTC.  Fixed
+       eight bytes on every platform, range approximately +/-292,000 years,
+       resolution one microsecond.  Accepts the same date/time string forms
+       as ``date`` (including a fractional-seconds part and a timezone
+       offset, so the string form of a JavaScript :green:`Date` can be fed
+       straight back in), the keyword ``'now'`` (which carries full
+       microsecond resolution), a JavaScript
+       :green:`Date`, or a :green:`Number` of **seconds** since the epoch
+       (integral or fractional -- both mean seconds, so a value that is
+       out of range as seconds is rejected with a warning rather than
+       silently reinterpreted).  Retrieved in
+       JavaScript as a :green:`Date`, which holds whole milliseconds, so
+       sub-millisecond precision is **lost on retrieval** -- use
+       ``convert(col,'int64')`` (or ``'uint64'``) when the exact
+       microsecond value is needed;
+       note that this is the one asymmetric conversion -- it *returns*
+       microseconds, whereas a :green:`Number` *supplied* to the column is
+       seconds, so an ``int64`` value cannot be inserted back unchanged.
+       ``convert(col,'double')`` gives seconds and does round-trip.
+       Compares, sorts and indexes as an integer.
 
 Identifier and special
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -1821,6 +1845,34 @@ and "pthread_mutex_t") by using two expressions:
 
     CREATE FULLTEXT cprogs_Snippits_text ON cprogs(Snippits)
     WITH WORDEXPRESSIONS ( '[\uword]{1,99}', '[\uword_]{2,99}' );
+
+Punctuation that belongs *inside* a token, such as the dots and hyphens
+of a document or section number, presents the opposite problem: an
+expression permissive enough to keep them will also swallow the period
+that ends a sentence.  The ``\bound`` operator (see
+:ref:`Expressions <sql-expressions>`) solves this, since a trailing
+``\bound`` gives characters back until the match ends on a word
+character:
+
+.. code-block:: sql
+
+    CREATE FULLTEXT docs_Doc_text ON docs(Doc)
+    WITH WORDEXPRESSIONS ( '[\uword]{2,99}', '\bound[\alnum.\-]+\bound' );
+
+The second expression indexes ``4.4.3-1a``, ``6.5-4``, ``12.4.15-2b``
+and ``NASA-STD-5001B`` as single terms -- keeping the dots and hyphens
+within them, but not the closing period of
+``as found in section 6.5-4.`` -- while the first continues to index
+ordinary prose in any script.
+
+.. note::
+   Terms containing a hyphen are searched for as single words, which is
+   what makes ``6.5-4`` findable above.  Before version 0.7.1 the default
+   was to treat the hyphen as a space and search for the words on either
+   side of it as a phrase; set
+   :ref:`hyphenPhrase <sql-set:hyphenPhrase>` to ``true`` for that
+   behavior, at the cost of not being able to search for a hyphenated
+   term as itself.
 
 NOTE:
    Word expressions must be specified when the index is created.  New expressions
@@ -4381,6 +4433,75 @@ Expressions
     ``lower``, ``digit``, ``xdigit``, ``alnum``, ``space``, ``punct``,
     ``print``, ``graph``, ``cntrl``, ``ascii``.  Note that the definition of
     these classes may be affected by the current locale.
+
+*   A ``\`` followed by one of the following Unicode character classes
+    matches any whole UTF-8 character in that class:
+
+    .. list-table::
+       :widths: 15 85
+       :header-rows: 1
+
+       * - Class
+         - Matches
+       * - ``\ualpha``
+         - Unicode letters (includes ASCII ``a-z``, ``A-Z``)
+       * - ``\udigit``
+         - Unicode decimal digits (includes ASCII ``0-9``)
+       * - ``\ualnum``
+         - ``\ualpha`` plus ``\udigit``
+       * - ``\umark``
+         - Combining marks (accents, Arabic harakat, Indic matras)
+       * - ``\uspace``
+         - Unicode spaces (includes ASCII whitespace)
+       * - ``\upunct``
+         - Unicode punctuation and symbols (includes ASCII punctuation)
+       * - ``\uword``
+         - ``\ualpha`` plus ``\udigit`` plus ``\umark`` -- word
+           characters, for tokenizing text in any script
+
+    A repetition counts *characters*, not bytes, so ``[\uword]{2,99}``
+    matches two to ninety-nine word characters of any script.  Invalid
+    or truncated UTF-8 never matches a Unicode class, so matches break
+    cleanly at malformed bytes in dirty data.  Zero-width joiners
+    (ZWNJ/ZWJ), soft hyphens and other invisible format characters are
+    deliberately in no class, so ``[\uword]+`` breaks words at them --
+    the correct tokenization for scripts that use them, such as Persian
+    ZWNJ.
+
+    These classes identify word *characters*, not word *boundaries*:
+    scripts written without spaces between words -- Chinese, Japanese,
+    Thai, Lao, Khmer and Burmese -- produce one ``[\uword]+`` match per
+    punctuation-bounded run rather than one per word.  Proper word
+    segmentation for those languages requires dictionary or n-gram
+    tokenization, which ``rex`` does not provide.
+
+    A Unicode class must be a sub-expression of its own.  It may carry a
+    repetition operator and may include extra explicit bytes (so
+    ``[\uword\X5F]+`` also matches ``_``), but it cannot be part of a
+    longer fixed set sequence, inverted with ``[^...]``, subtracted with
+    ``--``, negated with ``!``, or used with the ``{x*}`` repetition
+    operator.
+
+*   ``\bound`` matches a word boundary: the zero-width position between
+    a word character (a ``\uword`` character -- letter, digit or mark,
+    in any script) and a non-word character.  The start and the end of
+    the searched text also count as boundaries, so a token at either end
+    of the text is bounded.
+
+    ``\bound`` matches no text of its own, and is written at the start
+    or at the end of a sub-expression.  A *trailing* ``\bound`` shortens
+    the repetition it is attached to, one character at a time, until the
+    boundary is satisfied; this is what keeps trailing punctuation out of
+    a match.  For example ``\bound[\alnum.\-]+\bound`` matches
+    ``4.10.3`` in ``see section 4.10.3.``: the sentence's closing period
+    is given back, while the dots inside the number are kept.  The
+    give-back applies only to the repetition ``\bound`` is attached to --
+    REX does not otherwise backtrack.
+
+    A ``\bound`` must be attached to a pattern that matches at least once,
+    and cannot be used inside a set (``[\bound]``), in the middle of a
+    sub-expression, with ``!``, or with a zero-minimum repetition such as
+    ``*``, ``?`` or ``{0,9}``.
 
 *   A ``\`` followed by one of the following special characters
     will assume the following meaning: ``n`` = newline, ``t`` = tab,

@@ -25,6 +25,12 @@ from the Xpdf or Poppler utilities package.  For legacy Microsoft Word
 `catdoc <https://www.wagner.pp.ru/~vitus/software/catdoc/>`_ utility on
 Linux and FreeBSD, or the built-in ``textutil`` command on macOS.
 
+Image files, and PDF pages that carry no text layer (scans), are read
+with optical character recognition through the
+:ref:`rampart-ocr module <rampart-langtools:The rampart-ocr module>`
+when a reader has been supplied with `setOcr`_.  Scanned PDF pages are
+rasterized for it with Poppler's ``pdftoppm``.
+
 License
 ~~~~~~~
 
@@ -66,6 +72,16 @@ applies the appropriate extraction method:
 *  **External tool converters** invoke ``pdftotext`` for PDF files and
    ``catdoc`` or ``textutil`` for legacy ``.doc`` files.  If the
    required external tool is not installed, an error is thrown.
+
+*  **Images and scanned PDFs** go through a rampart-ocr reader, if one
+   has been set with `setOcr`_.  PNG, JPEG, TIFF (including multi-page),
+   GIF, BMP, PNM, PSD and HDR files are read in full.  For a PDF,
+   ``pdftotext`` runs first and only the pages that yield no usable text
+   are rasterized (``pdftoppm``) and read, so a document mixing born-digital
+   and scanned pages comes out whole, and a PDF that already carries an
+   OCR text layer is never re-read.  Without a reader, image files and
+   PDFs that contain nothing but images throw an error saying so; every
+   other PDF converts as before.
 
 *  **Gzip-compressed files** are transparently decompressed before
    processing.  This is particularly useful for man pages, which are
@@ -161,11 +177,24 @@ and any external dependencies.
    * - PDF
      - ``.pdf``
      - ``%PDF-``
-     - ``pdftotext`` (external)
+     - ``pdftotext`` (external); for scanned pages also ``pdftoppm``
+       and a rampart-ocr reader (see `setOcr`_)
    * - Legacy Word (.doc)
      - ``.doc``
      - OLE2 magic bytes (``\xD0\xCF\x11\xE0``)
      - ``catdoc`` (Linux/FreeBSD) or ``textutil`` (macOS)
+   * - PNG, JPEG, GIF, BMP, PSD, HDR
+     - ``.png``, ``.jpg``, ``.jpeg``, ``.gif``, ``.bmp``, ``.psd``, ``.hdr``
+     - Magic bytes
+     - a rampart-ocr reader (see `setOcr`_)
+   * - TIFF (multi-page)
+     - ``.tif``, ``.tiff``
+     - ``II*``, ``MM*`` (and BigTIFF)
+     - a rampart-ocr reader (see `setOcr`_)
+   * - PNM
+     - ``.pnm``, ``.ppm``, ``.pgm``, ``.pbm``
+     - ``P1`` .. ``P6`` header
+     - a rampart-ocr reader (see `setOcr`_)
 
 
 External Dependencies
@@ -204,6 +233,21 @@ Word ``.doc`` files on Linux and FreeBSD.  On macOS, the built-in
 If neither ``catdoc`` nor ``textutil`` is available and a ``.doc`` file
 is passed to ``convertFile()`` or ``convert()``, an error will be thrown.
 
+rampart-ocr and pdftoppm
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Optical character recognition is done by a reader from the
+:ref:`rampart-ocr module <rampart-langtools:The rampart-ocr module>`,
+which is part of the separately installed ``rampart-langtools`` package.
+The reader is supplied with `setOcr`_; nothing is loaded until then.
+
+Scanned PDF pages are rasterized with ``pdftoppm``, which ships in the
+same package as ``pdftotext`` (``poppler-utils``; see above).  The
+scanned-page check uses ``pdfimages`` from that package as well.
+
+If an image, or a PDF that contains only images, is converted with no
+reader set, an error is thrown that says which call sets one.
+
 
 Loading and Using the Module
 ----------------------------
@@ -222,8 +266,8 @@ function:
 Functions
 ---------
 
-The rampart-totext module exports three functions: ``convertFile()``,
-``convert()``, and ``identify()``.
+The rampart-totext module exports four functions: ``convertFile()``,
+``convert()``, ``identify()`` and ``setOcr()``.
 
 
 convertFile
@@ -247,8 +291,26 @@ Where:
    If ``true`` or ``{details: true}`` is passed, the function returns
    an :green:`Object` instead of a :green:`String` (see below).
 
+   The :green:`Object` form may also carry ``ocr``, which controls
+   optical character recognition for this call:
+
+   *  a reader from ``rampart-ocr.init()`` — use it for this call,
+      instead of whatever `setOcr`_ established;
+
+   *  ``"auto"`` (the default) — read image files, and only those PDF
+      pages that have no usable text layer;
+
+   *  ``"always"`` — read every PDF page, ignoring any text layer.  For
+      PDFs whose embedded text layer is a poor legacy OCR job;
+
+   *  ``true`` — build the default reader on first need, as
+      ``setOcr(true)`` does.
+
 Return Value:
    By default, a :green:`String` containing the extracted plain text.
+   Multi-page input (a PDF, a multi-page TIFF) has its pages separated
+   by form feeds (``"\f"``), whether the text came from a text layer or
+   from recognition.
 
    If ``details`` is set, an :green:`Object` with the following
    properties:
@@ -257,9 +319,21 @@ Return Value:
 
    *  ``mimeType`` — a :green:`String`, the MIME type of the detected
       input format (e.g. ``"text/html"``,
-      ``"application/vnd.openxmlformats-officedocument.wordprocessingml.document"``).
-      For unknown formats, the MIME type is
+      ``"application/vnd.openxmlformats-officedocument.wordprocessingml.document"``,
+      ``"image/tiff"``).  For unknown formats, the MIME type is
       ``"application/octet-stream"``.
+
+   *  ``ocr`` — a :green:`Boolean`, whether any of the text came from
+      optical character recognition.
+
+   *  ``pages`` — present when ``ocr`` is ``true``: an :green:`Array`
+      with one entry per recognized page, each the :green:`Object`
+      that
+      :ref:`reader.readText() <rampart-langtools:reader.readText()>`
+      returned (``lines`` with their boxes and confidence scores, and
+      ``text``), with ``page`` set to the page's position in the
+      document, counting from ``0``.  For a PDF, only the pages that
+      were actually recognized appear here.
 
 Example:
 
@@ -319,7 +393,9 @@ Return Value:
    text vs. Markdown), the content heuristic determines the type.
 
    For PDF and legacy ``.doc`` formats, the content is passed to the
-   external tool via standard input.
+   external tool via standard input.  Rasterizing scanned PDF pages for
+   recognition needs a file, so in that case the content is written to
+   a temporary file for the duration of the call.
 
 Example:
 
@@ -377,7 +453,8 @@ Return Value:
    ``"text"``, ``"plaintext"``, ``"html"``, ``"markdown"``, ``"xml"``,
    ``"latex"``, ``"rtf"``, ``"man"``, ``"pdf"``, ``"docx"``, ``"pptx"``,
    ``"xlsx"``, ``"odt"``, ``"odp"``, ``"ods"``, ``"epub"``, ``"doc"``,
-   or ``"unknown"``.
+   ``"png"``, ``"jpeg"``, ``"tiff"``, ``"gif"``, ``"bmp"``, ``"pnm"``,
+   ``"psd"``, ``"hdr"``, or ``"unknown"``.
 
    The file type is determined primarily by inspecting the content.
    If the content is ambiguous, the file extension is used as a
@@ -395,6 +472,72 @@ Example:
 
     var buf = readFile("presentation.pptx");
     console.log(totext.identify(buf));  // "pptx"
+
+
+setOcr
+~~~~~~
+
+Supply the reader used for optical character recognition of image
+files and scanned PDF pages.
+
+Usage:
+
+.. code-block:: javascript
+
+    totext.setOcr(reader);
+
+    /* or */
+
+    totext.setOcr(true);
+    totext.setOcr(options);
+
+    /* or */
+
+    totext.setOcr(false);
+
+Where:
+
+*  ``reader`` is the :green:`Object` returned by
+   :ref:`rampart-ocr.init() <rampart-langtools:ocr.init>`.  This is the
+   usual form: you choose the model, GPU and thread settings.
+
+*  ``true`` or ``options`` asks the module to build a reader itself the
+   first time one is needed, from the ``ppocr-v5`` model resolved
+   through rampart-models (downloading it on first use), with
+   ``options`` passed to ``rampart-ocr.init()``.  ``true`` is the same
+   as ``{}``.  Note that rampart-ocr's own default is a single thread;
+   pass ``{threads: 0}`` to use every core.
+
+*  ``false`` (or nothing) removes the reader.
+
+Return Value:
+   ``undefined``.
+
+The reader is stored on the module :green:`Object` itself.  A
+:green:`Function` called on that object — ``totext.convertFile(...)``
+rather than a detached ``var cf = totext.convertFile`` — finds it, and
+so does a thread that received the object as a copied global.  A fresh
+``require("rampart-totext")`` inside a thread yields a new module
+:green:`Object` with no reader; call ``setOcr()`` on that one, or pass
+``{ocr: reader}`` per call.
+
+Example:
+
+.. code-block:: javascript
+
+    var totext = require("rampart-totext");
+    var ocr    = require("rampart-ocr");
+    var models = require("rampart-models");
+
+    totext.setOcr(ocr.init(models.ocrGet("ppocr-v5"), {threads: 0}));
+
+    /* a scanned, multi-page TIFF */
+    var text = totext.convertFile("/scans/deposition-0042.tif");
+
+    /* a PDF: text pages come from pdftotext, scanned pages are read */
+    var res = totext.convertFile("/scans/production.pdf", {details: true});
+    if (res.ocr)
+        console.log("recognized pages:", res.pages.map(function(p){ return p.page; }));
 
 
 Output Format

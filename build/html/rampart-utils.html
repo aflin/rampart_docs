@@ -97,6 +97,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#stringtonumber">stringToNumber</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stringtobuffer">stringToBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#buffertostring">bufferToString</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#toutf8">toUtf8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#detectcharset">detectCharset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#objecttoquery">objectToQuery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#querytoobject">queryToObject</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#urlcomponents">urlComponents</a></li>
@@ -885,18 +887,151 @@ more information on different types of <span class="green">Buffers</span>.</p>
 </div>
 <div class="section" id="buffertostring">
 <h3>bufferToString<a class="headerlink" href="#buffertostring" title="Permalink to this headline">¶</a></h3>
-<p>Performs a 1:1 copy of the contents of a <span class="green">Buffer</span> to a <span class="green">String</span>.</p>
-<p>See <code class="docutils literal notranslate"><span class="pre">duk_buffer_to_string()</span></code> in the
-<a class="reference external" href="https://wiki.duktape.org/howtobuffers2x#buffer-to-string-conversion">Duktape documentation</a></p>
+<p>Copies the contents of a <span class="green">Buffer</span> into a <span class="green">String</span>, converting
+the bytes to UTF-8 if they are not already valid UTF-8.</p>
 <p>Usage:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">bufferToString</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">bufferToString</span><span class="p">(</span><span class="nx">data</span> <span class="p">[,</span> <span class="nx">charset</span><span class="p">]);</span>
 </pre></div>
 </div>
-<p>Where data is a <span class="green">Buffer</span> <span class="green">Object</span>.</p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">data</span></code> is a <span class="green">Buffer</span> <span class="green">Object</span> and the optional
+<code class="docutils literal notranslate"><span class="pre">charset</span></code> is a <span class="green">String</span> naming the encoding of the bytes (or an
+<span class="green">Object</span> of the form <code class="docutils literal notranslate"><span class="pre">{charset:</span> <span class="pre">&quot;windows-1252&quot;}</span></code>).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">charset</span></code> is given, the bytes are decoded as that encoding.  If it is
+not, the bytes are examined: a byte order mark or valid UTF-8 is used as
+is, and anything else is decoded as <code class="docutils literal notranslate"><span class="pre">windows-1252</span></code>.  Bytes which cannot
+be decoded are replaced with the Unicode replacement character (<code class="docutils literal notranslate"><span class="pre">U+FFFD</span></code>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>A <span class="green">String</span> in Rampart holds UTF-8.  Copying bytes into one
+without checking them produces a <span class="green">String</span> which looks normal but
+throws <code class="docutils literal notranslate"><span class="pre">internal</span> <span class="pre">error</span></code> from the first <span class="green">String</span> operation that
+touches it, such as <code class="docutils literal notranslate"><span class="pre">replace()</span></code>, naming neither the cause nor the
+offending text.  A single stray byte in a large document is enough.
+Converting on the way in avoids this.  Text which is already valid
+UTF-8, including plain ASCII, is copied unchanged.</p>
+<p class="last">If the exact bytes are wanted rather than text, do not use this
+function: keep the <span class="green">Buffer</span>.</p>
+</div>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd><span class="green">String</span>.  Contents of <span class="green">Buffer</span> copied to a new <span class="green">String</span>.</dd>
+<dd><span class="green">String</span>.  Contents of <span class="green">Buffer</span>, as UTF-8.</dd>
 </dl>
+</div>
+<div class="section" id="toutf8">
+<h3>toUtf8<a class="headerlink" href="#toutf8" title="Permalink to this headline">¶</a></h3>
+<p>Converts a <span class="green">Buffer</span> (or <span class="green">String</span>) of text in any supported
+encoding to UTF-8, with control over how errors are handled and what is
+reported.</p>
+<p><a class="reference internal" href="#buffertostring">bufferToString</a>() above is the short form of this and is usually what
+is wanted.  Use <code class="docutils literal notranslate"><span class="pre">toUtf8()</span></code> when the encoding needs to be reported, when
+undecodable input should raise an error rather than be replaced, or when
+the text arrives in pieces.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUtf8</span><span class="p">(</span><span class="nx">data</span> <span class="p">[,</span> <span class="nx">charset</span><span class="p">]);</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUtf8</span><span class="p">(</span><span class="nx">data</span> <span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">data</span></code> is a <span class="green">Buffer</span> or <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">charset</span></code> is a
+<span class="green">String</span> naming the encoding of the bytes, and <code class="docutils literal notranslate"><span class="pre">options</span></code> is an
+<span class="green">Object</span> with any of:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">charset</span></code> - <span class="green">String</span>.  The encoding of <code class="docutils literal notranslate"><span class="pre">data</span></code>.  Any label
+from the <a class="reference external" href="https://encoding.spec.whatwg.org/">WHATWG Encoding Standard</a>
+is accepted – <code class="docutils literal notranslate"><span class="pre">&quot;windows-1252&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;iso-8859-15&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;koi8-r&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;shift_jis&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gb18030&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;big5&quot;</span></code> and so on.  If omitted, the
+encoding is determined as described under <a class="reference internal" href="#buffertostring">bufferToString</a>().</li>
+<li><code class="docutils literal notranslate"><span class="pre">fatal</span></code> - <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, throw an error when a byte
+cannot be decoded instead of replacing it with <code class="docutils literal notranslate"><span class="pre">U+FFFD</span></code>.
+Default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stream</span></code> - <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, an incomplete multi-byte
+sequence at the end of <code class="docutils literal notranslate"><span class="pre">data</span></code> is left unconverted and its length
+reported as <code class="docutils literal notranslate"><span class="pre">tail</span></code>, so the remaining bytes may be carried into the
+next call.  Without this, a trailing partial sequence is treated as an
+error.  Default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">details</span></code> - <span class="green">Boolean</span>.  If <code class="docutils literal notranslate"><span class="pre">true</span></code>, return an <span class="green">Object</span>
+describing the conversion rather than the converted text alone.</li>
+</ul>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">raw</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;/path/to/notes.txt&quot;</span><span class="p">);</span>
+
+<span class="cm">/* text, converted if it needed it */</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUtf8</span><span class="p">(</span><span class="nx">raw</span><span class="p">);</span>
+
+<span class="cm">/* the same, with a report of what was done */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUtf8</span><span class="p">(</span><span class="nx">raw</span><span class="p">,</span> <span class="p">{</span><span class="nx">details</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+<span class="cm">/*  {</span>
+<span class="cm">       text:    &quot;...&quot;,</span>
+<span class="cm">       charset: &quot;WINDOWS-1252&quot;,</span>
+<span class="cm">       source:  &quot;assumed&quot;,</span>
+<span class="cm">       repairs: 18,</span>
+<span class="cm">       tail:    0</span>
+<span class="cm">    }  */</span>
+
+<span class="cm">/* an HTTP response, where the server said what the encoding is */</span>
+<span class="kd">var</span> <span class="nx">text</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">toUtf8</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="p">{</span><span class="nx">charset</span><span class="o">:</span> <span class="s2">&quot;iso-8859-9&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first"><span class="green">String</span> with the converted text, or, with <code class="docutils literal notranslate"><span class="pre">details</span></code>, an
+<span class="green">Object</span> with the properties:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> - <span class="green">String</span>.  The converted text.</li>
+<li><code class="docutils literal notranslate"><span class="pre">charset</span></code> - <span class="green">String</span>.  The encoding it was decoded as.</li>
+<li><code class="docutils literal notranslate"><span class="pre">source</span></code> - <span class="green">String</span>.  How that encoding was arrived at.  One
+of <code class="docutils literal notranslate"><span class="pre">&quot;bom&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;declared&quot;</span></code> (given by the caller), <code class="docutils literal notranslate"><span class="pre">&quot;utf-8&quot;</span></code>
+(already valid) or <code class="docutils literal notranslate"><span class="pre">&quot;assumed&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">repairs</span></code> - <span class="green">Number</span>.  Count of undecodable bytes replaced.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tail</span></code> - <span class="green">Number</span>.  Bytes of an incomplete final sequence left
+unconverted, when <code class="docutils literal notranslate"><span class="pre">stream</span></code> is set.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="detectcharset">
+<h3>detectCharset<a class="headerlink" href="#detectcharset" title="Permalink to this headline">¶</a></h3>
+<p>Reports the encoding of a <span class="green">Buffer</span> without converting it.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">detectCharset</span><span class="p">(</span><span class="nx">data</span> <span class="p">[,</span> <span class="nx">charset</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">data</span></code> is a <span class="green">Buffer</span> or <span class="green">String</span> and the optional
+<code class="docutils literal notranslate"><span class="pre">charset</span></code> is a <span class="green">String</span> naming an encoding the caller already
+believes to be correct, which is reported back if it is a recognised label.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">detectCharset</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s2">&quot;doc.txt&quot;</span><span class="p">));</span>
+<span class="cm">/*  {charset: &quot;UTF-8&quot;, source: &quot;utf-8&quot;, ascii: true}  */</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first"><span class="green">Object</span> with the properties:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">charset</span></code> - <span class="green">String</span>.  The encoding the bytes appear to be in.</li>
+<li><code class="docutils literal notranslate"><span class="pre">source</span></code> - <span class="green">String</span>.  How that was arrived at, as for
+<a class="reference internal" href="#toutf8">toUtf8</a>().</li>
+<li><code class="docutils literal notranslate"><span class="pre">ascii</span></code> - <span class="green">Boolean</span>.  <code class="docutils literal notranslate"><span class="pre">true</span></code> if the bytes are 7-bit ASCII,
+which is valid in every encoding listed here and needs no conversion.</li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Encodings are not equally distinguishable.  A byte order mark is
+decisive, and multi-byte encodings such as <code class="docutils literal notranslate"><span class="pre">shift_jis</span></code> or <code class="docutils literal notranslate"><span class="pre">gb18030</span></code>
+have distinctive byte patterns.  The single-byte encodings of Western
+and Central Europe – <code class="docutils literal notranslate"><span class="pre">windows-1252</span></code>, <code class="docutils literal notranslate"><span class="pre">iso-8859-1</span></code>, <code class="docutils literal notranslate"><span class="pre">iso-8859-15</span></code>
+and their relatives – occupy the same byte ranges and differ only in
+which character each byte maps to, so they cannot be told apart by
+inspection.  Text which is not valid UTF-8 and carries no mark is
+reported as <code class="docutils literal notranslate"><span class="pre">windows-1252</span></code>, which is a superset of <code class="docutils literal notranslate"><span class="pre">iso-8859-1</span></code>
+across the printable range.</p>
+<p class="last">Where the encoding is known from elsewhere – an HTTP <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>
+header, a <code class="docutils literal notranslate"><span class="pre">&lt;meta</span> <span class="pre">charset&gt;</span></code> declaration, a MIME part – pass it in
+rather than relying on inspection.</p>
+</div>
 </div>
 <div class="section" id="objecttoquery">
 <h3>objectToQuery<a class="headerlink" href="#objecttoquery" title="Permalink to this headline">¶</a></h3>
@@ -1256,9 +1391,11 @@ May be truncated if the file contains null characters.</td>
 <dd>If <code class="docutils literal notranslate"><span class="pre">return_str</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">offsetPos</span></code> and/or <code class="docutils literal notranslate"><span class="pre">rLength</span></code> are
 set, the returned <span class="green">String</span> may be shortened to ensure that the
 return value is a valid UTF-8 string.  If that behavior is not desired,
-returning a <span class="green">Buffer</span> and converting to a string with, e.g.
-<a class="reference internal" href="#sprintf">sprintf</a>() or <a class="reference internal" href="#buffertostring">bufferToString</a>() will bypass the UTF-8
-character/byte boundary check.</dd>
+returning a <span class="green">Buffer</span> and converting to a string with
+<a class="reference internal" href="#sprintf">sprintf</a>() will bypass the UTF-8 character/byte boundary check.
+Note that <a class="reference internal" href="#buffertostring">bufferToString</a>() will NOT bypass it: a sequence cut
+short at the end of the <span class="green">Buffer</span> is replaced with <code class="docutils literal notranslate"><span class="pre">U+FFFD</span></code>,
+since a <span class="green">String</span> ending mid character cannot be used safely.</dd>
 </dl>
 </div>
 <div class="section" id="writefile">

@@ -1474,6 +1474,25 @@ Metamorph query to look for:
   terms are visible. Also take care with URLs to try to show the
   start and end.
 
+* ``querysingleoffset`` (4) -
+  Like ``querysingle``, but the abstract is prefixed with ``@start: ``
+  — the **byte** offset in ``text`` at which the abstract begins,
+  e.g. ``@980: housekeeping data downlink…``.  Intended for making a
+  search result clickable: the offset locates the passage in the
+  original document.
+
+  Only the start is given, deliberately.  ``abstract()`` collapses
+  whitespace runs and long repeated-byte runs (``-------``) as it
+  renders, so its output is **not** a verbatim substring of ``text``
+  and no length would let a caller reproduce it by slicing.  When
+  exact spans are needed, use
+  :ref:`excerpt() <sql-server-funcs:excerpt>`\ 's ``offsets=1``
+  option, whose passages are copied verbatim and carry
+  ``@start+length: ``.
+
+  Works with the 5th (vector column) argument as well, where the
+  offset names the start of the best-chunk snippet.
+
 * ``querybest`` -
   An alias for the best available query-based style; currently the
   same as ``querymultiple``. Using ``querybest`` in a script ensures
@@ -1588,6 +1607,21 @@ key):
     When nothing clears the floor the result is the **empty string** —
     the signal that the document has no relevant chunk.  Guaranteed
     picks (``kw_hit``, ``lead``) are exempt from the floor.
+
+*   ``offsets`` (default 0) — with ``offsets=1``, each passage is
+    prefixed with its location in the document as ``@start+length: ``,
+    e.g. ``@931+230: ``.  Both numbers are **byte** offsets into
+    ``text``, measured after the whitespace trim, so they name exactly
+    the bytes that follow the prefix — ``substr(Doc, start, length)``
+    reproduces the passage.  Note this is a byte count, not a character
+    count: a passage of 504 bytes is 464 characters if it contains
+    multi-byte UTF-8, so a caller measuring the returned string in
+    characters must not use that figure to index the document.
+
+    The prefixes are **not** counted against ``maxsize`` — that budget
+    bounds the excerpt text, so the returned string is longer than
+    ``maxsize`` by whatever the prefixes add.  A passage truncated to
+    fit the budget reports its truncated length, not its original one.
 
 .. code-block:: sql
 

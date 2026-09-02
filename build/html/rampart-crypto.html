@@ -176,6 +176,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#hashing">Hashing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#hash">hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#alias-functions">alias functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hashstream">HashStream</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hmac">hmac</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#kmac">kmac</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cshake128-cshake256">cshake128 / cshake256</a></li>
@@ -2326,6 +2327,77 @@ value above.  Thus, using <code class="docutils literal notranslate"><span class
 (<code class="docutils literal notranslate"><span class="pre">-</span></code>), an underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>) is used instead.  Thus
 <code class="docutils literal notranslate"><span class="pre">crypto.hash(&quot;hello</span> <span class="pre">world&quot;,</span> <span class="pre">&quot;sha3-256&quot;)</span></code> is equivalent to
 <code class="docutils literal notranslate"><span class="pre">crypto.sha3_256(&quot;hello</span> <span class="pre">world&quot;)</span></code>.</p>
+</div>
+<div class="section" id="hashstream">
+<h3>HashStream<a class="headerlink" href="#hashstream" title="Permalink to this headline">¶</a></h3>
+<p>Incremental (streaming) hashing.  <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">crypto.HashStream()</span></code> returns a
+handle that accepts data in any number of pieces — for hashing content
+that is never in memory all at once, such as a large file read in
+chunks or a download as it arrives.</p>
+<p>Producing the digest with <code class="docutils literal notranslate"><span class="pre">final()</span></code> does not end the stream: more
+data may be added afterwards and <code class="docutils literal notranslate"><span class="pre">final()</span></code> called again, each call
+returning the digest of everything added so far.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">h</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">HashStream</span><span class="p">([</span><span class="nx">hash_func</span><span class="p">]);</span>
+
+<span class="nx">h</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>                        <span class="cm">/* any number of times */</span>
+
+<span class="kd">var</span> <span class="nx">digest</span> <span class="o">=</span> <span class="nx">h</span><span class="p">.</span><span class="kr">final</span><span class="p">([</span><span class="nx">return_option</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">hash_func</span></code> is an optional <span class="green">String</span>, any of the algorithms
+accepted by <a class="reference internal" href="#hash">hash</a> above.  Default is <code class="docutils literal notranslate"><span class="pre">sha256</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code> is a <span class="green">String</span> or <span class="green">Buffer</span> (any buffer-data
+type: a plain buffer, an <code class="docutils literal notranslate"><span class="pre">ArrayBuffer</span></code>, a TypedArray view such as
+<code class="docutils literal notranslate"><span class="pre">Uint8Array</span></code>, or a <code class="docutils literal notranslate"><span class="pre">DataView</span></code> — views contribute only the bytes
+they cover), the next piece of data to add to the hash.</li>
+<li><code class="docutils literal notranslate"><span class="pre">return_option</span></code> is the same as for <a class="reference internal" href="#hash">hash</a> above: omitted for a
+hex-encoded <span class="green">String</span>, <code class="docutils literal notranslate"><span class="pre">true</span></code> for a raw <span class="green">Uint8Array</span>,
+or <code class="docutils literal notranslate"><span class="pre">{returnType:</span> <span class="pre">&quot;hex&quot;</span> <span class="pre">|</span> <span class="pre">&quot;uint8array&quot;</span> <span class="pre">|</span> <span class="pre">&quot;buffer&quot;}</span></code>.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">A HashStream handle <span class="green">Object</span> with:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">update(data)</span></code> — add a piece of data.  Returns the handle, so
+calls may be chained.</li>
+<li><code class="docutils literal notranslate"><span class="pre">final([return_option])</span></code> — the digest of all data added so
+far.  Non-destructive; the handle remains usable.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code> — a <span class="green">String</span>, the algorithm name.</li>
+</ul>
+</dd>
+<dt>Note:</dt>
+<dd><p class="first">The <code class="docutils literal notranslate"><span class="pre">new</span></code> keyword is optional, but constructing with <code class="docutils literal notranslate"><span class="pre">new</span></code> is
+the documented form.</p>
+<p class="last">A handle copied to a thread created with <code class="docutils literal notranslate"><span class="pre">rampart.thread</span></code> shares
+its hash state with the original: bytes added in either thread are
+part of the digest either sees.  Updates are internally locked, but
+the byte order of interleaved concurrent updates is unspecified —
+have one thread at a time feed a given handle.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-crypto&quot;</span><span class="p">);</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+
+<span class="cm">/* the sha256 of a file too large to hash in one piece */</span>
+<span class="kd">var</span> <span class="nx">h</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">HashStream</span><span class="p">(</span><span class="s2">&quot;sha256&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">fh</span> <span class="o">=</span> <span class="nx">fopen</span><span class="p">(</span><span class="s2">&quot;/path/to/large.file&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">),</span> <span class="nx">chunk</span><span class="p">;</span>
+<span class="k">while</span><span class="p">(</span> <span class="p">(</span><span class="nx">chunk</span> <span class="o">=</span> <span class="nx">fh</span><span class="p">.</span><span class="nx">fread</span><span class="p">(</span><span class="mi">1048576</span><span class="p">))</span> <span class="o">&amp;&amp;</span> <span class="nx">chunk</span><span class="p">.</span><span class="nx">byteLength</span> <span class="p">)</span>
+    <span class="nx">h</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">chunk</span><span class="p">);</span>
+<span class="nx">fh</span><span class="p">.</span><span class="nx">fclose</span><span class="p">();</span>
+
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;sha256: %s\n&quot;</span><span class="p">,</span> <span class="nx">h</span><span class="p">.</span><span class="kr">final</span><span class="p">());</span>
+
+<span class="cm">/* equivalent to crypto.sha256() of the whole content at once,</span>
+<span class="cm">   e.g.: crypto.sha256(readFile(&quot;/path/to/large.file&quot;))       */</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="hmac">
 <h3>hmac<a class="headerlink" href="#hmac" title="Permalink to this headline">¶</a></h3>

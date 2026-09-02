@@ -604,21 +604,163 @@ Return Value:
 bufferToString
 ''''''''''''''
 
-Performs a 1:1 copy of the contents of a :green:`Buffer` to a :green:`String`.
-
-See ``duk_buffer_to_string()`` in the
-`Duktape documentation <https://wiki.duktape.org/howtobuffers2x#buffer-to-string-conversion>`__
+Copies the contents of a :green:`Buffer` into a :green:`String`, converting
+the bytes to UTF-8 if they are not already valid UTF-8.
 
 Usage:
 
 .. code-block:: javascript
 
-   var str = rampart.utils.bufferToString(data);
+   var str = rampart.utils.bufferToString(data [, charset]);
 
-Where data is a :green:`Buffer` :green:`Object`.
+Where ``data`` is a :green:`Buffer` :green:`Object` and the optional
+``charset`` is a :green:`String` naming the encoding of the bytes (or an
+:green:`Object` of the form ``{charset: "windows-1252"}``).
+
+If ``charset`` is given, the bytes are decoded as that encoding.  If it is
+not, the bytes are examined: a byte order mark or valid UTF-8 is used as
+is, and anything else is decoded as ``windows-1252``.  Bytes which cannot
+be decoded are replaced with the Unicode replacement character (``U+FFFD``).
+
+.. note::
+
+   A :green:`String` in Rampart holds UTF-8.  Copying bytes into one
+   without checking them produces a :green:`String` which looks normal but
+   throws ``internal error`` from the first :green:`String` operation that
+   touches it, such as ``replace()``, naming neither the cause nor the
+   offending text.  A single stray byte in a large document is enough.
+   Converting on the way in avoids this.  Text which is already valid
+   UTF-8, including plain ASCII, is copied unchanged.
+
+   If the exact bytes are wanted rather than text, do not use this
+   function: keep the :green:`Buffer`.
 
 Return Value:
-   :green:`String`.  Contents of :green:`Buffer` copied to a new :green:`String`.
+   :green:`String`.  Contents of :green:`Buffer`, as UTF-8.
+
+toUtf8
+''''''
+
+Converts a :green:`Buffer` (or :green:`String`) of text in any supported
+encoding to UTF-8, with control over how errors are handled and what is
+reported.
+
+`bufferToString`_\ () above is the short form of this and is usually what
+is wanted.  Use ``toUtf8()`` when the encoding needs to be reported, when
+undecodable input should raise an error rather than be replaced, or when
+the text arrives in pieces.
+
+Usage:
+
+.. code-block:: javascript
+
+   var str = rampart.utils.toUtf8(data [, charset]);
+   var res = rampart.utils.toUtf8(data [, options]);
+
+Where ``data`` is a :green:`Buffer` or :green:`String`, ``charset`` is a
+:green:`String` naming the encoding of the bytes, and ``options`` is an
+:green:`Object` with any of:
+
+   * ``charset`` - :green:`String`.  The encoding of ``data``.  Any label
+     from the `WHATWG Encoding Standard <https://encoding.spec.whatwg.org/>`_
+     is accepted -- ``"windows-1252"``, ``"iso-8859-15"``, ``"koi8-r"``,
+     ``"shift_jis"``, ``"gb18030"``, ``"big5"`` and so on.  If omitted, the
+     encoding is determined as described under `bufferToString`_\ ().
+
+   * ``fatal`` - :green:`Boolean`.  If ``true``, throw an error when a byte
+     cannot be decoded instead of replacing it with ``U+FFFD``.
+     Default ``false``.
+
+   * ``stream`` - :green:`Boolean`.  If ``true``, an incomplete multi-byte
+     sequence at the end of ``data`` is left unconverted and its length
+     reported as ``tail``, so the remaining bytes may be carried into the
+     next call.  Without this, a trailing partial sequence is treated as an
+     error.  Default ``false``.
+
+   * ``details`` - :green:`Boolean`.  If ``true``, return an :green:`Object`
+     describing the conversion rather than the converted text alone.
+
+Example:
+
+.. code-block:: javascript
+
+   var raw = rampart.utils.readFile("/path/to/notes.txt");
+
+   /* text, converted if it needed it */
+   var text = rampart.utils.toUtf8(raw);
+
+   /* the same, with a report of what was done */
+   var res = rampart.utils.toUtf8(raw, {details: true});
+   /*  {
+          text:    "...",
+          charset: "WINDOWS-1252",
+          source:  "assumed",
+          repairs: 18,
+          tail:    0
+       }  */
+
+   /* an HTTP response, where the server said what the encoding is */
+   var text = rampart.utils.toUtf8(body, {charset: "iso-8859-9"});
+
+Return Value:
+   :green:`String` with the converted text, or, with ``details``, an
+   :green:`Object` with the properties:
+
+   * ``text`` - :green:`String`.  The converted text.
+   * ``charset`` - :green:`String`.  The encoding it was decoded as.
+   * ``source`` - :green:`String`.  How that encoding was arrived at.  One
+     of ``"bom"``, ``"declared"`` (given by the caller), ``"utf-8"``
+     (already valid) or ``"assumed"``.
+   * ``repairs`` - :green:`Number`.  Count of undecodable bytes replaced.
+   * ``tail`` - :green:`Number`.  Bytes of an incomplete final sequence left
+     unconverted, when ``stream`` is set.
+
+detectCharset
+'''''''''''''
+
+Reports the encoding of a :green:`Buffer` without converting it.
+
+Usage:
+
+.. code-block:: javascript
+
+   var info = rampart.utils.detectCharset(data [, charset]);
+
+Where ``data`` is a :green:`Buffer` or :green:`String` and the optional
+``charset`` is a :green:`String` naming an encoding the caller already
+believes to be correct, which is reported back if it is a recognised label.
+
+Example:
+
+.. code-block:: javascript
+
+   var info = rampart.utils.detectCharset(rampart.utils.readFile("doc.txt"));
+   /*  {charset: "UTF-8", source: "utf-8", ascii: true}  */
+
+Return Value:
+   :green:`Object` with the properties:
+
+   * ``charset`` - :green:`String`.  The encoding the bytes appear to be in.
+   * ``source`` - :green:`String`.  How that was arrived at, as for
+     `toUtf8`_\ ().
+   * ``ascii`` - :green:`Boolean`.  ``true`` if the bytes are 7-bit ASCII,
+     which is valid in every encoding listed here and needs no conversion.
+
+.. note::
+
+   Encodings are not equally distinguishable.  A byte order mark is
+   decisive, and multi-byte encodings such as ``shift_jis`` or ``gb18030``
+   have distinctive byte patterns.  The single-byte encodings of Western
+   and Central Europe -- ``windows-1252``, ``iso-8859-1``, ``iso-8859-15``
+   and their relatives -- occupy the same byte ranges and differ only in
+   which character each byte maps to, so they cannot be told apart by
+   inspection.  Text which is not valid UTF-8 and carries no mark is
+   reported as ``windows-1252``, which is a superset of ``iso-8859-1``
+   across the printable range.
+
+   Where the encoding is known from elsewhere -- an HTTP ``Content-Type``
+   header, a ``<meta charset>`` declaration, a MIME part -- pass it in
+   rather than relying on inspection.
 
 objectToQuery
 '''''''''''''
@@ -1005,9 +1147,11 @@ Note:
     If ``return_str`` is ``true`` and ``offsetPos`` and/or ``rLength`` are
     set, the returned :green:`String` may be shortened to ensure that the
     return value is a valid UTF-8 string.  If that behavior is not desired,
-    returning a :green:`Buffer` and converting to a string with, e.g.
-    `sprintf`_\ () or `bufferToString`_\ () will bypass the UTF-8
-    character/byte boundary check.
+    returning a :green:`Buffer` and converting to a string with
+    `sprintf`_\ () will bypass the UTF-8 character/byte boundary check.
+    Note that `bufferToString`_\ () will NOT bypass it: a sequence cut
+    short at the end of the :green:`Buffer` is replaced with ``U+FFFD``,
+    since a :green:`String` ending mid character cannot be used safely.
 
 
 writeFile

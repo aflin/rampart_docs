@@ -7,7 +7,7 @@ Preface
 Acknowledgment
 ~~~~~~~~~~~~~~
 
-The rampart-langtools package provides five modules built on
+The rampart-langtools package provides six modules built on
 best-in-class machine-learning libraries:
 
 *  The rampart-llamacpp module is built on
@@ -35,6 +35,13 @@ best-in-class machine-learning libraries:
    `SentencePiece <https://github.com/google/sentencepiece>`_, the
    unsupervised text tokenizer from Google.
 
+*  The rampart-ocr module runs the
+   `PP-OCR <https://github.com/PaddlePaddle/PaddleOCR>`_ models from
+   PaddlePaddle on rampart-onnx's engine.  It decodes page images with
+   `stb_image <https://github.com/nothings/stb>`_ by Sean Barrett and
+   `libtiff <http://www.simplesystems.org/libtiff/>`_ by Sam Leffler
+   and Silicon Graphics, Inc.
+
 The authors of Rampart extend their thanks to the authors and
 contributors of each of these libraries.
 
@@ -52,6 +59,13 @@ The FAISS library is licensed under the
 `MIT License <https://github.com/facebookresearch/faiss/blob/main/LICENSE>`__\ .
 The SentencePiece library is licensed under the
 `Apache 2.0 License <https://github.com/google/sentencepiece/blob/master/LICENSE>`_\ .
+The libtiff library is licensed under a permissive
+`BSD-style license <https://gitlab.com/libtiff/libtiff/-/blob/master/LICENSE.md>`__\ .
+The stb_image decoder is
+`public domain or MIT <https://github.com/nothings/stb/blob/master/LICENSE>`__\ ,
+at the user's choice.  The PP-OCR models, which are downloaded rather
+than bundled, are licensed under the
+`Apache 2.0 License <https://github.com/PaddlePaddle/PaddleOCR/blob/main/LICENSE>`__\ .
 
 The rampart-langtools modules are released under the MIT license.
 
@@ -81,6 +95,12 @@ search and local LLM inference inside Rampart:
 
 *  **rampart-sentencepiece** tokenizes text into subword pieces
    (and back) using a SentencePiece model.
+
+*  **rampart-ocr** reads the text on page images — scans, multi-page
+   TIFFs, photographs of documents, screenshots — returning each line
+   with its position and confidence (`reader.readText()`_\ ).  It is
+   what :ref:`rampart-totext <rampart-totext:setOcr>` uses for image
+   files and scanned PDFs.
 
 The package also ships **rampart-models**, a pure-JavaScript helper
 that downloads and locates the models the engines above consume —
@@ -222,6 +242,16 @@ modelInfo
 
         *  ``nParams`` - A :green:`Number`, the parameter count.
 
+        *  ``chatTemplate`` - A :green:`String`, the model's chat
+           template (the GGUF ``tokenizer.chat_template``).  Absent
+           when the model has none, which is normal for embedding and
+           reranking models.
+
+           A template decides such things as how tool calls are
+           spelled, whether a system message may appear anywhere but
+           first, and which ``reasoning_effort`` values the model
+           accepts.
+
     Example:
 
     .. code-block:: javascript
@@ -238,9 +268,28 @@ modelInfo
               pooling:    "cls",
               nParams:    566703104
            } */
+        /* no chatTemplate: an embedding model has no chat form */
 
         /* size vector storage from the model itself: */
         var vecDim = info.embedDim;
+
+    Example -- which reasoning levels a model accepts:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+
+        var tmpl = llamacpp.modelInfo(path).chatTemplate || "";
+
+        if (!/reasoning_effort/.test(tmpl))
+            printf("this model ignores reasoning_effort\n");
+        else {
+            /* the template validates against a tuple and raises on
+               anything else, e.g.
+                 {%- if x not in ('xhigh', 'medium', 'low') %}          */
+            var m = tmpl.match(/reasoning_effort[\s\S]{0,200}?not\s+in\s*\(([^)]*)\)/);
+            printf("accepts: %s\n", m ? m[1] : "(not stated)");
+        }
 
 initEmbed
 ~~~~~~~~~
@@ -639,7 +688,9 @@ initGen
           given to `gen.predict()`_\ .  Default: ``true``.
 
        *  ``chatTemplate`` - A :green:`String`, a custom Jinja chat
-          template overriding the model's built-in template.
+          template overriding the model's built-in template.  The
+          built-in one can be read with `modelInfo`_\ , so a template
+          may be inspected, edited and passed back here.
 
        *  ``chatTemplateFile`` - A :green:`String`, a file from
           which to read the custom chat template.
@@ -647,9 +698,26 @@ initGen
     Return Value:
         An :green:`Object` (the gen handle) with the properties
         ``nCtx`` and ``nVocab`` (:green:`Numbers`, the resolved
-        context size and vocabulary size) and the functions
+        context size and vocabulary size), ``supportsTools`` and
+        ``chatFormat`` (see below) and the functions
         `gen.predict()`_\ , `gen.predictAsync()`_\ ,
         `gen.getLast()`_ and `gen.destroy()`_\ .
+
+        *  ``supportsTools`` - A :green:`Boolean`, whether the loaded
+           model's chat template can render tool definitions.  Check
+           this before passing ``tools`` to `gen.predict()`_ — a model
+           whose template has no tool support throws rather than
+           falling back to describing the tools in the prompt.  It is
+           always ``false`` when the ``jinja`` option is off, since
+           tools are only carried on the Jinja path.
+
+        *  ``chatFormat`` - A :green:`String`, the name of the chat
+           format detected for this model (e.g. ``"peg-native"``,
+           ``"Hermes 2 Pro"``), for diagnostics.
+
+        *  ``supportsThinkingToggle`` - A :green:`Boolean`, whether the
+           model's template honours the ``thinking`` option of
+           `gen.predict()`_\ .
 
     Example:
 
@@ -712,6 +780,12 @@ gen.predict()
        chat-style messages.  The model's chat template is applied
        (see the ``jinja`` option of `initGen`_\ ).
 
+       Messages may also carry the fields needed to feed a tool loop's
+       own output back: ``tool_calls`` on an ``assistant`` message
+       (the array returned as ``toolCalls``, verbatim), and
+       ``tool_call_id`` plus ``name`` on a ``tool`` message holding
+       that tool's result.  ``reasoning_content`` is accepted too.
+
     *  ``maxTokens`` - A :green:`Number`, the maximum number of
        tokens to generate.  Default: ``512``.
 
@@ -739,12 +813,103 @@ gen.predict()
        assistant generation prompt when applying a chat template.
        Default: ``true``.
 
+    *  ``tools`` - **Experimental.**  An :green:`Array` of tool
+       definitions in OpenAI shape:
+       ``{type:"function", function:{name, description, parameters}}``,
+       where ``parameters`` is a JSON Schema :green:`Object`.  The
+       model's own template renders them in whatever form it was
+       trained on, and its reply is parsed back into structure — the
+       tool-call markup never reaches your code.  Requires
+       ``supportsTools``; throws otherwise.
+
+    *  ``toolChoice`` - A :green:`String`, one of ``"auto"`` (the
+       default), ``"none"`` or ``"required"``.
+
+    *  ``parallelToolCalls`` - A :green:`Boolean`, whether the model
+       may emit several calls in one turn.  Default: ``false``.
+
+    *  ``reasoning`` - **Experimental.**  A :green:`Boolean`.  When
+       ``true``, a thinking model's deliberation is returned separately
+       as ``reasoning`` instead of being left in the reply text.
+       Default: ``false``, which keeps the reply byte-for-byte what it
+       has always been.
+
+       Turn this on whenever your code has to **machine-read** the
+       reply.  Some chat formats carry reasoning as a *channel* rather
+       than a ``<think>`` span, and only the model's own parser knows
+       where such a channel ends — so a caller cannot strip it
+       afterwards, and a reply meant to be ``"4,7"`` arrives as
+       paragraphs of deliberation instead.  Supplying ``tools`` enables
+       this implicitly.
+
+    *  ``thinking`` - **Experimental.**  A :green:`Boolean`.  ``false``
+       asks the model not to deliberate at all.  Where a model supports
+       it (see ``supportsThinkingToggle``) this is the difference
+       between a sub-second reply and tens of seconds.  Silently
+       ignored by templates that do not support it.  Unset leaves the
+       template's own default alone.
+
     Unset sampling options use the model/engine defaults.
 
     Return Value:
         A :green:`String`, the full generated text.  If the engine
         reports an error, the returned string is
         ``"[gen err:<message>]"``.
+
+        **When ``tools`` or ``reasoning`` is supplied**, an
+        :green:`Object` is returned instead, with:
+
+        *  ``fullText`` - A :green:`String`, the reply text with any
+           tool-call markup removed.
+
+        *  ``toolCalls`` - An :green:`Array` of
+           ``{id, type:"function", function:{name, arguments}}``.
+           ``arguments`` is a JSON :green:`String`, passed through
+           exactly as the model emitted it.  The property is
+           **absent** — not an empty array — when the model called
+           nothing, so ``if (res.toolCalls)`` is the test.
+
+        *  ``reasoning`` - A :green:`String`, the model's reasoning
+           block, when the chat format separates one.
+
+        *  ``finishReason`` - A :green:`String`: ``"tool_calls"``,
+           ``"stop"``, ``"length"``, ``"cancel"`` or ``"error"``.
+
+        Callers that pass neither ``tools`` nor ``reasoning`` always
+        get the :green:`String`, exactly as before.
+
+    Example — one turn of a tool loop:
+
+    .. code-block:: javascript
+
+        var tools = [{
+            type: "function",
+            function: {
+                name: "get_weather",
+                description: "Current weather for a city.",
+                parameters: {
+                    type: "object",
+                    properties: { city: { type: "string" } },
+                    required: ["city"]
+                }
+            }
+        }];
+
+        var msgs = [{ role: "user", content: "What's the weather in Paris?" }];
+        var res  = gen.predict({ messages: msgs, tools: tools });
+
+        if (res.toolCalls) {
+            var call = res.toolCalls[0];
+            var args = JSON.parse(call.function.arguments);
+            var out  = myWeatherLookup(args.city);      /* you run the tool */
+
+            msgs.push({ role: "assistant", content: "", tool_calls: res.toolCalls });
+            msgs.push({ role: "tool", tool_call_id: call.id,
+                        name: call.function.name, content: out });
+
+            res = gen.predict({ messages: msgs, tools: tools });
+        }
+        rampart.utils.printf("%s\n", res.fullText);
 
 gen.predictAsync()
 ^^^^^^^^^^^^^^^^^^
@@ -773,6 +938,11 @@ gen.predictAsync()
        *  ``done`` - A :green:`Boolean`, ``false`` for token
           callbacks.
 
+       *  ``reasoning`` - A :green:`Boolean`, present and ``true`` only
+          when this token is deliberation rather than the answer, so a
+          UI can render or hide the two separately.  Absent otherwise,
+          making ``if (res.reasoning)`` the test.
+
     *  ``final`` is an optional :green:`Function`, called once when
        the generation ends, with an :green:`Object`:
 
@@ -781,6 +951,22 @@ gen.predictAsync()
 
        *  ``error`` - A :green:`String`, set if the generation
           failed.
+
+       *  ``toolCalls``, ``reasoning``, ``finishReason`` - as
+          described under `gen.predict()`_\ .  ``toolCalls`` appears
+          only when ``tools`` was supplied and the model called
+          something.
+
+    Tool-call markup is never streamed: it is withheld and delivered in
+    structured form to ``final``.  Concatenating the tokens that arrive
+    **without** the ``reasoning`` flag therefore yields exactly
+    ``fullText``, with no markup to filter out.
+
+    Reasoning tokens, by contrast, *are* streamed as they are produced
+    (flagged, as above).  On a thinking model the deliberation is the
+    longest part of a turn, and a caller that receives nothing during it
+    cannot show progress — nor cancel, since cancellation works by
+    refusing the next token.
 
     Return Value:
         An :green:`Object` with a single function ``cancel()``,
@@ -862,6 +1048,16 @@ Common Model and Context Options
          - ``--parallel``
          - :green:`Number`. Maximum parallel sequences (`initGen`_:
            how many requests decode together).
+       * - ``loadStallSeconds``
+         - —
+         - :green:`Number`. How long the load may report NO progress
+           before `initGen`_ / `initGenAsync`_ give up (default ``120``).
+           This is not a deadline: the clock resets whenever llama.cpp
+           reports progress, so a slow load of a large model is never
+           cut short.  It bounds the case where the loader dies or
+           blocks without reporting anything, which would otherwise wait
+           for ever.  Raise it for a model whose allocation phase is
+           long and silent.
        * - ``threads``
          - ``--threads``
          - :green:`Number`. Threads for generation.
@@ -2684,6 +2880,255 @@ decode
     Return Value:
         A :green:`String`, the decoded text.
 
+The rampart-ocr module
+----------------------
+
+**Experimental.**  rampart-ocr is new in this release.  It is under
+active development and its API may change.
+
+Optical character recognition using the PP-OCR model family: a page
+image goes in, text and box geometry come out.  The module carries no
+inference engine of its own -- it runs its models on the ONNX Runtime
+inside `The rampart-onnx module`_, which must be installed alongside it,
+and it fails at ``require()`` with a clear message if it is not.
+
+Models are fetched through `The rampart-models module`_ and are not
+bundled.  ``models.ocrGet()`` returns exactly the object `ocr.init`_
+expects, so the two compose directly.
+
+Loading the module is a simple matter of using the ``require()``
+function:
+
+.. code-block:: javascript
+
+    var ocr = require("rampart-ocr");
+
+ocr.init
+~~~~~~~~
+
+    Load the detection, recognition and angle-classification models and
+    return a handle.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var ocr    = require("rampart-ocr");
+        var models = require("rampart-models");
+
+        var reader = ocr.init(paths [, options]);
+
+    Both arguments are :green:`Objects`, combined as
+    ``Object.assign({}, paths, options)`` -- so the model paths can come
+    straight from `ocrGet`_ while the settings you want to vary go in
+    the second, which wins:
+
+    .. code-block:: javascript
+
+        var reader = ocr.init(models.ocrGet("ppocr-v5"), {gpu: true});
+
+    The recognized properties are:
+
+    *  ``det`` is a :green:`String`, the path to the detection
+       ``.onnx`` model.  Required.
+
+    *  ``rec`` is a :green:`String`, the path to the recognition
+       ``.onnx`` model.  Required.
+
+    *  ``dict`` is a :green:`String`, the path to the character
+       dictionary that matches ``rec``.  Required.  A dictionary that
+       does not match the model is rejected here rather than silently
+       shifting every decoded character.
+
+    *  ``cls`` is a :green:`String`, the path to the angle-classification
+       model, or :green:`Boolean` ``false`` to skip angle
+       classification.  Default: enabled when a path is given.
+
+    *  ``gpu`` is a :green:`Boolean`.  Use the CUDA execution provider
+       when the installed rampart-onnx has one.  Default: ``false``.
+
+    *  ``threads`` is a :green:`Number`, ONNX intra-op threads.  ``0``
+       means all cores.  Default: ``1``, which suits a document
+       pipeline running many pages across many threads; ``0`` is
+       roughly twice as fast for a single page.
+
+    Tuning options, rarely needed:
+
+    *  ``limitSideLen`` (:green:`Number`, default ``960``) caps the
+       longer side of the page fed to detection.
+
+    *  ``thresh`` (:green:`Number`, default ``0.3``), ``boxThresh``
+       (default ``0.5``), ``unclipRatio`` (default ``1.6``),
+       ``minSize`` (default ``3``) and ``maxBoxes`` (default ``1000``)
+       control detection postprocessing.
+
+    *  ``clsThresh`` (:green:`Number`, default ``0.5``) is the
+       confidence a line needs to vote that the page is upside down.
+       The decision is made once per page by majority, not per line.
+
+    *  ``recHeight`` (default ``48``), ``recMaxWidth`` (default
+       ``1600``) and ``recBatch`` (default ``6``) control recognition.
+       A larger ``recBatch`` is not faster: every crop in a batch is
+       padded to the widest one.
+
+    Return Value:
+        An :green:`Object` (the handle) with the functions
+        `reader.readText()`_, `reader.destroy()`_ and
+        `reader.settings`_\ .
+
+reader.readText()
+~~~~~~~~~~~~~~~~~
+
+    Read one page image.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var res = reader.readText(image[, opts]);
+
+    Where ``image`` is a :green:`String`, the path to an image file, or
+    a :green:`Buffer` holding one.  PNG, JPEG, **TIFF**, BMP, GIF, PNM
+    (PBM/PGM/PPM, in both the ASCII and the binary forms), TGA, PSD, HDR
+    and PIC are accepted.  TIFF is read by a bundled libtiff, including
+    Group 3/4, LZW, PackBits and Deflate, and including multi-page
+    files, from a path or from a :green:`Buffer` alike; everything else
+    is read by stb_image.
+
+    ``opts`` is an optional :green:`Object`.  ``page`` (:green:`Number`,
+    default ``0``) selects a page of a multi-page TIFF; it is ignored for
+    single-page formats.  Use `pageCount`_ to drive the loop.
+
+    PDF is **not** accepted -- rasterize it first (``pdftoppm``), or hand
+    it to rampart-totext, which does that for you.
+
+    Return Value:
+        An :green:`Object`:
+
+        *  ``text`` -- a :green:`String`, the whole page in reading
+           order, one line per newline.
+
+        *  ``page`` -- a :green:`Number`, which page was read.
+
+        *  ``pages`` -- a :green:`Number`, how many pages the input
+           holds (``1`` for every single-page format).
+
+        *  ``lines`` -- an :green:`Array` of :green:`Objects`, one per
+           detected line, in the same order.  Each has ``text``
+           (:green:`String`), ``score`` (:green:`Number`, recognition
+           confidence 0-1), ``detScore`` (:green:`Number`, detection
+           confidence) and ``box`` -- an :green:`Array` of eight
+           :green:`Numbers`, the quadrilateral
+           ``[x1,y1,x2,y2,x3,y3,x4,y4]`` clockwise from the top-left,
+           in image pixel coordinates.
+
+    Lines whose ``score`` is low are usually misreads of small or
+    damaged type; the confidence is there to be filtered on.
+
+    A page fed in sideways is detected and stood up automatically, and
+    an upside-down page is detected by majority vote across its lines.
+    When the page is rotated a quarter turn, ``box`` coordinates refer
+    to the rotated page rather than the image passed in, and the
+    handle's ``errMsg`` says so (see
+    `Errors, Warnings and Logs`_\ ).
+
+    Example:
+
+    .. code-block:: javascript
+
+        var ocr    = require("rampart-ocr");
+        var models = require("rampart-models");
+
+        var reader = ocr.init(models.ocrGet("ppocr-v5"));
+        var res  = page.page("/tmp/scan-0001.png");
+
+        console.log(res.text);
+
+        res.lines.forEach(function(l) {
+            if (l.score > 0.8)
+                printf("%-60s %.2f\n", l.text, l.score);
+        });
+
+        reader.destroy();
+
+    The first call on a GPU handle is noticeably slower than the rest --
+    CUDA context creation and kernel autotuning happen there rather than
+    in `ocr.init`_\ .  Measured on one dense page: 1498 ms for the first
+    call and about 490 ms for each one after, against 4000 ms on the
+    CPU.  Time a second call, not the first.
+
+    **Multi-column pages are read across, not down.**  Lines at the
+    same height are emitted left to right, so a newspaper or a
+    two-column article comes back with its columns interleaved.  Every
+    line is still recognized correctly -- the text is all present, only
+    its order is wrong -- which is usually harmless for search and
+    indexing but not for extracting passages or quoting.
+
+reader.settings
+~~~~~~~~~~~~~~~
+
+    A read-only :green:`Object` describing what this handle actually
+    ended up using, which is not always what was asked for: ``gpu`` is
+    ``false`` if the CUDA provider was requested but unavailable, and
+    ``cls`` is ``false`` if the classifier could not be loaded.  It is
+    the way to answer "did the GPU turn on?" -- ``errMsg`` is empty in
+    both cases (see `Errors, Warnings and Logs`_\ ) and
+    `modelInfo and runtimeInfo`_ reports only that the *engine* has a
+    CUDA provider, not that this handle is using it.
+
+    .. code-block:: javascript
+
+        var reader = ocr.init(models.ocrGet("ppocr-v5"), {gpu: true});
+        console.log(reader.settings.gpu);   /* true = running on the GPU */
+
+    Contains ``gpu``, ``threads``, ``cls``, ``dictSize`` and the
+    detection and recognition values listed under `ocr.init`_\ .
+
+reader.destroy()
+~~~~~~~~~~~~~~~~
+
+    Release the models and free the handle.  Using the handle
+    afterwards throws.  Handles are also released when garbage
+    collected, but a long-running process should not wait for that.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        reader.destroy();
+
+pageCount
+~~~~~~~~~
+
+    ``ocr.pageCount(image)`` returns the number of pages in a file or
+    a :green:`Buffer`: the directory count of a multi-page TIFF, or
+    ``1`` for every single-page format.  It does not decode pixels.
+
+    .. code-block:: javascript
+
+        var n = ocr.pageCount("/tmp/production-0001.tif");
+        for (var p = 0; p < n; p++)
+            console.log(reader.readText("/tmp/production-0001.tif", {page: p}).text);
+
+modelInfo and runtimeInfo
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ``ocr.modelInfo(path)`` opens any ``.onnx`` file and returns an
+    :green:`Object` with ``inputs`` and ``outputs`` :green:`Arrays`,
+    each entry having ``name``, ``type`` and ``shape``.  A ``shape``
+    entry of ``-1`` is a dynamic dimension.
+
+    ``ocr.runtimeInfo()`` returns an :green:`Object` describing the
+    engine this module bound to: ``ort`` (the ONNX Runtime version),
+    ``runtime`` (which runtime the selection ladder picked), ``cuda``
+    (:green:`Boolean`, whether a CUDA execution provider is available)
+    and ``sessionAbi``.
+
+    .. code-block:: javascript
+
+        console.log(ocr.runtimeInfo());
+        /* { ort: "1.27.0", runtime: "built-in CPU", cuda: false, sessionAbi: 1 } */
+
 The rampart-models module
 -------------------------
 
@@ -2841,6 +3286,48 @@ models.ggufGet() / models.onnxGet()
 
         var emb  = llamacpp.initEmbed( models.ggufGet("bge-m3") );
         var oemb = onnx.initEmbed(     models.onnxGet("bge-m3") );
+
+ocrGet
+~~~~~~
+
+    Fetch an OCR model *set*.  An OCR model is not one file but four
+    with distinct roles -- detection, recognition, angle classification
+    and a character dictionary -- so unlike the functions above this one
+    returns an :green:`Object` of paths rather than a single path.  It
+    is the shape `ocr.init`_ expects.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var models = require("rampart-models");
+
+        var paths = models.ocrGet(name[, options]);
+
+    Where ``name`` is a :green:`String`, the catalog alias (currently
+    ``"ppocr-v5"``), and ``options`` accepts the same ``confirm``,
+    ``progress`` and ``force`` properties as `models.get()`_\\ , plus:
+
+    *  ``variant`` is a :green:`String`, which accuracy/size tradeoff to
+       fetch.  ``"mobile"`` (the default, about 21 MB) suits a
+       page-at-a-time document pipeline; ``"server"`` (about 172 MB) is
+       more accurate on hard scans and slower.  The classifier and
+       dictionary are shared between them, so switching variants
+       downloads only the two models that differ.
+
+    Return Value:
+        An :green:`Object` with ``det``, ``rec``, ``cls`` and ``dict``
+        (:green:`Strings`, absolute paths), ``dir`` (the directory
+        holding them) and ``variant`` (which one was fetched).  Returns
+        ``null`` if a ``confirm`` callback declines the download.
+
+    .. code-block:: javascript
+
+        var reader = ocr.init( models.ocrGet("ppocr-v5") );
+
+    ``ocr.init`` reads only the four path properties, so ``dir`` and
+    ``variant`` are carried along harmlessly and the object can be
+    passed straight through.
 
 models.url()
 ~~~~~~~~~~~~

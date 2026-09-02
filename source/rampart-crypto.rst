@@ -1995,10 +1995,86 @@ alias functions
 The hash function has an alias for each of the possible ``hash_func``
 value above.  Thus, using ``crypto.hash("hello world", "sha256")`` is equivalent to
 ``crypto.sha256("hello world")``.  For ``hash_func`` names with a dash
-(``-``), an underscore (``_``) is used instead.  Thus 
-``crypto.hash("hello world", "sha3-256")`` is equivalent to 
+(``-``), an underscore (``_``) is used instead.  Thus
+``crypto.hash("hello world", "sha3-256")`` is equivalent to
 ``crypto.sha3_256("hello world")``.
 
+HashStream
+~~~~~~~~~~
+
+Incremental (streaming) hashing.  ``new crypto.HashStream()`` returns a
+handle that accepts data in any number of pieces — for hashing content
+that is never in memory all at once, such as a large file read in
+chunks or a download as it arrives.
+
+Producing the digest with ``final()`` does not end the stream: more
+data may be added afterwards and ``final()`` called again, each call
+returning the digest of everything added so far.
+
+Usage:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+
+    var h = new crypto.HashStream([hash_func]);
+
+    h.update(data);                        /* any number of times */
+
+    var digest = h.final([return_option]);
+
+Where:
+
+* ``hash_func`` is an optional :green:`String`, any of the algorithms
+  accepted by `hash`_ above.  Default is ``sha256``.
+
+* ``data`` is a :green:`String` or :green:`Buffer` (any buffer-data
+  type: a plain buffer, an ``ArrayBuffer``, a TypedArray view such as
+  ``Uint8Array``, or a ``DataView`` — views contribute only the bytes
+  they cover), the next piece of data to add to the hash.
+
+* ``return_option`` is the same as for `hash`_ above: omitted for a
+  hex-encoded :green:`String`, ``true`` for a raw :green:`Uint8Array`,
+  or ``{returnType: "hex" | "uint8array" | "buffer"}``.
+
+Return Value:
+    A HashStream handle :green:`Object` with:
+
+    * ``update(data)`` — add a piece of data.  Returns the handle, so
+      calls may be chained.
+    * ``final([return_option])`` — the digest of all data added so
+      far.  Non-destructive; the handle remains usable.
+    * ``type`` — a :green:`String`, the algorithm name.
+
+Note:
+    The ``new`` keyword is optional, but constructing with ``new`` is
+    the documented form.
+
+    A handle copied to a thread created with ``rampart.thread`` shares
+    its hash state with the original: bytes added in either thread are
+    part of the digest either sees.  Updates are internally locked, but
+    the byte order of interleaved concurrent updates is unspecified —
+    have one thread at a time feed a given handle.
+
+Example:
+
+.. code-block:: javascript
+
+    var crypto = require("rampart-crypto");
+    rampart.globalize(rampart.utils);
+
+    /* the sha256 of a file too large to hash in one piece */
+    var h = new crypto.HashStream("sha256");
+
+    var fh = fopen("/path/to/large.file", "r"), chunk;
+    while( (chunk = fh.fread(1048576)) && chunk.byteLength )
+        h.update(chunk);
+    fh.fclose();
+
+    printf("sha256: %s\n", h.final());
+
+    /* equivalent to crypto.sha256() of the whole content at once,
+       e.g.: crypto.sha256(readFile("/path/to/large.file"))       */
 
 hmac
 ~~~~

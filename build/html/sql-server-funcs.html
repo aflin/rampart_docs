@@ -1360,24 +1360,46 @@ is 233 bytes).</p>
 between several different ways of creating the abstract. Note that some
 of these styles require the <code class="docutils literal notranslate"><span class="pre">query</span></code> argument as well, which is a
 Metamorph query to look for:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">dumb</span></code> (0) - Start the abstract at the top of the document.</li>
-<li><code class="docutils literal notranslate"><span class="pre">smart</span></code> (1) - This style will look for the first meaningful
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">dumb</span></code> (0) - Start the abstract at the top of the document.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">smart</span></code> (1) - This style will look for the first meaningful
 chunk of text, skipping over any headers at the top of the text.  This
-is the default if neither <code class="docutils literal notranslate"><span class="pre">style</span></code> nor <code class="docutils literal notranslate"><span class="pre">query</span></code> is given.</li>
-<li><code class="docutils literal notranslate"><span class="pre">querysingle</span></code> (2) -
+is the default if neither <code class="docutils literal notranslate"><span class="pre">style</span></code> nor <code class="docutils literal notranslate"><span class="pre">query</span></code> is given.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">querysingle</span></code> (2) -
 Center the abstract contiguously on the best occurrence of <code class="docutils literal notranslate"><span class="pre">query</span></code>
-in the document.</li>
-<li><code class="docutils literal notranslate"><span class="pre">querymultiple</span></code> (3) -
+in the document.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">querymultiple</span></code> (3) -
 Like <code class="docutils literal notranslate"><span class="pre">querysingle</span></code>, but also break up the abstract into multiple
 sections (separated with “<code class="docutils literal notranslate"><span class="pre">...</span></code>”) if needed to help ensure all
 terms are visible. Also take care with URLs to try to show the
-start and end.</li>
-<li><code class="docutils literal notranslate"><span class="pre">querybest</span></code> -
+start and end.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">querysingleoffset</span></code> (4) -
+Like <code class="docutils literal notranslate"><span class="pre">querysingle</span></code>, but the abstract is prefixed with <code class="docutils literal notranslate"><span class="pre">&#64;start:</span> <span class="pre">``</span>
+<span class="pre">—</span> <span class="pre">the</span> <span class="pre">**byte**</span> <span class="pre">offset</span> <span class="pre">in</span> <span class="pre">``text</span></code> at which the abstract begins,
+e.g. <code class="docutils literal notranslate"><span class="pre">&#64;980:</span> <span class="pre">housekeeping</span> <span class="pre">data</span> <span class="pre">downlink…</span></code>.  Intended for making a
+search result clickable: the offset locates the passage in the
+original document.</p>
+<p>Only the start is given, deliberately.  <code class="docutils literal notranslate"><span class="pre">abstract()</span></code> collapses
+whitespace runs and long repeated-byte runs (<code class="docutils literal notranslate"><span class="pre">-------</span></code>) as it
+renders, so its output is <strong>not</strong> a verbatim substring of <code class="docutils literal notranslate"><span class="pre">text</span></code>
+and no length would let a caller reproduce it by slicing.  When
+exact spans are needed, use
+<a class="reference internal" href="#excerpt"><span class="std std-ref">excerpt()</span></a>’s <code class="docutils literal notranslate"><span class="pre">offsets=1</span></code>
+option, whose passages are copied verbatim and carry
+<a href="#id1"><span class="problematic" id="id2">``</span></a>&#64;start+length: <a href="#id3"><span class="problematic" id="id4">``</span></a>.</p>
+<p>Works with the 5th (vector column) argument as well, where the
+offset names the start of the best-chunk snippet.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">querybest</span></code> -
 An alias for the best available query-based style; currently the
 same as <code class="docutils literal notranslate"><span class="pre">querymultiple</span></code>. Using <code class="docutils literal notranslate"><span class="pre">querybest</span></code> in a script ensures
 that if improved styles become available in future releases, the
-script will automatically “upgrade” to the best style.</li>
+script will automatically “upgrade” to the best style.</p>
+</li>
 </ul>
 <p>If no <code class="docutils literal notranslate"><span class="pre">query</span></code> is given for the <code class="docutils literal notranslate"><span class="pre">query</span></code><span class="math notranslate nohighlight">\(...\)</span> modes, they fall
 back to <code class="docutils literal notranslate"><span class="pre">dumb</span></code> mode. If a <code class="docutils literal notranslate"><span class="pre">query</span></code> is given with a
@@ -1451,26 +1473,44 @@ whole.  A bare number as the 5th argument sets <code class="docutils literal not
 string sets any of the selection options (case-insensitive keys,
 underscores in keys ignored — <code class="docutils literal notranslate"><span class="pre">kw_hit</span></code> and <code class="docutils literal notranslate"><span class="pre">kwhit</span></code> are the same
 key):</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">window</span></code> (default 0) — each selected chunk brings this many
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">window</span></code> (default 0) — each selected chunk brings this many
 neighboring chunks per side along with it, favoring longer
-contiguous context over covering more separate regions.</li>
-<li><code class="docutils literal notranslate"><span class="pre">kw_hit</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">kw_hit=1</span></code>, the chunk containing
+contiguous context over covering more separate regions.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">kw_hit</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">kw_hit=1</span></code>, the chunk containing
 the best <em>keyword</em> hit of <code class="docutils literal notranslate"><span class="pre">query</span></code> is also guaranteed a place
 (budget permitting).  Semantic scoring can prefer a chunk that
 discusses the topic over the one holding a literal fact — a
 number, a name — that the query asks for; this pulls the literal
 match in as well.  No effect when the query has no keyword hit in
-the document.</li>
-<li><code class="docutils literal notranslate"><span class="pre">lead</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">lead=1</span></code>, the document’s first chunk
+the document.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">lead</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">lead=1</span></code>, the document’s first chunk
 is also guaranteed a place.  Useful for corpora whose opening
 sentences define the subject (encyclopedia articles), grounding
-the excerpt’s mid-document passages.</li>
-<li><code class="docutils literal notranslate"><span class="pre">minsim</span></code> (unset by default) — a score floor: chunks scoring
+the excerpt’s mid-document passages.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">minsim</span></code> (unset by default) — a score floor: chunks scoring
 below it are never selected on score, even with budget to spare.
 When nothing clears the floor the result is the <strong>empty string</strong> —
 the signal that the document has no relevant chunk.  Guaranteed
-picks (<code class="docutils literal notranslate"><span class="pre">kw_hit</span></code>, <code class="docutils literal notranslate"><span class="pre">lead</span></code>) are exempt from the floor.</li>
+picks (<code class="docutils literal notranslate"><span class="pre">kw_hit</span></code>, <code class="docutils literal notranslate"><span class="pre">lead</span></code>) are exempt from the floor.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">offsets</span></code> (default 0) — with <code class="docutils literal notranslate"><span class="pre">offsets=1</span></code>, each passage is
+prefixed with its location in the document as <code class="docutils literal notranslate"><span class="pre">&#64;start+length:</span> <span class="pre">``,</span>
+<span class="pre">e.g.</span> <span class="pre">``&#64;931+230:</span> <span class="pre">``.</span>&#160; <span class="pre">Both</span> <span class="pre">numbers</span> <span class="pre">are</span> <span class="pre">**byte**</span> <span class="pre">offsets</span> <span class="pre">into</span>
+<span class="pre">``text</span></code>, measured after the whitespace trim, so they name exactly
+the bytes that follow the prefix — <code class="docutils literal notranslate"><span class="pre">substr(Doc,</span> <span class="pre">start,</span> <span class="pre">length)</span></code>
+reproduces the passage.  Note this is a byte count, not a character
+count: a passage of 504 bytes is 464 characters if it contains
+multi-byte UTF-8, so a caller measuring the returned string in
+characters must not use that figure to index the document.</p>
+<p>The prefixes are <strong>not</strong> counted against <code class="docutils literal notranslate"><span class="pre">maxsize</span></code> — that budget
+bounds the excerpt text, so the returned string is longer than
+<code class="docutils literal notranslate"><span class="pre">maxsize</span></code> by whatever the prefixes add.  A passage truncated to
+fit the budget reports its truncated length, not its original one.</p>
+</li>
 </ul>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="n">excerpt</span><span class="p">(</span><span class="n">Doc</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="o">?</span><span class="p">,</span> <span class="n">Vec</span><span class="p">,</span> <span class="s1">&#39;window=1, kw_hit=1&#39;</span><span class="p">)</span>
 </pre></div>

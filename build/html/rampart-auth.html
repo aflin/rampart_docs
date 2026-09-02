@@ -342,6 +342,9 @@ are supported.  It exports an object with the following properties:</p>
     <span class="nx">sessionRefresh</span><span class="o">:</span> <span class="mi">300</span><span class="p">,</span>        <span class="c1">// min interval between refreshes (default: 5min)</span>
     <span class="nx">sessionRefreshUrgent</span><span class="o">:</span> <span class="mi">3600</span><span class="p">,</span> <span class="c1">// always refresh if &lt; this remaining (default: 1h)</span>
 
+    <span class="c1">// Revalidation of OPEN websockets (default: 20; 0 = every frame)</span>
+    <span class="nx">wsRecheckSeconds</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+
     <span class="c1">// Account lockout</span>
     <span class="nx">lockoutAttempts</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span>     <span class="c1">// max failed attempts before lockout (default: 5)</span>
     <span class="nx">lockoutWindow</span><span class="o">:</span>   <span class="mi">300</span><span class="p">,</span>   <span class="c1">// time window in seconds (default: 5 min)</span>
@@ -447,6 +450,20 @@ to <code class="docutils literal notranslate"><span class="pre">0</span></code> 
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">sessionRefreshUrgent</span></code> — <span class="green">Number</span>.  If fewer than this
 many seconds remain before the session expires, refresh immediately
 regardless of <code class="docutils literal notranslate"><span class="pre">sessionRefresh</span></code> (default: <code class="docutils literal notranslate"><span class="pre">3600</span></code>).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">wsRecheckSeconds</span></code> — <span class="green">Number</span>.  How often an already-open
+websocket is revalidated, in seconds.  The upgrade itself is always
+authorised against <code class="docutils literal notranslate"><span class="pre">protectedPaths</span></code> before the handshake is
+generated; this setting governs only how long a session that is
+revoked or expires <em>mid-connection</em> may keep using a socket that is
+already open.  A denied frame closes the socket with a websocket
+close frame (status 1008, policy violation) rather than an HTTP
+response, which a peer in framing mode cannot parse.</p>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> revalidates on every frame the client sends — exact, but it
+roughly halves frame throughput, because the whole <code class="docutils literal notranslate"><span class="pre">req</span></code> object
+is passed through the auth function each time.  Note that an
+<strong>idle</strong> socket is not revalidated at any setting: nothing runs
+until the client sends data (default: <code class="docutils literal notranslate"><span class="pre">20</span></code>).</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">lockoutAttempts</span></code> — <span class="green">Number</span>.  Maximum failed login
 attempts before the account is temporarily locked.  Set to <code class="docutils literal notranslate"><span class="pre">0</span></code> to

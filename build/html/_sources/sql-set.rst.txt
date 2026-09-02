@@ -874,10 +874,18 @@ hyphenPhrase
 """"""""""""
     Controls whether a hyphen between words searches for the phrase of the
     two words next to each other, or searches for the hyphen literally.  The
-    default value of ``true`` will search for the two words as a phrase.
-    Setting it to ``false`` will search for a single term including the
-    hyphen.  If you anticipate setting hyphenphrase to 0 then you should
-    modify the index word expression to include hyphens.
+    default value of ``false`` searches for a single term including the
+    hyphen, so a hyphenated term that was indexed as one word can be
+    searched for as itself.  For that to find anything, the index word
+    expression has to keep hyphens -- see
+    :ref:`Word Expressions <rampart-sql:Word Expressions>`; with the default
+    expression a hyphenated query still matches, since both the query and
+    the text break at the hyphen.
+
+    Setting it to ``true`` searches for the two words as a phrase instead,
+    which was the default before version 0.7.1.  A query for
+    ``state-of-the-art`` then also matches text written ``state of the
+    art``.
 
 wordc
 """""

@@ -1022,12 +1022,20 @@ the <code class="docutils literal notranslate"><span class="pre">&#64;</span></c
 <div class="section" id="hyphenphrase">
 <h3>hyphenPhrase<a class="headerlink" href="#hyphenphrase" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>Controls whether a hyphen between words searches for the phrase of the
+<div><p>Controls whether a hyphen between words searches for the phrase of the
 two words next to each other, or searches for the hyphen literally.  The
-default value of <code class="docutils literal notranslate"><span class="pre">true</span></code> will search for the two words as a phrase.
-Setting it to <code class="docutils literal notranslate"><span class="pre">false</span></code> will search for a single term including the
-hyphen.  If you anticipate setting hyphenphrase to 0 then you should
-modify the index word expression to include hyphens.</div></blockquote>
+default value of <code class="docutils literal notranslate"><span class="pre">false</span></code> searches for a single term including the
+hyphen, so a hyphenated term that was indexed as one word can be
+searched for as itself.  For that to find anything, the index word
+expression has to keep hyphens – see
+<a class="reference internal" href="rampart-sql.html#word-expressions"><span class="std std-ref">Word Expressions</span></a>; with the default
+expression a hyphenated query still matches, since both the query and
+the text break at the hyphen.</p>
+<p>Setting it to <code class="docutils literal notranslate"><span class="pre">true</span></code> searches for the two words as a phrase instead,
+which was the default before version 0.7.1.  A query for
+<code class="docutils literal notranslate"><span class="pre">state-of-the-art</span></code> then also matches text written <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">of</span> <span class="pre">the</span>
+<span class="pre">art</span></code>.</p>
+</div></blockquote>
 </div>
 <div class="section" id="wordc">
 <h3>wordc<a class="headerlink" href="#wordc" title="Permalink to this headline">¶</a></h3>

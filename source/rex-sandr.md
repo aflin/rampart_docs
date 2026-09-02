@@ -197,6 +197,41 @@ also matches `_`), but it cannot be part of a longer fixed set sequence,
 inverted with `[^...]`, subtracted with `--`, negated with `!`, or used
 with the `{x*}` repetition operator.
 
+### `\bound` — Word Boundary
+
+```
+\bound    the zero-width position between a word character and a
+          non-word character; the start and end of the text count
+          as boundaries
+```
+
+`\bound` matches no text of its own, and is written at the start or the
+end of a sub-expression.  A word character here is a `\uword` character
+(letter, digit or mark), so the boundary works in any script.
+
+A *trailing* `\bound` shortens the repetition it is attached to, one
+character at a time, until the boundary is satisfied.  That is what
+keeps trailing punctuation out of a match:
+
+```
+rex -n -p -P '\bound[\alnum.\-]+\bound'
+
+  as found in section 6.5-4.   ->  6.5-4      (closing period given back)
+  NASA-STD-5001B, for x        ->  NASA-STD-5001B
+  see 4.10.3, and 12.4.15-2b.  ->  4.10.3  12.4.15-2b
+```
+
+The give-back applies only to the repetition `\bound` is attached to;
+rex does not otherwise backtrack.
+
+Note that `\b` by itself is still a backspace — only the whole keyword
+is the boundary.
+
+Restrictions: `\bound` must be attached to a pattern that matches at
+least once, and cannot be used inside a set (`[\bound]`), in the middle
+of a sub-expression, with `!`, or with a zero-minimum repetition such as
+`*`, `?` or `{0,9}`.
+
 ### Special Characters
 
 ```
@@ -204,6 +239,8 @@ with the `{x*}` repetition operator.
 \b    backspace     \r    carriage return
 \f    form feed     \0    null character
 \Xnn  hex character (e.g., \X0A for newline)
+
+\b is the backspace character; the word boundary is the keyword \bound
 ```
 
 ### Anchors
@@ -453,6 +490,44 @@ Sql.rexFile(
 | NOT | `[^...]` for chars | `!expr` for strings |
 | Case insensitive | `/i` flag | `\I` (default) / `\R` |
 | Literal mode | `\Q...\E` | `\L...\L` |
+| Word boundary | `\b` | `\bound` (in rex `\b` is a backspace) |
+| Non-boundary | `\B` | none |
+| Word character | `\w` = letters, digits, `_` | `\uword` = letters, digits, marks; no `_` |
+| Unicode | needs the `/u` flag | always UTF-8 aware |
+| Anchors | `^` and `$` are zero-width | `^` and `$` match a newline character |
+
+### `\bound` vs Perl's `\b`
+
+Perl's `\b` is defined by `\w`, which includes the underscore; rex's `\bound`
+is defined by `\uword`, which does not.  A match may still *contain* an
+underscore, since nothing requires a boundary inside a match, but one at
+either end is not part of the token:
+
+```
+"foo_bar _lead trail_"
+
+perl  \b\w+\b                     ->  foo_bar   _lead   trail_
+rex   \bound[\uword\X5F]+\bound   ->  foo_bar   lead    trail
+```
+
+Perl asserts `\b` and backtracks the whole pattern to satisfy it.  Rex does
+not backtrack: a trailing `\bound` shortens only the repetition it is attached
+to, down to that repetition's minimum.  For ordinary token patterns the two
+agree -- `\b[\w.-]+\b` and `\bound[\alnum.\-]+\bound` both take `4.10.3` out
+of `see section 4.10.3.` -- but rex has no alternation to backtrack into, so
+there is no equivalent of `\b(?:foo|bar)\b`.
+
+Placement differs as well.  Perl allows `\b` anywhere in a pattern; `\bound`
+must sit at the start or the end of a sub-expression, attached to a pattern
+that matches at least once.  `[\bound]` is an error, where Perl's `[\b]` is a
+backspace.
+
+"The text" also means something different.  Perl's boundary is relative to the
+subject string; rex's is relative to the buffer being matched -- a file chunk
+for the CLI, or the field being indexed -- so a token spanning a chunk refill
+can see a boundary at the seam.  Rex matches bytes, so malformed UTF-8 is
+simply not a word character and breaks a token there, where Perl in UTF-8 mode
+rejects an invalid subject outright.
 
 ## Performance Notes
 
