@@ -13,6 +13,11 @@ decompressing ZIP-based document formats (DOCX, PPTX, XLSX, ODT, ODP,
 ODS, EPUB).  The developers of Rampart extend our thanks to the author
 for this fast and portable decompression library.
 
+For email and mbox files, the module uses the RFC 5322 and MIME parsing
+layers of the
+`libetpan <https://github.com/dinhvh/libetpan>`_ library, vendored as a
+subset.  The developers of Rampart extend our thanks to its authors.
+
 For HTML text extraction, the module relies on the
 :ref:`rampart-html module <rampart-html:The rampart-html module>` and
 for Markdown conversion, the
@@ -35,6 +40,9 @@ License
 ~~~~~~~
 
 The rampart-totext module is released under the MIT license.
+
+The `libetpan <https://github.com/dinhvh/libetpan>`_ library is released
+under the BSD 3-Clause license.
 
 The `libdeflate <https://github.com/ebiggers/libdeflate>`_ library is
 released under the
@@ -195,6 +203,19 @@ and any external dependencies.
      - ``.pnm``, ``.ppm``, ``.pgm``, ``.pbm``
      - ``P1`` .. ``P6`` header
      - a rampart-ocr reader (see `setOcr`_)
+   * - Email
+     - ``.eml``, ``.emlx``
+     - RFC 5322 header block with a ``Received``, ``Message-ID``,
+       ``Return-Path`` or ``MIME-Version`` header
+     - None (libetpan is built in)
+   * - Mailbox
+     - ``.mbox``, ``.mbx``
+     - a ``From`` line (the word, a space, then a sender) followed by a header block
+     - None (libetpan is built in)
+   * - MHTML
+     - ``.mht``, ``.mhtml``
+     - MIME ``multipart/related``
+     - ``rampart-html`` (libetpan is built in)
 
 
 External Dependencies
@@ -281,6 +302,10 @@ Usage:
 
     var text = totext.convertFile(filename[, details]);
 
+        /* or, streaming one document at a time */
+
+    var count = totext.convertFile(filename[, details], callback);
+
 Where:
 
 *  ``filename`` is a :green:`String`, the path to the file to convert.
@@ -306,6 +331,23 @@ Where:
    *  ``true`` — build the default reader on first need, as
       ``setOcr(true)`` does.
 
+   For email and mbox input, the :green:`Object` form also accepts:
+
+   *  ``prefer`` — ``"text"`` (the default) or ``"html"``: which half of
+      a ``multipart/alternative`` body to keep.  Exactly one is kept —
+      keeping both would put every word of the message into the index
+      twice.
+
+   *  ``attachments`` — a :green:`Boolean`, default ``true``: whether to
+      convert attachments.  When ``false``, each attachment still appears
+      in ``documents`` with its ``title`` and ``mimeType``, but its
+      ``text`` is empty.
+
+   *  ``maxAttachment`` — a :green:`Number`, **unlimited by default**: an
+      attachment larger than this once decoded is listed but not converted.
+      Set it only to save time on large attachments deliberately; there is
+      no memory reason to (see `Large attachments`_).
+
 Return Value:
    By default, a :green:`String` containing the extracted plain text.
    Multi-page input (a PDF, a multi-page TIFF) has its pages separated
@@ -323,8 +365,65 @@ Return Value:
       ``"image/tiff"``).  For unknown formats, the MIME type is
       ``"application/octet-stream"``.
 
-   *  ``ocr`` — a :green:`Boolean`, whether any of the text came from
-      optical character recognition.
+   *  ``title`` — a :green:`String`, a title for the document, suitable for
+      a Title column in a database.  It is **derived**, not simply copied:
+      the first of the document's own title (``dc:title``, an HTML
+      ``<title>``, a PDF ``Title``, a man page's ``.TH`` name) or, failing
+      that, the basename of the file.  It is therefore effectively always
+      present for ``convertFile()``.  It may be absent for ``convert()``,
+      where there is no filename to fall back on and the content may carry
+      no title of its own.
+
+   *  ``metaData`` — an :green:`Object`, always present and possibly empty,
+      holding what the document itself declared.  One schema is used for
+      every format, so a consumer keying off these names does not need to
+      know what kind of file it was:
+
+      ``title``, ``author``, ``subject``, ``description``, ``keywords``,
+      ``language``, ``created``, ``modified``
+
+      A key appears only when the format supplied it, so its presence is
+      meaningful.  Format-specific extras may appear alongside — a man page
+      also reports ``section``, ``source`` and ``manual``, an EPUB reports
+      ``publisher``.  Note that ``metaData.title`` is only what the document
+      claimed, while ``title`` above is the derived value.
+
+   *  ``documents`` — an :green:`Array`, **always** present and **always**
+      holding at least one entry.  A file that yields a single document
+      gives an Array of one, so a caller writes the same code either way.
+      Each entry is an :green:`Object` with ``text`` and, where they apply,
+      ``mimeType``, ``title``, ``metaData``, ``ocr``, ``pages``, ``charset``
+      and ``charsetSource``.
+
+      ``text`` is always the concatenation of the documents' text, joined
+      with a single space::
+
+          details.text === details.documents.map(function(d){return d.text}).join(" ")
+
+      and is byte for byte what ``convertFile()`` returns without
+      ``details``.
+
+   *  ``charset`` — a :green:`String`, the encoding the file's bytes were
+      decoded **from** before conversion (e.g. ``"UTF-8"``,
+      ``"windows-1252"``).  Present only for the formats whose text comes
+      from the file's own bytes — plain text, source, HTML, XML, Markdown,
+      LaTeX, RTF and man pages.  A PDF or a DOCX has no source encoding to
+      report, and neither property appears for one.
+
+   *  ``charsetSource`` — a :green:`String`, how that encoding was
+      determined: ``"bom"`` (a byte-order mark), ``"declared"`` (an HTML
+      ``<meta charset>`` or XML ``encoding=``), ``"utf-8"`` (the bytes are
+      valid UTF-8), or ``"assumed"`` (neither declared nor valid UTF-8, so
+      a single-byte encoding was assumed).
+
+   *  ``ocr`` — a :green:`Boolean`, always present, whether the text of
+      ``documents[0]`` came from optical character recognition.
+
+      ``ocr``, ``pages``, ``charset`` and ``charsetSource`` at the top level
+      describe the **primary document** — ``documents[0]`` — and are the
+      same objects as the ones on that entry, not copies.  For a file that
+      yields a single document, which is every format listed above, that is
+      simply the document.
 
    *  ``pages`` — present when ``ocr`` is ``true``: an :green:`Array`
       with one entry per recognized page, each the :green:`Object`
@@ -334,6 +433,11 @@ Return Value:
       ``text``), with ``page`` set to the page's position in the
       document, counting from ``0``.  For a PDF, only the pages that
       were actually recognized appear here.
+
+*  ``callback`` is an optional :green:`Function`.  When given, each document
+   is passed to it as it is produced and released before the next one is
+   built, so nothing accumulates and memory stays flat however large the
+   input.  See `Streaming with a callback`_ below.
 
 Example:
 
@@ -454,7 +558,8 @@ Return Value:
    ``"latex"``, ``"rtf"``, ``"man"``, ``"pdf"``, ``"docx"``, ``"pptx"``,
    ``"xlsx"``, ``"odt"``, ``"odp"``, ``"ods"``, ``"epub"``, ``"doc"``,
    ``"png"``, ``"jpeg"``, ``"tiff"``, ``"gif"``, ``"bmp"``, ``"pnm"``,
-   ``"psd"``, ``"hdr"``, or ``"unknown"``.
+   ``"psd"``, ``"hdr"``, ``"email"``, ``"mbox"``, ``"mhtml"``, or
+   ``"unknown"``.
 
    The file type is determined primarily by inspecting the content.
    If the content is ambiguous, the file extension is used as a
@@ -502,11 +607,27 @@ Where:
    usual form: you choose the model, GPU and thread settings.
 
 *  ``true`` or ``options`` asks the module to build a reader itself the
-   first time one is needed, from the ``ppocr-v5`` model resolved
-   through rampart-models (downloading it on first use), with
-   ``options`` passed to ``rampart-ocr.init()``.  ``true`` is the same
-   as ``{}``.  Note that rampart-ocr's own default is a single thread;
-   pass ``{threads: 0}`` to use every core.
+   first time one is needed, resolving the models through rampart-models
+   and downloading them on first use, with ``options`` passed to
+   ``rampart-ocr.init()``.  ``true`` is the same as ``{}``.
+
+   That reader includes the **layout model** as well as the OCR set, so
+   multi-column scans are read down their columns rather than across
+   them.  It is what makes the difference between a two-column page
+   coming back in order and coming back interleaved.  The cost is the
+   download: 145 MB on first use rather than 21 MB.
+
+   *  ``{layout: false}`` opts out, fetching only the 21 MB OCR set.
+      Use it when the corpus is known to be single-column.  A page with
+      columns will then be read across them.
+
+   *  A failed or declined layout download is not fatal: you get a
+      working reader that cannot order columns, rather than a failed
+      conversion.
+
+   The reader uses the GPU when rampart-onnx has one and the CPU
+   otherwise.  rampart-ocr's own default is a single thread; pass
+   ``{threads: 0}`` to use every core on a CPU.
 
 *  ``false`` (or nothing) removes the reader.
 
@@ -529,7 +650,13 @@ Example:
     var ocr    = require("rampart-ocr");
     var models = require("rampart-models");
 
-    totext.setOcr(ocr.init(models.ocrGet("ppocr-v5"), {threads: 0}));
+    /* the simple form: models fetched on first use, layout included */
+    totext.setOcr(true);
+
+    /* or build the reader yourself */
+    var paths = models.ocrGet("ppocr-v5");
+    paths.layout = models.ocrGet("ppocr-layout").layout;
+    totext.setOcr(ocr.init(paths, {threads: 0}));
 
     /* a scanned, multi-page TIFF */
     var text = totext.convertFile("/scans/deposition-0042.tif");
@@ -539,6 +666,92 @@ Example:
     if (res.ocr)
         console.log("recognized pages:", res.pages.map(function(p){ return p.page; }));
 
+
+Streaming with a callback
+-------------------------
+
+Without a callback, ``details`` returns every document in ``documents`` and
+the whole extracted text again in ``text``, so all of it is held at once.
+That is convenient for a report and unsuitable for a large mailbox.  Passing
+a :green:`Function` streams instead: one document is built, handed to the
+callback and released before the next is built.
+
+.. code-block:: javascript
+
+    var n = totext.convertFile("archive.mbox", function(doc) {
+        /* doc has exactly the shape of a documents[] entry */
+        db.insert({ title: doc.title, body: doc.text, from: doc.metaData.from });
+    });
+
+    /* the same three forms are accepted, and convert() takes them too */
+    totext.convertFile(f, callback);                    /* details implied */
+    totext.convertFile(f, true, callback);
+    totext.convertFile(f, {prefer:"html"}, callback);
+    totext.convert(buffer, callback);
+
+Where:
+
+*  The **return value** is a :green:`Number`: how many documents were passed
+   to the callback.  There is no ``text`` and no ``documents`` — everything
+   is in the object handed to the callback.
+
+*  Returning ``false`` from the callback **stops the conversion**.  Nothing
+   further is parsed, decoded or converted, and the return value is the
+   number of documents actually delivered.  For a file that yields a single
+   document, returning ``false`` has no effect: there is nothing left to
+   stop.
+
+*  The callback is invoked **at least once** for any file, so a caller writes
+   one loop whatever it was given.  A ``.docx`` calls it once; an mbox calls
+   it once per message and once per attachment, in the same order
+   ``documents`` would have held them.
+
+*  Joining the ``text`` of everything the callback received with a single
+   space reproduces exactly what ``convertFile()`` returns without
+   ``details``.
+
+*  ``details`` is redundant alongside a callback, since document objects are
+   delivered either way; ``convertFile(f, false, callback)`` is not an error.
+
+*  An exception thrown by the callback propagates out of ``convertFile()``.
+
+.. _Large attachments:
+
+Large attachments
+-----------------
+
+Attachments that will not be converted — a video, an archive, anything over
+an explicit ``maxAttachment`` — are **never decoded into memory**.  The
+decision is taken from the encoded size and the declared type before any
+memory is spent, and anything not ruled out that way has a few kilobytes
+decoded so its real type can be identified from the bytes.  Such parts still
+appear, with their ``title`` and ``mimeType`` and an empty ``text``, so
+nothing is hidden from the caller.
+
+An attachment that *will* be converted and is larger than 4 MB decoded is not
+held in ordinary memory either.  It is decoded in pieces into a temporary
+file, which is mapped and unlinked immediately, so it never appears in the
+filesystem and needs no cleanup.  This matters because ordinary heap memory
+cannot be reclaimed by the kernel when there is no swap, whereas a file-backed
+mapping can: the difference is between a conversion that gets slower under
+memory pressure and one that is killed by it.  Converting a message with a
+200 MB attachment:
+
+.. code-block:: text
+
+                              peak unreclaimable memory
+      held in memory                   200 MB
+      decoded to a mapping               1 MB
+
+Under a 128 MB limit with swap disabled, the first is killed and the second
+completes.  The temporary file is created only when an attachment actually
+exceeds the threshold, so ordinary mail never touches the disk, and it is
+reused for the rest of the call rather than recreated per attachment.
+
+The temporary file is placed in ``TMPDIR``, falling back to ``/tmp`` and then
+``/var/tmp``.  Directories on a memory-backed filesystem (``tmpfs``) are
+skipped, since spilling to one would defeat the purpose; if every candidate is
+memory-backed, conversion proceeds in ordinary memory instead.
 
 Output Format
 -------------
@@ -564,8 +777,18 @@ formatted for search indexing and semantic analysis:
 *  **Entity decoding** — HTML and XML entities (e.g. ``&amp;``,
    ``&#8220;``, ``&nbsp;``) are decoded to their Unicode equivalents.
 
+*  **Text that is not visible but is still text** — For HTML, Markdown and
+   EPUB, the ``alt`` text of images and the ``content`` of
+   ``<meta name="description">`` and ``<meta name="keywords">`` are
+   extracted along with the visible text.  These are prose someone wrote
+   about the document, which is what a search index wants.  Addresses are
+   not: an ``<a href>`` or an ``<img src>`` is discarded, and only the
+   visible link text is kept.
+
 *  **Formatting removal** — Bold, italic, font changes, colors,
-   indentation, and other visual formatting are discarded.
+   indentation, and other visual formatting are discarded.  List numbering
+   is generated formatting and is not emitted: an ordered list contributes
+   its items' text, not "1.", "2.", "3.".
 
 *  **Tag stripping** — All markup tags (HTML, XML, RTF control words,
    LaTeX commands, troff macros) are removed.  An inline tag that is
@@ -597,10 +820,21 @@ with paragraph breaks between slides.
 XLSX
 ~~~~
 
-The module extracts text from the shared string table
-(``xl/sharedStrings.xml``), which contains all unique string values
-used in the spreadsheet.  This captures cell text content without
-duplicating repeated values.
+The module reads the workbook part for the sheet names and their order,
+then walks each worksheet cell by cell, in reading order.  Cells holding
+strings are resolved through the shared string table
+(``xl/sharedStrings.xml``), inline strings are taken as they stand, and
+numeric cells are emitted as their values — a spreadsheet is mostly not
+strings, and numbers never appear in the string table.
+
+Cells whose format marks them as dates are converted from the serial
+number a workbook actually stores to an ISO date, so a cell displaying
+``2026-03-14`` is extracted as ``2026-03-14`` rather than as ``46095``.
+
+Each sheet is introduced by its name, rows are separated by newlines and
+the cells within a row by tabs, so a value stays beside the label it
+belongs to.  Formulas contribute their last computed result, not their
+source; cells holding an error value contribute nothing.
 
 ODT / ODP / ODS
 ~~~~~~~~~~~~~~~~
@@ -615,9 +849,14 @@ OpenOffice, LibreOffice, and other ODF-compliant applications.
 EPUB
 ~~~~
 
-The module extracts and concatenates text from all ``.xhtml``,
-``.html``, and ``.htm`` files found in the EPUB archive.  The
-extracted HTML is then processed using the ``rampart-html`` module.
+The module reads ``META-INF/container.xml`` to find the OPF package, and
+concatenates the content documents in **spine order** — the order the
+book is meant to be read in — resolving each ``itemref`` through the
+manifest.  Documents that are not in the spine, such as the navigation
+document, are left out.  If the package cannot be read, the module falls
+back to concatenating every ``.xhtml``, ``.html`` and ``.htm`` file in
+the archive, in the order the archive stores them.  The extracted HTML
+is then processed using the ``rampart-html`` module.
 
 Markdown
 ~~~~~~~~
@@ -640,6 +879,56 @@ The quality of the extracted text depends on the PDF's internal
 structure — PDFs created from text documents generally produce excellent
 results, while scanned documents (image-only PDFs) will produce no text
 output.
+
+Email and mbox
+~~~~~~~~~~~~~~
+
+An ``.eml`` file is one RFC 5322 message; an mbox holds many, separated by
+``From`` lines (the word followed by a space) at the start of a line.  Either way the module walks the
+MIME tree and produces **one entry in** ``documents`` **per part**: the
+message body, then each attachment, then each nested forwarded message.
+
+*  A ``multipart/alternative`` body contributes exactly one document — the
+   ``text/plain`` half by default, the ``text/html`` half with
+   ``{prefer:"html"}``.
+
+*  **Attachments are converted, not merely listed.**  An attachment's
+   decoded bytes go back through the same identification and conversion
+   used for a file on disk, so a PDF, DOCX, ODT, EPUB or image attachment
+   yields its text exactly as that file would — including optical
+   character recognition, when a reader has been set with `setOcr`_.  The
+   declared ``Content-Type`` is deliberately ignored in favour of
+   inspecting the bytes, because many mailers label every attachment
+   ``application/octet-stream``; the filename is used only as a hint.
+
+*  ``Content-Transfer-Encoding`` (``base64``, ``quoted-printable``) is
+   decoded, each part is converted from its own declared ``charset``, and
+   header values are decoded from RFC 2047 encoded-words, so a
+   ``Subject`` of ``=?utf-8?B?...?=`` is reported as text.
+
+*  ``metaData`` carries ``subject``, ``from``, ``to``, ``cc``, ``date``
+   and ``messageId``.  An attachment that has no metadata of its own
+   refers to its message's, so in an mbox an attachment can be traced back
+   to the message it arrived in.
+
+*  A ``multipart/signed`` message converts normally — the signature part
+   is skipped.  A ``multipart/encrypted`` one cannot be read without keys,
+   and is recorded as a document with no text rather than having its
+   base64 dumped into the output.
+
+*  An attachment that needs a converter which is not installed does not
+   fail the message: that part is listed with empty text and the rest of
+   the mail converts.
+
+Apple Mail's ``.emlx`` wrapper (a byte count, then the message) and MHTML
+``.mht``/``.mhtml`` files (a web page saved as ``multipart/related``) are
+read by the same code.
+
+Note that detection of an email without a helpful extension is a
+heuristic, not a signature: a header block is required **and** at least one
+header that does not occur in ordinary prose (``Received``,
+``Message-ID``, ``Return-Path``, ``MIME-Version``).  A ``.txt`` file that
+merely begins ``Subject:`` remains plain text.
 
 Legacy Word (.doc)
 ~~~~~~~~~~~~~~~~~~

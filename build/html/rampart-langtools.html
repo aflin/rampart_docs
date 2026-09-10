@@ -131,6 +131,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#gen-destroy">gen.destroy()</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#initgenasync">initGenAsync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#embeddefaults">embedDefaults</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getlog">getLog</a></li>
@@ -222,6 +223,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#models-url">models.url()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#models-resolve">models.resolve()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#models-list">models.list()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-variants">models.variants()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-model-catalog">The model catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-cataloginfo-models-updatecatalog">models.catalogInfo() / models.updateCatalog()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#command-line">Command line</a></li>
 </ul>
@@ -1232,6 +1236,78 @@ must not be used afterwards.</p>
 </div></blockquote>
 </div>
 </div>
+<div class="section" id="initgenasync">
+<h3>initGenAsync<a class="headerlink" href="#initgenasync" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><strong>Experimental.</strong>  The non-blocking form of <a class="reference internal" href="#initgen">initGen</a>.  Loading a
+large model can take tens of seconds, and <a class="reference internal" href="#initgen">initGen</a> blocks the
+calling thread for all of it.  <code class="docutils literal notranslate"><span class="pre">initGenAsync</span></code> returns immediately,
+reports load progress as it arrives, and hands back the same engine
+handle through a callback — so an event loop, or a server that must
+keep answering while a model loads, is not stalled.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">h</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initGenAsync</span><span class="p">(</span><span class="nx">path</span><span class="p">[,</span> <span class="nx">options</span><span class="p">][,</span> <span class="nx">onProgress</span><span class="p">][,</span> <span class="nx">onDone</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> and <code class="docutils literal notranslate"><span class="pre">options</span></code> are exactly as for <a class="reference internal" href="#initgen">initGen</a>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">onProgress</span></code> is an optional <span class="green">Function</span>, called with a
+<span class="green">Number</span> from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> as the load advances.  It is
+called only when the fraction changes, and a load served from the
+model cache reports <strong>no</strong> progress at all — silence is not a
+stall.</li>
+<li><code class="docutils literal notranslate"><span class="pre">onDone</span></code> is an optional <span class="green">Function</span>, called
+<code class="docutils literal notranslate"><span class="pre">onDone(error,</span> <span class="pre">gen)</span></code> when the engine is ready: <code class="docutils literal notranslate"><span class="pre">error</span></code> is
+<code class="docutils literal notranslate"><span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">gen</span></code> is the same handle <a class="reference internal" href="#initgen">initGen</a> returns, or
+<code class="docutils literal notranslate"><span class="pre">error</span></code> is an <span class="green">Error</span> and <code class="docutils literal notranslate"><span class="pre">gen</span></code> is <code class="docutils literal notranslate"><span class="pre">null</span></code>.  Without
+an <code class="docutils literal notranslate"><span class="pre">onDone</span></code> a load failure is printed to <code class="docutils literal notranslate"><span class="pre">stderr</span></code> instead,
+since it would otherwise have no way out.</li>
+</ul>
+<p>The two callbacks are matched by TYPE, not position, so <code class="docutils literal notranslate"><span class="pre">options</span></code>
+stays optional in either form.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with a single function, <code class="docutils literal notranslate"><span class="pre">cancel()</span></code>, which
+returns a <span class="green">Boolean</span>.  llama.cpp only checks between
+progress reports, so a cancel lands at the next one rather than
+instantly, and a load already served from the model cache cannot
+be cancelled at all.</dd>
+</dl>
+<p>If the load reports no progress for <code class="docutils literal notranslate"><span class="pre">loadStallSeconds</span></code> (see
+<a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a> below), the attempt gives up and
+reports the stall through <code class="docutils literal notranslate"><span class="pre">onDone</span></code>.</p>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">models</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">loading</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initGenAsync</span><span class="p">(</span>
+    <span class="nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;qwen3-4b&quot;</span><span class="p">),</span>
+    <span class="p">{</span> <span class="nx">nCtx</span><span class="o">:</span> <span class="mi">4096</span> <span class="p">},</span>
+    <span class="kd">function</span> <span class="p">(</span><span class="nx">pct</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\rloading %5.1f%%&quot;</span><span class="p">,</span> <span class="nx">pct</span> <span class="o">*</span> <span class="mi">100</span><span class="p">);</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">fflush</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">stdout</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">gen</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\nload failed: %s\n&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;\nready\n&quot;</span><span class="p">);</span>
+        <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">gen</span><span class="p">.</span><span class="nx">predict</span><span class="p">({</span>
+            <span class="nx">messages</span><span class="o">:</span> <span class="p">[{</span> <span class="nx">role</span><span class="o">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s2">&quot;Hello.&quot;</span> <span class="p">}],</span>
+            <span class="nx">maxTokens</span><span class="o">:</span> <span class="mi">32</span>
+        <span class="p">}));</span>
+    <span class="p">}</span>
+<span class="p">);</span>
+
+<span class="cm">/* loading.cancel();   -- give up on the load */</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 <div class="section" id="common-model-and-context-options">
 <h3>Common Model and Context Options<a class="headerlink" href="#common-model-and-context-options" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -1300,7 +1376,7 @@ how many requests decode together).</td>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">loadStallSeconds</span></code></td>
 <td>—</td>
 <td><span class="green">Number</span>. How long the load may report NO progress
-before <a class="reference internal" href="#initgen">initGen</a> / <a href="#id3"><span class="problematic" id="id4">`initGenAsync`_</span></a> give up (default <code class="docutils literal notranslate"><span class="pre">120</span></code>).
+before <a class="reference internal" href="#initgen">initGen</a> / <a class="reference internal" href="#initgenasync">initGenAsync</a> give up (default <code class="docutils literal notranslate"><span class="pre">120</span></code>).
 This is not a deadline: the clock resets whenever llama.cpp
 reports progress, so a slow load of a large model is never
 cut short.  It bounds the case where the loader dies or
@@ -3057,7 +3133,7 @@ return a handle.</p>
 <code class="docutils literal notranslate"><span class="pre">Object.assign({},</span> <span class="pre">paths,</span> <span class="pre">options)</span></code> – so the model paths can come
 straight from <a class="reference internal" href="#ocrget">ocrGet</a> while the settings you want to vary go in
 the second, which wins:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">),</span> <span class="p">{</span><span class="nx">gpu</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">),</span> <span class="p">{</span><span class="nx">threads</span><span class="o">:</span> <span class="mi">0</span><span class="p">});</span>
 </pre></div>
 </div>
 <p>The recognized properties are:</p>
@@ -3073,17 +3149,46 @@ shifting every decoded character.</li>
 <li><code class="docutils literal notranslate"><span class="pre">cls</span></code> is a <span class="green">String</span>, the path to the angle-classification
 model, or <span class="green">Boolean</span> <code class="docutils literal notranslate"><span class="pre">false</span></code> to skip angle
 classification.  Default: enabled when a path is given.</li>
-<li><code class="docutils literal notranslate"><span class="pre">gpu</span></code> is a <span class="green">Boolean</span>.  Use the CUDA execution provider
-when the installed rampart-onnx has one.  Default: <code class="docutils literal notranslate"><span class="pre">false</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">gpu</span></code> is a <span class="green">Boolean</span>.  Default: <code class="docutils literal notranslate"><span class="pre">true</span></code> – as with
+rampart-onnx’s own handles, the GPU is used whenever the installed
+rampart-onnx selected a CUDA runtime, and the CPU otherwise, with
+no warning.  Pass <code class="docutils literal notranslate"><span class="pre">false</span></code> to force the CPU.  An explicit <code class="docutils literal notranslate"><span class="pre">true</span></code>
+on a build without a CUDA provider, or a GPU session that cannot
+be created (driver, memory), falls back to the CPU with a warning
+on <code class="docutils literal notranslate"><span class="pre">ocr.errMsg</span></code> (a warning from <code class="docutils literal notranslate"><span class="pre">init</span></code> lands on the module, not
+on the handle it is still building); <a class="reference internal" href="#reader-settings">reader.settings</a> reports
+what was actually used.</li>
 <li><code class="docutils literal notranslate"><span class="pre">threads</span></code> is a <span class="green">Number</span>, ONNX intra-op threads.  <code class="docutils literal notranslate"><span class="pre">0</span></code>
 means all cores.  Default: <code class="docutils literal notranslate"><span class="pre">1</span></code>, which suits a document
 pipeline running many pages across many threads; <code class="docutils literal notranslate"><span class="pre">0</span></code> is
 roughly twice as fast for a single page.</li>
+<li><code class="docutils literal notranslate"><span class="pre">layout</span></code> is a <span class="green">String</span>, the path to a layout model
+(<code class="docutils literal notranslate"><span class="pre">models.ocrGet(&quot;ppocr-layout&quot;).layout</span></code>).  It is independent of
+the recognition model, so it works with any <a class="reference internal" href="#ocrget">ocrGet</a> variant.  With it, a page that
+is not a single column is put into reading order; without it
+lines come out top to bottom, which reads a multi-column page
+ACROSS its columns.  Measured on OmniDocBench over 415 pages,
+reading order scores 0.83 without and 0.94 with; three-column
+pages 0.39 against 0.98.  The model is 124 MB and is a separate
+catalog entry, so it is never downloaded unless asked for.</li>
+<li><code class="docutils literal notranslate"><span class="pre">layoutMode</span></code> is a <span class="green">String</span>: <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (the default)
+runs layout only when the page geometry says there is more than
+one column, <code class="docutils literal notranslate"><span class="pre">&quot;always&quot;</span></code> runs it on every page, <code class="docutils literal notranslate"><span class="pre">&quot;never&quot;</span></code>
+disables it.  On a single-column page <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> costs about
+8 ms.  Ignored when no <code class="docutils literal notranslate"><span class="pre">layout</span></code> model was given.</li>
 </ul>
 <p>Tuning options, rarely needed:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">limitSideLen</span></code> (<span class="green">Number</span>, default <code class="docutils literal notranslate"><span class="pre">960</span></code>) caps the
-longer side of the page fed to detection.</li>
+<li><code class="docutils literal notranslate"><span class="pre">limitSideLen</span></code> caps the longer side of the page fed to
+detection.  Default <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>: it starts at <code class="docutils literal notranslate"><span class="pre">960</span></code> and, on a
+page whose source is more than twice that, re-detects at higher
+resolution while the line count keeps climbing.  Dense scans need
+this – on a 3036x4192 newspaper the fixed default found 141
+lines where auto finds 830, and agreement with that page’s
+reference OCR rose from 0.21 to 0.80.  Pass a <span class="green">Number</span> to
+pin it.  <a class="reference internal" href="#reader-readtext">reader.readText()</a> reports the value actually used.</li>
+<li><code class="docutils literal notranslate"><span class="pre">layoutThresh</span></code> (<span class="green">Number</span>, default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>) is the
+confidence a layout region needs.</li>
 <li><code class="docutils literal notranslate"><span class="pre">thresh</span></code> (<span class="green">Number</span>, default <code class="docutils literal notranslate"><span class="pre">0.3</span></code>), <code class="docutils literal notranslate"><span class="pre">boxThresh</span></code>
 (default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>), <code class="docutils literal notranslate"><span class="pre">unclipRatio</span></code> (default <code class="docutils literal notranslate"><span class="pre">1.6</span></code>),
 <code class="docutils literal notranslate"><span class="pre">minSize</span></code> (default <code class="docutils literal notranslate"><span class="pre">3</span></code>) and <code class="docutils literal notranslate"><span class="pre">maxBoxes</span></code> (default <code class="docutils literal notranslate"><span class="pre">1000</span></code>)
@@ -3157,7 +3262,7 @@ handle’s <code class="docutils literal notranslate"><span class="pre">errMsg</
 <span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">));</span>
-<span class="kd">var</span> <span class="nx">res</span>  <span class="o">=</span> <span class="nx">page</span><span class="p">.</span><span class="nx">page</span><span class="p">(</span><span class="s2">&quot;/tmp/scan-0001.png&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">res</span>    <span class="o">=</span> <span class="nx">reader</span><span class="p">.</span><span class="nx">readText</span><span class="p">(</span><span class="s2">&quot;/tmp/scan-0001.png&quot;</span><span class="p">);</span>
 
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
 
@@ -3173,13 +3278,30 @@ handle’s <code class="docutils literal notranslate"><span class="pre">errMsg</
 CUDA context creation and kernel autotuning happen there rather than
 in <a class="reference internal" href="#ocr-init">ocr.init</a>.  Measured on one dense page: 1498 ms for the first
 call and about 490 ms for each one after, against 4000 ms on the
-CPU.  Time a second call, not the first.</p>
-<p><strong>Multi-column pages are read across, not down.</strong>  Lines at the
-same height are emitted left to right, so a newspaper or a
-two-column article comes back with its columns interleaved.  Every
-line is still recognized correctly – the text is all present, only
-its order is wrong – which is usually harmless for search and
-indexing but not for extracting passages or quoting.</p>
+CPU.  Time a second call, not the first.  Since the GPU is used by
+default wherever there is one, this applies to the example above
+without any option being passed.</p>
+<p><strong>Multi-column pages need the layout model.</strong>  Without one, lines
+at the same height are emitted left to right, so a newspaper or a
+two-column article comes back with its columns interleaved: every
+line is recognized correctly and only the order is wrong, which is
+harmless for search but not for quoting.  Pass <code class="docutils literal notranslate"><span class="pre">layout</span></code> to
+<a class="reference internal" href="#ocr-init">ocr.init</a> and the page is put into reading order instead.</p>
+<p>With layout, the result carries two more properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">regions</span></code> – an <span class="green">Array</span>, present only when layout
+analysis actually ran, one entry per detected region with
+<code class="docutils literal notranslate"><span class="pre">label</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;text&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;title&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;table&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;figure&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;header&quot;</span></code> and 20 others), <code class="docutils literal notranslate"><span class="pre">score</span></code> and <code class="docutils literal notranslate"><span class="pre">box</span></code>
+(<code class="docutils literal notranslate"><span class="pre">[x0,y0,x1,y1]</span></code>).  Its absence means the lines are in plain
+top-to-bottom order.</li>
+<li><code class="docutils literal notranslate"><span class="pre">columns</span></code> – an <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">crossFrac</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sideFrac</span></code> and <code class="docutils literal notranslate"><span class="pre">layoutRan</span></code>: the statistic the <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>
+trigger read and whether it fired.  It answers why layout did or
+did not run, not merely that it did not.</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">limitSideLen</span></code> is also reported, since <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> may have raised
+it for a dense page.</p>
 </div></blockquote>
 </div>
 <div class="section" id="reader-settings">
@@ -3187,18 +3309,20 @@ indexing but not for extracting passages or quoting.</p>
 <blockquote>
 <div><p>A read-only <span class="green">Object</span> describing what this handle actually
 ended up using, which is not always what was asked for: <code class="docutils literal notranslate"><span class="pre">gpu</span></code> is
-<code class="docutils literal notranslate"><span class="pre">false</span></code> if the CUDA provider was requested but unavailable, and
-<code class="docutils literal notranslate"><span class="pre">cls</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> if the classifier could not be loaded.  It is
-the way to answer “did the GPU turn on?” – <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> is empty in
-both cases (see <a class="reference internal" href="#errors-warnings-and-logs">Errors, Warnings and Logs</a>) and
+<code class="docutils literal notranslate"><span class="pre">false</span></code> if no CUDA provider was available or a GPU session could
+not be created, and <code class="docutils literal notranslate"><span class="pre">cls</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> if the classifier could not
+be loaded.  It is the way to answer “did the GPU turn on?” – with
+the default <code class="docutils literal notranslate"><span class="pre">gpu</span></code> setting <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> stays empty on a CPU-only
+machine (see <a class="reference internal" href="#errors-warnings-and-logs">Errors, Warnings and Logs</a>) and
 <a class="reference internal" href="#modelinfo-and-runtimeinfo">modelInfo and runtimeInfo</a> reports only that the <em>engine</em> has a
 CUDA provider, not that this handle is using it.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">),</span> <span class="p">{</span><span class="nx">gpu</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">));</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">reader</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">gpu</span><span class="p">);</span>   <span class="cm">/* true = running on the GPU */</span>
 </pre></div>
 </div>
-<p>Contains <code class="docutils literal notranslate"><span class="pre">gpu</span></code>, <code class="docutils literal notranslate"><span class="pre">threads</span></code>, <code class="docutils literal notranslate"><span class="pre">cls</span></code>, <code class="docutils literal notranslate"><span class="pre">dictSize</span></code> and the
-detection and recognition values listed under <a class="reference internal" href="#ocr-init">ocr.init</a>.</p>
+<p>Contains <code class="docutils literal notranslate"><span class="pre">gpu</span></code>, <code class="docutils literal notranslate"><span class="pre">threads</span></code>, <code class="docutils literal notranslate"><span class="pre">cls</span></code>, <code class="docutils literal notranslate"><span class="pre">dictSize</span></code>,
+<code class="docutils literal notranslate"><span class="pre">limitAuto</span></code> (whether <code class="docutils literal notranslate"><span class="pre">limitSideLen</span></code> may be raised per page) and
+the detection and recognition values listed under <a class="reference internal" href="#ocr-init">ocr.init</a>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="reader-destroy">
@@ -3269,7 +3393,8 @@ rampart-sql <a class="reference internal" href="sql-set.html#llamaembed"><span c
 </pre></div>
 </div>
 <p>Models live under <code class="docutils literal notranslate"><span class="pre">~/.rampart/models/&lt;category&gt;/</span></code> (categories:
-<code class="docutils literal notranslate"><span class="pre">embed</span></code>, <code class="docutils literal notranslate"><span class="pre">rerank</span></code>, <code class="docutils literal notranslate"><span class="pre">gen</span></code>, <code class="docutils literal notranslate"><span class="pre">clip</span></code>; plain URLs go to <code class="docutils literal notranslate"><span class="pre">other</span></code>).  If the
+<code class="docutils literal notranslate"><span class="pre">embed</span></code>, <code class="docutils literal notranslate"><span class="pre">rerank</span></code>, <code class="docutils literal notranslate"><span class="pre">gen</span></code>, <code class="docutils literal notranslate"><span class="pre">clip</span></code>, <code class="docutils literal notranslate"><span class="pre">ocr</span></code>; plain URLs go to
+<code class="docutils literal notranslate"><span class="pre">other</span></code>).  If the
 model is already on disk its path is returned immediately with no
 network access; otherwise it is downloaded from
 <a class="reference external" href="https://huggingface.co/">HuggingFace</a> with resume, retries and a
@@ -3277,14 +3402,16 @@ single-line progress display.</p>
 <p>A short name is resolved in this order:</p>
 <ol class="arabic simple">
 <li>Already on disk under <code class="docutils literal notranslate"><span class="pre">~/.rampart/models/</span></code>.</li>
-<li>The embedded catalog — currently 81 curated models (embedding,
-reranking, text-generation and CLIP), each pinned to a specific
-repository revision.  Embedding entries also record the model’s vector
-dimension and its retrieval prompts, when it has them (see
+<li>The curated catalog — around 110 models (embedding, reranking,
+text-generation, CLIP and OCR), each pinned to a specific repository
+revision.  Embedding entries also record the model’s vector dimension
+and its retrieval prompts, when it has them (see
 <a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a> below).  <code class="docutils literal notranslate"><span class="pre">models.list()</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">--list</span></code> on the command line) shows them; it returns an
 <span class="green">Object</span> keyed by category, each value an <span class="green">Array</span> of the
-model names in that category.</li>
+model names in that category.  The catalog comes in two halves — one
+built into the module, one downloaded and kept current — described
+under <a class="reference internal" href="#the-model-catalog">The model catalog</a> below.</li>
 <li>A name containing <code class="docutils literal notranslate"><span class="pre">/</span></code> is used as an exact HuggingFace
 <code class="docutils literal notranslate"><span class="pre">org/repo</span></code> — no search.</li>
 <li>A live HuggingFace search (exact-name match first, model-family
@@ -3401,30 +3528,85 @@ is the shape <a class="reference internal" href="#ocr-init">ocr.init</a> expects
 <span class="kd">var</span> <span class="nx">paths</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="nx">name</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
 </pre></div>
 </div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">name</span></code> is a <span class="green">String</span>, the catalog alias (currently
-<code class="docutils literal notranslate"><span class="pre">&quot;ppocr-v5&quot;</span></code>), and <code class="docutils literal notranslate"><span class="pre">options</span></code> accepts the same <code class="docutils literal notranslate"><span class="pre">confirm</span></code>,
-<code class="docutils literal notranslate"><span class="pre">progress</span></code> and <code class="docutils literal notranslate"><span class="pre">force</span></code> properties as <a class="reference internal" href="#models-get">models.get()</a>\ , plus:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">variant</span></code> is a <span class="green">String</span>, which accuracy/size tradeoff to
-fetch.  <code class="docutils literal notranslate"><span class="pre">&quot;mobile&quot;</span></code> (the default, about 21 MB) suits a
-page-at-a-time document pipeline; <code class="docutils literal notranslate"><span class="pre">&quot;server&quot;</span></code> (about 172 MB) is
-more accurate on hard scans and slower.  The classifier and
-dictionary are shared between them, so switching variants
-downloads only the two models that differ.</li>
+<p>Where <code class="docutils literal notranslate"><span class="pre">name</span></code> is a <span class="green">String</span>, one of two catalog aliases, and
+<code class="docutils literal notranslate"><span class="pre">options</span></code> accepts the same <code class="docutils literal notranslate"><span class="pre">confirm</span></code>, <code class="docutils literal notranslate"><span class="pre">progress</span></code> and <code class="docutils literal notranslate"><span class="pre">force</span></code>
+properties as <a class="reference internal" href="#models-get">models.get()</a>:</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">&quot;ppocr-v5&quot;</span></code> – the OCR set itself: detection, recognition,
+angle classification and the character dictionary.  Returns
+<code class="docutils literal notranslate"><span class="pre">det</span></code>, <code class="docutils literal notranslate"><span class="pre">rec</span></code>, <code class="docutils literal notranslate"><span class="pre">cls</span></code> and <code class="docutils literal notranslate"><span class="pre">dict</span></code>, plus <code class="docutils literal notranslate"><span class="pre">dir</span></code> and
+<code class="docutils literal notranslate"><span class="pre">variant</span></code>.  A <code class="docutils literal notranslate"><span class="pre">variant</span></code> option selects which recognition
+model to fetch:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="18%" />
+<col width="10%" />
+<col width="10%" />
+<col width="12%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">variant</th>
+<th class="head">size</th>
+<th class="head">speed</th>
+<th class="head">languages</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">multi_mobile</span></code></td>
+<td>21 MB</td>
+<td>1.0x</td>
+<td>CN, EN, JP</td>
+<td>The default.  Best English of the three and strong on
+Chinese; the only one good at both.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">multi_server</span></code></td>
+<td>165 MB</td>
+<td>0.55x</td>
+<td>CN, EN, JP</td>
+<td>A language trade, not an upgrade: better Chinese, worse
+English.  Eight times the download for a 6% Chinese gain.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">en_mobile</span></code></td>
+<td>13 MB</td>
+<td>1.16x</td>
+<td>EN only</td>
+<td>A 436-character Latin dictionary, so it <strong>cannot read
+Chinese at all</strong>.  No better at English than the default,
+but the smallest and fastest.</td>
+</tr>
+</tbody>
+</table>
+<p>Measured on OmniDocBench, block-level normalized edit distance
+(lower is better), 300 blocks per language:
+<code class="docutils literal notranslate"><span class="pre">multi_mobile</span></code> 0.0899 EN / 0.1602 CN, <code class="docutils literal notranslate"><span class="pre">multi_server</span></code> 0.1094 /
+0.1509, <code class="docutils literal notranslate"><span class="pre">en_mobile</span></code> 0.0954 / 0.9124.  Any variant may be used
+with the layout model below.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">&quot;ppocr-layout&quot;</span></code> – document layout analysis (PP-DocLayoutV3),
+124 MB.  Returns <code class="docutils literal notranslate"><span class="pre">layout</span></code>.  Kept separate precisely because of
+that size: only pages that are not a single column need it, so
+asking for OCR never drags it in.</p>
+</li>
 </ul>
 <dl class="docutils">
 <dt>Return Value:</dt>
-<dd>An <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">det</span></code>, <code class="docutils literal notranslate"><span class="pre">rec</span></code>, <code class="docutils literal notranslate"><span class="pre">cls</span></code> and <code class="docutils literal notranslate"><span class="pre">dict</span></code>
-(<span class="green">Strings</span>, absolute paths), <code class="docutils literal notranslate"><span class="pre">dir</span></code> (the directory
-holding them) and <code class="docutils literal notranslate"><span class="pre">variant</span></code> (which one was fetched).  Returns
-<code class="docutils literal notranslate"><span class="pre">null</span></code> if a <code class="docutils literal notranslate"><span class="pre">confirm</span></code> callback declines the download.</dd>
+<dd>An <span class="green">Object</span> of absolute paths, the shape <a class="reference internal" href="#ocr-init">ocr.init</a>
+expects.  Returns <code class="docutils literal notranslate"><span class="pre">null</span></code> if a <code class="docutils literal notranslate"><span class="pre">confirm</span></code> callback declines the
+download.</dd>
 </dl>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">)</span> <span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">paths</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-v5&quot;</span><span class="p">);</span>
+<span class="cm">/* add layout for multi-column documents */</span>
+<span class="nx">paths</span><span class="p">.</span><span class="nx">layout</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ocrGet</span><span class="p">(</span><span class="s2">&quot;ppocr-layout&quot;</span><span class="p">).</span><span class="nx">layout</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">reader</span> <span class="o">=</span> <span class="nx">ocr</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="nx">paths</span><span class="p">);</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">ocr.init</span></code> reads only the four path properties, so <code class="docutils literal notranslate"><span class="pre">dir</span></code> and
+<p><code class="docutils literal notranslate"><span class="pre">ocr.init</span></code> reads only the path properties, so <code class="docutils literal notranslate"><span class="pre">dir</span></code> and
 <code class="docutils literal notranslate"><span class="pre">variant</span></code> are carried along harmlessly and the object can be
-passed straight through.</p>
+passed straight through.  (<code class="docutils literal notranslate"><span class="pre">rampart-totext</span></code> does this for you –
+see <a class="reference internal" href="rampart-totext.html#setocr"><span class="std std-ref">setOcr</span></a>.)</p>
 </div></blockquote>
 </div>
 <div class="section" id="models-url">
@@ -3454,7 +3636,7 @@ downloading</strong>.</p>
 <div class="section" id="models-list">
 <h3>models.list()<a class="headerlink" href="#models-list" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><p>Return the embedded catalog’s short names grouped by category
+<div><p>Return the catalog’s short names grouped by category
 (an <span class="green">Object</span> of <span class="green">Arrays</span>), each annotated with its
 available formats:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">l</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">list</span><span class="p">();</span>
@@ -3466,6 +3648,100 @@ available formats:</p>
 <p>The module also exposes <code class="docutils literal notranslate"><span class="pre">models.catalog</span></code> (the raw catalog
 <span class="green">Object</span>) and <code class="docutils literal notranslate"><span class="pre">models.modelsDir</span></code> (the
 <code class="docutils literal notranslate"><span class="pre">~/.rampart/models</span></code> path).</p>
+</div></blockquote>
+</div>
+<div class="section" id="models-variants">
+<h3>models.variants()<a class="headerlink" href="#models-variants" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>List a model’s available GGUF quantizations with their <strong>real file
+sizes</strong>, without downloading anything — what a setup-time picker
+needs to answer “which is the largest quantization that fits in this
+much memory?”</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">v</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">variants</span><span class="p">(</span><span class="s2">&quot;qwen3-30b-a3b&quot;</span><span class="p">);</span>
+<span class="cm">/* [ { quant: &quot;UD-IQ2_XXS&quot;, bytes: 11337121792, files: 1, installed: false },</span>
+<span class="cm">     ...</span>
+<span class="cm">     { quant: &quot;Q8_0&quot;,       bytes: 32484619264, files: 1, installed: false } ] */</span>
+</pre></div>
+</div>
+<p>Smallest first.  <code class="docutils literal notranslate"><span class="pre">files</span></code> is greater than one for a quantization
+split across several <code class="docutils literal notranslate"><span class="pre">-00001-of-0000N.gguf</span></code> parts (<code class="docutils literal notranslate"><span class="pre">bytes</span></code> is the
+total), and <code class="docutils literal notranslate"><span class="pre">installed</span></code> is true only when every part is already on
+disk.  Sizes must be read rather than estimated from parameter count
+and bit depth: hybrid architectures do not shrink uniformly — one
+30B Mamba/MoE model is 33.6 GB at <code class="docutils literal notranslate"><span class="pre">Q8_0</span></code> and 33.5 GB at <code class="docutils literal notranslate"><span class="pre">Q6_K</span></code>,
+but 24.6 GB at <code class="docutils literal notranslate"><span class="pre">Q4_K_M</span></code>.</p>
+<p>A model shipped only in a vendor-prefixed build keeps that prefix in
+the quant name (<code class="docutils literal notranslate"><span class="pre">UD-Q4_K_M</span></code>, Unsloth Dynamic), because such a build
+is not interchangeable with the plain one.  Asking for the plain name
+raises an error naming the near match; pass
+<code class="docutils literal notranslate"><span class="pre">{quant:</span> <span class="pre">&quot;Q4_K_M&quot;,</span> <span class="pre">allowVariant:</span> <span class="pre">true}</span></code> to accept it.</p>
+</div></blockquote>
+</div>
+<div class="section" id="the-model-catalog">
+<h3>The model catalog<a class="headerlink" href="#the-model-catalog" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Models turn over much faster than this module, but some families
+barely move at all, so the catalog ships in two halves.</p>
+<p><strong>Built in.</strong>  Compiled into <code class="docutils literal notranslate"><span class="pre">rampart-models.js</span></code>: every <code class="docutils literal notranslate"><span class="pre">clip</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ocr</span></code> and <code class="docutils literal notranslate"><span class="pre">rerank</span></code> model, plus the stable embedding and
+text-generation workhorses.  These resolve with <strong>no network and no
+cache</strong> — asking for <code class="docutils literal notranslate"><span class="pre">bge-m3</span></code> or <code class="docutils literal notranslate"><span class="pre">qwen3-4b</span></code> works from disk, or
+downloads straight from its pinned repository, even when the catalog
+source is unreachable.</p>
+<p><strong>Downloaded.</strong>  <code class="docutils literal notranslate"><span class="pre">rampart-models-catalog.json</span></code>, fetched from the
+project repository and cached as
+<code class="docutils literal notranslate"><span class="pre">~/.rampart/models/.rampart-models-catalog.json</span></code>.  It carries the
+whole catalog, built-ins included, and each entry <strong>overrides</strong> the
+built-in of the same name — so a moved repository, a re-pinned
+revision or a newly published quantization reaches an installed
+module without a new release, and models added since the release
+appear the same way.  It is intentionally <strong>not</strong> installed with the
+module.</p>
+<p>The download is revalidated on each load with a conditional request
+(<code class="docutils literal notranslate"><span class="pre">ETag</span></code>), which normally costs one small round trip and returns
+<code class="docutils literal notranslate"><span class="pre">304</span> <span class="pre">Not</span> <span class="pre">Modified</span></code>.  A refresh that fails is never fatal: the cache
+keeps working offline, and a reply that is truncated, an error page,
+or implausibly small is rejected rather than allowed to replace a
+good cache.  With no catalog at all the built-ins still resolve, and
+unknown names fall through to live HuggingFace search.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="49%" />
+<col width="51%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Environment variable</th>
+<th class="head">Effect</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">RAMPART_MODELS_CATALOG_URL</span></code></td>
+<td>fetch the catalog from a different URL
+(a mirror, or a pinned revision)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">RAMPART_MODELS_CATALOG_TTL</span></code></td>
+<td>seconds between revalidations; default
+<code class="docutils literal notranslate"><span class="pre">0</span></code>, meaning check on every load</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">RAMPART_MODELS_CATALOG_OFFLINE</span></code></td>
+<td>never use the network; cache and
+built-ins only</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="models-cataloginfo-models-updatecatalog">
+<h3>models.catalogInfo() / models.updateCatalog()<a class="headerlink" href="#models-cataloginfo-models-updatecatalog" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">models.catalogInfo()</span></code> reports which catalog is in use and how
+current it is: <code class="docutils literal notranslate"><span class="pre">source</span></code> (<code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">cache</span></code>, <code class="docutils literal notranslate"><span class="pre">network</span></code> or
+<code class="docutils literal notranslate"><span class="pre">none</span></code>), <code class="docutils literal notranslate"><span class="pre">builtin</span></code> and <code class="docutils literal notranslate"><span class="pre">entries</span></code> (the two halves’ model
+counts), <code class="docutils literal notranslate"><span class="pre">models</span></code> (the effective total after merging), <code class="docutils literal notranslate"><span class="pre">url</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cache</span></code>, <code class="docutils literal notranslate"><span class="pre">generated</span></code>, <code class="docutils literal notranslate"><span class="pre">fetched</span></code>, <code class="docutils literal notranslate"><span class="pre">etag</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> — the
+reason the last refresh did not happen, when it did not.</p>
+<p><code class="docutils literal notranslate"><span class="pre">models.updateCatalog()</span></code> forces a refresh, ignoring the
+revalidation interval, and returns the same <span class="green">Object</span>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="retrieval-prompt-sidecars">
@@ -3506,19 +3782,25 @@ rampart rampart-models.js bge-m3 onnx q4        <span class="c1"># onnx, 4-bit q
 rampart rampart-models.js bge-m3 gguf Q8_0      <span class="c1"># gguf file, chosen quant</span>
 rampart rampart-models.js qwen3-4b:q4_k_m       <span class="c1"># quant suffix</span>
 rampart rampart-models.js --list                <span class="c1"># show the catalog</span>
+rampart rampart-models.js --update              <span class="c1"># refresh the catalog now</span>
 </pre></div>
 </div>
 <p>The third argument is the ONNX <code class="docutils literal notranslate"><span class="pre">precision</span></code>
 (<code class="docutils literal notranslate"><span class="pre">fp16</span></code> | <code class="docutils literal notranslate"><span class="pre">fp32</span></code> | <code class="docutils literal notranslate"><span class="pre">int8</span></code> | <code class="docutils literal notranslate"><span class="pre">q4</span></code>, default <code class="docutils literal notranslate"><span class="pre">fp16</span></code>) when the
 format is <code class="docutils literal notranslate"><span class="pre">onnx</span></code>, or the GGUF <code class="docutils literal notranslate"><span class="pre">quant</span></code> otherwise.  The resolved
 local path is printed on success.  <code class="docutils literal notranslate"><span class="pre">--list</span></code> groups the catalog by
-category, colorizes on a color terminal (plain when piped), and marks
-already-downloaded models — e.g. <code class="docutils literal notranslate"><span class="pre">[installed</span> <span class="pre">(onnx</span> <span class="pre">fp32,</span> <span class="pre">gguf</span>
-<span class="pre">Q4_K_M)]</span></code> — showing the on-disk precision/quant of each.</p>
+category, colorizes on a color terminal (plain when piped), names each
+model’s license in brief (<code class="docutils literal notranslate"><span class="pre">Apache</span></code>, <code class="docutils literal notranslate"><span class="pre">MIT</span></code>, <code class="docutils literal notranslate"><span class="pre">Gemma</span></code>, <code class="docutils literal notranslate"><span class="pre">NOML</span></code>,
+…), and marks already-downloaded models — e.g. <code class="docutils literal notranslate"><span class="pre">[installed</span> <span class="pre">(onnx</span>
+<span class="pre">fp32,</span> <span class="pre">gguf</span> <span class="pre">Q4_K_M)]</span></code> — showing the on-disk precision/quant of each.
+<code class="docutils literal notranslate"><span class="pre">--update</span></code> downloads the current catalog and prints where it came
+from (see <a class="reference internal" href="#the-model-catalog">The model catalog</a>).</p>
 <p>Environment: <code class="docutils literal notranslate"><span class="pre">HF_TOKEN</span></code> supplies the HuggingFace token for gated
 repositories; <code class="docutils literal notranslate"><span class="pre">HF_ENDPOINT</span></code> overrides the HuggingFace host (for
 mirrors).  Only HuggingFace’s stable URL patterns are used
-(<code class="docutils literal notranslate"><span class="pre">api/models</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve/{revision}/</span></code>), never CDN URLs.</p>
+(<code class="docutils literal notranslate"><span class="pre">api/models</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve/{revision}/</span></code>), never CDN URLs.  The
+<code class="docutils literal notranslate"><span class="pre">RAMPART_MODELS_CATALOG_*</span></code> variables in <a class="reference internal" href="#the-model-catalog">The model catalog</a> control
+where the catalog itself comes from.</p>
 </div></blockquote>
 </div>
 </div>

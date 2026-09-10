@@ -998,6 +998,84 @@ gen.destroy()
 
         gen.destroy();
 
+initGenAsync
+~~~~~~~~~~~~
+
+    **Experimental.**  The non-blocking form of `initGen`_\ .  Loading a
+    large model can take tens of seconds, and `initGen`_ blocks the
+    calling thread for all of it.  ``initGenAsync`` returns immediately,
+    reports load progress as it arrives, and hands back the same engine
+    handle through a callback — so an event loop, or a server that must
+    keep answering while a model loads, is not stalled.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+
+        var h = llamacpp.initGenAsync(path[, options][, onProgress][, onDone]);
+
+    Where:
+
+    *  ``path`` and ``options`` are exactly as for `initGen`_\ .
+
+    *  ``onProgress`` is an optional :green:`Function`, called with a
+       :green:`Number` from ``0`` to ``1`` as the load advances.  It is
+       called only when the fraction changes, and a load served from the
+       model cache reports **no** progress at all — silence is not a
+       stall.
+
+    *  ``onDone`` is an optional :green:`Function`, called
+       ``onDone(error, gen)`` when the engine is ready: ``error`` is
+       ``null`` and ``gen`` is the same handle `initGen`_ returns, or
+       ``error`` is an :green:`Error` and ``gen`` is ``null``.  Without
+       an ``onDone`` a load failure is printed to ``stderr`` instead,
+       since it would otherwise have no way out.
+
+    The two callbacks are matched by TYPE, not position, so ``options``
+    stays optional in either form.
+
+    Return Value:
+        An :green:`Object` with a single function, ``cancel()``, which
+        returns a :green:`Boolean`.  llama.cpp only checks between
+        progress reports, so a cancel lands at the next one rather than
+        instantly, and a load already served from the model cache cannot
+        be cancelled at all.
+
+    If the load reports no progress for ``loadStallSeconds`` (see
+    `Common Model and Context Options`_ below), the attempt gives up and
+    reports the stall through ``onDone``.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+        var models   = require("rampart-models");
+
+        var loading = llamacpp.initGenAsync(
+            models.get("qwen3-4b"),
+            { nCtx: 4096 },
+            function (pct) {
+                rampart.utils.printf("\rloading %5.1f%%", pct * 100);
+                rampart.utils.fflush(rampart.utils.stdout);
+            },
+            function (err, gen) {
+                if (err) {
+                    rampart.utils.printf("\nload failed: %s\n", err.message);
+                    return;
+                }
+                rampart.utils.printf("\nready\n");
+                rampart.utils.printf("%s\n", gen.predict({
+                    messages: [{ role: "user", content: "Hello." }],
+                    maxTokens: 32
+                }));
+            }
+        );
+
+        /* loading.cancel();   -- give up on the load */
+
 Common Model and Context Options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2925,7 +3003,7 @@ ocr.init
 
     .. code-block:: javascript
 
-        var reader = ocr.init(models.ocrGet("ppocr-v5"), {gpu: true});
+        var reader = ocr.init(models.ocrGet("ppocr-v5"), {threads: 0});
 
     The recognized properties are:
 
@@ -2944,18 +3022,50 @@ ocr.init
        model, or :green:`Boolean` ``false`` to skip angle
        classification.  Default: enabled when a path is given.
 
-    *  ``gpu`` is a :green:`Boolean`.  Use the CUDA execution provider
-       when the installed rampart-onnx has one.  Default: ``false``.
+    *  ``gpu`` is a :green:`Boolean`.  Default: ``true`` -- as with
+       rampart-onnx's own handles, the GPU is used whenever the installed
+       rampart-onnx selected a CUDA runtime, and the CPU otherwise, with
+       no warning.  Pass ``false`` to force the CPU.  An explicit ``true``
+       on a build without a CUDA provider, or a GPU session that cannot
+       be created (driver, memory), falls back to the CPU with a warning
+       on ``ocr.errMsg`` (a warning from ``init`` lands on the module, not
+       on the handle it is still building); `reader.settings`_ reports
+       what was actually used.
 
     *  ``threads`` is a :green:`Number`, ONNX intra-op threads.  ``0``
        means all cores.  Default: ``1``, which suits a document
        pipeline running many pages across many threads; ``0`` is
        roughly twice as fast for a single page.
 
+    *  ``layout`` is a :green:`String`, the path to a layout model
+       (``models.ocrGet("ppocr-layout").layout``).  It is independent of
+       the recognition model, so it works with any `ocrGet`_ variant.  With it, a page that
+       is not a single column is put into reading order; without it
+       lines come out top to bottom, which reads a multi-column page
+       ACROSS its columns.  Measured on OmniDocBench over 415 pages,
+       reading order scores 0.83 without and 0.94 with; three-column
+       pages 0.39 against 0.98.  The model is 124 MB and is a separate
+       catalog entry, so it is never downloaded unless asked for.
+
+    *  ``layoutMode`` is a :green:`String`: ``"auto"`` (the default)
+       runs layout only when the page geometry says there is more than
+       one column, ``"always"`` runs it on every page, ``"never"``
+       disables it.  On a single-column page ``"auto"`` costs about
+       8 ms.  Ignored when no ``layout`` model was given.
+
     Tuning options, rarely needed:
 
-    *  ``limitSideLen`` (:green:`Number`, default ``960``) caps the
-       longer side of the page fed to detection.
+    *  ``limitSideLen`` caps the longer side of the page fed to
+       detection.  Default ``"auto"``: it starts at ``960`` and, on a
+       page whose source is more than twice that, re-detects at higher
+       resolution while the line count keeps climbing.  Dense scans need
+       this -- on a 3036x4192 newspaper the fixed default found 141
+       lines where auto finds 830, and agreement with that page's
+       reference OCR rose from 0.21 to 0.80.  Pass a :green:`Number` to
+       pin it.  `reader.readText()`_ reports the value actually used.
+
+    *  ``layoutThresh`` (:green:`Number`, default ``0.5``) is the
+       confidence a layout region needs.
 
     *  ``thresh`` (:green:`Number`, default ``0.3``), ``boxThresh``
        (default ``0.5``), ``unclipRatio`` (default ``1.6``),
@@ -3040,7 +3150,7 @@ reader.readText()
         var models = require("rampart-models");
 
         var reader = ocr.init(models.ocrGet("ppocr-v5"));
-        var res  = page.page("/tmp/scan-0001.png");
+        var res    = reader.readText("/tmp/scan-0001.png");
 
         console.log(res.text);
 
@@ -3055,34 +3165,55 @@ reader.readText()
     CUDA context creation and kernel autotuning happen there rather than
     in `ocr.init`_\ .  Measured on one dense page: 1498 ms for the first
     call and about 490 ms for each one after, against 4000 ms on the
-    CPU.  Time a second call, not the first.
+    CPU.  Time a second call, not the first.  Since the GPU is used by
+    default wherever there is one, this applies to the example above
+    without any option being passed.
 
-    **Multi-column pages are read across, not down.**  Lines at the
-    same height are emitted left to right, so a newspaper or a
-    two-column article comes back with its columns interleaved.  Every
-    line is still recognized correctly -- the text is all present, only
-    its order is wrong -- which is usually harmless for search and
-    indexing but not for extracting passages or quoting.
+    **Multi-column pages need the layout model.**  Without one, lines
+    at the same height are emitted left to right, so a newspaper or a
+    two-column article comes back with its columns interleaved: every
+    line is recognized correctly and only the order is wrong, which is
+    harmless for search but not for quoting.  Pass ``layout`` to
+    `ocr.init`_ and the page is put into reading order instead.
+
+    With layout, the result carries two more properties:
+
+    *  ``regions`` -- an :green:`Array`, present only when layout
+       analysis actually ran, one entry per detected region with
+       ``label`` (``"text"``, ``"title"``, ``"table"``, ``"figure"``,
+       ``"header"`` and 20 others), ``score`` and ``box``
+       (``[x0,y0,x1,y1]``).  Its absence means the lines are in plain
+       top-to-bottom order.
+
+    *  ``columns`` -- an :green:`Object` with ``crossFrac``,
+       ``sideFrac`` and ``layoutRan``: the statistic the ``"auto"``
+       trigger read and whether it fired.  It answers why layout did or
+       did not run, not merely that it did not.
+
+    ``limitSideLen`` is also reported, since ``"auto"`` may have raised
+    it for a dense page.
 
 reader.settings
 ~~~~~~~~~~~~~~~
 
     A read-only :green:`Object` describing what this handle actually
     ended up using, which is not always what was asked for: ``gpu`` is
-    ``false`` if the CUDA provider was requested but unavailable, and
-    ``cls`` is ``false`` if the classifier could not be loaded.  It is
-    the way to answer "did the GPU turn on?" -- ``errMsg`` is empty in
-    both cases (see `Errors, Warnings and Logs`_\ ) and
+    ``false`` if no CUDA provider was available or a GPU session could
+    not be created, and ``cls`` is ``false`` if the classifier could not
+    be loaded.  It is the way to answer "did the GPU turn on?" -- with
+    the default ``gpu`` setting ``errMsg`` stays empty on a CPU-only
+    machine (see `Errors, Warnings and Logs`_\ ) and
     `modelInfo and runtimeInfo`_ reports only that the *engine* has a
     CUDA provider, not that this handle is using it.
 
     .. code-block:: javascript
 
-        var reader = ocr.init(models.ocrGet("ppocr-v5"), {gpu: true});
+        var reader = ocr.init(models.ocrGet("ppocr-v5"));
         console.log(reader.settings.gpu);   /* true = running on the GPU */
 
-    Contains ``gpu``, ``threads``, ``cls``, ``dictSize`` and the
-    detection and recognition values listed under `ocr.init`_\ .
+    Contains ``gpu``, ``threads``, ``cls``, ``dictSize``,
+    ``limitAuto`` (whether ``limitSideLen`` may be raised per page) and
+    the detection and recognition values listed under `ocr.init`_\ .
 
 reader.destroy()
 ~~~~~~~~~~~~~~~~
@@ -3159,7 +3290,8 @@ rampart-sql :ref:`llamaEmbed <sql-set:llamaEmbed>` /
     var gen  = llamacpp.initGen( models.get("qwen3-4b") );      // gen = gguf
 
 Models live under ``~/.rampart/models/<category>/`` (categories:
-``embed``, ``rerank``, ``gen``, ``clip``; plain URLs go to ``other``).  If the
+``embed``, ``rerank``, ``gen``, ``clip``, ``ocr``; plain URLs go to
+``other``).  If the
 model is already on disk its path is returned immediately with no
 network access; otherwise it is downloaded from
 `HuggingFace <https://huggingface.co/>`_ with resume, retries and a
@@ -3168,14 +3300,16 @@ single-line progress display.
 A short name is resolved in this order:
 
 1. Already on disk under ``~/.rampart/models/``.
-2. The embedded catalog — currently 81 curated models (embedding,
-   reranking, text-generation and CLIP), each pinned to a specific
-   repository revision.  Embedding entries also record the model's vector
-   dimension and its retrieval prompts, when it has them (see
+2. The curated catalog — around 110 models (embedding, reranking,
+   text-generation, CLIP and OCR), each pinned to a specific repository
+   revision.  Embedding entries also record the model's vector dimension
+   and its retrieval prompts, when it has them (see
    `Retrieval prompt sidecars`_ below).  ``models.list()`` (or
    ``--list`` on the command line) shows them; it returns an
    :green:`Object` keyed by category, each value an :green:`Array` of the
-   model names in that category.
+   model names in that category.  The catalog comes in two halves — one
+   built into the module, one downloaded and kept current — described
+   under `The model catalog`_ below.
 3. A name containing ``/`` is used as an exact HuggingFace
    ``org/repo`` — no search.
 4. A live HuggingFace search (exact-name match first, model-family
@@ -3304,30 +3438,73 @@ ocrGet
 
         var paths = models.ocrGet(name[, options]);
 
-    Where ``name`` is a :green:`String`, the catalog alias (currently
-    ``"ppocr-v5"``), and ``options`` accepts the same ``confirm``,
-    ``progress`` and ``force`` properties as `models.get()`_\\ , plus:
+    Where ``name`` is a :green:`String`, one of two catalog aliases, and
+    ``options`` accepts the same ``confirm``, ``progress`` and ``force``
+    properties as `models.get()`_\ :
 
-    *  ``variant`` is a :green:`String`, which accuracy/size tradeoff to
-       fetch.  ``"mobile"`` (the default, about 21 MB) suits a
-       page-at-a-time document pipeline; ``"server"`` (about 172 MB) is
-       more accurate on hard scans and slower.  The classifier and
-       dictionary are shared between them, so switching variants
-       downloads only the two models that differ.
+    *  ``"ppocr-v5"`` -- the OCR set itself: detection, recognition,
+       angle classification and the character dictionary.  Returns
+       ``det``, ``rec``, ``cls`` and ``dict``, plus ``dir`` and
+       ``variant``.  A ``variant`` option selects which recognition
+       model to fetch:
+
+       .. list-table::
+          :header-rows: 1
+          :widths: 18 10 10 12 50
+
+          * - variant
+            - size
+            - speed
+            - languages
+            - notes
+          * - ``multi_mobile``
+            - 21 MB
+            - 1.0x
+            - CN, EN, JP
+            - The default.  Best English of the three and strong on
+              Chinese; the only one good at both.
+          * - ``multi_server``
+            - 165 MB
+            - 0.55x
+            - CN, EN, JP
+            - A language trade, not an upgrade: better Chinese, worse
+              English.  Eight times the download for a 6% Chinese gain.
+          * - ``en_mobile``
+            - 13 MB
+            - 1.16x
+            - EN only
+            - A 436-character Latin dictionary, so it **cannot read
+              Chinese at all**.  No better at English than the default,
+              but the smallest and fastest.
+
+       Measured on OmniDocBench, block-level normalized edit distance
+       (lower is better), 300 blocks per language:
+       ``multi_mobile`` 0.0899 EN / 0.1602 CN, ``multi_server`` 0.1094 /
+       0.1509, ``en_mobile`` 0.0954 / 0.9124.  Any variant may be used
+       with the layout model below.
+
+    *  ``"ppocr-layout"`` -- document layout analysis (PP-DocLayoutV3),
+       124 MB.  Returns ``layout``.  Kept separate precisely because of
+       that size: only pages that are not a single column need it, so
+       asking for OCR never drags it in.
 
     Return Value:
-        An :green:`Object` with ``det``, ``rec``, ``cls`` and ``dict``
-        (:green:`Strings`, absolute paths), ``dir`` (the directory
-        holding them) and ``variant`` (which one was fetched).  Returns
-        ``null`` if a ``confirm`` callback declines the download.
+        An :green:`Object` of absolute paths, the shape `ocr.init`_
+        expects.  Returns ``null`` if a ``confirm`` callback declines the
+        download.
 
     .. code-block:: javascript
 
-        var reader = ocr.init( models.ocrGet("ppocr-v5") );
+        var paths = models.ocrGet("ppocr-v5");
+        /* add layout for multi-column documents */
+        paths.layout = models.ocrGet("ppocr-layout").layout;
 
-    ``ocr.init`` reads only the four path properties, so ``dir`` and
+        var reader = ocr.init(paths);
+
+    ``ocr.init`` reads only the path properties, so ``dir`` and
     ``variant`` are carried along harmlessly and the object can be
-    passed straight through.
+    passed straight through.  (``rampart-totext`` does this for you --
+    see :ref:`setOcr <rampart-totext:setOcr>`\ .)
 
 models.url()
 ~~~~~~~~~~~~
@@ -3358,7 +3535,7 @@ models.resolve()
 models.list()
 ~~~~~~~~~~~~~
 
-    Return the embedded catalog's short names grouped by category
+    Return the catalog's short names grouped by category
     (an :green:`Object` of :green:`Arrays`), each annotated with its
     available formats:
 
@@ -3372,6 +3549,92 @@ models.list()
     The module also exposes ``models.catalog`` (the raw catalog
     :green:`Object`) and ``models.modelsDir`` (the
     ``~/.rampart/models`` path).
+
+models.variants()
+~~~~~~~~~~~~~~~~~
+
+    List a model's available GGUF quantizations with their **real file
+    sizes**, without downloading anything — what a setup-time picker
+    needs to answer "which is the largest quantization that fits in this
+    much memory?"
+
+    .. code-block:: javascript
+
+        var v = models.variants("qwen3-30b-a3b");
+        /* [ { quant: "UD-IQ2_XXS", bytes: 11337121792, files: 1, installed: false },
+             ...
+             { quant: "Q8_0",       bytes: 32484619264, files: 1, installed: false } ] */
+
+    Smallest first.  ``files`` is greater than one for a quantization
+    split across several ``-00001-of-0000N.gguf`` parts (``bytes`` is the
+    total), and ``installed`` is true only when every part is already on
+    disk.  Sizes must be read rather than estimated from parameter count
+    and bit depth: hybrid architectures do not shrink uniformly — one
+    30B Mamba/MoE model is 33.6 GB at ``Q8_0`` and 33.5 GB at ``Q6_K``,
+    but 24.6 GB at ``Q4_K_M``.
+
+    A model shipped only in a vendor-prefixed build keeps that prefix in
+    the quant name (``UD-Q4_K_M``, Unsloth Dynamic), because such a build
+    is not interchangeable with the plain one.  Asking for the plain name
+    raises an error naming the near match; pass
+    ``{quant: "Q4_K_M", allowVariant: true}`` to accept it.
+
+The model catalog
+~~~~~~~~~~~~~~~~~
+
+    Models turn over much faster than this module, but some families
+    barely move at all, so the catalog ships in two halves.
+
+    **Built in.**  Compiled into ``rampart-models.js``: every ``clip``,
+    ``ocr`` and ``rerank`` model, plus the stable embedding and
+    text-generation workhorses.  These resolve with **no network and no
+    cache** — asking for ``bge-m3`` or ``qwen3-4b`` works from disk, or
+    downloads straight from its pinned repository, even when the catalog
+    source is unreachable.
+
+    **Downloaded.**  ``rampart-models-catalog.json``, fetched from the
+    project repository and cached as
+    ``~/.rampart/models/.rampart-models-catalog.json``.  It carries the
+    whole catalog, built-ins included, and each entry **overrides** the
+    built-in of the same name — so a moved repository, a re-pinned
+    revision or a newly published quantization reaches an installed
+    module without a new release, and models added since the release
+    appear the same way.  It is intentionally **not** installed with the
+    module.
+
+    The download is revalidated on each load with a conditional request
+    (``ETag``), which normally costs one small round trip and returns
+    ``304 Not Modified``.  A refresh that fails is never fatal: the cache
+    keeps working offline, and a reply that is truncated, an error page,
+    or implausibly small is rejected rather than allowed to replace a
+    good cache.  With no catalog at all the built-ins still resolve, and
+    unknown names fall through to live HuggingFace search.
+
+    +--------------------------------------+---------------------------------------+
+    |Environment variable                  |Effect                                 |
+    +======================================+=======================================+
+    |``RAMPART_MODELS_CATALOG_URL``        |fetch the catalog from a different URL |
+    |                                      |(a mirror, or a pinned revision)       |
+    +--------------------------------------+---------------------------------------+
+    |``RAMPART_MODELS_CATALOG_TTL``        |seconds between revalidations; default |
+    |                                      |``0``, meaning check on every load     |
+    +--------------------------------------+---------------------------------------+
+    |``RAMPART_MODELS_CATALOG_OFFLINE``    |never use the network; cache and       |
+    |                                      |built-ins only                         |
+    +--------------------------------------+---------------------------------------+
+
+models.catalogInfo() / models.updateCatalog()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ``models.catalogInfo()`` reports which catalog is in use and how
+    current it is: ``source`` (``local``, ``cache``, ``network`` or
+    ``none``), ``builtin`` and ``entries`` (the two halves' model
+    counts), ``models`` (the effective total after merging), ``url``,
+    ``cache``, ``generated``, ``fetched``, ``etag``, and ``error`` — the
+    reason the last refresh did not happen, when it did not.
+
+    ``models.updateCatalog()`` forces a refresh, ignoring the
+    revalidation interval, and returns the same :green:`Object`.
 
 Retrieval prompt sidecars
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3417,19 +3680,25 @@ Command line
         rampart rampart-models.js bge-m3 gguf Q8_0      # gguf file, chosen quant
         rampart rampart-models.js qwen3-4b:q4_k_m       # quant suffix
         rampart rampart-models.js --list                # show the catalog
+        rampart rampart-models.js --update              # refresh the catalog now
 
     The third argument is the ONNX ``precision``
     (``fp16`` | ``fp32`` | ``int8`` | ``q4``, default ``fp16``) when the
     format is ``onnx``, or the GGUF ``quant`` otherwise.  The resolved
     local path is printed on success.  ``--list`` groups the catalog by
-    category, colorizes on a color terminal (plain when piped), and marks
-    already-downloaded models — e.g. ``[installed (onnx fp32, gguf
-    Q4_K_M)]`` — showing the on-disk precision/quant of each.
+    category, colorizes on a color terminal (plain when piped), names each
+    model's license in brief (``Apache``, ``MIT``, ``Gemma``, ``NOML``,
+    ...), and marks already-downloaded models — e.g. ``[installed (onnx
+    fp32, gguf Q4_K_M)]`` — showing the on-disk precision/quant of each.
+    ``--update`` downloads the current catalog and prints where it came
+    from (see `The model catalog`_).
 
     Environment: ``HF_TOKEN`` supplies the HuggingFace token for gated
     repositories; ``HF_ENDPOINT`` overrides the HuggingFace host (for
     mirrors).  Only HuggingFace's stable URL patterns are used
-    (``api/models``, ``resolve/{revision}/``), never CDN URLs.
+    (``api/models``, ``resolve/{revision}/``), never CDN URLs.  The
+    ``RAMPART_MODELS_CATALOG_*`` variables in `The model catalog`_ control
+    where the catalog itself comes from.
 
 Putting It Together
 -------------------
