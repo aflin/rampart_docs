@@ -415,12 +415,15 @@ outside the SQL engine, reranking and text generation.</p>
 </div>
 <div class="section" id="platform-availability">
 <h3>Platform Availability<a class="headerlink" href="#platform-availability" title="Permalink to this headline">¶</a></h3>
-<p>The rampart-langtools modules are <strong>not available</strong> on the following
-platforms:</p>
-<ul class="simple">
-<li>macOS x86_64 (Intel Macs).</li>
-<li>32-bit ARM Linux (the <code class="docutils literal notranslate"><span class="pre">raspberry_pi_os-buster-armv7l</span></code> build).</li>
-</ul>
+<p>The rampart-langtools package is available on every platform Rampart is
+built for.  Two of its modules are not: <code class="docutils literal notranslate"><span class="pre">rampart-onnx</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rampart-ocr</span></code> require glibc 2.28 or later, so they are absent from the
+glibc 2.17 Linux builds and from the 32-bit ARM build.  Use
+<code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> for embedding and reranking there.</p>
+<p>On 32-bit ARM the default package is compiled for ARMv6, so one build runs
+on every 32-bit Raspberry Pi.  On a Pi 3 or newer,
+<code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--install</span> <span class="pre">rampart-langtools-arm8a</span></code> installs a faster ARMv8-A
+build in its place.</p>
 <p>On macOS (Apple Silicon):</p>
 <ul class="simple">
 <li><a class="reference internal" href="#initembed">initEmbed</a> requires macOS 12 (Monterey) or later.</li>
@@ -429,14 +432,14 @@ regression in older versions of macOS.  The requirement is
 checked at runtime and <code class="docutils literal notranslate"><span class="pre">initGen</span></code> will throw a descriptive error
 on macOS 14 and below.</li>
 </ul>
-<p>On Linux, the modules are available in CPU and CUDA (GPU) builds.
+<p>On Linux, the modules are available in CPU and CUDA (GPU) builds
+(<code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--install</span> <span class="pre">rampart-langtools-cu11</span></code>, <code class="docutils literal notranslate"><span class="pre">-cu12</span></code> or <code class="docutils literal notranslate"><span class="pre">-cu13</span></code>).
 GPU-only features (such as the faiss <a class="reference internal" href="#idx-enablegpu">idx.enableGpu()</a> function)
-are noted where applicable.</p>
-<p>The rampart-onnx module additionally requires glibc 2.28 or later
-on Linux (it is not included in the packages built for older
-distributions), and its CUDA support requires an NVIDIA driver
-supporting CUDA 12 or later — see
+are noted where applicable.  rampart-onnx’s CUDA support additionally
+requires an NVIDIA driver supporting CUDA 12 or later — see
 <a class="reference internal" href="#cpu-and-gpu-runtime-selection">CPU and GPU (runtime selection)</a>.</p>
+<p>Acceleration is Metal on Apple Silicon.  The Intel Mac, FreeBSD and
+32-bit ARM builds are CPU-only.</p>
 </div>
 <div class="section" id="errors-warnings-and-logs">
 <h3>Errors, Warnings and Logs<a class="headerlink" href="#errors-warnings-and-logs" title="Permalink to this headline">¶</a></h3>
@@ -1550,7 +1553,7 @@ call made afterwards will silently not apply to that model.</dd>
     <span class="nx">threadsBatch</span><span class="o">:</span> <span class="mi">8</span>        <span class="cm">/* else ggml uses 4, always    */</span>
 <span class="p">});</span>
 
-<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">(</span><span class="s2">&quot;/path/to/db&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">sql</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">connection</span><span class="p">(</span><span class="s2">&quot;/path/to/db&quot;</span><span class="p">);</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">llamaEmbed</span><span class="o">:</span> <span class="s2">&quot;/models/bge-m3-FP16.gguf&quot;</span><span class="p">});</span>
 
 <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into docs values(?, chunkembed(?))&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">id</span><span class="p">,</span> <span class="nx">text</span><span class="p">]);</span>

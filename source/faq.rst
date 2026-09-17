@@ -17,10 +17,11 @@ installer:
 
     curl -fsSL https://get.rampart.dev/ | sh
 
-It supports Linux x86_64 and aarch64 (glibc 2.31 or newer), macOS 11
-(Big Sur) or newer, and FreeBSD 14 or newer.  On any
-other system it stops with a specific reason rather than installing
-something that will not run.
+It supports Linux x86_64 and aarch64 (glibc 2.17 or newer), 32-bit
+Raspberry Pi and other armv7l systems (glibc 2.28 or newer, i.e. Debian 10
+and up), macOS 11 (Big Sur) or newer on both Apple Silicon and Intel, and
+FreeBSD 14 or newer.  On any other system it stops with a specific reason
+rather than installing something that will not run.
 
 Run without ``sudo``, it installs to ``~/.rampart``.  For a system-wide
 install to ``/usr/local/rampart``, pipe to ``sudo sh`` instead:
@@ -55,8 +56,15 @@ and so on — are downloaded on demand:
 .. code-block:: bash
 
     rampart --install --list                        # show what is available
-    rampart --install rampart-python rampart-sql    # install named modules
+    rampart --install rampart-python rampart-langtools  # install named modules
     rampart --install all                           # install everything available
+
+Where a module has hardware-specific builds, each is its own name.
+``rampart-langtools-cu11``, ``-cu12`` and ``-cu13`` are the CUDA builds,
+and ``rampart-langtools-arm8a`` is a faster ARMv8-A build for a Pi 3 or
+newer.  Installing one re-points ``rampart-llamacpp.so``,
+``rampart-faiss.so`` and ``rampart-clip.so`` at its builds; switch back by
+installing a different variant.
 
 Note that ``--install`` works only on official builds — the ones the
 install script and the download page provide.  A Rampart you compiled
@@ -164,7 +172,6 @@ distribution and are loaded with ``require()``:
 * **Text extraction** — ``rampart-totext`` (PDF, DOCX, XLSX, etc.)
 * **Python interop** — ``rampart-python``
 * **Networking** — ``rampart-net`` (TCP sockets, SSL/TLS)
-* **URL parsing** — ``rampart-url``
 * **robots.txt** — ``rampart-robots``
 
 You can also write your own C modules using the Duktape C API (see
@@ -176,7 +183,9 @@ What version of ECMAScript does Rampart support?
 
 By default, Rampart supports partial ECMAScript 2015 (ES6) and
 ECMAScript 2016 (ES7) through Duktape.  This includes ``TypedArray``,
-``Buffer``, ``Proxy``, ``Symbol``, template literals, and more.
+``Buffer``, ``Proxy``, ``Symbol``, template literals, ``BigInt`` (with
+``123n`` literals and ``BigInt64Array``), and ``WeakRef`` /
+``WeakMap`` / ``FinalizationRegistry``.
 
 For full ES2015+ support — including ``async``/``await``, destructuring,
 arrow functions, ``for...of``, ``class`` syntax, and Promises — place one
@@ -188,16 +197,13 @@ of the following directives at the top of your script:
                       //    OR
     "use babel";      // Full ES2015+ via the Babel transpiler (much slower)
 
-The built-in transpiler (``"use transpiler"``) is written in C and is
-significantly faster than Babel, which runs as JavaScript.  In both
+The built-in transpiler (``"use transpiler"``) is written in C, on top of
+tree-sitter, and is significantly faster than Babel, which runs as
+JavaScript.  In both
 cases, the transpiled output is cached to disk (e.g.,
 ``myscript.transpiled.js`` or ``myscript.babel.js``).  On subsequent
 runs, the cached version is reused if the source file has not changed,
 so the startup cost is only paid once.
-
-Note that Rampart's non-standard extensions (template literal ``sprintf``
-shortcuts and triple-backtick unescaped strings) work with
-``"use transpiler"`` but do **not** work with ``"use babel"``.
 
 
 What are Rampart's non-standard JavaScript extensions?
@@ -322,23 +328,37 @@ Rampart uses a CommonJS-style ``require()`` function, but the module
 search path is different from Node.js.  There is no ``node_modules``
 directory.
 
-The ``.js`` extension is optional.  ``require()`` searches in this order:
+The extension is optional.  For a bare name, each directory on the search
+path is tried with ``.js``, then ``.json``, then ``.so``, then the name
+exactly as given.  Naming the extension (``require("foo.so")``) selects
+that file.  A path ending in ``/`` loads ``index.js`` from that directory.
 
-1. The absolute path (if one is given).
-2. The calling module's own directory (if called from within a module).
-3. ``process.scriptPath`` — the directory of the currently running script.
-4. ``process.scriptPath + "/modules/"``
-5. ``~/.rampart/modules/``
+``require()`` searches in this order:
+
+1. The absolute path (if one is given), and nothing else.
+2. When running a :ref:`single-file bundle <rampart-extras:single-file bundles>`,
+   the appended zip, before any location on disk.
+3. The calling module's own directory (if called from within a module).
+4. ``process.scriptPath``, then its ``modules/`` and
+   ``lib/rampart_modules/`` subdirectories.
+5. ``~/.rampart/modules/`` and ``~/.rampart/lib/rampart_modules/``.
 6. The ``$RAMPART_PATH`` environment variable (if set).
-7. ``process.modulesPath`` — the system modules directory from the install path.
+7. ``process.installPath``, then its ``modules/`` and
+   ``lib/rampart_modules/`` subdirectories — the last of which is
+   ``process.modulesPath``.
 
 C modules (``.so`` shared libraries) are searched the same way.
 
 .. code-block:: javascript
 
     var Sql  = require("rampart-sql");       // included C module
-    var util = require("./myutil.js");       // relative path
-    var util2 = require("myutil");           // .js extension is optional
+    var conf = require("./myconf.json");     // JSON is parsed and returned
+    var util = require("./myutil");          // extension optional
+
+**The current working directory is not searched.**  A relative id such as
+``require("./myutil")`` resolves against the script or module doing the
+requiring, not against the directory you happen to be standing in — so a
+script behaves the same no matter where it is run from.
 
 Modules are loaded once and cached — subsequent ``require()`` calls for the
 same module return the cached instance.
@@ -650,14 +670,32 @@ What are the transpiler gotchas I should know about?
 
 When using ``"use transpiler"``, be aware of these limitations:
 
-* ``const`` is transpiled to ``var`` — reassignment silently succeeds.
-* ``await`` inside loops may not pause per-iteration.  Use
-  ``Promise.all()`` instead.
-* Destructuring combined with ``await`` (e.g.,
-  ``var {a, b} = await fn()``) may fail.  Await first, then destructure.
+* ``const`` is transpiled to ``var`` — reassignment silently succeeds
+  rather than throwing.
 
-``"use babel"`` handles more of these cases correctly but is much
-slower.  Test your specific patterns if in doubt.
+``await`` in a loop does pause per iteration, and destructuring an
+awaited value works; both were limitations in earlier releases.
+
+``"use babel"`` handles more edge cases correctly but is much slower.
+Test your specific patterns if in doubt.
+
+
+What happens to my threads when the script exits?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``process.exit()`` is immediate: threads still running are terminated
+where they are, and work in progress is lost.  A thread that is part way
+through writing a file will not finish.
+
+Letting the script end normally is the orderly path.  A non-persistent
+thread closes once its event loop is empty and the parent is ready to
+exit; a persistent thread (``new rampart.thread(true)``) keeps the
+process alive until you call ``thr.close()``.  If you have state to
+flush, flush it before exiting rather than relying on the thread to get
+there first.
+
+Note also that ``fork()`` and ``daemon()`` refuse to run while threads
+are open — see `How do fork() and daemon() work?`_.
 
 
 Why did my setTimeout callback fire late?
@@ -708,6 +746,16 @@ Key differences:
   and reloaded if changed on disk.  No server restart required.
 * **WebSockets included** — No external package needed; part of
   ``rampart-server``.
+* **Reverse proxy** — A map entry may be ``{proxy: "http://backend:3000/"}``
+  instead of a directory or function, WebSocket upgrades included.  No
+  separate ``http-proxy-middleware``.
+* **Rate limiting** — ``rateLimit`` takes per-path rules keyed by ``ip``,
+  ``fingerprint`` (IP plus browser headers) or ``cookie:name``.  All
+  matching prefixes are checked, so a global limit and a tighter one on
+  ``/apps/auth/`` compose.
+* **Several listeners in one process** — ``listen:[]`` takes a list of
+  bind blocks, so http and https, different certificates and different
+  routing can share a process.
 
 .. code-block:: javascript
 
@@ -725,6 +773,37 @@ Key differences:
                             }
         }
     });
+
+
+How do I add authentication and sessions?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``rampart-auth`` provides session-based authentication for
+``rampart-server``.  The session check runs in C — cookie extraction,
+LMDB session lookup, expiry and privilege level — so it costs no
+JavaScript on a request that is merely authenticated.
+
+Turn it on with two properties in ``web_server_conf.js`` (or in
+``server.start()``):
+
+.. code-block:: javascript
+
+    var serverConf = {
+        authMod:     true,
+        authModConf: working_directory + '/auth-conf.js'
+    };
+
+``auth-conf.js`` is where protected paths, privilege levels, session
+lifetime and lockout policy live.  The companion ``auth.js`` in
+``web_server/apps/`` handles the operations that do not need to be fast:
+account creation, login and logout, password management, an
+administrative web interface and a CLI tool.  CSRF protection, sliding
+expiry, account lockout, email-based password reset, and Google and
+Facebook OAuth plugins are included.  Setting ``authMod`` to a
+:green:`Function` replaces the whole mechanism with your own — useful for
+API-key or header-based schemes.
+
+See :ref:`rampart-auth <rampart-auth:The rampart-auth module>`.
 
 
 How do I structure a Rampart web application?
@@ -1202,14 +1281,19 @@ beyond SQLite's FTS.
 |                     | thesaurus, phrase proximity, wildcards,    | limited ranking                   |
 |                     | relevance ranking, linguistic derivations  |                                   |
 +---------------------+--------------------------------------------+-----------------------------------+
-| Vector Search       | Built-in ``vecdist()`` for cosine,         | Requires extensions               |
-|                     | Euclidean, and dot-product distance        |                                   |
+| Vector Search       | ``varvec*`` columns, ``CREATE VECTOR``     | Requires extensions               |
+|                     | ``INDEX`` (FAISS/IVFPQ or usearch/HNSW),   |                                   |
+|                     | ``LIKEV`` search, and ``embed()`` /        |                                   |
+|                     | ``chunkembed()`` running the model         |                                   |
+|                     | inside the engine; keyword+vector          |                                   |
+|                     | fusion in one statement                    |                                   |
 +---------------------+--------------------------------------------+-----------------------------------+
 | Geocoding           | Built-in ``latlon2geocode()`` for          | Requires extensions               |
 |                     | geographic bounded-area searches           |                                   |
 +---------------------+--------------------------------------------+-----------------------------------+
 | Data Types          | VARCHAR, INT, DOUBLE, DATE, COUNTER,       | TEXT, INTEGER, REAL, BLOB, NULL   |
-|                     | STRLST, VARBYTE, INDIRECT, GEOCODE         |                                   |
+|                     | STRLST, VARBYTE, INDIRECT, GEOCODE,        |                                   |
+|                     | VARVECF32/F16/BF16/I8/U8/B8                |                                   |
 +---------------------+--------------------------------------------+-----------------------------------+
 | Storage             | Directory-based (one dir per database)     | Single file                       |
 +---------------------+--------------------------------------------+-----------------------------------+
@@ -1258,7 +1342,7 @@ automatically check and update the index at a regular interval:
 
 .. code-block:: javascript
 
-    // Check every 2 hours starting now; rebuild if >= 1000 rows changed
+    // Check every 2 hours starting now; optimize if >= 1000 rows changed
     sql.scheduleUpdate("docs_body_ftx", "now", "2 hours", 1000);
 
 The schedule is stored in the database's ``SYSUPDATE`` table, and a
@@ -1391,6 +1475,31 @@ images with a text query.
 Model files can be fetched by short name rather than path with
 ``rampart-models``: ``models.get("bge-m3:q8_0")``.  See
 :ref:`rampart-langtools <rampart-langtools:The rampart-models module>`.
+
+
+How do I search images with a text query?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Load a CLIP model instead of a text embedding model.  CLIP puts images
+and text in one vector space, so a row whose vector came from a
+photograph can be found by a sentence describing it:
+
+.. code-block:: javascript
+
+    sql.set({clipEmbed: models.get("clip-vit-b-32-laion:q8_0")});
+
+    sql.exec("create table pics (Path varchar(256), Vec varvecF16)");
+
+    /* 'image' tells embed() the parameter is an image path */
+    sql.exec("insert into pics values (?, embed(?, 'image'))",
+             [path, path]);
+
+    var hits = sql.exec("select Path, $rank from pics where Vec likev ?",
+                        ["a dog playing on a beach"], {maxRows: 10});
+
+Only image paths and text go over the wire to the embedding engine, and
+``chunkembed()`` does not apply to CLIP models.  Outside SQL, the same
+model is available directly through ``rampart-clip``.
 
 
 How do I combine keyword and semantic search?
@@ -1919,6 +2028,32 @@ and request handling, use ``rampart-server`` in your own script.  The
     });
 
 
+How do I ship my application as a single file?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Append a zip to a copy of the ``rampart`` executable.  The result is one
+file — scripts, native modules, HTML, everything — that runs on a machine
+with nothing installed on it:
+
+.. code-block:: bash
+
+    cd mybundle && zip -qr ../payload.zip . && cd ..
+    cp /path/to/rampart myapp && cat payload.zip >> myapp && chmod +x myapp
+
+Nothing in the code has to change.  A virtual ``:zip:/`` namespace makes
+every file-reading API resolve inside the bundle, so ``require()``,
+``readFile()`` and the web server's static-file handler all work as they
+did on disk, and ``process.scriptPath`` becomes ``:zip:``.  At the zip
+root, a file named ``entry_script.js`` is run automatically.
+
+The two directories that cannot live in a bundle are the ones that must
+be writable — a database directory and a log directory.  Compute those at
+runtime; ``rampart.utils.payloadGet`` is defined only in a bundle, which
+makes a convenient test.
+
+See :ref:`Single-File Bundles <rampart-extras:single-file bundles>`.
+
+
 How do I set up HTTPS?
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1957,7 +2092,7 @@ provides automatic type conversion between JavaScript and Python:
 
     // Import a Python module
     var math = python.import("math");
-    var result = math.sqrt.toValue(16);   // 4.0
+    var result = math.sqrt(16).toValue();   // 4
 
     // Run arbitrary Python code
     var mymod = python.importString(`
@@ -2015,9 +2150,11 @@ Yes, for a substantial subset.  ``fetch``, ``URL``, ``Headers`` /
 stream family, ``WebSocket``, ``XMLHttpRequest``, ``crypto`` (Web
 Crypto), ``structuredClone`` and ``localStorage`` are all present.
 
-They are **lazy-loaded**: nothing is initialized until a script first
-references one of the names, so scripts that never use them pay no
-startup cost.  There is nothing to ``require()``.
+They come from ``rampart --install rampart-whatwg rampart-intl``, which
+the base install does not include.  Once installed there is nothing to
+``require()``: the globals are built in and **lazy-loaded**, so nothing is
+initialized until a script first references one of the names and scripts
+that never use them pay no startup cost.
 
 Conformance is partial and experimental — strongest for the APIs that do
 not assume a browser or DOM.  ``Intl`` (vendored ICU4C) is available the
@@ -2061,11 +2198,72 @@ the SQL embedding path described under `Database and Search`_:
 * ``rampart-clip`` — CLIP image and text embeddings in a shared space.
 * ``rampart-faiss`` — a standalone vector index (``openFactory()``,
   ``addFp32()``, ``searchFp32()``), separate from SQL vector indexes.
+* ``rampart-ocr`` — PP-OCR: text, box geometry and per-line confidence
+  from scans, screenshots and multi-page TIFFs, with layout-aware
+  reading order.
+* ``rampart-sentencepiece`` — SentencePiece tokenization and
+  detokenization.
 * ``rampart-models`` — resolve a short model name to a file, downloading
   it on first use: ``models.get("bge-m3:q8_0")``.
 
 All are documented in :ref:`rampart-langtools
 <rampart-langtools:The rampart-langtools modules>`.
+
+
+Can I use a newer or larger LLM than the bundled llama.cpp?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, through ``rampart-llm``.  ``rampart-llamacpp`` carries its own build
+of llama.cpp, and because embedding and reranking model formats change
+slowly, that build stays current for what it and ``rampart-sql`` are
+there to do.  Text generation is the fast-moving end: a brand-new model
+may want a llama.cpp newer than the one in your Rampart, and a large one
+may belong on another machine entirely.
+
+``rampart-llm`` covers both cases with one streaming API and one response
+shape over ``llama-server``, Ollama, any OpenAI-compatible endpoint,
+Anthropic's API and the Claude Code CLI:
+
+.. code-block:: javascript
+
+    var llm = require("rampart-llm.js");
+
+    var client = new llm.llamaCpp({server: "10.0.0.5", port: 8080});
+
+Run ``llama-server`` on whatever schedule and whichever host suits you;
+the calling code does not change.  It handles SSE parsing, reasoning
+output, tool calls, cancellation and context-window discovery.  See
+:ref:`rampart-llm <rampart-extras:rampart-llm>`.
+
+
+Can I build desktop apps or drive a headless browser?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Both, with two different modules:
+
+* ``rampart-webview`` opens a native OS webview — WebKitGTK on Linux,
+  WKWebView on macOS — and drives it from JavaScript.  The page is your
+  UI, and ``w.bind()`` makes a Rampart function callable from it as
+  ``window.<name>()``.  It also exposes a JavaScriptCore context
+  (``JSCContext``) for running browser JavaScript libraries in-process.
+* ``rampart-chromeview`` is a Puppeteer-compatible client for headless
+  Chrome over the DevTools protocol: navigate, wait on selectors,
+  ``$eval``, screenshots, PDFs, request interception and raw CDP
+  sessions.  Use it for scraping rendered pages and automated testing,
+  not for shipping a GUI.
+
+Both are installed with ``rampart --install``.
+
+
+Is there peer-to-peer networking?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``rampart --install rampart-iroh`` adds
+`iroh <https://www.iroh.computer/>`_ — encrypted QUIC connections,
+document sync, gossip pub/sub and blob transfer between peers with no
+server in the middle.  The package also installs ``iroh-webproxy``, which
+exposes a web server running behind NAT through an encrypted P2P tunnel;
+``rampart-webserver`` can start it for you with ``--irohProxy``.
 
 
 Vibe Coding with Rampart

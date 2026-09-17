@@ -785,7 +785,30 @@ preserved relative to <code class="docutils literal notranslate"><span class="pr
 at <code class="docutils literal notranslate"><span class="pre">destDir/html/index.html</span></code>).  Returns the number of files written.
 Refuses to extract entries whose path contains a <code class="docutils literal notranslate"><span class="pre">..</span></code> segment or
 starts with <code class="docutils literal notranslate"><span class="pre">/</span></code> (zip-slip protection).</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadOffset()</span></code></dt>
+<dd>Returns a <span class="green">Number</span>: the byte offset at which the appended zip
+begins, which is also the size of the bare, payload-free <code class="docutils literal notranslate"><span class="pre">rampart</span></code>
+executable.  A bundle can use it to slice itself apart – everything
+before the offset is a working <code class="docutils literal notranslate"><span class="pre">rampart</span></code> binary.</dd>
 </dl>
+<p>This is how rampart’s own self-extracting installer
+(<code class="docutils literal notranslate"><span class="pre">install/entry_script.js</span></code> in the source tree) installs the
+interpreter out of the downloaded bundle:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">u</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">installBareRampart</span><span class="p">(</span><span class="nx">prefix</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">all</span>  <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">installPathExec</span><span class="p">);</span>  <span class="cm">/* the bundle  */</span>
+    <span class="kd">var</span> <span class="nx">bare</span> <span class="o">=</span> <span class="nx">all</span><span class="p">.</span><span class="nx">subarray</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">u</span><span class="p">.</span><span class="nx">payloadOffset</span><span class="p">());</span>   <span class="cm">/* minus the zip */</span>
+
+    <span class="nx">u</span><span class="p">.</span><span class="nx">mkdir</span><span class="p">(</span><span class="nx">prefix</span> <span class="o">+</span> <span class="s2">&quot;/bin&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">u</span><span class="p">.</span><span class="nx">fwrite</span><span class="p">(</span><span class="nx">prefix</span> <span class="o">+</span> <span class="s2">&quot;/bin/rampart&quot;</span><span class="p">,</span> <span class="nx">bare</span><span class="p">);</span>
+    <span class="nx">u</span><span class="p">.</span><span class="nx">chmod</span><span class="p">(</span><span class="nx">prefix</span> <span class="o">+</span> <span class="s2">&quot;/bin/rampart&quot;</span><span class="p">,</span> <span class="s2">&quot;755&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The extracted file is byte-identical to the <code class="docutils literal notranslate"><span class="pre">rampart</span></code> the bundle was
+built from.  Having no payload of its own, it exposes none of the
+<code class="docutils literal notranslate"><span class="pre">payload*</span></code> functions when it runs.</p>
 <p>A second set works on <strong>any</strong> zip file on disk – not the appended
 payload – and is always available:</p>
 <dl class="docutils">
@@ -1012,7 +1035,7 @@ of to text:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-converter.js&quot;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">convert</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">converter</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convertFile</span><span class="p">(</span><span class="s1">&#39;/path/to/my/file.ext&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-    <span class="nx">or</span>
+<span class="cm">/* or */</span>
 <span class="kd">var</span> <span class="nx">txt</span> <span class="o">=</span> <span class="nx">convert</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">myFileBufferOrString</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -2263,8 +2286,8 @@ functions may be used to place the variable on top of the stack before returning
 </pre></div>
 </div>
 <p class="last">This allows you to, e.g., check for a <span class="green">Date Object</span> without getting <code class="docutils literal notranslate"><span class="pre">&quot;object&quot;</span></code> back as you would
-with <code class="docutils literal notranslate"><span class="pre">typeof</span></code> and obviates the need to use of <code class="docutils literal notranslate"><span class="pre">instanceOf</span> <span class="pre">Date</span></code> or <code class="docutils literal notranslate"><span class="pre">Array.isArray()</span></code> where is not cleanly
-codable in C. It is also the basis of the <a class="reference internal" href="rampart-utils.html#gettype"><span class="std std-ref">rampart.utils.getType() JavaScript call</span></a>.</p>
+with <code class="docutils literal notranslate"><span class="pre">typeof</span></code>, and obviates the need for <code class="docutils literal notranslate"><span class="pre">instanceof</span> <span class="pre">Date</span></code> or <code class="docutils literal notranslate"><span class="pre">Array.isArray()</span></code>, neither of which is
+cleanly codable in C. It is also the basis of the <a class="reference internal" href="rampart-utils.html#gettype"><span class="std std-ref">rampart.utils.getType() JavaScript call</span></a>.</p>
 </dd>
 </dl>
 </div>

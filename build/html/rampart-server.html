@@ -1115,7 +1115,7 @@ be a concatenation of the <code class="docutils literal notranslate"><span class
   <span class="nx">map</span><span class="o">:</span> <span class="p">{</span>
      <span class="s2">&quot;/multi/&quot;</span><span class="o">:</span>            <span class="p">{</span><span class="nx">module</span><span class="o">:</span> <span class="s2">&quot;modules/multi_function.js&quot;</span> <span class="p">}</span>
   <span class="p">}</span>
-<span class="p">}</span>
+<span class="p">});</span>
 
 <span class="cm">/* Here modules/multi_function.js is a module which sets exports *</span>
 <span class="cm"> * to an Object with keys as paths set to functions. Example:    */</span>
@@ -2215,7 +2215,7 @@ and is set to the current 0 based chunk index.</p>
 <span class="kd">function</span> <span class="nx">sendpic</span><span class="p">(</span><span class="nx">req</span><span class="p">){</span>
 
     <span class="c1">// from https://webcams.nyctmc.org/map</span>
-    <span class="nx">msg</span><span class="o">=</span><span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://webcams.nyctmc.org/api/cameras/d8122408-7092-41ba-a9db-ef8847edeaef/image&#39;</span><span class="p">,{</span><span class="nx">insecure</span><span class="o">:</span><span class="kc">true</span><span class="p">});</span>
+    <span class="kd">var</span> <span class="nx">msg</span><span class="o">=</span><span class="nx">curl</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://webcams.nyctmc.org/api/cameras/d8122408-7092-41ba-a9db-ef8847edeaef/image&#39;</span><span class="p">,{</span><span class="nx">insecure</span><span class="o">:</span><span class="kc">true</span><span class="p">});</span>
 
     <span class="nx">req</span><span class="p">.</span><span class="nx">chunkSend</span><span class="p">(</span>
         <span class="nx">sprintf</span><span class="p">(</span><span class="s2">&quot;--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n%s&quot;</span><span class="p">,</span>
@@ -3201,11 +3201,11 @@ Using this function with malloced data saves a copy and a free.</p>
 <div class="section" id="technical-notes">
 <h2>Technical Notes<a class="headerlink" href="#technical-notes" title="Permalink to this headline">¶</a></h2>
 <p>A rampart server script is broken into 3 stages:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">begin</span> <span class="nx">code</span>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>begin code
 
-<span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+server.start()
 
-<span class="nx">end</span> <span class="k">of</span> <span class="nx">script</span>
+end of script
 </pre></div>
 </div>
 <p>At “begin code”, code is run in the main thread.  Global functions and

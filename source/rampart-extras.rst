@@ -590,6 +590,33 @@ A small set of utilities is exposed only when a zip payload is present
     Refuses to extract entries whose path contains a ``..`` segment or
     starts with ``/`` (zip-slip protection).
 
+``rampart.utils.payloadOffset()``
+    Returns a :green:`Number`: the byte offset at which the appended zip
+    begins, which is also the size of the bare, payload-free ``rampart``
+    executable.  A bundle can use it to slice itself apart -- everything
+    before the offset is a working ``rampart`` binary.
+
+This is how rampart's own self-extracting installer
+(``install/entry_script.js`` in the source tree) installs the
+interpreter out of the downloaded bundle:
+
+.. code-block:: javascript
+
+    var u = rampart.utils;
+
+    function installBareRampart(prefix) {
+        var all  = u.readFile(process.installPathExec);  /* the bundle  */
+        var bare = all.subarray(0, u.payloadOffset());   /* minus the zip */
+
+        u.mkdir(prefix + "/bin", true);
+        u.fwrite(prefix + "/bin/rampart", bare);
+        u.chmod(prefix + "/bin/rampart", "755");
+    }
+
+The extracted file is byte-identical to the ``rampart`` the bundle was
+built from.  Having no payload of its own, it exposes none of the
+``payload*`` functions when it runs.
+
 A second set works on **any** zip file on disk -- not the appended
 payload -- and is always available:
 
@@ -851,7 +878,7 @@ To convert a document:
     var converter = require("rampart-converter.js");
     var convert = new converter();
     var txt = convert.convertFile('/path/to/my/file.ext', options);
-        or
+    /* or */
     var txt = convert.convert(myFileBufferOrString, options);
 
 where ``options`` overrides the ``defaultOptions`` above and 
@@ -2146,8 +2173,8 @@ Simple Type Check:
        */
 
     This allows you to, e.g., check for a :green:`Date Object` without getting ``"object"`` back as you would
-    with ``typeof`` and obviates the need to use of ``instanceOf Date`` or ``Array.isArray()`` where is not cleanly
-    codable in C. It is also the basis of the :ref:`rampart.utils.getType() JavaScript call <rampart-utils:getType>`.
+    with ``typeof``, and obviates the need for ``instanceof Date`` or ``Array.isArray()``, neither of which is
+    cleanly codable in C. It is also the basis of the :ref:`rampart.utils.getType() JavaScript call <rampart-utils:getType>`.
 
 
 Intl and WHATWG

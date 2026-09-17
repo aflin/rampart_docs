@@ -218,6 +218,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#argv">argv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#installpath">installPath</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#installpathbin">installPathBin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rampart-main.html#installpathexec">installPathExec</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#modulespath">modulesPath</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#scriptpath">scriptPath</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-main.html#scriptname">scriptName</a></li>
@@ -587,6 +588,7 @@
 <li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#connect">connect()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#init-constructor">init() constructor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#list-in-list-parameters">list() - IN-list parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rampart-sql.html#setmapsize">setMapSize()</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="rampart-sql.html#connection-functions">Connection Functions</a><ul>
@@ -2282,11 +2284,13 @@
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-threads-communicate-with-each-other">How do threads communicate with each other?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#does-rampart-support-promises-and-async-await">Does Rampart support Promises and async/await?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#what-are-the-transpiler-gotchas-i-should-know-about">What are the transpiler gotchas I should know about?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-happens-to-my-threads-when-the-script-exits">What happens to my threads when the script exits?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#why-did-my-settimeout-callback-fire-late">Why did my setTimeout callback fire late?</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="faq.html#http-server">HTTP Server</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-does-rampart-server-compare-to-express-js">How does rampart-server compare to Express.js?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-add-authentication-and-sessions">How do I add authentication and sessions?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-structure-a-rampart-web-application">How do I structure a Rampart web application?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#what-is-web-server-conf-js-and-when-should-i-use-it">What is web_server_conf.js and when should I use it?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-serve-static-files">How do I serve static files?</a></li>
@@ -2306,6 +2310,7 @@
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-build-a-full-text-search-over-documents-pdf-docx-etc">How do I build a full-text search over documents (PDF, DOCX, etc.)?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-do-semantic-vector-search">How do I do semantic (vector) search?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#which-embedding-engine-should-i-use">Which embedding engine should I use?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-search-images-with-a-text-query">How do I search images with a text query?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-combine-keyword-and-semantic-search">How do I combine keyword and semantic search?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#when-should-i-use-rampart-sql-vs-rampart-lmdb-vs-rampart-redis">When should I use rampart-sql vs rampart-lmdb vs rampart-redis?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#what-is-sql-one-and-when-should-i-use-it">What is sql.one() and when should I use it?</a></li>
@@ -2327,6 +2332,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="faq.html#deployment">Deployment</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-daemonize-and-deploy-the-rampart-server">How do I daemonize and deploy the Rampart server?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-ship-my-application-as-a-single-file">How do I ship my application as a single file?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-set-up-https">How do I set up HTTPS?</a></li>
 </ul>
 </li>
@@ -2335,6 +2341,9 @@
 <li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-use-browser-apis-like-fetch-url-or-blob">Can I use browser APIs like fetch, URL or Blob?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-run-code-written-for-node-js">Can I run code written for Node.js?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-run-ai-models-directly-without-the-database">Can I run AI models directly, without the database?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-use-a-newer-or-larger-llm-than-the-bundled-llama-cpp">Can I use a newer or larger LLM than the bundled llama.cpp?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-build-desktop-apps-or-drive-a-headless-browser">Can I build desktop apps or drive a headless browser?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#is-there-peer-to-peer-networking">Is there peer-to-peer networking?</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="faq.html#vibe-coding-with-rampart">Vibe Coding with Rampart</a><ul>

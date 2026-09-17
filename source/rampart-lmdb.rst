@@ -1049,7 +1049,7 @@ This operates identically to:
     var lmdb = new Lmdb.init(path,create,options);
 
     /* open read only if only reading in this transaction */
-    var txn = new lmdb.transaction([dbase, ] false);
+    var txn = new lmdb.transaction("mydb", false);
 
     /* position the cursor at next item*/
     var res = txn.cursorGet(lmdb.op_next);
@@ -1133,7 +1133,7 @@ This operates identically to:
     var txn = new lmdb.transaction("mydb", false);
 
     /* position the cursor at previous item*/
-    var res = txn.cursorGet([dbase, ] lmdb.op_prev);
+    var res = txn.cursorGet("mydb", lmdb.op_prev);
 
     txn.commit();
 

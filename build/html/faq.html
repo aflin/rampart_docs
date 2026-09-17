@@ -132,11 +132,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#how-do-threads-communicate-with-each-other">How do threads communicate with each other?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#does-rampart-support-promises-and-async-await">Does Rampart support Promises and async/await?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-are-the-transpiler-gotchas-i-should-know-about">What are the transpiler gotchas I should know about?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-happens-to-my-threads-when-the-script-exits">What happens to my threads when the script exits?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#why-did-my-settimeout-callback-fire-late">Why did my setTimeout callback fire late?</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#http-server">HTTP Server</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#how-does-rampart-server-compare-to-express-js">How does rampart-server compare to Express.js?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-add-authentication-and-sessions">How do I add authentication and sessions?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-structure-a-rampart-web-application">How do I structure a Rampart web application?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-is-web-server-conf-js-and-when-should-i-use-it">What is web_server_conf.js and when should I use it?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-serve-static-files">How do I serve static files?</a></li>
@@ -156,6 +158,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-build-a-full-text-search-over-documents-pdf-docx-etc">How do I build a full-text search over documents (PDF, DOCX, etc.)?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-do-semantic-vector-search">How do I do semantic (vector) search?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#which-embedding-engine-should-i-use">Which embedding engine should I use?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-search-images-with-a-text-query">How do I search images with a text query?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-combine-keyword-and-semantic-search">How do I combine keyword and semantic search?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#when-should-i-use-rampart-sql-vs-rampart-lmdb-vs-rampart-redis">When should I use rampart-sql vs rampart-lmdb vs rampart-redis?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-is-sql-one-and-when-should-i-use-it">What is sql.one() and when should I use it?</a></li>
@@ -177,6 +180,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-daemonize-and-deploy-the-rampart-server">How do I daemonize and deploy the Rampart server?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-i-ship-my-application-as-a-single-file">How do I ship my application as a single file?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-do-i-set-up-https">How do I set up HTTPS?</a></li>
 </ul>
 </li>
@@ -185,6 +189,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#can-i-use-browser-apis-like-fetch-url-or-blob">Can I use browser APIs like fetch, URL or Blob?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#can-i-run-code-written-for-node-js">Can I run code written for Node.js?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#can-i-run-ai-models-directly-without-the-database">Can I run AI models directly, without the database?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-use-a-newer-or-larger-llm-than-the-bundled-llama-cpp">Can I use a newer or larger LLM than the bundled llama.cpp?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-build-desktop-apps-or-drive-a-headless-browser">Can I build desktop apps or drive a headless browser?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#is-there-peer-to-peer-networking">Is there peer-to-peer networking?</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#vibe-coding-with-rampart">Vibe Coding with Rampart</a><ul>
@@ -268,10 +275,11 @@ installer:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -fsSL https://get.rampart.dev/ <span class="p">|</span> sh
 </pre></div>
 </div>
-<p>It supports Linux x86_64 and aarch64 (glibc 2.31 or newer), macOS 11
-(Big Sur) or newer, and FreeBSD 14 or newer.  On any
-other system it stops with a specific reason rather than installing
-something that will not run.</p>
+<p>It supports Linux x86_64 and aarch64 (glibc 2.17 or newer), 32-bit
+Raspberry Pi and other armv7l systems (glibc 2.28 or newer, i.e. Debian 10
+and up), macOS 11 (Big Sur) or newer on both Apple Silicon and Intel, and
+FreeBSD 14 or newer.  On any other system it stops with a specific reason
+rather than installing something that will not run.</p>
 <p>Run without <code class="docutils literal notranslate"><span class="pre">sudo</span></code>, it installs to <code class="docutils literal notranslate"><span class="pre">~/.rampart</span></code>.  For a system-wide
 install to <code class="docutils literal notranslate"><span class="pre">/usr/local/rampart</span></code>, pipe to <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">sh</span></code> instead:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -fsSL https://get.rampart.dev/ <span class="p">|</span> sudo sh
@@ -296,10 +304,16 @@ structure is kept intact.  Run <code class="docutils literal notranslate"><span 
 modules.  Others — Python interop, langtools, tree-sitter, chromeview
 and so on — are downloaded on demand:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rampart --install --list                        <span class="c1"># show what is available</span>
-rampart --install rampart-python rampart-sql    <span class="c1"># install named modules</span>
+rampart --install rampart-python rampart-langtools  <span class="c1"># install named modules</span>
 rampart --install all                           <span class="c1"># install everything available</span>
 </pre></div>
 </div>
+<p>Where a module has hardware-specific builds, each is its own name.
+<code class="docutils literal notranslate"><span class="pre">rampart-langtools-cu11</span></code>, <code class="docutils literal notranslate"><span class="pre">-cu12</span></code> and <code class="docutils literal notranslate"><span class="pre">-cu13</span></code> are the CUDA builds,
+and <code class="docutils literal notranslate"><span class="pre">rampart-langtools-arm8a</span></code> is a faster ARMv8-A build for a Pi 3 or
+newer.  Installing one re-points <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp.so</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rampart-faiss.so</span></code> and <code class="docutils literal notranslate"><span class="pre">rampart-clip.so</span></code> at its builds; switch back by
+installing a different variant.</p>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">--install</span></code> works only on official builds — the ones the
 install script and the download page provide.  A Rampart you compiled
 yourself will refuse, since the distribution packages are not
@@ -423,7 +437,6 @@ distribution and are loaded with <code class="docutils literal notranslate"><spa
 <li><strong>Text extraction</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-totext</span></code> (PDF, DOCX, XLSX, etc.)</li>
 <li><strong>Python interop</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-python</span></code></li>
 <li><strong>Networking</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-net</span></code> (TCP sockets, SSL/TLS)</li>
-<li><strong>URL parsing</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-url</span></code></li>
 <li><strong>robots.txt</strong> — <code class="docutils literal notranslate"><span class="pre">rampart-robots</span></code></li>
 </ul>
 <p>You can also write your own C modules using the Duktape C API (see
@@ -433,7 +446,9 @@ distribution and are loaded with <code class="docutils literal notranslate"><spa
 <h3>What version of ECMAScript does Rampart support?<a class="headerlink" href="#what-version-of-ecmascript-does-rampart-support" title="Permalink to this headline">¶</a></h3>
 <p>By default, Rampart supports partial ECMAScript 2015 (ES6) and
 ECMAScript 2016 (ES7) through Duktape.  This includes <code class="docutils literal notranslate"><span class="pre">TypedArray</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Buffer</span></code>, <code class="docutils literal notranslate"><span class="pre">Proxy</span></code>, <code class="docutils literal notranslate"><span class="pre">Symbol</span></code>, template literals, and more.</p>
+<code class="docutils literal notranslate"><span class="pre">Buffer</span></code>, <code class="docutils literal notranslate"><span class="pre">Proxy</span></code>, <code class="docutils literal notranslate"><span class="pre">Symbol</span></code>, template literals, <code class="docutils literal notranslate"><span class="pre">BigInt</span></code> (with
+<code class="docutils literal notranslate"><span class="pre">123n</span></code> literals and <code class="docutils literal notranslate"><span class="pre">BigInt64Array</span></code>), and <code class="docutils literal notranslate"><span class="pre">WeakRef</span></code> /
+<code class="docutils literal notranslate"><span class="pre">WeakMap</span></code> / <code class="docutils literal notranslate"><span class="pre">FinalizationRegistry</span></code>.</p>
 <p>For full ES2015+ support — including <code class="docutils literal notranslate"><span class="pre">async</span></code>/<code class="docutils literal notranslate"><span class="pre">await</span></code>, destructuring,
 arrow functions, <code class="docutils literal notranslate"><span class="pre">for...of</span></code>, <code class="docutils literal notranslate"><span class="pre">class</span></code> syntax, and Promises — place one
 of the following directives at the top of your script:</p>
@@ -442,15 +457,13 @@ of the following directives at the top of your script:</p>
 <span class="s2">&quot;use babel&quot;</span><span class="p">;</span>      <span class="c1">// Full ES2015+ via the Babel transpiler (much slower)</span>
 </pre></div>
 </div>
-<p>The built-in transpiler (<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>) is written in C and is
-significantly faster than Babel, which runs as JavaScript.  In both
+<p>The built-in transpiler (<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>) is written in C, on top of
+tree-sitter, and is significantly faster than Babel, which runs as
+JavaScript.  In both
 cases, the transpiled output is cached to disk (e.g.,
 <code class="docutils literal notranslate"><span class="pre">myscript.transpiled.js</span></code> or <code class="docutils literal notranslate"><span class="pre">myscript.babel.js</span></code>).  On subsequent
 runs, the cached version is reused if the source file has not changed,
 so the startup cost is only paid once.</p>
-<p>Note that Rampart’s non-standard extensions (template literal <code class="docutils literal notranslate"><span class="pre">sprintf</span></code>
-shortcuts and triple-backtick unescaped strings) work with
-<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> but do <strong>not</strong> work with <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code>.</p>
 </div>
 <div class="section" id="what-are-rampart-s-non-standard-javascript-extensions">
 <h3>What are Rampart’s non-standard JavaScript extensions?<a class="headerlink" href="#what-are-rampart-s-non-standard-javascript-extensions" title="Permalink to this headline">¶</a></h3>
@@ -550,22 +563,34 @@ as local variables:</p>
 <p>Rampart uses a CommonJS-style <code class="docutils literal notranslate"><span class="pre">require()</span></code> function, but the module
 search path is different from Node.js.  There is no <code class="docutils literal notranslate"><span class="pre">node_modules</span></code>
 directory.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">.js</span></code> extension is optional.  <code class="docutils literal notranslate"><span class="pre">require()</span></code> searches in this order:</p>
+<p>The extension is optional.  For a bare name, each directory on the search
+path is tried with <code class="docutils literal notranslate"><span class="pre">.js</span></code>, then <code class="docutils literal notranslate"><span class="pre">.json</span></code>, then <code class="docutils literal notranslate"><span class="pre">.so</span></code>, then the name
+exactly as given.  Naming the extension (<code class="docutils literal notranslate"><span class="pre">require(&quot;foo.so&quot;)</span></code>) selects
+that file.  A path ending in <code class="docutils literal notranslate"><span class="pre">/</span></code> loads <code class="docutils literal notranslate"><span class="pre">index.js</span></code> from that directory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">require()</span></code> searches in this order:</p>
 <ol class="arabic simple">
-<li>The absolute path (if one is given).</li>
+<li>The absolute path (if one is given), and nothing else.</li>
+<li>When running a <a class="reference internal" href="rampart-extras.html#single-file-bundles"><span class="std std-ref">single-file bundle</span></a>,
+the appended zip, before any location on disk.</li>
 <li>The calling module’s own directory (if called from within a module).</li>
-<li><code class="docutils literal notranslate"><span class="pre">process.scriptPath</span></code> — the directory of the currently running script.</li>
-<li><code class="docutils literal notranslate"><span class="pre">process.scriptPath</span> <span class="pre">+</span> <span class="pre">&quot;/modules/&quot;</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">~/.rampart/modules/</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">process.scriptPath</span></code>, then its <code class="docutils literal notranslate"><span class="pre">modules/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectories.</li>
+<li><code class="docutils literal notranslate"><span class="pre">~/.rampart/modules/</span></code> and <code class="docutils literal notranslate"><span class="pre">~/.rampart/lib/rampart_modules/</span></code>.</li>
 <li>The <code class="docutils literal notranslate"><span class="pre">$RAMPART_PATH</span></code> environment variable (if set).</li>
-<li><code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code> — the system modules directory from the install path.</li>
+<li><code class="docutils literal notranslate"><span class="pre">process.installPath</span></code>, then its <code class="docutils literal notranslate"><span class="pre">modules/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lib/rampart_modules/</span></code> subdirectories — the last of which is
+<code class="docutils literal notranslate"><span class="pre">process.modulesPath</span></code>.</li>
 </ol>
 <p>C modules (<code class="docutils literal notranslate"><span class="pre">.so</span></code> shared libraries) are searched the same way.</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>       <span class="c1">// included C module</span>
-<span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./myutil.js&quot;</span><span class="p">);</span>       <span class="c1">// relative path</span>
-<span class="kd">var</span> <span class="nx">util2</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;myutil&quot;</span><span class="p">);</span>           <span class="c1">// .js extension is optional</span>
+<span class="kd">var</span> <span class="nx">conf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./myconf.json&quot;</span><span class="p">);</span>     <span class="c1">// JSON is parsed and returned</span>
+<span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;./myutil&quot;</span><span class="p">);</span>          <span class="c1">// extension optional</span>
 </pre></div>
 </div>
+<p><strong>The current working directory is not searched.</strong>  A relative id such as
+<code class="docutils literal notranslate"><span class="pre">require(&quot;./myutil&quot;)</span></code> resolves against the script or module doing the
+requiring, not against the directory you happen to be standing in — so a
+script behaves the same no matter where it is run from.</p>
 <p>Modules are loaded once and cached — subsequent <code class="docutils literal notranslate"><span class="pre">require()</span></code> calls for the
 same module return the cached instance.</p>
 </div>
@@ -826,14 +851,27 @@ work with <code class="docutils literal notranslate"><span class="pre">async</sp
 <h3>What are the transpiler gotchas I should know about?<a class="headerlink" href="#what-are-the-transpiler-gotchas-i-should-know-about" title="Permalink to this headline">¶</a></h3>
 <p>When using <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>, be aware of these limitations:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">const</span></code> is transpiled to <code class="docutils literal notranslate"><span class="pre">var</span></code> — reassignment silently succeeds.</li>
-<li><code class="docutils literal notranslate"><span class="pre">await</span></code> inside loops may not pause per-iteration.  Use
-<code class="docutils literal notranslate"><span class="pre">Promise.all()</span></code> instead.</li>
-<li>Destructuring combined with <code class="docutils literal notranslate"><span class="pre">await</span></code> (e.g.,
-<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">{a,</span> <span class="pre">b}</span> <span class="pre">=</span> <span class="pre">await</span> <span class="pre">fn()</span></code>) may fail.  Await first, then destructure.</li>
+<li><code class="docutils literal notranslate"><span class="pre">const</span></code> is transpiled to <code class="docutils literal notranslate"><span class="pre">var</span></code> — reassignment silently succeeds
+rather than throwing.</li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> handles more of these cases correctly but is much
-slower.  Test your specific patterns if in doubt.</p>
+<p><code class="docutils literal notranslate"><span class="pre">await</span></code> in a loop does pause per iteration, and destructuring an
+awaited value works; both were limitations in earlier releases.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">babel&quot;</span></code> handles more edge cases correctly but is much slower.
+Test your specific patterns if in doubt.</p>
+</div>
+<div class="section" id="what-happens-to-my-threads-when-the-script-exits">
+<h3>What happens to my threads when the script exits?<a class="headerlink" href="#what-happens-to-my-threads-when-the-script-exits" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">process.exit()</span></code> is immediate: threads still running are terminated
+where they are, and work in progress is lost.  A thread that is part way
+through writing a file will not finish.</p>
+<p>Letting the script end normally is the orderly path.  A non-persistent
+thread closes once its event loop is empty and the parent is ready to
+exit; a persistent thread (<code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">rampart.thread(true)</span></code>) keeps the
+process alive until you call <code class="docutils literal notranslate"><span class="pre">thr.close()</span></code>.  If you have state to
+flush, flush it before exiting rather than relying on the thread to get
+there first.</p>
+<p>Note also that <code class="docutils literal notranslate"><span class="pre">fork()</span></code> and <code class="docutils literal notranslate"><span class="pre">daemon()</span></code> refuse to run while threads
+are open — see <a class="reference internal" href="#how-do-fork-and-daemon-work">How do fork() and daemon() work?</a>.</p>
 </div>
 <div class="section" id="why-did-my-settimeout-callback-fire-late">
 <h3>Why did my setTimeout callback fire late?<a class="headerlink" href="#why-did-my-settimeout-callback-fire-late" title="Permalink to this headline">¶</a></h3>
@@ -877,6 +915,16 @@ order.  Express uses middleware chain order.</li>
 and reloaded if changed on disk.  No server restart required.</li>
 <li><strong>WebSockets included</strong> — No external package needed; part of
 <code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>.</li>
+<li><strong>Reverse proxy</strong> — A map entry may be <code class="docutils literal notranslate"><span class="pre">{proxy:</span> <span class="pre">&quot;http://backend:3000/&quot;}</span></code>
+instead of a directory or function, WebSocket upgrades included.  No
+separate <code class="docutils literal notranslate"><span class="pre">http-proxy-middleware</span></code>.</li>
+<li><strong>Rate limiting</strong> — <code class="docutils literal notranslate"><span class="pre">rateLimit</span></code> takes per-path rules keyed by <code class="docutils literal notranslate"><span class="pre">ip</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fingerprint</span></code> (IP plus browser headers) or <code class="docutils literal notranslate"><span class="pre">cookie:name</span></code>.  All
+matching prefixes are checked, so a global limit and a tighter one on
+<code class="docutils literal notranslate"><span class="pre">/apps/auth/</span></code> compose.</li>
+<li><strong>Several listeners in one process</strong> — <code class="docutils literal notranslate"><span class="pre">listen:[]</span></code> takes a list of
+bind blocks, so http and https, different certificates and different
+routing can share a process.</li>
 </ul>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-server&quot;</span><span class="p">);</span>
 
@@ -894,6 +942,31 @@ and reloaded if changed on disk.  No server restart required.</li>
 <span class="p">});</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="how-do-i-add-authentication-and-sessions">
+<h3>How do I add authentication and sessions?<a class="headerlink" href="#how-do-i-add-authentication-and-sessions" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">rampart-auth</span></code> provides session-based authentication for
+<code class="docutils literal notranslate"><span class="pre">rampart-server</span></code>.  The session check runs in C — cookie extraction,
+LMDB session lookup, expiry and privilege level — so it costs no
+JavaScript on a request that is merely authenticated.</p>
+<p>Turn it on with two properties in <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code> (or in
+<code class="docutils literal notranslate"><span class="pre">server.start()</span></code>):</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">serverConf</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">authMod</span><span class="o">:</span>     <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">authModConf</span><span class="o">:</span> <span class="nx">working_directory</span> <span class="o">+</span> <span class="s1">&#39;/auth-conf.js&#39;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">auth-conf.js</span></code> is where protected paths, privilege levels, session
+lifetime and lockout policy live.  The companion <code class="docutils literal notranslate"><span class="pre">auth.js</span></code> in
+<code class="docutils literal notranslate"><span class="pre">web_server/apps/</span></code> handles the operations that do not need to be fast:
+account creation, login and logout, password management, an
+administrative web interface and a CLI tool.  CSRF protection, sliding
+expiry, account lockout, email-based password reset, and Google and
+Facebook OAuth plugins are included.  Setting <code class="docutils literal notranslate"><span class="pre">authMod</span></code> to a
+<span class="green">Function</span> replaces the whole mechanism with your own — useful for
+API-key or header-based schemes.</p>
+<p>See <a class="reference internal" href="rampart-auth.html#the-rampart-auth-module"><span class="std std-ref">rampart-auth</span></a>.</p>
 </div>
 <div class="section" id="how-do-i-structure-a-rampart-web-application">
 <h3>How do I structure a Rampart web application?<a class="headerlink" href="#how-do-i-structure-a-rampart-web-application" title="Permalink to this headline">¶</a></h3>
@@ -1328,8 +1401,12 @@ relevance ranking, linguistic derivations</td>
 limited ranking</td>
 </tr>
 <tr class="row-odd"><td>Vector Search</td>
-<td>Built-in <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> for cosine,
-Euclidean, and dot-product distance</td>
+<td><code class="docutils literal notranslate"><span class="pre">varvec*</span></code> columns, <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VECTOR</span></code>
+<code class="docutils literal notranslate"><span class="pre">INDEX</span></code> (FAISS/IVFPQ or usearch/HNSW),
+<code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> search, and <code class="docutils literal notranslate"><span class="pre">embed()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> running the model
+inside the engine; keyword+vector
+fusion in one statement</td>
 <td>Requires extensions</td>
 </tr>
 <tr class="row-even"><td>Geocoding</td>
@@ -1339,7 +1416,8 @@ geographic bounded-area searches</td>
 </tr>
 <tr class="row-odd"><td>Data Types</td>
 <td>VARCHAR, INT, DOUBLE, DATE, COUNTER,
-STRLST, VARBYTE, INDIRECT, GEOCODE</td>
+STRLST, VARBYTE, INDIRECT, GEOCODE,
+VARVECF32/F16/BF16/I8/U8/B8</td>
 <td>TEXT, INTEGER, REAL, BLOB, NULL</td>
 </tr>
 <tr class="row-even"><td>Storage</td>
@@ -1383,7 +1461,7 @@ or frequently updated tables, you should set up index maintenance.</p>
 </div>
 <p><strong>Scheduled update</strong> — use <code class="docutils literal notranslate"><span class="pre">scheduleUpdate()</span></code> to have Rampart
 automatically check and update the index at a regular interval:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Check every 2 hours starting now; rebuild if &gt;= 1000 rows changed</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Check every 2 hours starting now; optimize if &gt;= 1000 rows changed</span>
 <span class="nx">sql</span><span class="p">.</span><span class="nx">scheduleUpdate</span><span class="p">(</span><span class="s2">&quot;docs_body_ftx&quot;</span><span class="p">,</span> <span class="s2">&quot;now&quot;</span><span class="p">,</span> <span class="s2">&quot;2 hours&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -1498,6 +1576,27 @@ images with a text query.</p>
 <p>Model files can be fetched by short name rather than path with
 <code class="docutils literal notranslate"><span class="pre">rampart-models</span></code>: <code class="docutils literal notranslate"><span class="pre">models.get(&quot;bge-m3:q8_0&quot;)</span></code>.  See
 <a class="reference internal" href="rampart-langtools.html#the-rampart-models-module"><span class="std std-ref">rampart-langtools</span></a>.</p>
+</div>
+<div class="section" id="how-do-i-search-images-with-a-text-query">
+<h3>How do I search images with a text query?<a class="headerlink" href="#how-do-i-search-images-with-a-text-query" title="Permalink to this headline">¶</a></h3>
+<p>Load a CLIP model instead of a text embedding model.  CLIP puts images
+and text in one vector space, so a row whose vector came from a
+photograph can be found by a sentence describing it:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">clipEmbed</span><span class="o">:</span> <span class="nx">models</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;clip-vit-b-32-laion:q8_0&quot;</span><span class="p">)});</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;create table pics (Path varchar(256), Vec varvecF16)&quot;</span><span class="p">);</span>
+
+<span class="cm">/* &#39;image&#39; tells embed() the parameter is an image path */</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;insert into pics values (?, embed(?, &#39;image&#39;))&quot;</span><span class="p">,</span>
+         <span class="p">[</span><span class="nx">path</span><span class="p">,</span> <span class="nx">path</span><span class="p">]);</span>
+
+<span class="kd">var</span> <span class="nx">hits</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="s2">&quot;select Path, $rank from pics where Vec likev ?&quot;</span><span class="p">,</span>
+                    <span class="p">[</span><span class="s2">&quot;a dog playing on a beach&quot;</span><span class="p">],</span> <span class="p">{</span><span class="nx">maxRows</span><span class="o">:</span> <span class="mi">10</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Only image paths and text go over the wire to the embedding engine, and
+<code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> does not apply to CLIP models.  Outside SQL, the same
+model is available directly through <code class="docutils literal notranslate"><span class="pre">rampart-clip</span></code>.</p>
 </div>
 <div class="section" id="how-do-i-combine-keyword-and-semantic-search">
 <h3>How do I combine keyword and semantic search?<a class="headerlink" href="#how-do-i-combine-keyword-and-semantic-search" title="Permalink to this headline">¶</a></h3>
@@ -2101,6 +2200,26 @@ and request handling, use <code class="docutils literal notranslate"><span class
 </pre></div>
 </div>
 </div>
+<div class="section" id="how-do-i-ship-my-application-as-a-single-file">
+<h3>How do I ship my application as a single file?<a class="headerlink" href="#how-do-i-ship-my-application-as-a-single-file" title="Permalink to this headline">¶</a></h3>
+<p>Append a zip to a copy of the <code class="docutils literal notranslate"><span class="pre">rampart</span></code> executable.  The result is one
+file — scripts, native modules, HTML, everything — that runs on a machine
+with nothing installed on it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> mybundle <span class="o">&amp;&amp;</span> zip -qr ../payload.zip . <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
+cp /path/to/rampart myapp <span class="o">&amp;&amp;</span> cat payload.zip &gt;&gt; myapp <span class="o">&amp;&amp;</span> chmod +x myapp
+</pre></div>
+</div>
+<p>Nothing in the code has to change.  A virtual <code class="docutils literal notranslate"><span class="pre">:zip:/</span></code> namespace makes
+every file-reading API resolve inside the bundle, so <code class="docutils literal notranslate"><span class="pre">require()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">readFile()</span></code> and the web server’s static-file handler all work as they
+did on disk, and <code class="docutils literal notranslate"><span class="pre">process.scriptPath</span></code> becomes <code class="docutils literal notranslate"><span class="pre">:zip:</span></code>.  At the zip
+root, a file named <code class="docutils literal notranslate"><span class="pre">entry_script.js</span></code> is run automatically.</p>
+<p>The two directories that cannot live in a bundle are the ones that must
+be writable — a database directory and a log directory.  Compute those at
+runtime; <code class="docutils literal notranslate"><span class="pre">rampart.utils.payloadGet</span></code> is defined only in a bundle, which
+makes a convenient test.</p>
+<p>See <a class="reference internal" href="rampart-extras.html#single-file-bundles"><span class="std std-ref">Single-File Bundles</span></a>.</p>
+</div>
 <div class="section" id="how-do-i-set-up-https">
 <h3>How do I set up HTTPS?<a class="headerlink" href="#how-do-i-set-up-https" title="Permalink to this headline">¶</a></h3>
 <p>Pass SSL options to <code class="docutils literal notranslate"><span class="pre">server.start()</span></code>:</p>
@@ -2131,7 +2250,7 @@ provides automatic type conversion between JavaScript and Python:</p>
 
 <span class="c1">// Import a Python module</span>
 <span class="kd">var</span> <span class="nx">math</span> <span class="o">=</span> <span class="nx">python</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="s2">&quot;math&quot;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">.</span><span class="nx">toValue</span><span class="p">(</span><span class="mi">16</span><span class="p">);</span>   <span class="c1">// 4.0</span>
+<span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="mi">16</span><span class="p">).</span><span class="nx">toValue</span><span class="p">();</span>   <span class="c1">// 4</span>
 
 <span class="c1">// Run arbitrary Python code</span>
 <span class="kd">var</span> <span class="nx">mymod</span> <span class="o">=</span> <span class="nx">python</span><span class="p">.</span><span class="nx">importString</span><span class="p">(</span><span class="sb">`</span>
@@ -2197,9 +2316,11 @@ available to both <code class="docutils literal notranslate"><span class="pre">p
 <code class="docutils literal notranslate"><span class="pre">Request</span></code> / <code class="docutils literal notranslate"><span class="pre">Response</span></code> / <code class="docutils literal notranslate"><span class="pre">FormData</span></code>, <code class="docutils literal notranslate"><span class="pre">Blob</span></code> / <code class="docutils literal notranslate"><span class="pre">File</span></code>, the
 stream family, <code class="docutils literal notranslate"><span class="pre">WebSocket</span></code>, <code class="docutils literal notranslate"><span class="pre">XMLHttpRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">crypto</span></code> (Web
 Crypto), <code class="docutils literal notranslate"><span class="pre">structuredClone</span></code> and <code class="docutils literal notranslate"><span class="pre">localStorage</span></code> are all present.</p>
-<p>They are <strong>lazy-loaded</strong>: nothing is initialized until a script first
-references one of the names, so scripts that never use them pay no
-startup cost.  There is nothing to <code class="docutils literal notranslate"><span class="pre">require()</span></code>.</p>
+<p>They come from <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--install</span> <span class="pre">rampart-whatwg</span> <span class="pre">rampart-intl</span></code>, which
+the base install does not include.  Once installed there is nothing to
+<code class="docutils literal notranslate"><span class="pre">require()</span></code>: the globals are built in and <strong>lazy-loaded</strong>, so nothing is
+initialized until a script first references one of the names and scripts
+that never use them pay no startup cost.</p>
 <p>Conformance is partial and experimental — strongest for the APIs that do
 not assume a browser or DOM.  <code class="docutils literal notranslate"><span class="pre">Intl</span></code> (vendored ICU4C) is available the
 same way.  See <a class="reference internal" href="rampart-main.html#whatwg-w3c-web-platform-apis-experimental"><span class="std std-ref">WHATWG / W3C Web Platform APIs (experimental)</span></a>.</p>
@@ -2235,10 +2356,62 @@ GPU is CUDA-only.</li>
 <li><code class="docutils literal notranslate"><span class="pre">rampart-clip</span></code> — CLIP image and text embeddings in a shared space.</li>
 <li><code class="docutils literal notranslate"><span class="pre">rampart-faiss</span></code> — a standalone vector index (<code class="docutils literal notranslate"><span class="pre">openFactory()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">addFp32()</span></code>, <code class="docutils literal notranslate"><span class="pre">searchFp32()</span></code>), separate from SQL vector indexes.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-ocr</span></code> — PP-OCR: text, box geometry and per-line confidence
+from scans, screenshots and multi-page TIFFs, with layout-aware
+reading order.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-sentencepiece</span></code> — SentencePiece tokenization and
+detokenization.</li>
 <li><code class="docutils literal notranslate"><span class="pre">rampart-models</span></code> — resolve a short model name to a file, downloading
 it on first use: <code class="docutils literal notranslate"><span class="pre">models.get(&quot;bge-m3:q8_0&quot;)</span></code>.</li>
 </ul>
 <p>All are documented in <a class="reference internal" href="rampart-langtools.html#the-rampart-langtools-modules"><span class="std std-ref">rampart-langtools</span></a>.</p>
+</div>
+<div class="section" id="can-i-use-a-newer-or-larger-llm-than-the-bundled-llama-cpp">
+<h3>Can I use a newer or larger LLM than the bundled llama.cpp?<a class="headerlink" href="#can-i-use-a-newer-or-larger-llm-than-the-bundled-llama-cpp" title="Permalink to this headline">¶</a></h3>
+<p>Yes, through <code class="docutils literal notranslate"><span class="pre">rampart-llm</span></code>.  <code class="docutils literal notranslate"><span class="pre">rampart-llamacpp</span></code> carries its own build
+of llama.cpp, and because embedding and reranking model formats change
+slowly, that build stays current for what it and <code class="docutils literal notranslate"><span class="pre">rampart-sql</span></code> are
+there to do.  Text generation is the fast-moving end: a brand-new model
+may want a llama.cpp newer than the one in your Rampart, and a large one
+may belong on another machine entirely.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rampart-llm</span></code> covers both cases with one streaming API and one response
+shape over <code class="docutils literal notranslate"><span class="pre">llama-server</span></code>, Ollama, any OpenAI-compatible endpoint,
+Anthropic’s API and the Claude Code CLI:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llm</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llm.js&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">llm</span><span class="p">.</span><span class="nx">llamaCpp</span><span class="p">({</span><span class="nx">server</span><span class="o">:</span> <span class="s2">&quot;10.0.0.5&quot;</span><span class="p">,</span> <span class="nx">port</span><span class="o">:</span> <span class="mi">8080</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Run <code class="docutils literal notranslate"><span class="pre">llama-server</span></code> on whatever schedule and whichever host suits you;
+the calling code does not change.  It handles SSE parsing, reasoning
+output, tool calls, cancellation and context-window discovery.  See
+<a class="reference internal" href="rampart-extras.html#rampart-llm"><span class="std std-ref">rampart-llm</span></a>.</p>
+</div>
+<div class="section" id="can-i-build-desktop-apps-or-drive-a-headless-browser">
+<h3>Can I build desktop apps or drive a headless browser?<a class="headerlink" href="#can-i-build-desktop-apps-or-drive-a-headless-browser" title="Permalink to this headline">¶</a></h3>
+<p>Both, with two different modules:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">rampart-webview</span></code> opens a native OS webview — WebKitGTK on Linux,
+WKWebView on macOS — and drives it from JavaScript.  The page is your
+UI, and <code class="docutils literal notranslate"><span class="pre">w.bind()</span></code> makes a Rampart function callable from it as
+<code class="docutils literal notranslate"><span class="pre">window.&lt;name&gt;()</span></code>.  It also exposes a JavaScriptCore context
+(<code class="docutils literal notranslate"><span class="pre">JSCContext</span></code>) for running browser JavaScript libraries in-process.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart-chromeview</span></code> is a Puppeteer-compatible client for headless
+Chrome over the DevTools protocol: navigate, wait on selectors,
+<code class="docutils literal notranslate"><span class="pre">$eval</span></code>, screenshots, PDFs, request interception and raw CDP
+sessions.  Use it for scraping rendered pages and automated testing,
+not for shipping a GUI.</li>
+</ul>
+<p>Both are installed with <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--install</span></code>.</p>
+</div>
+<div class="section" id="is-there-peer-to-peer-networking">
+<h3>Is there peer-to-peer networking?<a class="headerlink" href="#is-there-peer-to-peer-networking" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">--install</span> <span class="pre">rampart-iroh</span></code> adds
+<a class="reference external" href="https://www.iroh.computer/">iroh</a> — encrypted QUIC connections,
+document sync, gossip pub/sub and blob transfer between peers with no
+server in the middle.  The package also installs <code class="docutils literal notranslate"><span class="pre">iroh-webproxy</span></code>, which
+exposes a web server running behind NAT through an encrypted P2P tunnel;
+<code class="docutils literal notranslate"><span class="pre">rampart-webserver</span></code> can start it for you with <code class="docutils literal notranslate"><span class="pre">--irohProxy</span></code>.</p>
 </div>
 </div>
 <div class="section" id="vibe-coding-with-rampart">

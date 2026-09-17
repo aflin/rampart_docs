@@ -538,7 +538,7 @@ pages loaded via ``setHtml()`` or ``file://`` to make requests:
 .. code-block:: javascript
 
     // In your rampart-server route handler:
-    req.header("Access-Control-Allow-Origin", "*");
+    return { json: data, headers: {"Access-Control-Allow-Origin": "*"} };
 
 Option 3: Use ``w.bind()`` as a proxy
 '''''''''''''''''''''''''''''''''''''

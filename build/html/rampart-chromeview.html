@@ -467,11 +467,14 @@ Without the transpiler, the underlying engine returns the stub
 cannot be shipped to Chrome.  The module raises an error in
 that case.</li>
 </ul>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* String — accepted in every mode */</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="cm">/* accepted in every mode */</span>
 <span class="nx">page</span><span class="p">.</span><span class="nx">$eval</span><span class="p">(</span><span class="s2">&quot;h1&quot;</span><span class="p">,</span> <span class="s2">&quot;el =&gt; el.textContent&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>A function may be passed instead when <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code> is the first
+statement of the file:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
 
-<span class="cm">/* Function — accepted only under &quot;use transpiler&quot; */</span>
-<span class="s2">&quot;use transpiler&quot;</span>
 <span class="nx">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">$eval</span><span class="p">(</span><span class="s2">&quot;h1&quot;</span><span class="p">,</span> <span class="nx">el</span> <span class="p">=&gt;</span> <span class="nx">el</span><span class="p">.</span><span class="nx">textContent</span><span class="p">);</span>
 <span class="nx">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="nb">document</span><span class="p">.</span><span class="nx">title</span><span class="p">);</span>
 </pre></div>

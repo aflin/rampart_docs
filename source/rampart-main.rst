@@ -738,6 +738,16 @@ installPathBin
 The value of ``process.installPathBin`` is a :green:`String` containing the
 canonical path of the directory containing the rampart executable.
 
+installPathExec
+"""""""""""""""
+
+The value of ``process.installPathExec`` is a :green:`String` containing the
+canonical path of the rampart executable itself, file name included (e.g.
+``/usr/local/bin/rampart``).  Symlinks are resolved, so this always names
+the real file being run -- which is what a
+:ref:`single-file bundle <rampart-extras:single-file bundles>` reads when it
+needs to examine or copy itself.
+
 modulesPath
 """""""""""
 

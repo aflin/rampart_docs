@@ -127,12 +127,16 @@ outside the SQL engine, reranking and text generation.
 Platform Availability
 ~~~~~~~~~~~~~~~~~~~~~
 
-The rampart-langtools modules are **not available** on the following
-platforms:
+The rampart-langtools package is available on every platform Rampart is
+built for.  Two of its modules are not: ``rampart-onnx`` and
+``rampart-ocr`` require glibc 2.28 or later, so they are absent from the
+glibc 2.17 Linux builds and from the 32-bit ARM build.  Use
+``rampart-llamacpp`` for embedding and reranking there.
 
-*  macOS x86_64 (Intel Macs).
-
-*  32-bit ARM Linux (the ``raspberry_pi_os-buster-armv7l`` build).
+On 32-bit ARM the default package is compiled for ARMv6, so one build runs
+on every 32-bit Raspberry Pi.  On a Pi 3 or newer,
+``rampart --install rampart-langtools-arm8a`` installs a faster ARMv8-A
+build in its place.
 
 On macOS (Apple Silicon):
 
@@ -143,15 +147,15 @@ On macOS (Apple Silicon):
    checked at runtime and ``initGen`` will throw a descriptive error
    on macOS 14 and below.
 
-On Linux, the modules are available in CPU and CUDA (GPU) builds.
+On Linux, the modules are available in CPU and CUDA (GPU) builds
+(``rampart --install rampart-langtools-cu11``, ``-cu12`` or ``-cu13``).
 GPU-only features (such as the faiss `idx.enableGpu()`_ function)
-are noted where applicable.
-
-The rampart-onnx module additionally requires glibc 2.28 or later
-on Linux (it is not included in the packages built for older
-distributions), and its CUDA support requires an NVIDIA driver
-supporting CUDA 12 or later — see
+are noted where applicable.  rampart-onnx's CUDA support additionally
+requires an NVIDIA driver supporting CUDA 12 or later — see
 `CPU and GPU (runtime selection)`_\ .
+
+Acceleration is Metal on Apple Silicon.  The Intel Mac, FreeBSD and
+32-bit ARM builds are CPU-only.
 
 Errors, Warnings and Logs
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1293,7 +1297,7 @@ embedDefaults
             threadsBatch: 8        /* else ggml uses 4, always    */
         });
 
-        var sql = new Sql("/path/to/db");
+        var sql = new Sql.connection("/path/to/db");
         sql.set({llamaEmbed: "/models/bge-m3-FP16.gguf"});
 
         sql.exec("insert into docs values(?, chunkembed(?))", [id, text]);

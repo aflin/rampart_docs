@@ -2984,7 +2984,7 @@ Where:
      or a :green:`Date`.  The default value is the current time.  A :green:`String` date is parsed
      automatically (the same parser used by `autoScanDate`_\ ), trying the following formats in order:
 
-.. code-block:: javascript
+.. code-block:: none
 
     "%Y-%m-%d %H:%M:%S %z"
     "%A %B %d %H:%M:%S %Y %z"
@@ -4785,7 +4785,7 @@ durability barrier.  Neither is available through `fopen`_\ ().
    var u = rampart.utils, O = u.O;
 
    function atomicWrite(path, data) {
-      var tmp = path + ".tmp." + process.pid;
+      var tmp = path + ".tmp." + process.getpid();
       var fd  = u.open(tmp, O.WRONLY|O.CREAT|O.EXCL|O.TRUNC, 0o644);
       try {
          /* Loop until all bytes are written -- write() may return short. */

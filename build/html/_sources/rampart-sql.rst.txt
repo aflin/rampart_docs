@@ -254,6 +254,59 @@ matches when the column value is one of the strings in the list.
     columns with values larger than 2\ :sup:`53`, pass the values as
     :green:`Strings`: ``Sql.list(["9007199254740993", ...])``.
 
+setMapSize()
+''''''''''''
+
+Sets the size of the shared-memory segment used to move data between a
+connection and its helper process.
+
+Usage:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+
+    var adopted = Sql.setMapSize(bytes);
+
+Where ``bytes`` is a :green:`Number`.  The return value is the size
+actually adopted, which may be larger than requested: it is rounded up
+to a whole number of memory pages, with a floor of one page.  A missing,
+negative or non-numeric argument throws.
+
+For thread safety and performance, a connection used from any thread other
+than the main one runs its SQL in a forked helper process, and every
+statement, parameter and result row crosses a shared-memory segment between
+the two.  Data larger than the segment is sent in successive pieces and
+reassembled on the other side, so this setting affects **performance only,
+never correctness** — a four-kilobyte segment returns exactly the same rows
+as an eight-megabyte one, just with more round trips.
+
+The default is 8MB on 64-bit builds, 1MB on 32-bit.
+
+The setting is process-wide, and applies only to helpers started *after*
+the call; a helper already running keeps the size it was given.  Set it
+once, early — in a server, at the top of the configuration, since worker
+threads fork their helpers on first use:
+
+.. code-block:: javascript
+
+    var Sql = require("rampart-sql");
+
+    Sql.setMapSize(32 * 1024 * 1024);   /* before any threaded connection */
+
+Raising it reduces the number of round trips for large rows or large
+statements.  Lowering it reduces the memory a process can commit when
+many worker threads each hold a helper.  The segment is a reservation
+rather than an allocation — pages are committed only as they are used,
+so a large setting costs nothing until a large message needs it.
+
+.. note::
+    On Linux the pages touched by an unusually large message are handed
+    back afterwards.  macOS and FreeBSD cannot release them, so on those
+    systems a single very large row leaves its helper holding those
+    pages for the rest of its life.  That is why the default is modest
+    rather than generous.
+
 Connection Functions
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -319,14 +372,14 @@ SQL Parameters:
 .. code-block:: javascript
 
     var res = sql.exec(
-        "select * from employees where Salary > ? and Start-date < ?",
+        "select * from employees where Salary > ? and Start_date < ?",
         [50000, "2018-12-31"]
     );
 
     /* or */
 
     var res = sql.exec(
-        "select * from employees where Salary > ?salary and Start-date < ?date",
+        "select * from employees where Salary > ?salary and Start_date < ?date",
         { salary: 50000, date: "2018-12-31"}
     );
 
@@ -1943,10 +1996,12 @@ Where:
       If a :green:`String`, it will parse plain English values in minutes, hours, days or weeks.
       (i.e. "every third day" or "120 minutes");
 
-    * ``minRows`` is an optional :green:`Number`, the threshold number of changed, deleted, or
-      added rows needed to trigger an index update when checked.  Default is ``1000`` for
+    * ``minRows`` is an optional :green:`Number`, the threshold number of pending rows
+      needed to trigger an index update when checked.  Default is ``1000`` for
       fulltext indexes and ``10000`` for vector indexes (vector ``OPTIMIZE`` rewrites the
-      sealed index file, so a larger delta amortizes the cost better).
+      sealed index file, so a larger delta amortizes the cost better).  For a vector
+      index the count is added plus deleted rows -- an ``UPDATE`` is both, so it counts
+      twice.  For a fulltext index it is added rows only.
 
 Return Value:
 
@@ -1976,7 +2031,8 @@ Note:
       * ``ACTION``: ``OPTIMIZE`` or ``REBUILD`` for the in-progress operation; empty when idle.
       * ``STAGE`` and ``NSTAGES``: current stage number and total stages for the in-progress
         operation.  Stage count varies by index type (fulltext and HNSW: 3 stages;
-        IVFPQ ``REBUILD``: 4 stages).  When idle both are ``0``.
+        IVFPQ ``OPTIMIZE``: 2 stages; IVFPQ ``REBUILD``: 5 stages).  When idle
+        both are ``0``.
       * ``STAGENAME``: human-readable label for the current stage (e.g. ``"indexing"``,
         ``"training PQ subquantizers"``, ``"encoding"``).
       * ``PROGRESS``: a ``double`` between ``0`` and ``1`` showing fractional progress within
@@ -2604,14 +2660,16 @@ A vector index participates in the standard SQL update path:
 
 * ``INSERT`` adds the row's recid to a small ``_T.btr`` (newrec)
   alongside the sealed index.  Searches consult both transparently.
-* ``DELETE`` adds the row's recid to ``_del.btr`` (tombstone).
+* ``DELETE`` adds the row's recid to ``_del.btr`` (tombstone), but only
+  when the sealed index actually holds that row -- deleting a row that
+  is still only in ``_T.btr`` just removes it from there.
 * ``UPDATE`` is delete+insert; the new vector lands in ``_T.btr``,
   the old recid is tombstoned.
 
 Per-row mutations are durable on commit (no per-row rewrite of the
-sealed index file).  Over time the newrec/tombstone btrees grow and
-search latency drifts up; ``ALTER INDEX … OPTIMIZE`` folds them back
-into sealed.  See `Maintenance`_.
+sealed index file).  Between maintenance runs the newrec/tombstone
+btrees grow and search latency drifts up; ``ALTER INDEX … OPTIMIZE``
+folds them back into sealed and empties both.  See `Maintenance`_.
 
 A note on type matching: a typed ``varvec*`` column should be given a
 ``rampart.vector`` of the matching dtype.  A vector of a different dtype is
@@ -2636,10 +2694,14 @@ Maintenance
 '''''''''''
 
 ``ALTER INDEX <name> OPTIMIZE`` folds the accumulated newrec /
-tombstone delta back into the sealed segment.  Searches stay live
-during the build (only the brief commit phase fences writes), and
-concurrent INSERTs landing during the build are picked up via a
-carry-forward step.  Returns immediately if the delta is empty.
+tombstone delta back into the sealed segment.  New rows are encoded
+into it and deleted rows are physically removed from it, so both delta
+btrees are left empty and search no longer pays to filter them.
+Searches stay live during the build (only the brief commit phase fences
+writes), and INSERTs and DELETEs landing during the build are picked up
+via a carry-forward step.  Returns immediately only when both deltas are
+empty -- a run with nothing but deletes pending still rewrites the
+sealed segment to drop them.
 
 ``ALTER INDEX <name> REBUILD`` re-encodes the entire table from
 scratch.  Use this if the embedding distribution has shifted (IVFPQ
@@ -3678,8 +3740,8 @@ Examples:
 
    console.log(
       Sql.stringFormat("%F", 5.75)
-  );
-  /* 5 3/4 */
+   );
+   /* 5 3/4 */
 
 .. _extended-flags:
 
@@ -4345,7 +4407,7 @@ Example:
    var txt    =  'hello, this is a message';
 
    var ret = Sql.rex(search, txt, {exclude:'duplicate'});
-   /* ret == [ "this", "his is" ] */
+   /* ret == [ "this ", "his is" ] */
 
    ret = Sql.rex(search, txt, {exclude:'overlap'});
    /* ret == [ "his is" ] */

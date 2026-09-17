@@ -106,6 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#connect">connect()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#init-constructor">init() constructor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#list-in-list-parameters">list() - IN-list parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#setmapsize">setMapSize()</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#connection-functions">Connection Functions</a><ul>
@@ -543,6 +544,51 @@ columns with values larger than 2<sup>53</sup>, pass the values as
 <span class="green">Strings</span>: <code class="docutils literal notranslate"><span class="pre">Sql.list([&quot;9007199254740993&quot;,</span> <span class="pre">...])</span></code>.</p>
 </div>
 </div>
+<div class="section" id="setmapsize">
+<h3>setMapSize()<a class="headerlink" href="#setmapsize" title="Permalink to this headline">¶</a></h3>
+<p>Sets the size of the shared-memory segment used to move data between a
+connection and its helper process.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">adopted</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">setMapSize</span><span class="p">(</span><span class="nx">bytes</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">bytes</span></code> is a <span class="green">Number</span>.  The return value is the size
+actually adopted, which may be larger than requested: it is rounded up
+to a whole number of memory pages, with a floor of one page.  A missing,
+negative or non-numeric argument throws.</p>
+<p>For thread safety and performance, a connection used from any thread other
+than the main one runs its SQL in a forked helper process, and every
+statement, parameter and result row crosses a shared-memory segment between
+the two.  Data larger than the segment is sent in successive pieces and
+reassembled on the other side, so this setting affects <strong>performance only,
+never correctness</strong> — a four-kilobyte segment returns exactly the same rows
+as an eight-megabyte one, just with more round trips.</p>
+<p>The default is 8MB on 64-bit builds, 1MB on 32-bit.</p>
+<p>The setting is process-wide, and applies only to helpers started <em>after</em>
+the call; a helper already running keeps the size it was given.  Set it
+once, early — in a server, at the top of the configuration, since worker
+threads fork their helpers on first use:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Sql</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-sql&quot;</span><span class="p">);</span>
+
+<span class="nx">Sql</span><span class="p">.</span><span class="nx">setMapSize</span><span class="p">(</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">);</span>   <span class="cm">/* before any threaded connection */</span>
+</pre></div>
+</div>
+<p>Raising it reduces the number of round trips for large rows or large
+statements.  Lowering it reduces the memory a process can commit when
+many worker threads each hold a helper.  The segment is a reservation
+rather than an allocation — pages are committed only as they are used,
+so a large setting costs nothing until a large message needs it.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">On Linux the pages touched by an unusually large message are handed
+back afterwards.  macOS and FreeBSD cannot release them, so on those
+systems a single very large row leaves its helper holding those
+pages for the rest of its life.  That is why the default is modest
+rather than generous.</p>
+</div>
+</div>
 </div>
 <div class="section" id="connection-functions">
 <h2>Connection Functions<a class="headerlink" href="#connection-functions" title="Permalink to this headline">¶</a></h2>
@@ -619,14 +665,14 @@ statement.</p>
 </dd>
 </dl>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
-    <span class="s2">&quot;select * from employees where Salary &gt; ? and Start-date &lt; ?&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select * from employees where Salary &gt; ? and Start_date &lt; ?&quot;</span><span class="p">,</span>
     <span class="p">[</span><span class="mi">50000</span><span class="p">,</span> <span class="s2">&quot;2018-12-31&quot;</span><span class="p">]</span>
 <span class="p">);</span>
 
 <span class="cm">/* or */</span>
 
 <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span>
-    <span class="s2">&quot;select * from employees where Salary &gt; ?salary and Start-date &lt; ?date&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select * from employees where Salary &gt; ?salary and Start_date &lt; ?date&quot;</span><span class="p">,</span>
     <span class="p">{</span> <span class="nx">salary</span><span class="o">:</span> <span class="mi">50000</span><span class="p">,</span> <span class="nx">date</span><span class="o">:</span> <span class="s2">&quot;2018-12-31&quot;</span><span class="p">}</span>
 <span class="p">);</span>
 </pre></div>
@@ -2168,10 +2214,12 @@ offset or abbreviation is given.</li>
 If a <span class="green">Number</span>, the number of seconds between checks (i.e. <code class="docutils literal notranslate"><span class="pre">86400</span></code> for one day).
 If a <span class="green">String</span>, it will parse plain English values in minutes, hours, days or weeks.
 (i.e. “every third day” or “120 minutes”);</li>
-<li><code class="docutils literal notranslate"><span class="pre">minRows</span></code> is an optional <span class="green">Number</span>, the threshold number of changed, deleted, or
-added rows needed to trigger an index update when checked.  Default is <code class="docutils literal notranslate"><span class="pre">1000</span></code> for
+<li><code class="docutils literal notranslate"><span class="pre">minRows</span></code> is an optional <span class="green">Number</span>, the threshold number of pending rows
+needed to trigger an index update when checked.  Default is <code class="docutils literal notranslate"><span class="pre">1000</span></code> for
 fulltext indexes and <code class="docutils literal notranslate"><span class="pre">10000</span></code> for vector indexes (vector <code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code> rewrites the
-sealed index file, so a larger delta amortizes the cost better).</li>
+sealed index file, so a larger delta amortizes the cost better).  For a vector
+index the count is added plus deleted rows – an <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> is both, so it counts
+twice.  For a fulltext index it is added rows only.</li>
 </ul>
 </div></blockquote>
 <p>Return Value:</p>
@@ -2195,7 +2243,8 @@ Useful columns:<ul>
 <li><code class="docutils literal notranslate"><span class="pre">ACTION</span></code>: <code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code> or <code class="docutils literal notranslate"><span class="pre">REBUILD</span></code> for the in-progress operation; empty when idle.</li>
 <li><code class="docutils literal notranslate"><span class="pre">STAGE</span></code> and <code class="docutils literal notranslate"><span class="pre">NSTAGES</span></code>: current stage number and total stages for the in-progress
 operation.  Stage count varies by index type (fulltext and HNSW: 3 stages;
-IVFPQ <code class="docutils literal notranslate"><span class="pre">REBUILD</span></code>: 4 stages).  When idle both are <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
+IVFPQ <code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code>: 2 stages; IVFPQ <code class="docutils literal notranslate"><span class="pre">REBUILD</span></code>: 5 stages).  When idle
+both are <code class="docutils literal notranslate"><span class="pre">0</span></code>.</li>
 <li><code class="docutils literal notranslate"><span class="pre">STAGENAME</span></code>: human-readable label for the current stage (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;indexing&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;training</span> <span class="pre">PQ</span> <span class="pre">subquantizers&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;encoding&quot;</span></code>).</li>
 <li><code class="docutils literal notranslate"><span class="pre">PROGRESS</span></code>: a <code class="docutils literal notranslate"><span class="pre">double</span></code> between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> showing fractional progress within
@@ -2836,14 +2885,16 @@ returned candidates.</p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">INSERT</span></code> adds the row’s recid to a small <code class="docutils literal notranslate"><span class="pre">_T.btr</span></code> (newrec)
 alongside the sealed index.  Searches consult both transparently.</li>
-<li><code class="docutils literal notranslate"><span class="pre">DELETE</span></code> adds the row’s recid to <code class="docutils literal notranslate"><span class="pre">_del.btr</span></code> (tombstone).</li>
+<li><code class="docutils literal notranslate"><span class="pre">DELETE</span></code> adds the row’s recid to <code class="docutils literal notranslate"><span class="pre">_del.btr</span></code> (tombstone), but only
+when the sealed index actually holds that row – deleting a row that
+is still only in <code class="docutils literal notranslate"><span class="pre">_T.btr</span></code> just removes it from there.</li>
 <li><code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> is delete+insert; the new vector lands in <code class="docutils literal notranslate"><span class="pre">_T.btr</span></code>,
 the old recid is tombstoned.</li>
 </ul>
 <p>Per-row mutations are durable on commit (no per-row rewrite of the
-sealed index file).  Over time the newrec/tombstone btrees grow and
-search latency drifts up; <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">…</span> <span class="pre">OPTIMIZE</span></code> folds them back
-into sealed.  See <a class="reference internal" href="#maintenance">Maintenance</a>.</p>
+sealed index file).  Between maintenance runs the newrec/tombstone
+btrees grow and search latency drifts up; <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">…</span> <span class="pre">OPTIMIZE</span></code>
+folds them back into sealed and empties both.  See <a class="reference internal" href="#maintenance">Maintenance</a>.</p>
 <p>A note on type matching: a typed <code class="docutils literal notranslate"><span class="pre">varvec*</span></code> column should be given a
 <code class="docutils literal notranslate"><span class="pre">rampart.vector</span></code> of the matching dtype.  A vector of a different dtype is
 <strong>not</strong> rejected – it is silently converted to the column’s declared type
@@ -2864,10 +2915,14 @@ site, and make an unintended dtype obvious when reading the code:</p>
 <div class="section" id="maintenance">
 <h3>Maintenance<a class="headerlink" href="#maintenance" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">&lt;name&gt;</span> <span class="pre">OPTIMIZE</span></code> folds the accumulated newrec /
-tombstone delta back into the sealed segment.  Searches stay live
-during the build (only the brief commit phase fences writes), and
-concurrent INSERTs landing during the build are picked up via a
-carry-forward step.  Returns immediately if the delta is empty.</p>
+tombstone delta back into the sealed segment.  New rows are encoded
+into it and deleted rows are physically removed from it, so both delta
+btrees are left empty and search no longer pays to filter them.
+Searches stay live during the build (only the brief commit phase fences
+writes), and INSERTs and DELETEs landing during the build are picked up
+via a carry-forward step.  Returns immediately only when both deltas are
+empty – a run with nothing but deletes pending still rewrites the
+sealed segment to drop them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span> <span class="pre">&lt;name&gt;</span> <span class="pre">REBUILD</span></code> re-encodes the entire table from
 scratch.  Use this if the embedding distribution has shifted (IVFPQ
 codebooks become stale) or if you want to reset to a clean baseline.
@@ -3812,13 +3867,13 @@ of the three variants.</li>
 <p>All the standard flags, as well as the extended flags (below), can be given
 to these codes, where applicable.</p>
 <p>Examples:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
-    <span class="nx">Sql</span><span class="p">.</span><span class="nx">stringFormat</span><span class="p">(</span><span class="s2">&quot;Year %R %H %R&quot;</span><span class="p">,</span> <span class="mi">1977</span><span class="p">,</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="mi">1997</span><span class="p">)</span>
- <span class="p">);</span>
- <span class="cm">/* Year MCMLXXVII &amp;lt; MCMXCVII */</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+   <span class="nx">Sql</span><span class="p">.</span><span class="nx">stringFormat</span><span class="p">(</span><span class="s2">&quot;Year %R %H %R&quot;</span><span class="p">,</span> <span class="mi">1977</span><span class="p">,</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="mi">1997</span><span class="p">)</span>
+<span class="p">);</span>
+<span class="cm">/* Year MCMLXXVII &amp;lt; MCMXCVII */</span>
 
- <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
-    <span class="nx">Sql</span><span class="p">.</span><span class="nx">stringFormat</span><span class="p">(</span><span class="s2">&quot;%F&quot;</span><span class="p">,</span> <span class="mf">5.75</span><span class="p">)</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+   <span class="nx">Sql</span><span class="p">.</span><span class="nx">stringFormat</span><span class="p">(</span><span class="s2">&quot;%F&quot;</span><span class="p">,</span> <span class="mf">5.75</span><span class="p">)</span>
 <span class="p">);</span>
 <span class="cm">/* 5 3/4 */</span>
 </pre></div>
@@ -4440,7 +4495,7 @@ other.</li>
 <span class="kd">var</span> <span class="nx">txt</span>    <span class="o">=</span>  <span class="s1">&#39;hello, this is a message&#39;</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">rex</span><span class="p">(</span><span class="nx">search</span><span class="p">,</span> <span class="nx">txt</span><span class="p">,</span> <span class="p">{</span><span class="nx">exclude</span><span class="o">:</span><span class="s1">&#39;duplicate&#39;</span><span class="p">});</span>
-<span class="cm">/* ret == [ &quot;this&quot;, &quot;his is&quot; ] */</span>
+<span class="cm">/* ret == [ &quot;this &quot;, &quot;his is&quot; ] */</span>
 
 <span class="nx">ret</span> <span class="o">=</span> <span class="nx">Sql</span><span class="p">.</span><span class="nx">rex</span><span class="p">(</span><span class="nx">search</span><span class="p">,</span> <span class="nx">txt</span><span class="p">,</span> <span class="p">{</span><span class="nx">exclude</span><span class="o">:</span><span class="s1">&#39;overlap&#39;</span><span class="p">});</span>
 <span class="cm">/* ret == [ &quot;his is&quot; ] */</span>

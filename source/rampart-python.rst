@@ -171,7 +171,7 @@ pvar.toValue()
     .. code-block:: javascript
 
         var python=require("rampart-python");
-        var printf = rampart.printf;
+        var printf = rampart.utils.printf;
 
         var mymod = python.importFile("/path/to/myscript.py");
 

@@ -3021,7 +3021,7 @@ or a <span class="green">Date</span>.  The default value is the current time.  A
 automatically (the same parser used by <a class="reference internal" href="#autoscandate">autoScanDate</a>), trying the following formats in order:</li>
 </ul>
 </div></blockquote>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> &quot;%Y-%m-%d %H:%M:%S %z&quot;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span> &quot;%Y-%m-%d %H:%M:%S %z&quot;
  &quot;%A %B %d %H:%M:%S %Y %z&quot;
  &quot;%Y-%m-%d %H:%M:%S&quot;
  &quot;%A %B %d %H:%M:%S %Y&quot;
@@ -4846,7 +4846,7 @@ durability barrier.  Neither is available through <a class="reference internal" 
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">u</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">,</span> <span class="nx">O</span> <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">O</span><span class="p">;</span>
 
 <span class="kd">function</span> <span class="nx">atomicWrite</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-   <span class="kd">var</span> <span class="nx">tmp</span> <span class="o">=</span> <span class="nx">path</span> <span class="o">+</span> <span class="s2">&quot;.tmp.&quot;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">pid</span><span class="p">;</span>
+   <span class="kd">var</span> <span class="nx">tmp</span> <span class="o">=</span> <span class="nx">path</span> <span class="o">+</span> <span class="s2">&quot;.tmp.&quot;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">getpid</span><span class="p">();</span>
    <span class="kd">var</span> <span class="nx">fd</span>  <span class="o">=</span> <span class="nx">u</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">tmp</span><span class="p">,</span> <span class="nx">O</span><span class="p">.</span><span class="nx">WRONLY</span><span class="o">|</span><span class="nx">O</span><span class="p">.</span><span class="nx">CREAT</span><span class="o">|</span><span class="nx">O</span><span class="p">.</span><span class="nx">EXCL</span><span class="o">|</span><span class="nx">O</span><span class="p">.</span><span class="nx">TRUNC</span><span class="p">,</span> <span class="mo">0o644</span><span class="p">);</span>
    <span class="k">try</span> <span class="p">{</span>
       <span class="cm">/* Loop until all bytes are written -- write() may return short. */</span>

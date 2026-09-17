@@ -884,7 +884,7 @@ NOTE:
       map: {
          "/multi/":            {module: "modules/multi_function.js" }
       }
-    }
+    });
 
     /* Here modules/multi_function.js is a module which sets exports *
      * to an Object with keys as paths set to functions. Example:    */
@@ -2061,7 +2061,7 @@ Sending mjpeg, simple:
     function sendpic(req){
 
         // from https://webcams.nyctmc.org/map
-        msg=curl.fetch('https://webcams.nyctmc.org/api/cameras/d8122408-7092-41ba-a9db-ef8847edeaef/image',{insecure:true});
+        var msg=curl.fetch('https://webcams.nyctmc.org/api/cameras/d8122408-7092-41ba-a9db-ef8847edeaef/image',{insecure:true});
 
         req.chunkSend(
             sprintf("--myboundary\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n%s",
@@ -3181,7 +3181,7 @@ Technical Notes
 
 A rampart server script is broken into 3 stages:
 
-.. code-block:: javascript
+.. code-block:: none
 
     begin code
 

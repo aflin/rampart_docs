@@ -914,8 +914,8 @@ Server Full Example
                   "close": {},
                   "listening": {}
                },
-               "sslKeyFile": "/etc/letsencrypt/live/example.com/fullchain.pem",
-               "sslCertFile": "/etc/letsencrypt/live/example.com/privkey.pem",
+               "sslKeyFile": "/etc/letsencrypt/live/example.com/privkey.pem",
+               "sslCertFile": "/etc/letsencrypt/live/example.com/fullchain.pem",
                "tls": true,
                "maxConnections": 1200,
                "_hostAddrs": [

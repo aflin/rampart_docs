@@ -161,7 +161,7 @@ Note:
 
        if(typeof v == 'object')
        {
-           if(v instanceOf Array)
+           if(v instanceof Array)
                return "Array";
            return "Object"
        }
@@ -324,7 +324,7 @@ Example:
 
     var html = require("rampart-html");
 
-    var mydoc = html.newDocument(document, options);
+    var mydoc = html.newDocument(document_text, options);
 
     /* get a list of all the divs in the document */
     var alldivs = mydoc.findTag("div");
@@ -362,7 +362,7 @@ Example:
 
     var html = require("rampart-html");
 
-    var mydoc = html.newDocument(document, options);
+    var mydoc = html.newDocument(document_text, options);
 
     /* get a list of all the elements with a href in the element */
     var allhrefs = mydoc.findAttr("href");
@@ -392,7 +392,7 @@ Example:
 
     var html = require("rampart-html");
 
-    var mydoc = html.newDocument(document, options);
+    var mydoc = html.newDocument(document_text, options);
 
     /* get a list of all the elements in the document
        which belong to the "foo1" class              */

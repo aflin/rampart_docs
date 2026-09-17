@@ -245,11 +245,16 @@ methods may be supplied in either form:
 
 .. code-block:: javascript
 
-    /* String — accepted in every mode */
+    /* accepted in every mode */
     page.$eval("h1", "el => el.textContent");
 
-    /* Function — accepted only under "use transpiler" */
+A function may be passed instead when ``"use transpiler"`` is the first
+statement of the file:
+
+.. code-block:: javascript
+
     "use transpiler"
+
     await page.$eval("h1", el => el.textContent);
     await page.evaluate(() => document.title);
 
