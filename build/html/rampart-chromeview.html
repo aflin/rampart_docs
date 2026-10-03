@@ -151,6 +151,16 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#browser">Browser</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#browser-events">Browser events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fetching-urls">Fetching URLs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#browser-fetch">browser.fetch()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#browser-fetchasync">browser.fetchAsync()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#browser-fetchclose">browser.fetchClose()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#browser-download">browser.download()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fetch-options">Fetch Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fetch-results">Fetch Results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#large-responses">Large responses</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#browsercontext">BrowserContext</a></li>
@@ -725,6 +735,12 @@ current CDP connection.  Synchronous.</li>
 <li><code class="docutils literal notranslate"><span class="pre">browser.close([cb])</span></code> - Shut down the worker thread.  If the
 browser was launched by <code class="docutils literal notranslate"><span class="pre">launch()</span></code>, also kill the Chrome
 process and remove the temporary user-data directory.</li>
+<li><code class="docutils literal notranslate"><span class="pre">browser.fetch()</span></code>, <code class="docutils literal notranslate"><span class="pre">browser.fetchAsync()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">browser.fetchClose()</span></code> - Retrieve URLs through Chrome and get
+back a <code class="docutils literal notranslate"><span class="pre">curl.fetch()</span></code>-style result.  See <a class="reference internal" href="#fetching-urls">Fetching URLs</a>
+below.</li>
+<li><code class="docutils literal notranslate"><span class="pre">browser.download()</span></code> - Save a URL to a local file, letting Chrome
+write it.  See <a class="reference internal" href="#browser-download">browser.download()</a> below.</li>
 </ul>
 <div class="section" id="browser-events">
 <h3>Browser events<a class="headerlink" href="#browser-events" title="Permalink to this headline">¶</a></h3>
@@ -741,6 +757,399 @@ browser-level events.  Subscribing to any of these events enables
 WebSocket ping/pong detects an ungracefully-exited Chrome
 (~30 seconds after the process dies).</li>
 </ul>
+</div>
+<div class="section" id="fetching-urls">
+<h3>Fetching URLs<a class="headerlink" href="#fetching-urls" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">browser.fetch()</span></code> and <code class="docutils literal notranslate"><span class="pre">browser.fetchAsync()</span></code> retrieve URLs
+through Chrome and return the same kind of result as
+<a class="reference internal" href="rampart-curl.html#the-rampart-curl-module"><span class="std std-ref">rampart-curl</span></a>’s
+<code class="docutils literal notranslate"><span class="pre">fetch()</span></code> and <code class="docutils literal notranslate"><span class="pre">fetchAsync()</span></code>.  Use them in place of curl when a
+page must be rendered by a real browser — for example, a page
+built by JavaScript — or when a site only answers a browser.</p>
+<ul class="simple">
+<li>HTML pages are loaded and rendered.  <code class="docutils literal notranslate"><span class="pre">text</span></code> holds the rendered
+page (the DOM after scripts have run) and <code class="docutils literal notranslate"><span class="pre">body</span></code> holds the
+original bytes sent by the server.</li>
+<li>Anything else (images, archives, JSON, PDFs, plain text, etc.) is
+returned byte-for-byte in <code class="docutils literal notranslate"><span class="pre">body</span></code> without being opened in the
+browser.  Files are never saved to Chrome’s download directory.</li>
+<li>Fetches use their own tabs in a private browser context.  They
+are not returned by <code class="docutils literal notranslate"><span class="pre">browser.pages()</span></code> or <code class="docutils literal notranslate"><span class="pre">browser.targets()</span></code>,
+do not fire <code class="docutils literal notranslate"><span class="pre">&quot;targetcreated&quot;</span></code> events, and do not share cookies
+with pages opened by <code class="docutils literal notranslate"><span class="pre">browser.newPage()</span></code>.</li>
+<li>Tabs are created as needed and reused.  Cookies, local storage and
+the HTTP cache carry over from one fetch to the next, as in a
+normal browser session.  Use the <code class="docutils literal notranslate"><span class="pre">fresh</span></code> option or
+<code class="docutils literal notranslate"><span class="pre">browser.fetchClose()</span></code> to start clean.</li>
+</ul>
+<div class="section" id="browser-fetch">
+<h4>browser.fetch()<a class="headerlink" href="#browser-fetch" title="Permalink to this headline">¶</a></h4>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+
+<span class="nx">browser</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">url_list</span><span class="p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">url</span></code> is a <span class="green">String</span>, the URL to retrieve.</li>
+<li><code class="docutils literal notranslate"><span class="pre">url_list</span></code> is an <span class="green">Array</span> of URLs.  A callback is required.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span>.  See
+<a class="reference internal" href="#fetch-options">Fetch Options</a> below.</li>
+<li><code class="docutils literal notranslate"><span class="pre">callback</span></code> is a <span class="green">Function</span> that receives one argument, a
+<a class="reference internal" href="#fetch-results">Fetch Results</a> <span class="green">Object</span>.  It is called once per URL, in
+the order the fetches complete.  Inside the callback,
+<code class="docutils literal notranslate"><span class="pre">this.addurl(url)</span></code> adds another URL to the list.  Returning
+<code class="docutils literal notranslate"><span class="pre">false</span></code> stops processing further results.</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">fetch()</span></code> blocks until every URL has been retrieved.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>With a single <code class="docutils literal notranslate"><span class="pre">url</span></code> and no callback, a <a class="reference internal" href="#fetch-results">Fetch Results</a>
+<span class="green">Object</span>.  Otherwise <code class="docutils literal notranslate"><span class="pre">undefined</span></code>.</dd>
+</dl>
+</div>
+<div class="section" id="browser-fetchasync">
+<h4>browser.fetchAsync()<a class="headerlink" href="#browser-fetchasync" title="Permalink to this headline">¶</a></h4>
+<p>The same as <code class="docutils literal notranslate"><span class="pre">browser.fetch()</span></code> except that it returns immediately
+and the callback runs in the Rampart event loop.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">browser</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="nx">url</span><span class="o">|</span><span class="nx">url_list</span><span class="p">[,</span> <span class="nx">options</span><span class="p">],</span> <span class="nx">callback</span><span class="p">)</span>
+    <span class="p">.</span><span class="k">finally</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span> <span class="cm">/* all done */</span> <span class="p">});</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>An <span class="green">Object</span> with a single method, <code class="docutils literal notranslate"><span class="pre">finally(fn)</span></code>, which
+registers a <span class="green">Function</span> to be called once all URLs have
+completed.</dd>
+</dl>
+<p>When the transpiler is active (<code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">-t</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>
+or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpilerGlobally&quot;</span></code>), <code class="docutils literal notranslate"><span class="pre">fetchAsync()</span></code> returns a
+<span class="green">Promise</span> instead:</p>
+<ul class="simple">
+<li>With a single <code class="docutils literal notranslate"><span class="pre">url</span></code> and no callback, the Promise resolves to the
+<a class="reference internal" href="#fetch-results">Fetch Results</a> <span class="green">Object</span>, or rejects with an
+<span class="green">Error</span> if <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> is set.</li>
+<li>With a callback, the callback is still called once per URL and
+the Promise resolves when all URLs have completed.</li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;use transpiler&quot;</span>
+<span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">chrome</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-chromeview&quot;</span><span class="p">);</span>
+
+<span class="nx">async</span> <span class="kd">function</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">browser</span> <span class="o">=</span> <span class="nx">chrome</span><span class="p">.</span><span class="nx">launch</span><span class="p">();</span>
+    <span class="k">try</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">fetchAsync</span><span class="p">(</span><span class="s2">&quot;https://example.com/&quot;</span><span class="p">);</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d %d\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">catch</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;error: %s\n&quot;</span><span class="p">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">browser</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="nx">main</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="browser-fetchclose">
+<h4>browser.fetchClose()<a class="headerlink" href="#browser-fetchclose" title="Permalink to this headline">¶</a></h4>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">browser</span><span class="p">.</span><span class="nx">fetchClose</span><span class="p">([</span><span class="nx">callback</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Closes the tabs used by <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> and <code class="docutils literal notranslate"><span class="pre">fetchAsync()</span></code> and
+discards their cookies, storage and cache.  The next fetch starts
+with a clean browser context.  Throws (or passes an error to the
+callback) if fetches are still in progress.  Supports the three
+calling conventions described above.</p>
+</div>
+<div class="section" id="browser-download">
+<h4>browser.download()<a class="headerlink" href="#browser-download" title="Permalink to this headline">¶</a></h4>
+<p>Save a URL to a local file.  Unlike <code class="docutils literal notranslate"><span class="pre">fetch()</span></code>, the response never
+passes through Rampart: Chrome writes the file itself, so memory stays
+flat no matter how large the file is and there is no size limit.  Use
+this whenever the file itself is what is wanted; use <code class="docutils literal notranslate"><span class="pre">fetch()</span></code> when
+the body or the response headers are needed in the script.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">download</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">path</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">url</span></code> is a <span class="green">String</span>, the URL to save.</li>
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> is a <span class="green">String</span>, the local file to write.  A relative
+path is relative to the script’s current directory.  The data is
+written under a temporary name in the same directory and renamed into
+place only when the download succeeds, so <code class="docutils literal notranslate"><span class="pre">path</span></code> only ever holds a
+complete file.  If the download fails for any reason – an HTTP error,
+a network error, a stall, <code class="docutils literal notranslate"><span class="pre">maxTime</span></code> – <code class="docutils literal notranslate"><span class="pre">path</span></code> is left exactly as
+it was: an existing file is kept, and no file is created.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting <code class="docutils literal notranslate"><span class="pre">timeout</span></code>,
+<code class="docutils literal notranslate"><span class="pre">maxTime</span></code>, <code class="docutils literal notranslate"><span class="pre">headers</span></code>, <code class="docutils literal notranslate"><span class="pre">userAgent</span></code> and <code class="docutils literal notranslate"><span class="pre">referrer</span></code>, which mean
+the same as in <a class="reference internal" href="#fetch-options">Fetch Options</a>, and:<ul>
+<li><code class="docutils literal notranslate"><span class="pre">native</span></code> - a <span class="green">Boolean</span>.  Set <code class="docutils literal notranslate"><span class="pre">false</span></code> to fetch the body
+to the file instead of letting Chrome save it.  Slower and limited
+by memory as described under <a class="reference internal" href="#large-responses">Large responses</a>, but it relies on
+nothing from Chrome’s download handling.  Default <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+</ul>
+</li>
+<li>Supports the three calling conventions described above, so a
+callback or (with the transpiler) a <span class="green">Promise</span> may be used
+instead of blocking.  A blocking call waits as long as the download
+takes; <code class="docutils literal notranslate"><span class="pre">timeout</span></code> still applies to a stall.</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span>:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">ok</span></code> - a <span class="green">Boolean</span>, <code class="docutils literal notranslate"><span class="pre">true</span></code> if the file was saved.</li>
+<li><code class="docutils literal notranslate"><span class="pre">file</span></code> - a <span class="green">String</span>, the path written.</li>
+<li><code class="docutils literal notranslate"><span class="pre">bodySize</span></code> - a <span class="green">Number</span>, bytes received.</li>
+<li><code class="docutils literal notranslate"><span class="pre">status</span></code> - a <span class="green">Number</span>, the HTTP status, when known.</li>
+<li><code class="docutils literal notranslate"><span class="pre">totalTime</span></code> - a <span class="green">Number</span>, seconds taken.</li>
+<li><code class="docutils literal notranslate"><span class="pre">errMsg</span></code> - a <span class="green">String</span>, present only when <code class="docutils literal notranslate"><span class="pre">ok</span></code> is
+<code class="docutils literal notranslate"><span class="pre">false</span></code>: an HTTP error (<code class="docutils literal notranslate"><span class="pre">&quot;HTTP</span> <span class="pre">404</span> <span class="pre">Not</span> <span class="pre">Found&quot;</span></code>), a network
+error (<code class="docutils literal notranslate"><span class="pre">&quot;net::ERR_NAME_NOT_RESOLVED&quot;</span></code>), a stall
+(<code class="docutils literal notranslate"><span class="pre">&quot;no</span> <span class="pre">progress</span> <span class="pre">for</span> <span class="pre">30000</span> <span class="pre">ms&quot;</span></code>), a <code class="docutils literal notranslate"><span class="pre">maxTime</span></code> cut-off, or
+<code class="docutils literal notranslate"><span class="pre">&quot;browser</span> <span class="pre">closed&quot;</span></code> if the browser was closed first.</li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">download</span><span class="p">(</span><span class="s2">&quot;https://example.com/big.iso&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;/var/tmp/big.iso&quot;</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;download failed: %s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+<span class="k">else</span>
+    <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;saved %d bytes in %.1f seconds\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">bodySize</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">totalTime</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Content that Chrome would display rather than download – an HTML page,
+plain text, JSON, an image – is still saved: the response is fetched to
+the file instead.  Each download runs in its own private browser
+context, so its cookies are not shared with pages or with <code class="docutils literal notranslate"><span class="pre">fetch()</span></code>.</p>
+</div>
+<div class="section" id="fetch-options">
+<h4>Fetch Options<a class="headerlink" href="#fetch-options" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">timeout</span></code> - a <span class="green">Number</span>, milliseconds a fetch may make <strong>no
+progress</strong> before it gives up.  Default <code class="docutils literal notranslate"><span class="pre">30000</span></code>.  It is not a limit
+on how long a transfer may take: the clock restarts whenever more of
+the response arrives, so a large download over a slow link still
+completes while a stalled one fails promptly.  On timeout <code class="docutils literal notranslate"><span class="pre">errMsg</span></code>
+is set, and anything already received is returned and marked (see
+<code class="docutils literal notranslate"><span class="pre">bodyPartial</span></code> and <code class="docutils literal notranslate"><span class="pre">filePartial</span></code> under <a class="reference internal" href="#fetch-results">Fetch Results</a>).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">maxTime</span></code> - a <span class="green">Number</span>, seconds, a hard limit on the whole
+fetch, as in rampart-curl.  Use it when a fetch must return within a
+fixed time no matter what.  Not set by default.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">waitUntil</span></code> - a <span class="green">String</span>, when an HTML page counts as
+finished:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;load&quot;</span></code> - the page’s <code class="docutils literal notranslate"><span class="pre">load</span></code> event (default).</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;domcontentloaded&quot;</span></code> - the HTML has been parsed.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;networkidle0&quot;</span></code> - no network activity for 500 ms.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;networkidle2&quot;</span></code> - no more than two requests active for
+500 ms.</li>
+</ul>
+<p>Use a <code class="docutils literal notranslate"><span class="pre">networkidle</span></code> setting for pages that fill in their
+content with later requests.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">render</span></code> - a <span class="green">Boolean</span>.  Set <code class="docutils literal notranslate"><span class="pre">false</span></code> to return HTML
+pages without rendering them.  <code class="docutils literal notranslate"><span class="pre">text</span></code> is then the raw HTML.
+Default <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">returnText</span></code> - a <span class="green">Boolean</span>.  Set <code class="docutils literal notranslate"><span class="pre">false</span></code> to omit
+<code class="docutils literal notranslate"><span class="pre">text</span></code> for content that was not rendered, saving a copy of large
+bodies.  Default <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">location</span></code> - a <span class="green">Boolean</span>.  Whether to follow HTTP
+redirects.  Default <code class="docutils literal notranslate"><span class="pre">true</span></code>.  When <code class="docutils literal notranslate"><span class="pre">false</span></code>, the redirect
+response itself is returned; its <code class="docutils literal notranslate"><span class="pre">body</span></code> is always empty.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">headers</span></code> - an <span class="green">Object</span> (<code class="docutils literal notranslate"><span class="pre">{&quot;X-Name&quot;:</span> <span class="pre">&quot;value&quot;}</span></code>) or an
+<span class="green">Array</span> of <span class="green">String</span>s (<code class="docutils literal notranslate"><span class="pre">[&quot;X-Name:</span> <span class="pre">value&quot;]</span></code>).
+Extra request headers.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">userAgent</span></code> - a <span class="green">String</span>, the User-Agent to send.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">referrer</span></code> - a <span class="green">String</span>, the referring URL.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">fresh</span></code> - a <span class="green">Boolean</span>.  When <code class="docutils literal notranslate"><span class="pre">true</span></code>, the fetch runs in
+a new, empty browser context that is discarded afterwards: no
+cookies, storage or cache from earlier fetches, and none left
+behind.  Slower, since a new tab is opened each time.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">concurrency</span></code> - a <span class="green">Number</span>, how many URLs from one call
+are fetched at the same time.  Default <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">toFile</span></code> - a <span class="green">String</span>, a path to write the response body to.
+The bytes go straight to disk as they arrive, so the body never has to
+fit in memory.  The result then has <code class="docutils literal notranslate"><span class="pre">file</span></code> and <code class="docutils literal notranslate"><span class="pre">bodySize</span></code> instead
+of <code class="docutils literal notranslate"><span class="pre">body</span></code> and <code class="docutils literal notranslate"><span class="pre">text</span></code>.  An existing file is overwritten.  Use it
+when the response headers are wanted along with the file; for a plain
+download <a class="reference internal" href="#browser-download">browser.download()</a> is faster and uses far less memory.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">chunkSize</span></code> - a <span class="green">Number</span>, the read size in bytes used when a
+body is streamed.  Default 8388608 (8 MB).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">post</span></code> - a <span class="green">String</span>, <span class="green">Buffer</span> or <span class="green">Object</span>.
+Send the request as a POST with this body.  An <span class="green">Object</span> is
+converted with <a class="reference internal" href="rampart-utils.html#objecttoquery"><span class="std std-ref">objectToQuery</span></a>.  A
+<span class="green">String</span> starting with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> is read from that file (start it
+with <code class="docutils literal notranslate"><span class="pre">\&#64;</span></code> to send a literal <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>).  Sent with
+<code class="docutils literal notranslate"><span class="pre">Content-Type:</span> <span class="pre">application/x-www-form-urlencoded</span></code> unless
+<code class="docutils literal notranslate"><span class="pre">headers</span></code> sets a different <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">postJSON</span></code> - a <span class="green">String</span>, <span class="green">Buffer</span>, <span class="green">Object</span>
+or <span class="green">Array</span>.  As <code class="docutils literal notranslate"><span class="pre">post</span></code>, except that an <span class="green">Object</span> or
+<span class="green">Array</span> is sent as JSON and the <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> is
+<code class="docutils literal notranslate"><span class="pre">application/json</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">postform</span></code> - an <span class="green">Object</span>.  Send a
+<code class="docutils literal notranslate"><span class="pre">multipart/form-data</span></code> POST, one part per property, as in
+rampart-curl.  Each value may be:</p>
+<ul class="simple">
+<li>a <span class="green">String</span> or <span class="green">Buffer</span>, sent as is.  A
+<span class="green">String</span> starting with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> uploads that file, with its
+base name as the filename.</li>
+<li>an <span class="green">Object</span> with a <code class="docutils literal notranslate"><span class="pre">data</span></code> property (as above, or an
+<span class="green">Object</span>/<span class="green">Array</span> sent as JSON) and optional
+<code class="docutils literal notranslate"><span class="pre">filename</span></code> and <code class="docutils literal notranslate"><span class="pre">type</span></code> (the part’s <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>).</li>
+<li>any other <span class="green">Object</span>, sent as JSON.</li>
+<li>an <span class="green">Array</span> of <span class="green">Object</span>s with <code class="docutils literal notranslate"><span class="pre">data</span></code>, sending
+several parts with the same name.</li>
+</ul>
+<p>For example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://example.com/upload&quot;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">postform</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">title</span><span class="o">:</span>  <span class="s2">&quot;My photo&quot;</span><span class="p">,</span>
+        <span class="nx">photo</span><span class="o">:</span>  <span class="s2">&quot;@/path/to/pic.jpg&quot;</span><span class="p">,</span>
+        <span class="nx">notes</span><span class="o">:</span>  <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="s2">&quot;some text&quot;</span><span class="p">,</span> <span class="nx">filename</span><span class="o">:</span> <span class="s2">&quot;notes.txt&quot;</span><span class="p">,</span> <span class="nx">type</span><span class="o">:</span> <span class="s2">&quot;text/plain&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Only one of <code class="docutils literal notranslate"><span class="pre">post</span></code>, <code class="docutils literal notranslate"><span class="pre">postJSON</span></code> and <code class="docutils literal notranslate"><span class="pre">postform</span></code> is used; if
+several are given, <code class="docutils literal notranslate"><span class="pre">postform</span></code> takes precedence, then
+<code class="docutils literal notranslate"><span class="pre">postJSON</span></code>.</p>
+</li>
+<li><p class="first">Redirects after a POST are followed as a browser follows them: a
+<code class="docutils literal notranslate"><span class="pre">301</span></code>, <code class="docutils literal notranslate"><span class="pre">302</span></code> or <code class="docutils literal notranslate"><span class="pre">303</span></code> redirect becomes a GET, while <code class="docutils literal notranslate"><span class="pre">307</span></code>
+and <code class="docutils literal notranslate"><span class="pre">308</span></code> repeat the POST with the same body.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="fetch-results">
+<h4>Fetch Results<a class="headerlink" href="#fetch-results" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">body</span></code> - a <span class="green">Buffer</span>, the response body exactly as sent by
+the server.</li>
+<li><code class="docutils literal notranslate"><span class="pre">text</span></code> - a <span class="green">String</span>.  For a rendered HTML page, the
+rendered document (<code class="docutils literal notranslate"><span class="pre">document.documentElement.outerHTML</span></code>).
+Otherwise the body converted to a string (omitted if
+<code class="docutils literal notranslate"><span class="pre">returnText</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">rendered</span></code> - a <span class="green">Boolean</span>, <code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">text</span></code> is a
+rendered page.</li>
+<li><code class="docutils literal notranslate"><span class="pre">status</span></code> - a <span class="green">Number</span>, the HTTP status code, or <code class="docutils literal notranslate"><span class="pre">0</span></code> if
+no response was received.</li>
+<li><code class="docutils literal notranslate"><span class="pre">statusText</span></code> - a <span class="green">String</span>, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;OK&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;Not</span> <span class="pre">Found&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">url</span></code> - a <span class="green">String</span>, the URL as requested.</li>
+<li><code class="docutils literal notranslate"><span class="pre">effectiveUrl</span></code> - a <span class="green">String</span>, the final URL after any
+redirects.</li>
+<li><code class="docutils literal notranslate"><span class="pre">headers</span></code> - an <span class="green">Object</span>, the response headers.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rawHeader</span></code> - a <span class="green">String</span>, the raw header text, when
+available (not for HTTP/2 or HTTP/3).</li>
+<li><code class="docutils literal notranslate"><span class="pre">totalTime</span></code> - a <span class="green">Number</span>, seconds taken.</li>
+<li><code class="docutils literal notranslate"><span class="pre">serverIP</span></code>, <code class="docutils literal notranslate"><span class="pre">serverPort</span></code>, <code class="docutils literal notranslate"><span class="pre">httpVersion</span></code> - the server’s
+address, port and HTTP version.  Present for rendered pages only.</li>
+<li><code class="docutils literal notranslate"><span class="pre">file</span></code> - a <span class="green">String</span>, present only with the <code class="docutils literal notranslate"><span class="pre">toFile</span></code>
+option: the path the body was written to.</li>
+<li><code class="docutils literal notranslate"><span class="pre">bodySize</span></code> - a <span class="green">Number</span>, the number of bytes received.
+Present when the body was streamed or written with <code class="docutils literal notranslate"><span class="pre">toFile</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">bodyPartial</span></code> - a <span class="green">Boolean</span>, present only when the fetch
+ended early and <code class="docutils literal notranslate"><span class="pre">body</span></code> holds part of the response.  <code class="docutils literal notranslate"><span class="pre">bodySize</span></code>
+gives the number of bytes received.  Always check <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> (or
+this) before treating a large body as complete.</li>
+<li><code class="docutils literal notranslate"><span class="pre">filePartial</span></code> - a <span class="green">Boolean</span>, the same for a <code class="docutils literal notranslate"><span class="pre">toFile</span></code>
+download: the file exists but is short.</li>
+<li><code class="docutils literal notranslate"><span class="pre">bodyOmitted</span></code> - a <span class="green">Boolean</span>, present only when an HTML page
+was larger than the streaming threshold.  The page is still rendered
+into <code class="docutils literal notranslate"><span class="pre">text</span></code>, but <code class="docutils literal notranslate"><span class="pre">body</span></code> is empty (see <a class="reference internal" href="#large-responses">Large responses</a>).</li>
+<li><code class="docutils literal notranslate"><span class="pre">errMsg</span></code> - a <span class="green">String</span>, present only when the fetch
+failed, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;net::ERR_NAME_NOT_RESOLVED&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;no</span> <span class="pre">progress</span> <span class="pre">for</span> <span class="pre">30000</span> <span class="pre">ms&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;browser</span> <span class="pre">closed&quot;</span></code> when
+<code class="docutils literal notranslate"><span class="pre">browser.close()</span></code> is called while a <code class="docutils literal notranslate"><span class="pre">fetchAsync()</span></code> is still
+running (every unfinished fetch and download is answered this way, so
+callbacks and <code class="docutils literal notranslate"><span class="pre">finally()</span></code> always run).  As with rampart-curl, a failed
+fetch sets <code class="docutils literal notranslate"><span class="pre">errMsg</span></code> rather than throwing.</li>
+</ul>
+</div>
+<div class="section" id="large-responses">
+<h4>Large responses<a class="headerlink" href="#large-responses" title="Permalink to this headline">¶</a></h4>
+<p>Bodies up to 64 MB are fetched in a single step.  Anything larger, or
+any response that does not say how big it is, is read from Chrome in
+chunks instead.  This is not merely an optimization: Chrome stops
+answering a request for a whole body once its reply would reach 256 MB,
+which is a body of 192 MB, and it gives no error when it does — so
+without chunked reads such a fetch would simply never finish.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">toFile</span></code> the chunks are written to disk as they arrive and
+Rampart’s memory stays flat regardless of size.  Without it, the
+assembled body is held in memory twice while it is handed back, so
+allow roughly twice the file size.</p>
+<p>Chrome itself is the real limit for <code class="docutils literal notranslate"><span class="pre">fetch()</span></code>.  Because it takes the
+body from Chrome rather than letting it save the file, Chrome holds the
+whole response first: fetching a 1 GB file was measured at about 7.5 GB
+of Chrome memory.  A few hundred megabytes is comfortable and a gigabyte
+works, but there is no reason to pay that when only the file is wanted:
+<a class="reference internal" href="#browser-download">browser.download()</a> lets Chrome write it instead.  The same 1 GB file
+downloads in a quarter of the time with about 1 GB of Chrome memory and
+16 MB in Rampart, and has no size limit at all.</p>
+<p>An HTML page is a special case: Chrome cannot both hand over the body
+and render it, so a page larger than 64 MB is rendered into <code class="docutils literal notranslate"><span class="pre">text</span></code>
+with <code class="docutils literal notranslate"><span class="pre">body</span></code> left empty and <code class="docutils literal notranslate"><span class="pre">bodyOmitted</span></code> set.  Pass
+<code class="docutils literal notranslate"><span class="pre">render:</span> <span class="pre">false</span></code> to get such a page’s bytes instead of its rendering.</p>
+<p>Differences from rampart-curl:</p>
+<ul class="simple">
+<li>Only GET and POST requests are supported.</li>
+<li>rampart-curl’s <code class="docutils literal notranslate"><span class="pre">post301</span></code>, <code class="docutils literal notranslate"><span class="pre">post302</span></code> and <code class="docutils literal notranslate"><span class="pre">post303</span></code> options
+have no equivalent; redirects after a POST are handled as
+described under <a class="reference internal" href="#fetch-options">Fetch Options</a> above.</li>
+<li><code class="docutils literal notranslate"><span class="pre">localIP</span></code>, <code class="docutils literal notranslate"><span class="pre">localPort</span></code> and <code class="docutils literal notranslate"><span class="pre">cookies</span></code> are not provided.</li>
+<li>The body of a redirect response is not available.</li>
+<li>A page that navigates itself elsewhere with JavaScript is not
+followed; the result is the page as originally requested.</li>
+<li>Chrome retrieves simultaneous requests for the same URL one at a
+time.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">rampart</span><span class="p">.</span><span class="nx">globalize</span><span class="p">(</span><span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">chrome</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-chromeview&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">browser</span> <span class="o">=</span> <span class="nx">chrome</span><span class="p">.</span><span class="nx">launch</span><span class="p">();</span>
+
+<span class="cm">/* a page built by JavaScript */</span>
+<span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://example.com/app&quot;</span><span class="p">,</span>
+                        <span class="p">{</span><span class="nx">waitUntil</span><span class="o">:</span> <span class="s2">&quot;networkidle0&quot;</span><span class="p">});</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%d %s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">statusText</span><span class="p">);</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
+
+<span class="cm">/* several urls, including a binary file */</span>
+<span class="nx">browser</span><span class="p">.</span><span class="nx">fetch</span><span class="p">([</span>
+    <span class="s2">&quot;https://example.com/&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;https://example.com/files/archive.tar.gz&quot;</span>
+<span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">)</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s: %s\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">errMsg</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s: %d bytes\n&quot;</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span> <span class="nx">res</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">browser</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="browsercontext">

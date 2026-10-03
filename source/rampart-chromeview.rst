@@ -547,6 +547,14 @@ callback, Promise).
   browser was launched by ``launch()``, also kill the Chrome
   process and remove the temporary user-data directory.
 
+* ``browser.fetch()``, ``browser.fetchAsync()``,
+  ``browser.fetchClose()`` - Retrieve URLs through Chrome and get
+  back a ``curl.fetch()``\ -style result.  See `Fetching URLs`_
+  below.
+
+* ``browser.download()`` - Save a URL to a local file, letting Chrome
+  write it.  See `browser.download()`_ below.
+
 Browser events
 ~~~~~~~~~~~~~~
 
@@ -565,6 +573,452 @@ browser-level events.  Subscribing to any of these events enables
   ``browser.close()``, ``disconnect()``, or when rampart-net's
   WebSocket ping/pong detects an ungracefully-exited Chrome
   (~30 seconds after the process dies).
+
+Fetching URLs
+~~~~~~~~~~~~~
+
+``browser.fetch()`` and ``browser.fetchAsync()`` retrieve URLs
+through Chrome and return the same kind of result as
+:ref:`rampart-curl <rampart-curl:The rampart-curl module>`'s
+``fetch()`` and ``fetchAsync()``.  Use them in place of curl when a
+page must be rendered by a real browser — for example, a page
+built by JavaScript — or when a site only answers a browser.
+
+* HTML pages are loaded and rendered.  ``text`` holds the rendered
+  page (the DOM after scripts have run) and ``body`` holds the
+  original bytes sent by the server.
+
+* Anything else (images, archives, JSON, PDFs, plain text, etc.) is
+  returned byte-for-byte in ``body`` without being opened in the
+  browser.  Files are never saved to Chrome's download directory.
+
+* Fetches use their own tabs in a private browser context.  They
+  are not returned by ``browser.pages()`` or ``browser.targets()``,
+  do not fire ``"targetcreated"`` events, and do not share cookies
+  with pages opened by ``browser.newPage()``.
+
+* Tabs are created as needed and reused.  Cookies, local storage and
+  the HTTP cache carry over from one fetch to the next, as in a
+  normal browser session.  Use the ``fresh`` option or
+  ``browser.fetchClose()`` to start clean.
+
+browser.fetch()
+"""""""""""""""
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = browser.fetch(url[, options]);
+
+    browser.fetch(url_list[, options], callback);
+
+Where:
+
+* ``url`` is a :green:`String`, the URL to retrieve.
+
+* ``url_list`` is an :green:`Array` of URLs.  A callback is required.
+
+* ``options`` is an optional :green:`Object`.  See
+  `Fetch Options`_ below.
+
+* ``callback`` is a :green:`Function` that receives one argument, a
+  `Fetch Results`_ :green:`Object`.  It is called once per URL, in
+  the order the fetches complete.  Inside the callback,
+  ``this.addurl(url)`` adds another URL to the list.  Returning
+  ``false`` stops processing further results.
+
+``fetch()`` blocks until every URL has been retrieved.
+
+Return Value:
+  With a single ``url`` and no callback, a `Fetch Results`_
+  :green:`Object`.  Otherwise ``undefined``.
+
+browser.fetchAsync()
+""""""""""""""""""""
+
+The same as ``browser.fetch()`` except that it returns immediately
+and the callback runs in the Rampart event loop.
+
+Usage:
+
+.. code-block:: javascript
+
+    browser.fetchAsync(url|url_list[, options], callback)
+        .finally(function() { /* all done */ });
+
+Return Value:
+  An :green:`Object` with a single method, ``finally(fn)``, which
+  registers a :green:`Function` to be called once all URLs have
+  completed.
+
+When the transpiler is active (``rampart -t``, ``"use transpiler"``
+or ``"use transpilerGlobally"``), ``fetchAsync()`` returns a
+:green:`Promise` instead:
+
+* With a single ``url`` and no callback, the Promise resolves to the
+  `Fetch Results`_ :green:`Object`, or rejects with an
+  :green:`Error` if ``errMsg`` is set.
+
+* With a callback, the callback is still called once per URL and
+  the Promise resolves when all URLs have completed.
+
+.. code-block:: javascript
+
+    "use transpiler"
+    rampart.globalize(rampart.utils);
+    var chrome = require("rampart-chromeview");
+
+    async function main() {
+        var browser = chrome.launch();
+        try {
+            var res = await browser.fetchAsync("https://example.com/");
+            printf("%d %d\n", res.status, res.text.length);
+        } catch(e) {
+            printf("error: %s\n", e.message);
+        }
+        browser.close();
+    }
+    main();
+
+browser.fetchClose()
+""""""""""""""""""""
+
+Usage:
+
+.. code-block:: javascript
+
+    browser.fetchClose([callback]);
+
+Closes the tabs used by ``fetch()`` and ``fetchAsync()`` and
+discards their cookies, storage and cache.  The next fetch starts
+with a clean browser context.  Throws (or passes an error to the
+callback) if fetches are still in progress.  Supports the three
+calling conventions described above.
+
+browser.download()
+""""""""""""""""""
+
+Save a URL to a local file.  Unlike ``fetch()``, the response never
+passes through Rampart: Chrome writes the file itself, so memory stays
+flat no matter how large the file is and there is no size limit.  Use
+this whenever the file itself is what is wanted; use ``fetch()`` when
+the body or the response headers are needed in the script.
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = browser.download(url, path[, options]);
+
+Where:
+
+* ``url`` is a :green:`String`, the URL to save.
+
+* ``path`` is a :green:`String`, the local file to write.  A relative
+  path is relative to the script's current directory.  The data is
+  written under a temporary name in the same directory and renamed into
+  place only when the download succeeds, so ``path`` only ever holds a
+  complete file.  If the download fails for any reason -- an HTTP error,
+  a network error, a stall, ``maxTime`` -- ``path`` is left exactly as
+  it was: an existing file is kept, and no file is created.
+
+* ``options`` is an optional :green:`Object` accepting ``timeout``,
+  ``maxTime``, ``headers``, ``userAgent`` and ``referrer``, which mean
+  the same as in `Fetch Options`_, and:
+
+  * ``native`` - a :green:`Boolean`.  Set ``false`` to fetch the body
+    to the file instead of letting Chrome save it.  Slower and limited
+    by memory as described under `Large responses`_, but it relies on
+    nothing from Chrome's download handling.  Default ``true``.
+
+* Supports the three calling conventions described above, so a
+  callback or (with the transpiler) a :green:`Promise` may be used
+  instead of blocking.  A blocking call waits as long as the download
+  takes; ``timeout`` still applies to a stall.
+
+Return Value:
+    An :green:`Object`:
+
+    * ``ok`` - a :green:`Boolean`, ``true`` if the file was saved.
+
+    * ``file`` - a :green:`String`, the path written.
+
+    * ``bodySize`` - a :green:`Number`, bytes received.
+
+    * ``status`` - a :green:`Number`, the HTTP status, when known.
+
+    * ``totalTime`` - a :green:`Number`, seconds taken.
+
+    * ``errMsg`` - a :green:`String`, present only when ``ok`` is
+      ``false``: an HTTP error (``"HTTP 404 Not Found"``), a network
+      error (``"net::ERR_NAME_NOT_RESOLVED"``), a stall
+      (``"no progress for 30000 ms"``), a ``maxTime`` cut-off, or
+      ``"browser closed"`` if the browser was closed first.
+
+.. code-block:: javascript
+
+    var res = browser.download("https://example.com/big.iso",
+                               "/var/tmp/big.iso");
+    if (!res.ok)
+        printf("download failed: %s\n", res.errMsg);
+    else
+        printf("saved %d bytes in %.1f seconds\n", res.bodySize, res.totalTime);
+
+Content that Chrome would display rather than download -- an HTML page,
+plain text, JSON, an image -- is still saved: the response is fetched to
+the file instead.  Each download runs in its own private browser
+context, so its cookies are not shared with pages or with ``fetch()``.
+
+Fetch Options
+"""""""""""""
+
+* ``timeout`` - a :green:`Number`, milliseconds a fetch may make **no
+  progress** before it gives up.  Default ``30000``.  It is not a limit
+  on how long a transfer may take: the clock restarts whenever more of
+  the response arrives, so a large download over a slow link still
+  completes while a stalled one fails promptly.  On timeout ``errMsg``
+  is set, and anything already received is returned and marked (see
+  ``bodyPartial`` and ``filePartial`` under `Fetch Results`_).
+
+* ``maxTime`` - a :green:`Number`, seconds, a hard limit on the whole
+  fetch, as in rampart-curl.  Use it when a fetch must return within a
+  fixed time no matter what.  Not set by default.
+
+* ``waitUntil`` - a :green:`String`, when an HTML page counts as
+  finished:
+
+  * ``"load"`` - the page's ``load`` event (default).
+  * ``"domcontentloaded"`` - the HTML has been parsed.
+  * ``"networkidle0"`` - no network activity for 500 ms.
+  * ``"networkidle2"`` - no more than two requests active for
+    500 ms.
+
+  Use a ``networkidle`` setting for pages that fill in their
+  content with later requests.
+
+* ``render`` - a :green:`Boolean`.  Set ``false`` to return HTML
+  pages without rendering them.  ``text`` is then the raw HTML.
+  Default ``true``.
+
+* ``returnText`` - a :green:`Boolean`.  Set ``false`` to omit
+  ``text`` for content that was not rendered, saving a copy of large
+  bodies.  Default ``true``.
+
+* ``location`` - a :green:`Boolean`.  Whether to follow HTTP
+  redirects.  Default ``true``.  When ``false``, the redirect
+  response itself is returned; its ``body`` is always empty.
+
+* ``headers`` - an :green:`Object` (``{"X-Name": "value"}``) or an
+  :green:`Array` of :green:`String`\ s (``["X-Name: value"]``).
+  Extra request headers.
+
+* ``userAgent`` - a :green:`String`, the User-Agent to send.
+
+* ``referrer`` - a :green:`String`, the referring URL.
+
+* ``fresh`` - a :green:`Boolean`.  When ``true``, the fetch runs in
+  a new, empty browser context that is discarded afterwards: no
+  cookies, storage or cache from earlier fetches, and none left
+  behind.  Slower, since a new tab is opened each time.
+
+* ``concurrency`` - a :green:`Number`, how many URLs from one call
+  are fetched at the same time.  Default ``4``.
+
+* ``toFile`` - a :green:`String`, a path to write the response body to.
+  The bytes go straight to disk as they arrive, so the body never has to
+  fit in memory.  The result then has ``file`` and ``bodySize`` instead
+  of ``body`` and ``text``.  An existing file is overwritten.  Use it
+  when the response headers are wanted along with the file; for a plain
+  download `browser.download()`_ is faster and uses far less memory.
+
+* ``chunkSize`` - a :green:`Number`, the read size in bytes used when a
+  body is streamed.  Default 8388608 (8 MB).
+
+* ``post`` - a :green:`String`, :green:`Buffer` or :green:`Object`.
+  Send the request as a POST with this body.  An :green:`Object` is
+  converted with :ref:`rampart-utils:objectToQuery`.  A
+  :green:`String` starting with ``@`` is read from that file (start it
+  with ``\@`` to send a literal ``@``).  Sent with
+  ``Content-Type: application/x-www-form-urlencoded`` unless
+  ``headers`` sets a different ``Content-Type``.
+
+* ``postJSON`` - a :green:`String`, :green:`Buffer`, :green:`Object`
+  or :green:`Array`.  As ``post``, except that an :green:`Object` or
+  :green:`Array` is sent as JSON and the ``Content-Type`` is
+  ``application/json``.
+
+* ``postform`` - an :green:`Object`.  Send a
+  ``multipart/form-data`` POST, one part per property, as in
+  rampart-curl.  Each value may be:
+
+  * a :green:`String` or :green:`Buffer`, sent as is.  A
+    :green:`String` starting with ``@`` uploads that file, with its
+    base name as the filename.
+
+  * an :green:`Object` with a ``data`` property (as above, or an
+    :green:`Object`/:green:`Array` sent as JSON) and optional
+    ``filename`` and ``type`` (the part's ``Content-Type``).
+
+  * any other :green:`Object`, sent as JSON.
+
+  * an :green:`Array` of :green:`Object`\ s with ``data``, sending
+    several parts with the same name.
+
+  For example:
+
+  .. code-block:: javascript
+
+      var res = browser.fetch("https://example.com/upload", {
+          postform: {
+              title:  "My photo",
+              photo:  "@/path/to/pic.jpg",
+              notes:  {data: "some text", filename: "notes.txt", type: "text/plain"}
+          }
+      });
+
+  Only one of ``post``, ``postJSON`` and ``postform`` is used; if
+  several are given, ``postform`` takes precedence, then
+  ``postJSON``.
+
+* Redirects after a POST are followed as a browser follows them: a
+  ``301``, ``302`` or ``303`` redirect becomes a GET, while ``307``
+  and ``308`` repeat the POST with the same body.
+
+Fetch Results
+"""""""""""""
+
+* ``body`` - a :green:`Buffer`, the response body exactly as sent by
+  the server.
+
+* ``text`` - a :green:`String`.  For a rendered HTML page, the
+  rendered document (``document.documentElement.outerHTML``).
+  Otherwise the body converted to a string (omitted if
+  ``returnText`` is ``false``).
+
+* ``rendered`` - a :green:`Boolean`, ``true`` if ``text`` is a
+  rendered page.
+
+* ``status`` - a :green:`Number`, the HTTP status code, or ``0`` if
+  no response was received.
+
+* ``statusText`` - a :green:`String`, e.g. ``"OK"`` or
+  ``"Not Found"``.
+
+* ``url`` - a :green:`String`, the URL as requested.
+
+* ``effectiveUrl`` - a :green:`String`, the final URL after any
+  redirects.
+
+* ``headers`` - an :green:`Object`, the response headers.
+
+* ``rawHeader`` - a :green:`String`, the raw header text, when
+  available (not for HTTP/2 or HTTP/3).
+
+* ``totalTime`` - a :green:`Number`, seconds taken.
+
+* ``serverIP``, ``serverPort``, ``httpVersion`` - the server's
+  address, port and HTTP version.  Present for rendered pages only.
+
+* ``file`` - a :green:`String`, present only with the ``toFile``
+  option: the path the body was written to.
+
+* ``bodySize`` - a :green:`Number`, the number of bytes received.
+  Present when the body was streamed or written with ``toFile``.
+
+* ``bodyPartial`` - a :green:`Boolean`, present only when the fetch
+  ended early and ``body`` holds part of the response.  ``bodySize``
+  gives the number of bytes received.  Always check ``errMsg`` (or
+  this) before treating a large body as complete.
+
+* ``filePartial`` - a :green:`Boolean`, the same for a ``toFile``
+  download: the file exists but is short.
+
+* ``bodyOmitted`` - a :green:`Boolean`, present only when an HTML page
+  was larger than the streaming threshold.  The page is still rendered
+  into ``text``, but ``body`` is empty (see `Large responses`_).
+
+* ``errMsg`` - a :green:`String`, present only when the fetch
+  failed, e.g. ``"net::ERR_NAME_NOT_RESOLVED"``,
+  ``"no progress for 30000 ms"``, or ``"browser closed"`` when
+  ``browser.close()`` is called while a ``fetchAsync()`` is still
+  running (every unfinished fetch and download is answered this way, so
+  callbacks and ``finally()`` always run).  As with rampart-curl, a failed
+  fetch sets ``errMsg`` rather than throwing.
+
+Large responses
+"""""""""""""""
+
+Bodies up to 64 MB are fetched in a single step.  Anything larger, or
+any response that does not say how big it is, is read from Chrome in
+chunks instead.  This is not merely an optimization: Chrome stops
+answering a request for a whole body once its reply would reach 256 MB,
+which is a body of 192 MB, and it gives no error when it does — so
+without chunked reads such a fetch would simply never finish.
+
+With ``toFile`` the chunks are written to disk as they arrive and
+Rampart's memory stays flat regardless of size.  Without it, the
+assembled body is held in memory twice while it is handed back, so
+allow roughly twice the file size.
+
+Chrome itself is the real limit for ``fetch()``.  Because it takes the
+body from Chrome rather than letting it save the file, Chrome holds the
+whole response first: fetching a 1 GB file was measured at about 7.5 GB
+of Chrome memory.  A few hundred megabytes is comfortable and a gigabyte
+works, but there is no reason to pay that when only the file is wanted:
+`browser.download()`_ lets Chrome write it instead.  The same 1 GB file
+downloads in a quarter of the time with about 1 GB of Chrome memory and
+16 MB in Rampart, and has no size limit at all.
+
+An HTML page is a special case: Chrome cannot both hand over the body
+and render it, so a page larger than 64 MB is rendered into ``text``
+with ``body`` left empty and ``bodyOmitted`` set.  Pass
+``render: false`` to get such a page's bytes instead of its rendering.
+
+Differences from rampart-curl:
+
+* Only GET and POST requests are supported.
+
+* rampart-curl's ``post301``, ``post302`` and ``post303`` options
+  have no equivalent; redirects after a POST are handled as
+  described under `Fetch Options`_ above.
+
+* ``localIP``, ``localPort`` and ``cookies`` are not provided.
+
+* The body of a redirect response is not available.
+
+* A page that navigates itself elsewhere with JavaScript is not
+  followed; the result is the page as originally requested.
+
+* Chrome retrieves simultaneous requests for the same URL one at a
+  time.
+
+Example:
+
+.. code-block:: javascript
+
+    rampart.globalize(rampart.utils);
+    var chrome = require("rampart-chromeview");
+    var browser = chrome.launch();
+
+    /* a page built by JavaScript */
+    var res = browser.fetch("https://example.com/app",
+                            {waitUntil: "networkidle0"});
+    printf("%d %s\n", res.status, res.statusText);
+    printf("%s\n", res.text);
+
+    /* several urls, including a binary file */
+    browser.fetch([
+        "https://example.com/",
+        "https://example.com/files/archive.tar.gz"
+    ], function(res) {
+        if (res.errMsg)
+            printf("%s: %s\n", res.url, res.errMsg);
+        else
+            printf("%s: %d bytes\n", res.url, res.body.length);
+    });
+
+    browser.close();
 
 BrowserContext
 --------------

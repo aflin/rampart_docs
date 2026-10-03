@@ -113,6 +113,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#optimize-nooptimize">optimize,noOptimize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#options-nooptions">options,noOptions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ignorenewlist">ignoreNewList</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#uniqnewlist">uniqNewList</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#indexwithin">indexWithin</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wildoneword">wildOneWord</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wildsufmatch">wildSufMatch</a></li>
@@ -165,13 +166,26 @@
 <li class="toctree-l4"><a class="reference internal" href="#likepallmatch">likepAllMatch</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likepobeyintersects">likepObeyIntersects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likepinfthresh">likepInfThresh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#infthresh">infThresh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#infpercent">infPercent</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likepindexthresh">likepIndexThresh</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#likeptime">likepTime</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#vector-index-properties">Vector Index Properties</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#likevrows">likevRows</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#likevminrank">likevMinRank</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likevef">likevEf</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#likevpqnprobe">likevPqNprobe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vecpqmaxtrainsamples">vecPqMaxTrainSamples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vecpqoverfetchpad">vecPqOverFetchPad</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#rank-fusion-properties">Rank Fusion Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rrfrows">rrfRows</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rrfk">rrfK</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rrftiebreak">rrfTieBreak</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rrfkwweight-rrfvecweight">rrfKwWeight, rrfVecWeight</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#embedding-properties">Embedding Properties</a><ul>
@@ -190,6 +204,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#indexmeter">indexMeter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#meter">meter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#addexp">addExp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#expressionslist">expressionsList</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#indextemplist">indexTempList</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#delexp">delExp</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#lstexp">lstExp</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#addindextmp">addIndexTmp</a></li>
@@ -228,7 +244,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#inmode">inMode</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#hexifybytes">hexifyBytes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unalignedbufferwarning">unalignedBufferWarning</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#unneededrexescapewarning">unneededRexEscapeWarning</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#nulloutputstring">nullOutputString</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#validatebtrees">validateBtrees</a></li>
 </ul>
@@ -248,6 +263,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#qminprelen">qMinPrelen</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#qminwordlen">qMinWordLen</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#querysettings">querySettings</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#reading-current-settings">Reading Current Settings</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sql-get">sql.get()</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#restoring-defaults">Restoring Defaults</a><ul>
@@ -386,16 +405,42 @@ whereas <code class="docutils literal notranslate"><span class="pre">SET</span> 
 context.  Therefore, <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> should always be used when in
 JavaScript.</dd>
 <dt>NOTE:</dt>
-<dd>Two settings are an exception to the handle scoping described above.  The
+<dd><p class="first">Values are type checked, and a value of the wrong type is an error
+rather than a guess:</p>
+<ul class="simple">
+<li>A Boolean setting takes the JavaScript Booleans <code class="docutils literal notranslate"><span class="pre">true</span></code> or
+<code class="docutils literal notranslate"><span class="pre">false</span></code>, and nothing else.  <code class="docutils literal notranslate"><span class="pre">sql.set({alWild:</span> <span class="pre">1})</span></code> and
+<code class="docutils literal notranslate"><span class="pre">sql.set({alWild:</span> <span class="pre">&quot;on&quot;})</span></code> both throw.  Texis itself understands a
+dozen spellings of true – <code class="docutils literal notranslate"><span class="pre">on</span></code>, <code class="docutils literal notranslate"><span class="pre">yes</span></code>, <code class="docutils literal notranslate"><span class="pre">enabled</span></code> and more –
+and those are still reachable as a quoted SQL value, for example
+<code class="docutils literal notranslate"><span class="pre">sql.exec(&quot;set</span> <span class="pre">alwild='on';&quot;)</span></code>, but they are not accepted from
+<code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>: a setting that silently became <code class="docutils literal notranslate"><span class="pre">false</span></code> because its
+value was misspelled is worse than an error, particularly for the
+<a class="reference internal" href="#query-protection">Query Protection</a> settings, which default to on.</li>
+<li>A setting that takes a whole number requires one.
+<code class="docutils literal notranslate"><span class="pre">sql.set({minWordLen:</span> <span class="pre">3.5})</span></code> throws rather than quietly becoming
+3.  A string holding exactly a number is still accepted, so
+<code class="docutils literal notranslate"><span class="pre">sql.set({maxRows:</span> <span class="pre">&quot;100&quot;})</span></code> is fine.</li>
+<li><a class="reference internal" href="#likeptime">likepTime</a>, <code class="docutils literal notranslate"><span class="pre">rrfKwWeight</span></code>, <code class="docutils literal notranslate"><span class="pre">rrfVecWeight</span></code> and
+<a class="reference internal" href="#vecpqoverfetchpad">vecPqOverFetchPad</a> are the settings for which a fraction is
+meaningful, and they accept one.</li>
+</ul>
+<p class="last"><a class="reference internal" href="#sql-get">sql.get()</a> reports each setting in its matching type, so a Boolean
+setting always reads back as <code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</dd>
+<dt>NOTE:</dt>
+<dd><p class="first">Two settings are an exception to the handle scoping described above.  The
 expression list (<a class="reference internal" href="#addexp">addExp</a> / <a class="reference internal" href="#delexp">delExp</a>, i.e. <code class="docutils literal notranslate"><span class="pre">addExpressions</span></code> /
 <code class="docutils literal notranslate"><span class="pre">deleteExpressions</span></code>) and the index temporary directory list
 (<a class="reference internal" href="#addindextmp">addIndexTmp</a> / <a class="reference internal" href="#delindextmp">delIndexTmp</a>, i.e. <code class="docutils literal notranslate"><span class="pre">addIndexTemp</span></code> /
 <code class="docutils literal notranslate"><span class="pre">deleteIndexTemp</span></code>) are stored <strong>process-wide</strong>, not per handle.  Changing
-either affects every other <code class="docutils literal notranslate"><span class="pre">sql</span></code> handle in the process – including
-handles opened on different databases, and handles created afterward – and
-neither is restored by <a class="reference internal" href="#sql-reset">sql.reset()</a>.  To undo a change to these two
-lists, remove the entries explicitly with <code class="docutils literal notranslate"><span class="pre">deleteExpressions</span></code> or
-<code class="docutils literal notranslate"><span class="pre">deleteIndexTemp</span></code>.</dd>
+either affects other <code class="docutils literal notranslate"><span class="pre">sql</span></code> handles in the process – including handles
+opened on different databases, and handles created afterward – until one of
+those handles next applies its own settings.</p>
+<p class="last">Each list can also be replaced outright, which is usually easier than
+adding and deleting entries: see <a class="reference internal" href="#expressionslist">expressionsList</a> and <a class="reference internal" href="#indextemplist">indexTempList</a>.
+<a class="reference internal" href="#sql-reset">sql.reset()</a> restores both to the engine default.</p>
+</dd>
 </dl>
 <div class="section" id="search-and-optimization-parameters">
 <h2>Search and optimization parameters<a class="headerlink" href="#search-and-optimization-parameters" title="Permalink to this headline">¶</a></h2>
@@ -640,7 +685,7 @@ the use of disk.</div></blockquote>
 means that a matching record will be found in the index, returned to the
 user, then the next record found in the index, and so forth till the end
 of the query.  This normally generates the first results as quickly as
-possible.  By setting <code class="docutils literal notranslate"><span class="pre">bubble</span></code> to 0 the entire set of matching record
+possible.  By setting <code class="docutils literal notranslate"><span class="pre">bubble</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> the entire set of matching record
 handles will be read from the index first, and then each record
 processed from this list.</div></blockquote>
 </div>
@@ -802,6 +847,17 @@ processing overhead.  In that case it may be wise to enable the
 have been updated in the batch will not be found with Metamorph queries
 until the index has been optimized.</div></blockquote>
 </div>
+<div class="section" id="uniqnewlist">
+<h3>uniqNewList<a class="headerlink" href="#uniqnewlist" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>Diagnostic.  Discard duplicate entries from the unoptimized portion
+of a Metamorph index (the “new list”) while reading it, to work
+around duplicates that should not be present.  <code class="docutils literal notranslate"><span class="pre">0</span></code>, the default,
+reads the list as-is.  <code class="docutils literal notranslate"><span class="pre">1</span></code> de-duplicates auxiliary and compound
+index new lists only, <code class="docutils literal notranslate"><span class="pre">2</span></code> de-duplicates every new list, and <code class="docutils literal notranslate"><span class="pre">3</span></code>
+does the same as <code class="docutils literal notranslate"><span class="pre">2</span></code> and additionally reports the first few
+duplicates it finds.</div></blockquote>
+</div>
 <div class="section" id="indexwithin">
 <h3>indexWithin<a class="headerlink" href="#indexwithin" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -838,7 +894,7 @@ only, i.e. for multi-substring wildcards. If 0 (false), the query
 1 (true), then “<code class="docutils literal notranslate"><span class="pre">st*ion</span></code>” only matches “<code class="docutils literal notranslate"><span class="pre">stallion</span></code>”, and
 linear-dictionary index searches are possible (if enabled), because
 there are no multi-word matches to (erroneously) miss.</p>
-<p>The default is 1 (true).</p>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="wildsufmatch">
@@ -849,7 +905,7 @@ trailing substrings to the end of words. If 0 (false), the query
 “<code class="docutils literal notranslate"><span class="pre">*so</span></code>” matches “<code class="docutils literal notranslate"><span class="pre">also</span></code>” as well as “<code class="docutils literal notranslate"><span class="pre">absolute</span></code>”. If 1 (true),
 then “<code class="docutils literal notranslate"><span class="pre">*so</span></code>” only matches “<code class="docutils literal notranslate"><span class="pre">also</span></code>”. Affects what terms are
 matched during linear-dictionary index searches.</p>
-<p>The default is 1 (true)</p>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">true</span></code></p>
 </div></blockquote>
 </div>
 <div class="section" id="wildsingle">
@@ -867,8 +923,8 @@ Normally a Metamorph query term is either binary-index searchable
 certain terms, while not binary-index searchable, can be
 linear-dictionary searched in the index, which is slower than
 binary-index, yet faster than linear-table search. Examples include
-leading-prefix wildcards such as “<code class="docutils literal notranslate"><span class="pre">*tion</span></code>”. The default is 0
-(false), since query protection is enabled by default. Note that
+leading-prefix wildcards such as “<code class="docutils literal notranslate"><span class="pre">*tion</span></code>”. The default is <code class="docutils literal notranslate"><span class="pre">false</span></code>,
+since query protection is enabled by default. Note that
 <code class="docutils literal notranslate"><span class="pre">wildSingle</span></code> should typically be set true so that wildcard syntax
 is more likely to be linear-dictionary searchable.</div></blockquote>
 </div>
@@ -1386,7 +1442,7 @@ searches.</div></blockquote>
 <div class="section" id="likepallmatch">
 <h3>likepAllMatch<a class="headerlink" href="#likepallmatch" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>Setting this to 1 forces <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> to only consider those documents
+<div>Setting this to <code class="docutils literal notranslate"><span class="pre">true</span></code> forces <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> to only consider those documents
 containing <em>all</em> (non-negated) query terms as matches (i.e. just as
 <code class="docutils literal notranslate"><span class="pre">LIKE</span></code> does). By default, since <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> is a ranking operator it
 returns the best results even if only some of the set-logic terms
@@ -1398,10 +1454,10 @@ operator value in the query will override this setting.)</div></blockquote>
 <div class="section" id="likepobeyintersects">
 <h3>likepObeyIntersects<a class="headerlink" href="#likepobeyintersects" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div>Setting this to 1 forces <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> to obey the intersects operator
+<div>Setting this to <code class="docutils literal notranslate"><span class="pre">true</span></code> forces <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> to obey the intersects operator
 (&#64;) in queries (even when likepallmatch is true). By default
 <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> does not use it, because it is a ranking operator. Setting
-both <code class="docutils literal notranslate"><span class="pre">likepAllMatch</span></code> and <code class="docutils literal notranslate"><span class="pre">likepObeyIntersects</span></code> to 1 will make
+both <code class="docutils literal notranslate"><span class="pre">likepAllMatch</span></code> and <code class="docutils literal notranslate"><span class="pre">likepObeyIntersects</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code> will make
 <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> respect queries the same as <code class="docutils literal notranslate"><span class="pre">LIKE</span></code>. (Note:
 <a class="reference internal" href="#alintersects">alIntersects</a> may have to be enabled as well.)</div></blockquote>
 </div>
@@ -1416,6 +1472,28 @@ sets, the document is given an estimated rank. This saves time
 ranking irrelevant but often-occurring matches, at the possible
 expense of rank position. The default is <code class="docutils literal notranslate"><span class="pre">0</span></code>, which means infinite (no
 infinite sets; rank all documents).</div></blockquote>
+</div>
+<div class="section" id="infthresh">
+<h3>infThresh<a class="headerlink" href="#infthresh" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>The “infinity” threshold applied when a Metamorph query term is
+expanded: a term whose expansion covers more than this many index
+entries is treated as infinitely-occurring, and so contributes an
+estimated rather than a computed rank.  This counts index entries
+for the term, where <a class="reference internal" href="#likepinfthresh">likepInfThresh</a> counts estimated matching
+rows.  The default of <code class="docutils literal notranslate"><span class="pre">-1</span></code> disables the test, so no term is
+treated as infinite.</div></blockquote>
+</div>
+<div class="section" id="infpercent">
+<h3>infPercent<a class="headerlink" href="#infpercent" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>The same threshold as <a class="reference internal" href="#infthresh">infThresh</a>, but relative to the size of the
+index instead of an absolute count.  The threshold is recomputed for
+each query as the fraction <code class="docutils literal notranslate"><span class="pre">100/infPercent</span></code> of the index’s total
+token count, so <code class="docutils literal notranslate"><span class="pre">1000</span></code> makes a term infinite once its expansion
+covers more than a tenth of the index.  Setting this overrides
+<a class="reference internal" href="#infthresh">infThresh</a>.  The default of <code class="docutils literal notranslate"><span class="pre">-1</span></code> leaves <a class="reference internal" href="#infthresh">infThresh</a> in
+control.</div></blockquote>
 </div>
 <div class="section" id="likepindexthresh">
 <h3>likepIndexThresh<a class="headerlink" href="#likepindexthresh" title="Permalink to this headline">¶</a></h3>
@@ -1438,6 +1516,15 @@ processed, but the more queries may be dropping potentially
 high-ranking hits.</p>
 </div></blockquote>
 </div>
+<div class="section" id="likeptime">
+<h3>likepTime<a class="headerlink" href="#likeptime" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>A time budget for <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> and <code class="docutils literal notranslate"><span class="pre">LIKE</span></code> ranking, in seconds.  When
+the budget runs out the matches found so far are returned, much as
+<a class="reference internal" href="#likepindexthresh">likepIndexThresh</a> stops after a given number of matches – a limit
+on time rather than on count.  Fractions are accepted, so <code class="docutils literal notranslate"><span class="pre">0.25</span></code>
+is 250 milliseconds.  The default of <code class="docutils literal notranslate"><span class="pre">0</span></code> means no limit.</div></blockquote>
+</div>
 </div>
 <div class="section" id="vector-index-properties">
 <h2>Vector Index Properties<a class="headerlink" href="#vector-index-properties" title="Permalink to this headline">¶</a></h2>
@@ -1455,14 +1542,86 @@ for the LIKEP / Metamorph search path.</p>
 the SQL layer in response to a <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> query (default <code class="docutils literal notranslate"><span class="pre">1000</span></code>).
 Mirrors <a class="reference internal" href="#likeprows"><span class="std std-ref">likepRows</span></a> for vector search.</p>
 <p>The candidate pool is the working set the SQL planner then filters
-via any additional <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clauses and (optionally) re-ranks with
-full-precision <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>. A larger pool gives better recall
-and a higher ceiling for re-rank quality, at the cost of more work
-per query; a smaller pool is faster but may drop relevant hits.</p>
-<p>Typical pattern when re-ranking with <code class="docutils literal notranslate"><span class="pre">vecdist()</span></code>: set
-<code class="docutils literal notranslate"><span class="pre">likevRows</span></code> to several times the desired final <code class="docutils literal notranslate"><span class="pre">maxRows</span></code> so
-the re-rank step has enough candidates to choose from. Setting to
+via any additional <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clauses.</p>
+<p>Every candidate in the pool is <strong>automatically re-scored at full
+precision</strong> against the row’s actual stored column bytes, using the
+same scorer <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> itself uses, before any of them are returned.
+<code class="docutils literal notranslate"><span class="pre">$rank</span></code> is therefore exact no matter how approximate the index
+step was, and nothing needs to be added to the query to get that —
+<code class="docutils literal notranslate"><span class="pre">vecdist()</span></code> is available for display or for an explicit
+<code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code>, but ranking precision does not depend on it.</p>
+<p>What <code class="docutils literal notranslate"><span class="pre">likevRows</span></code> governs is <strong>recall</strong>, not precision: an ANN
+index can fail to surface a true nearest neighbour at all, and a
+candidate that never enters the pool cannot be re-scored.  A larger
+pool raises the chance the real neighbours are found, at the cost of
+more work per query; a smaller pool is faster but may miss them
+outright.</p>
+<p>A useful default is several times the desired final <code class="docutils literal notranslate"><span class="pre">maxRows</span></code>, so
+the exact re-scoring has enough candidates to reorder.  Setting to
 <code class="docutils literal notranslate"><span class="pre">0</span></code> is reserved and currently treated as the default.</p>
+</div></blockquote>
+</div>
+<div class="section" id="likevminrank">
+<h3>likevMinRank<a class="headerlink" href="#likevminrank" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Minimum similarity a <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> candidate must reach to be returned
+(default <code class="docutils literal notranslate"><span class="pre">0</span></code>, meaning no floor).  Expressed in the same units as
+<code class="docutils literal notranslate"><span class="pre">$rank</span></code> for a vector query: similarity scaled to
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">..</span> <span class="pre">100000</span></code>, so <code class="docutils literal notranslate"><span class="pre">75000</span></code> is a cosine similarity of 0.75.</p>
+<p>Applies to a solitary <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> <strong>and</strong> to the vector leg of a
+fused keyword-OR-vector query, so one setting governs both.  The
+floor is applied after the index has scored each candidate exactly,
+not to the index’s approximation, and it does not reduce the search
+itself — <code class="docutils literal notranslate"><span class="pre">likevRows</span></code> still governs how deep the index looks.
+What it removes is weak candidates from the result set, which is
+worth most when the <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> list is expensive.</p>
+<p><strong>There is no good universal value, so the default is off.</strong>  Cosine
+similarity scales are a property of the embedding model, not of
+relevance: embedding spaces are anisotropic, so even unrelated text
+scores well above zero, and how far above depends on the model’s
+training temperature and whether it uses instruction prefixes.
+Measured baselines for <em>unrelated</em> pairs:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="53%" />
+<col width="24%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">model family</th>
+<th class="head">unrelated</th>
+<th class="head">relevant</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">all-MiniLM-L6-v2</span></code> (cosine loss)</td>
+<td>10000 – 30000</td>
+<td>above 50000</td>
+</tr>
+<tr class="row-odd"><td>BGE / E5 / nomic (with prefixes)</td>
+<td>60000 – 75000</td>
+<td>80000 – 90000</td>
+</tr>
+<tr class="row-even"><td>OpenAI <code class="docutils literal notranslate"><span class="pre">text-embedding-*</span></code></td>
+<td>~70000 – 75000</td>
+<td>above 80000</td>
+</tr>
+</tbody>
+</table>
+<p>The often-quoted “0.5 cutoff” comes from the MiniLM generation.  On
+a BGE or nomic model it discards nothing, because unrelated pairs
+already score above it.  Calibrate against your own model — embed a
+few hundred unrelated pairs from your corpus and look at where the
+distribution sits — or leave this off and let a cross-encoder
+reranker make the relevance decision, since reranker scores are
+calibrated in a way that embedding cosine is not.</p>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> is off, and a negative value means the same as <code class="docutils literal notranslate"><span class="pre">0</span></code>.  The
+useful range is therefore <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">100000</span></code>; a value above
+<code class="docutils literal notranslate"><span class="pre">100000</span></code> cannot be reached by any similarity and so returns
+nothing.</p>
+<p>Ignored, with a message, for an index built with <code class="docutils literal notranslate"><span class="pre">vec_metric</span> <span class="pre">'l2'</span></code>:
+an L2 score is an ascending distance, not a similarity, so a
+minimum would mean the opposite of what it says.</p>
 </div></blockquote>
 </div>
 <div class="section" id="likevef">
@@ -1564,6 +1723,171 @@ actual stored column bytes after the index step.  This setting
 controls how <em>many</em> and <em>which</em> candidates the index surfaces;
 once surfaced, they are scored exactly.  See
 <a class="reference internal" href="rampart-sql.html#querying-with-likev"><span class="std std-ref">Querying with LIKEV</span></a>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="vecpqmaxtrainsamples">
+<h3>vecPqMaxTrainSamples<a class="headerlink" href="#vecpqmaxtrainsamples" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><strong>IVFPQ only.</strong>  The smallest number of vectors sampled to train an
+IVFPQ codebook at <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">INDEX</span></code>.  The number of samples FAISS
+requires grows with <code class="docutils literal notranslate"><span class="pre">nlist</span></code>; this setting raises it when <code class="docutils literal notranslate"><span class="pre">nlist</span></code>
+is small, so that a small index still gets good-quality centroids.
+It is a floor rather than a cap: when FAISS requires more samples
+than this, it gets them.  Sampling writes a temporary
+<code class="docutils literal notranslate"><span class="pre">.train.tmp</span></code> file next to the index, so a larger value costs
+build-time disk space.  The default is <code class="docutils literal notranslate"><span class="pre">1000000</span></code>.</div></blockquote>
+</div>
+<div class="section" id="vecpqoverfetchpad">
+<h3>vecPqOverFetchPad<a class="headerlink" href="#vecpqoverfetchpad" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><strong>IVFPQ only.</strong>  How many extra candidates an IVFPQ search fetches
+internally, as a fraction of the number requested, to absorb
+candidates that are then discarded as deleted.  The default of
+<code class="docutils literal notranslate"><span class="pre">0.10</span></code> fetches ten percent more.  Raise it for an index with many
+deletes pending optimization.  <code class="docutils literal notranslate"><span class="pre">0</span></code> turns the padding off, and a
+negative value is treated as <code class="docutils literal notranslate"><span class="pre">0</span></code>.</div></blockquote>
+</div>
+</div>
+<div class="section" id="rank-fusion-properties">
+<h2>Rank Fusion Properties<a class="headerlink" href="#rank-fusion-properties" title="Permalink to this headline">¶</a></h2>
+<p>These settings govern how a hybrid <code class="docutils literal notranslate"><span class="pre">Doc</span> <span class="pre">LIKEP</span> <span class="pre">?</span> <span class="pre">OR</span> <span class="pre">Vec</span> <span class="pre">LIKEV</span> <span class="pre">?</span></code> query
+combines its two result lists.  The two engines produce scores on
+incomparable scales — a Metamorph proximity rank of 0-1000 against a
+scaled cosine similarity — so fusion uses each list’s rank <em>order</em>
+only, by Reciprocal Rank Fusion:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>fused(row) = rrfKwWeight  * 1000000 / (rrfK + keyword position)
+           + rrfVecWeight * 1000000 / (rrfK + vector position)
+</pre></div>
+</div>
+<p>A row found by both engines earns both terms, which is the
+cross-engine agreement signal that a plain <code class="docutils literal notranslate"><span class="pre">OR</span></code> throws away.  The
+fused value is the row’s <code class="docutils literal notranslate"><span class="pre">$rank</span></code>.  Per-side native scores remain
+available as <code class="docutils literal notranslate"><span class="pre">$krank</span></code> and <code class="docutils literal notranslate"><span class="pre">$vrank</span></code>.</p>
+<p>They have no effect on a query that is not fused — a solitary
+<code class="docutils literal notranslate"><span class="pre">LIKEP</span></code>, a solitary <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code>, or an <code class="docutils literal notranslate"><span class="pre">OR</span></code> of two keyword
+predicates, all of which keep their own native ranking.  See
+<a class="reference internal" href="rampart-sql.html#hybrid-keyword-vector-queries-rank-fusion"><span class="std std-ref">Hybrid keyword + vector queries</span></a>.</p>
+<div class="section" id="rrfrows">
+<h3>rrfRows<a class="headerlink" href="#rrfrows" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Depth of the fusion pool, applied to <strong>both</strong> sides (default
+<code class="docutils literal notranslate"><span class="pre">300</span></code>).</p>
+<p>Equal depth is the point: a position means the same thing on either
+side only if both lists are the same length.  The vector index
+still searches to <a class="reference internal" href="#likevrows"><span class="std std-ref">likevRows</span></a> — ANN recall
+needs that depth — and its list is truncated to <code class="docutils literal notranslate"><span class="pre">rrfRows</span></code> <em>after</em>
+being sorted best-first, so the neighbours the depth exists to find
+are exactly the ones kept.</p>
+<p>Effective depth per side is the smaller of <code class="docutils literal notranslate"><span class="pre">rrfRows</span></code> and that
+side’s own cap, i.e. <code class="docutils literal notranslate"><span class="pre">min(likepRows,</span> <span class="pre">rrfRows)</span></code> for the keyword leg
+and <code class="docutils literal notranslate"><span class="pre">min(likevRows,</span> <span class="pre">rrfRows)</span></code> for the vector leg.  With the
+defaults (<code class="docutils literal notranslate"><span class="pre">likepRows</span></code> 100, <code class="docutils literal notranslate"><span class="pre">likevRows</span></code> 1000) the keyword leg is
+therefore still limited to 100; raise <code class="docutils literal notranslate"><span class="pre">likepRows</span></code> to <code class="docutils literal notranslate"><span class="pre">rrfRows</span></code>
+if you want genuinely symmetric pools.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">rrfRows</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> disables truncation, leaving each side
+to its own cap.  A negative value means the same as <code class="docutils literal notranslate"><span class="pre">0</span></code>.  A value
+larger than both caps is simply a no-op, since neither list reaches
+it.</p>
+<p>This is the only fusion setting with a material cost, because the
+<code class="docutils literal notranslate"><span class="pre">SELECT</span></code> list is evaluated for every candidate in the union before
+<code class="docutils literal notranslate"><span class="pre">maxRows</span></code> truncates.  Measured on a 20,000-row table, 20 queries,
+minimum of 15 runs:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="31%" />
+<col width="33%" />
+<col width="36%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><code class="docutils literal notranslate"><span class="pre">rrfRows</span></code></th>
+<th class="head">union size</th>
+<th class="head">ms per query</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>100</td>
+<td>196</td>
+<td>20.2</td>
+</tr>
+<tr class="row-odd"><td>300</td>
+<td>396</td>
+<td>22.2</td>
+</tr>
+<tr class="row-even"><td>1000</td>
+<td>1095</td>
+<td>32.0</td>
+</tr>
+</tbody>
+</table>
+<p>The effect is larger when the <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> list is expensive — an
+in-query <a class="reference internal" href="sql-server-funcs.html#abstract"><span class="std std-ref">abstract()</span></a> is paid once
+per candidate, not once per returned row.</p>
+</div></blockquote>
+</div>
+<div class="section" id="rrfk">
+<h3>rrfK<a class="headerlink" href="#rrfk" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Damping constant in the fusion formula (default <code class="docutils literal notranslate"><span class="pre">60</span></code>, the value
+from the original RRF paper).  Practical range is roughly <code class="docutils literal notranslate"><span class="pre">10</span></code> to
+<code class="docutils literal notranslate"><span class="pre">200</span></code>.</p>
+<p>What it really sets is <strong>how much agreement between the two engines
+is worth against one strong hit</strong>.  A row at position <em>p</em> in both
+lists scores <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">SCALE/(rrfK</span> <span class="pre">+</span> <span class="pre">p)</span></code>, while the best row from a
+single list scores <code class="docutils literal notranslate"><span class="pre">SCALE/(rrfK</span> <span class="pre">+</span> <span class="pre">1)</span></code>; those are equal when
+<code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">rrfK</span> <span class="pre">+</span> <span class="pre">2</span></code>.  So at the default, a document sitting at position
+62 in <em>both</em> lists ties the top hit of either list alone.</p>
+<ul class="simple">
+<li>Lower — the top of each list dominates and agreement counts for
+little.  At <code class="docutils literal notranslate"><span class="pre">rrfK</span> <span class="pre">10</span></code> the crossover is position 12.</li>
+<li>Higher — a flatter curve, where breadth of agreement outweighs
+depth.  At <code class="docutils literal notranslate"><span class="pre">rrfK</span> <span class="pre">200</span></code> the crossover is position 202.</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">0</span></code> is a legal setting, not a sentinel: it is the maximally
+top-heavy end of the scale, where the first position of either list
+is worth <code class="docutils literal notranslate"><span class="pre">1000000</span></code> and nothing can outrank it.  A negative value
+means the same as <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rrfK</span> <span class="pre">60</span></code> is inherited from the literature, where it was tuned on
+runs with different list lengths than these pools.  It is not
+necessarily right for a given corpus.</p>
+</div></blockquote>
+</div>
+<div class="section" id="rrftiebreak">
+<h3>rrfTieBreak<a class="headerlink" href="#rrftiebreak" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Which side wins when two rows fuse to exactly the same score —
+<code class="docutils literal notranslate"><span class="pre">'keyword'</span></code> (the default) or <code class="docutils literal notranslate"><span class="pre">'vector'</span></code>.</p>
+<p>Exact ties are routine rather than rare: with the default weights,
+the keyword row at position <em>N</em> and the vector row at position <em>N</em>
+produce identical scores whenever neither appears in the other’s
+list.  Something has to break them, and without this setting the
+order would fall to each row’s physical position in the table, which
+is both arbitrary and not stable — those positions are reused file
+offsets, so maintenance can reshuffle equally-scored rows.</p>
+<p>This is therefore a <strong>determinism guarantee, not a relevance
+control</strong>.  It fires only on exactly equal evidence; it cannot
+promote a row over one with a genuinely higher score, including a
+fractionally higher one produced by the weights below.  Rows found
+by both engines carry a contribution from each side, so they take
+the tie-break either way and their order relative to each other
+never changes.</p>
+</div></blockquote>
+</div>
+<div class="section" id="rrfkwweight-rrfvecweight">
+<h3>rrfKwWeight, rrfVecWeight<a class="headerlink" href="#rrfkwweight-rrfvecweight" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Multipliers on the keyword and vector terms respectively (both
+default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, permissible <code class="docutils literal notranslate"><span class="pre">0.0</span></code> to <code class="docutils literal notranslate"><span class="pre">10.0</span></code>).</p>
+<p>Only the <em>ratio</em> matters, so leave one at <code class="docutils literal notranslate"><span class="pre">1.0</span></code> and move the
+other.  <code class="docutils literal notranslate"><span class="pre">rrfKwWeight</span> <span class="pre">2.0</span></code> makes keyword evidence worth twice as
+much as semantic evidence at the same position.</p>
+<p>These are the one place to express a corpus-level judgement that one
+engine is simply more trustworthy than the other — plain RRF weights
+both equally by construction.  Setting a weight to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> keeps
+that side’s rows in the result union but contributes no score for
+them, so they sort to the bottom rather than disappearing.</p>
+<p>A negative weight means the same as <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p>
+<p>Neither weight has a measurable cost; both are arithmetic in the
+merge step.</p>
 </div></blockquote>
 </div>
 </div>
@@ -1952,6 +2276,66 @@ are saved.  Expressions set during an update (issuance of “create
 metamorph [inverted] index” or “create fulltext index” on an existent
 index) will <em>not</em> be added.</div></blockquote>
 </div>
+<div class="section" id="expressionslist">
+<h3>expressionsList<a class="headerlink" href="#expressionslist" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>An array of REX expressions that <strong>replaces</strong> the whole index word
+expression list, rather than adding to it one entry at a time.  An
+empty array or <code class="docutils literal notranslate"><span class="pre">null</span></code> clears the list.  Elements may be strings or
+JavaScript <code class="docutils literal notranslate"><span class="pre">RegExp</span></code> objects.</p>
+<p>Every entry is checked before anything changes: each must be a string
+or expression, each must compile as REX the way the indexer will
+compile it, and the list must fit the engine limit of 15 entries.  If
+any entry is rejected the <strong>existing list is left untouched</strong>, so a
+typo cannot leave a half-replaced list behind.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span> <span class="nx">expressionsList</span><span class="o">:</span> <span class="p">[</span>
+    <span class="s2">&quot;[\\uword]+&quot;</span><span class="p">,</span>                  <span class="c1">// words in any script</span>
+    <span class="s2">&quot;[\\alnum\\$\\%\\@\\-\\_\\+]+&quot;</span> <span class="c1">// code-ish tokens</span>
+<span class="p">]});</span>
+
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span> <span class="nx">expressionsList</span><span class="o">:</span> <span class="p">[]</span> <span class="p">});</span>   <span class="c1">// clear</span>
+</pre></div>
+</div>
+<p>Note the same caveat as <a class="reference internal" href="#addexp">addExp</a>: only the expressions in effect when
+an index is <strong>first</strong> created are stored with it.</p>
+<p>An invalid expression is reported with its position and the reason:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sql.set: expressionsList[1] - invalid expression &#39;[unterminated&#39;: ...
+</pre></div>
+</div>
+<p>This is worth preferring over <a class="reference internal" href="#addexp">addExp</a> for that reason – <code class="docutils literal notranslate"><span class="pre">addExp</span></code>
+stores what it is given verbatim, so a malformed expression is accepted
+silently and only fails later, when an index is built or a query runs.</p>
+</div></blockquote>
+</div>
+<div class="section" id="indextemplist">
+<h3>indexTempList<a class="headerlink" href="#indextemplist" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>An array of directories that <strong>replaces</strong> the whole index temporary
+directory list.  An empty array or <code class="docutils literal notranslate"><span class="pre">null</span></code> clears it.  Each entry must
+be a string, and the list must fit the engine limit of 15 entries; as
+with <a class="reference internal" href="#expressionslist">expressionsList</a>, nothing is changed unless every entry is
+acceptable.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span> <span class="nx">indexTempList</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;/mnt/fast&quot;</span><span class="p">,</span> <span class="s2">&quot;/var/tmp&quot;</span><span class="p">]</span> <span class="p">});</span>
+</pre></div>
+</div>
+<p>These are <strong>candidates to choose among, not a single directory.</strong>  While
+building a Metamorph index, Texis stats every path in the list, measures
+the free space on each, and uses the one with the most room for its
+intermediate merge files.  For a candidate on the same filesystem as the
+index itself, the estimated final index size is subtracted first, so a
+volume that the finished index will fill is not chosen to also hold the
+temporary files.  Supplying several paths on different filesystems is
+the intended use.</p>
+<p>When the list is empty, the candidates are the index file’s own
+directory, then <code class="docutils literal notranslate"><span class="pre">$TMP</span></code>, then <code class="docutils literal notranslate"><span class="pre">$TMPDIR</span></code>.  If no candidate is usable,
+the index file’s own directory is used.</p>
+<p>A path that does not exist is <strong>skipped silently</strong> – it is not an
+error, it simply stops being a candidate.  If temporary files are not
+appearing where expected, check the paths for typos.</p>
+<p>This list affects Metamorph index builds only.  It is not a general
+temporary directory for Texis.</p>
+</div></blockquote>
+</div>
 <div class="section" id="delexp">
 <h3>delExp<a class="headerlink" href="#delexp" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -2012,8 +2396,9 @@ memory and only spills to a temporary file once the build exceeds
 ordinary indexes never spill and this setting will appear to have no
 effect.  It becomes observable on very large indexes, or if <code class="docutils literal notranslate"><span class="pre">indexMem</span></code>
 is lowered.</p>
-<p>Note also that this list is process-wide and is not restored by
-<a class="reference internal" href="#sql-reset">sql.reset()</a> – see the second NOTE at the top of this page.</p>
+<p>Note also that this list is process-wide – see the second NOTE at the
+top of this page.  <a class="reference internal" href="#sql-reset">sql.reset()</a> restores it to the engine default,
+and <a class="reference internal" href="#indextemplist">indexTempList</a> replaces it outright.</p>
 </div></blockquote>
 </div>
 <div class="section" id="delindextmp">
@@ -2298,7 +2683,9 @@ word occurs many times in that single recid, the data (for a Metamorph
 inverted index) may be large enough to bloat the B-tree and thus negate
 the savings, so if the single-recid word occurs more than
 <code class="docutils literal notranslate"><span class="pre">indexMaxSingle</span></code> times, it is stored in the <code class="docutils literal notranslate"><span class="pre">.dat</span></code>. The default is
-<code class="docutils literal notranslate"><span class="pre">8</span></code>.</div></blockquote>
+<code class="docutils literal notranslate"><span class="pre">8</span></code>.  Requires Metamorph index version 2 or later, and
+<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">INDEX</span> <span class="pre">...</span> <span class="pre">WITH</span> <span class="pre">...</span></code> can override it for an individual
+index.  <code class="docutils literal notranslate"><span class="pre">-1</span></code> disables the optimization.</div></blockquote>
 </div>
 <div class="section" id="tablereadbufsz">
 <h3>tableReadBufSz<a class="headerlink" href="#tablereadbufsz" title="Permalink to this headline">¶</a></h3>
@@ -2583,28 +2970,6 @@ data, obviating the need for hex conversion.</div></blockquote>
 buffers are encountered in certain situations. Messages are issued
 if this setting is true/nonzero (the default).</div></blockquote>
 </div>
-<div class="section" id="unneededrexescapewarning">
-<h3>unneededRexEscapeWarning<a class="headerlink" href="#unneededrexescapewarning" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><p>Whether to issue “REX: Unneeded escape sequence …” warnings when a
-REX expression uses certain unneeded escapes. An unneeded escape is
-when a character is escaped that has no special meaning in the
-current context in REX, either alone or escaped. Such escapes are
-interpreted as just the literal character alone (respect-case); e.g
-“<code class="docutils literal notranslate"><span class="pre">\w</span></code>” has no special meaning in REX, and is taken as “<code class="docutils literal notranslate"><span class="pre">w</span></code>”.</p>
-<p>While such escapes have no meaning currently, some may take on a
-specific new meaning in a future Texis release, if REX syntax is
-expanded. Thus using them in an expression now may unexpectedly (and
-silently) result in their behavior changing after a Texis update;
-hence the warning message. Expressions using such escapes should
-thus have them changed to the unescaped literal character.</p>
-<p>If updating the code is not feasible, the warning may be silenced by
-setting <code class="docutils literal notranslate"><span class="pre">unneededRexEscapeWarning</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> – at the risk of silent
-behavior change at an upgrade.
-Overrides Unneeded REX Escape Warning setting in <code class="docutils literal notranslate"><span class="pre">conf/texis.ini</span></code> and
-is set <code class="docutils literal notranslate"><span class="pre">false</span></code> regardless in Rampart by default.</p>
-</div></blockquote>
-</div>
 <div class="section" id="nulloutputstring">
 <h3>nullOutputString<a class="headerlink" href="#nulloutputstring" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -2768,6 +3133,11 @@ disallowed query is attempted:</p>
 </ul>
 <p>A message such as “‘delimiters’ not allowed in query” may be generated when
 a disallowed query is attempted and <code class="docutils literal notranslate"><span class="pre">denyMode</span></code> is not <code class="docutils literal notranslate"><span class="pre">silent</span></code>.</p>
+<p>The integer forms are accepted but normalized, so <a class="reference internal" href="#sql-get">sql.get()</a> always
+reports one of the three keywords.  Any other value is an error:
+<code class="docutils literal notranslate"><span class="pre">sql.set({denyMode:</span> <span class="pre">&quot;loud&quot;})</span></code> throws rather than falling back to a
+mode, since the fallback would have been <code class="docutils literal notranslate"><span class="pre">silent</span></code> – the most
+permissive of the three.</p>
 <p>Note that “failing” the query under <code class="docutils literal notranslate"><span class="pre">error</span></code> does not throw a
 JavaScript exception: as with other non-syntax Texis refusals, the
 query returns <strong>zero rows</strong> and the reason is recorded in
@@ -2858,6 +3228,89 @@ one of the following:</p>
 (e.g. all <code class="docutils literal notranslate"><span class="pre">al</span></code>.. setting are set <code class="docutils literal notranslate"><span class="pre">true</span></code>).</p>
 </li>
 </ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="reading-current-settings">
+<h2>Reading Current Settings<a class="headerlink" href="#reading-current-settings" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sql-get">
+<h3>sql.get()<a class="headerlink" href="#sql-get" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Return the settings this <code class="docutils literal notranslate"><span class="pre">sql</span></code> handle will apply.  With no argument it
+returns an object of every setting; with a property name it returns that
+one value.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">get</span><span class="p">();</span>         <span class="c1">// every setting, as an object</span>
+<span class="kd">var</span> <span class="nx">n</span>   <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;likevRows&quot;</span><span class="p">);</span>   <span class="c1">// 1000</span>
+</pre></div>
+</div>
+<p>Keys are the documented names used with <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>, so the object can
+be fed straight back:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">saved</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">get</span><span class="p">();</span>       <span class="c1">// snapshot</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">likepRows</span><span class="o">:</span> <span class="mi">500</span><span class="p">,</span> <span class="nx">rrfK</span><span class="o">:</span> <span class="mi">10</span><span class="p">});</span>
+<span class="p">...</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">saved</span><span class="p">);</span>              <span class="c1">// restore exactly</span>
+</pre></div>
+</div>
+<p>The property name is matched without regard to case, and the documented
+aliases resolve, so <code class="docutils literal notranslate"><span class="pre">sql.get(&quot;rrfrows&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">sql.get(&quot;rrfRows&quot;)</span></code> are
+the same.  An unrecognized name returns <code class="docutils literal notranslate"><span class="pre">undefined</span></code>; a non-string
+argument throws.</p>
+<p>Numeric settings are returned as Numbers whether they came from a default
+or from a <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code>, so <code class="docutils literal notranslate"><span class="pre">sql.set({rrfRows:</span> <span class="pre">&quot;55&quot;})</span></code> reads back as
+<code class="docutils literal notranslate"><span class="pre">55</span></code>.</p>
+<p>The four word lists (<a class="reference internal" href="#noiselist">noiseList</a>, <a class="reference internal" href="#suffixlist">suffixList</a>, <a class="reference internal" href="#suffixequivslist">suffixEquivsList</a>,
+<a class="reference internal" href="#prefixlist">prefixList</a>) and the two index lists (<a class="reference internal" href="#expressionslist">expressionsList</a>,
+<a class="reference internal" href="#indextemplist">indexTempList</a>) are included as arrays.</p>
+<p>What it reports is <strong>what the next statement on this handle will use</strong>.
+It is assembled from the documented defaults overlaid with what this
+handle has set – the same information the handle re-applies before each
+statement – rather than being read back out of the engine.  Two
+consequences:</p>
+<ul class="simple">
+<li>A setting changed with <code class="docutils literal notranslate"><span class="pre">sql.exec(&quot;SET</span> <span class="pre">property</span> <span class="pre">=</span> <span class="pre">value;&quot;)</span></code> instead
+of <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> will not appear.  This is one more reason to prefer
+<code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> in JavaScript, as described at the top of this page.</li>
+<li>The add and delete list <em>operations</em> are not reported, since they are
+operations rather than values: use <a class="reference internal" href="#expressionslist">expressionsList</a> and
+<a class="reference internal" href="#indextemplist">indexTempList</a> to read or replace those lists.  For the same reason
+<code class="docutils literal notranslate"><span class="pre">optimize</span></code> and <code class="docutils literal notranslate"><span class="pre">nooptimize</span></code> are absent – each takes a list of
+optimization names and turns those flags on or off, so there is no
+single value to report.</li>
+<li><a class="reference internal" href="#querysettings">querySettings</a> is likewise absent, and leaving it out matters:
+<code class="docutils literal notranslate"><span class="pre">querySettings:</span> <span class="pre">&quot;defaults&quot;</span></code> reinitializes the structure that
+<a class="reference internal" href="#alwild">alWild</a>, <a class="reference internal" href="#qminwordlen">qMinWordLen</a> and the rest of that family live on.  Were
+it reported, feeding the object back to <code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> could discard
+those settings, depending on the order the keys happened to be
+applied in.  <code class="docutils literal notranslate"><span class="pre">querySettings</span></code> is still honored by <a class="reference internal" href="#sql-reset">sql.reset()</a> –
+that is how the family returns to its defaults.</li>
+<li>The embedding settings (<a class="reference internal" href="#llamaembed">llamaEmbed</a>, <a class="reference internal" href="#onnxembed">onnxEmbed</a>, <a class="reference internal" href="#clipembed">clipEmbed</a>)
+are not reported.  They load a model rather than store a value, and
+the loaded model stays attached to the handle: <code class="docutils literal notranslate"><span class="pre">embed()</span></code> continues
+to work after a <a class="reference internal" href="#sql-reset">sql.reset()</a>, and keeps using the same model until
+another is set.</li>
+</ul>
+<p>Values are reported in their natural JavaScript type, so that a
+setting reads back the same whichever accepted form was used to write
+it:</p>
+<ul class="simple">
+<li>Numeric settings come back as Numbers, so <code class="docutils literal notranslate"><span class="pre">sql.set({rrfRows:</span>
+<span class="pre">&quot;55&quot;})</span></code> reads back as <code class="docutils literal notranslate"><span class="pre">55</span></code>.</li>
+<li>The settings that are simple on/off switches – <a class="reference internal" href="#alwild">alWild</a>,
+<a class="reference internal" href="#suffixproc">suffixProc</a>, <a class="reference internal" href="#paramchk">paramChk</a> and the like – come back as <code class="docutils literal notranslate"><span class="pre">true</span></code> or
+<code class="docutils literal notranslate"><span class="pre">false</span></code>, whether the value reported is one a script set or the
+built-in default.</li>
+<li><a class="reference internal" href="#exactphrase">exactPhrase</a> is three-valued, so it reports <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code>
+or <code class="docutils literal notranslate"><span class="pre">&quot;ignorewordposition&quot;</span></code>.</li>
+<li>Everything else comes back as a string.</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">sql.set()</span></code> accepts every one of those forms, so a snapshot always
+restores correctly.</p>
+<p>Only settings that are genuinely binary are reported as Booleans.  A
+good many take a small number without being switches – <a class="reference internal" href="#likepmode">likepMode</a> is
+a mode, <a class="reference internal" href="#indexmmap">indexMmap</a> is a bit-mask, and <a class="reference internal" href="#ramrows">ramRows</a>, <a class="reference internal" href="#likevef">likevEf</a>,
+<a class="reference internal" href="#likevminrank">likevMinRank</a> and <a class="reference internal" href="#likeptime">likepTime</a> are counts or limits in which <code class="docutils literal notranslate"><span class="pre">0</span></code>
+means “automatic” or “no limit” – and those are reported as Numbers
+even when they happen to hold <code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 </div></blockquote>
 </div>
 </div>

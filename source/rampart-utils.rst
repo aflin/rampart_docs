@@ -3589,6 +3589,12 @@ Where ``options`` is an :green:`Object` with the following optional keys
 |                |                 | ``stdout``. If ``false``, only the prompt and current edit   |
 |                |                 | line are redrawn at the cursor's current row (the behavior   |
 |                |                 | prior to the capture-and-replay feature being added).        |
+|                |                 |                                                              |
+|                |                 | Capturing works by routing ``stdout`` through a pipe for the |
+|                |                 | rest of the process, so while it is ``true`` the process's   |
+|                |                 | file descriptor 1 is not a terminal (rampart's own color     |
+|                |                 | detection and forked children are unaffected). Set ``false`` |
+|                |                 | to leave ``stdout`` untouched.                               |
 +----------------+-----------------+--------------------------------------------------------------+
 |objectMode      |:green:`Boolean` | If ``true``, ``.next()`` returns an :green:`Object` with     |
 |                |                 | ``{text, status[, signal]}`` instead of the legacy           |
@@ -3820,6 +3826,18 @@ Keybindings:
    +--------------------+------------------------------------------------------+
    |Ctrl-Z              |Suspend and drop to shell.                            |
    +--------------------+------------------------------------------------------+
+   |Ctrl-Left / Alt-B   |Move one word to the left.                            |
+   +--------------------+------------------------------------------------------+
+   |Ctrl-Right / Alt-F  |Move one word to the right.                           |
+   +--------------------+------------------------------------------------------+
+   |Alt-Backspace       |Delete previous word.                                 |
+   +--------------------+------------------------------------------------------+
+
+   Input is UTF-8: the cursor moves and deletes by whole character (including
+   combining marks and emoji sequences), and double-width characters and
+   color escape sequences in the prompt are accounted for when positioning
+   the cursor.  Text pasted into a terminal that supports bracketed paste is
+   inserted verbatim, tabs and newlines included.
 
 File Handle Utilities
 """""""""""""""""""""

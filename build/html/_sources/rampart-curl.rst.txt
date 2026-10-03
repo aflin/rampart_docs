@@ -324,6 +324,7 @@ Promise / async-await Support
 
     .. code-block:: javascript
 
+        "use transpiler"
         var res = await curl.submitAsync({url: 'https://example.com/', location: true});
 
     **In server modules** — use ``{defer: true}`` with ``req.reply()``:

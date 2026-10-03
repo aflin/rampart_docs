@@ -3615,12 +3615,18 @@ If the file does not yet exist it is created on first save.</td>
 </tr>
 <tr class="row-odd"><td>redrawOnResume</td>
 <td><span class="green">Boolean</span></td>
-<td>If <code class="docutils literal notranslate"><span class="pre">true</span></code> (default), on Ctrl-Z resume the screen content
+<td><p class="first">If <code class="docutils literal notranslate"><span class="pre">true</span></code> (default), on Ctrl-Z resume the screen content
 visible just before suspend is restored by replaying a
 captured copy of everything the REPL had written to
 <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. If <code class="docutils literal notranslate"><span class="pre">false</span></code>, only the prompt and current edit
 line are redrawn at the cursor’s current row (the behavior
-prior to the capture-and-replay feature being added).</td>
+prior to the capture-and-replay feature being added).</p>
+<p class="last">Capturing works by routing <code class="docutils literal notranslate"><span class="pre">stdout</span></code> through a pipe for the
+rest of the process, so while it is <code class="docutils literal notranslate"><span class="pre">true</span></code> the process’s
+file descriptor 1 is not a terminal (rampart’s own color
+detection and forked children are unaffected). Set <code class="docutils literal notranslate"><span class="pre">false</span></code>
+to leave <code class="docutils literal notranslate"><span class="pre">stdout</span></code> untouched.</p>
+</td>
 </tr>
 <tr class="row-even"><td>objectMode</td>
 <td><span class="green">Boolean</span></td>
@@ -3836,7 +3842,7 @@ interactively.</dd>
 <dl class="docutils">
 <dt>Keybindings:</dt>
 <dd><p class="first">The same keys as the built-in REPL are honored:</p>
-<table border="1" class="last docutils">
+<table border="1" class="docutils">
 <colgroup>
 <col width="27%" />
 <col width="73%" />
@@ -3900,8 +3906,22 @@ while it is on).</td>
 <tr class="row-even"><td>Ctrl-Z</td>
 <td>Suspend and drop to shell.</td>
 </tr>
+<tr class="row-odd"><td>Ctrl-Left / Alt-B</td>
+<td>Move one word to the left.</td>
+</tr>
+<tr class="row-even"><td>Ctrl-Right / Alt-F</td>
+<td>Move one word to the right.</td>
+</tr>
+<tr class="row-odd"><td>Alt-Backspace</td>
+<td>Delete previous word.</td>
+</tr>
 </tbody>
 </table>
+<p class="last">Input is UTF-8: the cursor moves and deletes by whole character (including
+combining marks and emoji sequences), and double-width characters and
+color escape sequences in the prompt are accounted for when positioning
+the cursor.  Text pasted into a terminal that supports bracketed paste is
+inserted verbatim, tabs and newlines included.</p>
 </dd>
 </dl>
 </div>

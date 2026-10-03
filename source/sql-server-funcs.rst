@@ -267,10 +267,16 @@ for the built-in chunker:
 .. code-block:: javascript
 
     // splitter returns [{text, start, end}, ...]
-    var parts = mySplitter(docText);
+    var parts = mySplitter(docText), texts = [], spans = [];
+
+    for (var i = 0; i < parts.length; i++)
+    {
+        texts.push(parts[i].text);
+        spans.push(parts[i].start, parts[i].end);   // two per element
+    }
+
     sql.exec("insert into docs values (?, ?, chunkembed(?, 'f16', ?, ?))",
-             [id, docText, Sql.list(parts.map(p => p.text)),
-              title, Sql.list(parts.flatMap(p => [p.start, p.end]))]);
+             [id, docText, Sql.list(texts), title, Sql.list(spans)]);
 
 The offsets are UTF-8 **bytes**, not JavaScript string indices.  A JS
 string position counts *characters*, so offsets taken from

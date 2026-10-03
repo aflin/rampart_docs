@@ -48,16 +48,42 @@ NOTE:
    JavaScript.
 
 NOTE:
+   Values are type checked, and a value of the wrong type is an error
+   rather than a guess:
+
+   *  A Boolean setting takes the JavaScript Booleans ``true`` or
+      ``false``, and nothing else.  ``sql.set({alWild: 1})`` and
+      ``sql.set({alWild: "on"})`` both throw.  Texis itself understands a
+      dozen spellings of true -- ``on``, ``yes``, ``enabled`` and more --
+      and those are still reachable as a quoted SQL value, for example
+      ``sql.exec("set alwild='on';")``, but they are not accepted from
+      ``sql.set()``: a setting that silently became ``false`` because its
+      value was misspelled is worse than an error, particularly for the
+      `Query Protection`_ settings, which default to on.
+   *  A setting that takes a whole number requires one.
+      ``sql.set({minWordLen: 3.5})`` throws rather than quietly becoming
+      3.  A string holding exactly a number is still accepted, so
+      ``sql.set({maxRows: "100"})`` is fine.
+   *  `likepTime`_, ``rrfKwWeight``, ``rrfVecWeight`` and
+      `vecPqOverFetchPad`_ are the settings for which a fraction is
+      meaningful, and they accept one.
+
+   `sql.get()`_ reports each setting in its matching type, so a Boolean
+   setting always reads back as ``true`` or ``false``.
+
+NOTE:
    Two settings are an exception to the handle scoping described above.  The
    expression list (`addExp`_ / `delExp`_, i.e. ``addExpressions`` /
    ``deleteExpressions``) and the index temporary directory list
    (`addIndexTmp`_ / `delIndexTmp`_, i.e. ``addIndexTemp`` /
    ``deleteIndexTemp``) are stored **process-wide**, not per handle.  Changing
-   either affects every other ``sql`` handle in the process -- including
-   handles opened on different databases, and handles created afterward -- and
-   neither is restored by `sql.reset()`_\ .  To undo a change to these two
-   lists, remove the entries explicitly with ``deleteExpressions`` or
-   ``deleteIndexTemp``.
+   either affects other ``sql`` handles in the process -- including handles
+   opened on different databases, and handles created afterward -- until one of
+   those handles next applies its own settings.
+
+   Each list can also be replaced outright, which is usually easier than
+   adding and deleting entries: see `expressionsList`_ and `indexTempList`_\ .
+   `sql.reset()`_ restores both to the engine default.
 
 
 Search and optimization parameters
@@ -383,7 +409,7 @@ bubble
     means that a matching record will be found in the index, returned to the
     user, then the next record found in the index, and so forth till the end
     of the query.  This normally generates the first results as quickly as
-    possible.  By setting ``bubble`` to 0 the entire set of matching record
+    possible.  By setting ``bubble`` to ``false`` the entire set of matching record
     handles will be read from the index first, and then each record
     processed from this list.
 
@@ -560,6 +586,17 @@ ignoreNewList
     until the index has been optimized.
 
 
+uniqNewList
+"""""""""""
+    Diagnostic.  Discard duplicate entries from the unoptimized portion
+    of a Metamorph index (the "new list") while reading it, to work
+    around duplicates that should not be present.  ``0``, the default,
+    reads the list as-is.  ``1`` de-duplicates auxiliary and compound
+    index new lists only, ``2`` de-duplicates every new list, and ``3``
+    does the same as ``2`` and additionally reports the first few
+    duplicates it finds.
+
+
 indexWithin
 """""""""""
     How to use the Metamorph index when processing “within :math:`N`”
@@ -598,7 +635,7 @@ wildOneWord
     linear-dictionary index searches are possible (if enabled), because
     there are no multi-word matches to (erroneously) miss.
 
-    The default is 1 (true).
+    The default is ``true``.
 
 
 wildSufMatch
@@ -609,7 +646,7 @@ wildSufMatch
     then “``*so``” only matches “``also``”. Affects what terms are
     matched during linear-dictionary index searches.
 
-    The default is 1 (true)
+    The default is ``true``
 
 
 wildSingle
@@ -626,8 +663,8 @@ alLinearDict
     certain terms, while not binary-index searchable, can be
     linear-dictionary searched in the index, which is slower than
     binary-index, yet faster than linear-table search. Examples include
-    leading-prefix wildcards such as “``*tion``”. The default is 0
-    (false), since query protection is enabled by default. Note that
+    leading-prefix wildcards such as “``*tion``”. The default is ``false``,
+    since query protection is enabled by default. Note that
     ``wildSingle`` should typically be set true so that wildcard syntax
     is more likely to be linear-dictionary searchable.
 
@@ -1271,7 +1308,7 @@ likepMode
 
 likepAllMatch
 """""""""""""
-    Setting this to 1 forces ``LIKEP`` to only consider those documents
+    Setting this to ``true`` forces ``LIKEP`` to only consider those documents
     containing *all* (non-negated) query terms as matches (i.e. just as
     ``LIKE`` does). By default, since ``LIKEP`` is a ranking operator it
     returns the best results even if only some of the set-logic terms
@@ -1283,10 +1320,10 @@ likepAllMatch
 
 likepObeyIntersects
 """""""""""""""""""
-    Setting this to 1 forces ``LIKEP`` to obey the intersects operator
+    Setting this to ``true`` forces ``LIKEP`` to obey the intersects operator
     (@) in queries (even when likepallmatch is true). By default
     ``LIKEP`` does not use it, because it is a ranking operator. Setting
-    both ``likepAllMatch`` and ``likepObeyIntersects`` to 1 will make
+    both ``likepAllMatch`` and ``likepObeyIntersects`` to ``true`` will make
     ``LIKEP`` respect queries the same as ``LIKE``. (Note:
     `alIntersects`_ may have to be enabled as well.)
 
@@ -1301,6 +1338,28 @@ likepInfThresh
     ranking irrelevant but often-occurring matches, at the possible
     expense of rank position. The default is ``0``, which means infinite (no
     infinite sets; rank all documents).
+
+
+infThresh
+"""""""""
+    The "infinity" threshold applied when a Metamorph query term is
+    expanded: a term whose expansion covers more than this many index
+    entries is treated as infinitely-occurring, and so contributes an
+    estimated rather than a computed rank.  This counts index entries
+    for the term, where `likepInfThresh`_ counts estimated matching
+    rows.  The default of ``-1`` disables the test, so no term is
+    treated as infinite.
+
+
+infPercent
+""""""""""
+    The same threshold as `infThresh`_, but relative to the size of the
+    index instead of an absolute count.  The threshold is recomputed for
+    each query as the fraction ``100/infPercent`` of the index's total
+    token count, so ``1000`` makes a term infinite once its expansion
+    covers more than a tenth of the index.  Setting this overrides
+    `infThresh`_.  The default of ``-1`` leaves `infThresh`_ in
+    control.
 
 
 likepIndexThresh
@@ -1324,6 +1383,15 @@ likepIndexThresh
     high-ranking hits.
 
 
+likepTime
+"""""""""
+    A time budget for ``LIKEP`` and ``LIKE`` ranking, in seconds.  When
+    the budget runs out the matches found so far are returned, much as
+    `likepIndexThresh`_ stops after a given number of matches -- a limit
+    on time rather than on count.  Fractions are accepted, so ``0.25``
+    is 250 milliseconds.  The default of ``0`` means no limit.
+
+
 Vector Index Properties
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1344,15 +1412,76 @@ likevRows
     Mirrors :ref:`likepRows <sql-set:likepRows>` for vector search.
 
     The candidate pool is the working set the SQL planner then filters
-    via any additional ``WHERE`` clauses and (optionally) re-ranks with
-    full-precision ``vecdist()``. A larger pool gives better recall
-    and a higher ceiling for re-rank quality, at the cost of more work
-    per query; a smaller pool is faster but may drop relevant hits.
+    via any additional ``WHERE`` clauses.
 
-    Typical pattern when re-ranking with ``vecdist()``: set
-    ``likevRows`` to several times the desired final ``maxRows`` so
-    the re-rank step has enough candidates to choose from. Setting to
+    Every candidate in the pool is **automatically re-scored at full
+    precision** against the row's actual stored column bytes, using the
+    same scorer ``LIKEV`` itself uses, before any of them are returned.
+    ``$rank`` is therefore exact no matter how approximate the index
+    step was, and nothing needs to be added to the query to get that —
+    ``vecdist()`` is available for display or for an explicit
+    ``ORDER BY``, but ranking precision does not depend on it.
+
+    What ``likevRows`` governs is **recall**, not precision: an ANN
+    index can fail to surface a true nearest neighbour at all, and a
+    candidate that never enters the pool cannot be re-scored.  A larger
+    pool raises the chance the real neighbours are found, at the cost of
+    more work per query; a smaller pool is faster but may miss them
+    outright.
+
+    A useful default is several times the desired final ``maxRows``, so
+    the exact re-scoring has enough candidates to reorder.  Setting to
     ``0`` is reserved and currently treated as the default.
+
+
+likevMinRank
+""""""""""""
+    Minimum similarity a ``LIKEV`` candidate must reach to be returned
+    (default ``0``, meaning no floor).  Expressed in the same units as
+    ``$rank`` for a vector query: similarity scaled to
+    ``0 .. 100000``, so ``75000`` is a cosine similarity of 0.75.
+
+    Applies to a solitary ``LIKEV`` **and** to the vector leg of a
+    fused keyword-OR-vector query, so one setting governs both.  The
+    floor is applied after the index has scored each candidate exactly,
+    not to the index's approximation, and it does not reduce the search
+    itself — ``likevRows`` still governs how deep the index looks.
+    What it removes is weak candidates from the result set, which is
+    worth most when the ``SELECT`` list is expensive.
+
+    **There is no good universal value, so the default is off.**  Cosine
+    similarity scales are a property of the embedding model, not of
+    relevance: embedding spaces are anisotropic, so even unrelated text
+    scores well above zero, and how far above depends on the model's
+    training temperature and whether it uses instruction prefixes.
+    Measured baselines for *unrelated* pairs:
+
+    +-------------------------------------+-----------------+----------------+
+    | model family                        | unrelated       | relevant       |
+    +=====================================+=================+================+
+    | ``all-MiniLM-L6-v2`` (cosine loss)  | 10000 – 30000   | above 50000    |
+    +-------------------------------------+-----------------+----------------+
+    | BGE / E5 / nomic (with prefixes)    | 60000 – 75000   | 80000 – 90000  |
+    +-------------------------------------+-----------------+----------------+
+    | OpenAI ``text-embedding-*``         | ~70000 – 75000  | above 80000    |
+    +-------------------------------------+-----------------+----------------+
+
+    The often-quoted "0.5 cutoff" comes from the MiniLM generation.  On
+    a BGE or nomic model it discards nothing, because unrelated pairs
+    already score above it.  Calibrate against your own model — embed a
+    few hundred unrelated pairs from your corpus and look at where the
+    distribution sits — or leave this off and let a cross-encoder
+    reranker make the relevance decision, since reranker scores are
+    calibrated in a way that embedding cosine is not.
+
+    ``0`` is off, and a negative value means the same as ``0``.  The
+    useful range is therefore ``0`` to ``100000``; a value above
+    ``100000`` cannot be reached by any similarity and so returns
+    nothing.
+
+    Ignored, with a message, for an index built with ``vec_metric 'l2'``:
+    an L2 score is an ascending distance, not a similarity, so a
+    minimum would mean the opposite of what it says.
 
 
 likevEf
@@ -1435,6 +1564,168 @@ likevPqNprobe
     controls how *many* and *which* candidates the index surfaces;
     once surfaced, they are scored exactly.  See
     :ref:`Querying with LIKEV <querying-with-likev>`.
+
+
+vecPqMaxTrainSamples
+""""""""""""""""""""
+    **IVFPQ only.**  The smallest number of vectors sampled to train an
+    IVFPQ codebook at ``CREATE INDEX``.  The number of samples FAISS
+    requires grows with ``nlist``; this setting raises it when ``nlist``
+    is small, so that a small index still gets good-quality centroids.
+    It is a floor rather than a cap: when FAISS requires more samples
+    than this, it gets them.  Sampling writes a temporary
+    ``.train.tmp`` file next to the index, so a larger value costs
+    build-time disk space.  The default is ``1000000``.
+
+
+vecPqOverFetchPad
+"""""""""""""""""
+    **IVFPQ only.**  How many extra candidates an IVFPQ search fetches
+    internally, as a fraction of the number requested, to absorb
+    candidates that are then discarded as deleted.  The default of
+    ``0.10`` fetches ten percent more.  Raise it for an index with many
+    deletes pending optimization.  ``0`` turns the padding off, and a
+    negative value is treated as ``0``.
+
+
+Rank Fusion Properties
+~~~~~~~~~~~~~~~~~~~~~~
+
+These settings govern how a hybrid ``Doc LIKEP ? OR Vec LIKEV ?`` query
+combines its two result lists.  The two engines produce scores on
+incomparable scales — a Metamorph proximity rank of 0-1000 against a
+scaled cosine similarity — so fusion uses each list's rank *order*
+only, by Reciprocal Rank Fusion:
+
+.. code-block:: none
+
+    fused(row) = rrfKwWeight  * 1000000 / (rrfK + keyword position)
+               + rrfVecWeight * 1000000 / (rrfK + vector position)
+
+A row found by both engines earns both terms, which is the
+cross-engine agreement signal that a plain ``OR`` throws away.  The
+fused value is the row's ``$rank``.  Per-side native scores remain
+available as ``$krank`` and ``$vrank``.
+
+They have no effect on a query that is not fused — a solitary
+``LIKEP``, a solitary ``LIKEV``, or an ``OR`` of two keyword
+predicates, all of which keep their own native ranking.  See
+:ref:`Hybrid keyword + vector queries <rampart-sql:Hybrid keyword + vector queries (rank fusion)>`.
+
+
+rrfRows
+"""""""
+    Depth of the fusion pool, applied to **both** sides (default
+    ``300``).
+
+    Equal depth is the point: a position means the same thing on either
+    side only if both lists are the same length.  The vector index
+    still searches to :ref:`likevRows <sql-set:likevRows>` — ANN recall
+    needs that depth — and its list is truncated to ``rrfRows`` *after*
+    being sorted best-first, so the neighbours the depth exists to find
+    are exactly the ones kept.
+
+    Effective depth per side is the smaller of ``rrfRows`` and that
+    side's own cap, i.e. ``min(likepRows, rrfRows)`` for the keyword leg
+    and ``min(likevRows, rrfRows)`` for the vector leg.  With the
+    defaults (``likepRows`` 100, ``likevRows`` 1000) the keyword leg is
+    therefore still limited to 100; raise ``likepRows`` to ``rrfRows``
+    if you want genuinely symmetric pools.
+
+    Setting ``rrfRows`` to ``0`` disables truncation, leaving each side
+    to its own cap.  A negative value means the same as ``0``.  A value
+    larger than both caps is simply a no-op, since neither list reaches
+    it.
+
+    This is the only fusion setting with a material cost, because the
+    ``SELECT`` list is evaluated for every candidate in the union before
+    ``maxRows`` truncates.  Measured on a 20,000-row table, 20 queries,
+    minimum of 15 runs:
+
+    +--------------+---------------+----------------+
+    | ``rrfRows``  | union size    | ms per query   |
+    +==============+===============+================+
+    | 100          | 196           | 20.2           |
+    +--------------+---------------+----------------+
+    | 300          | 396           | 22.2           |
+    +--------------+---------------+----------------+
+    | 1000         | 1095          | 32.0           |
+    +--------------+---------------+----------------+
+
+    The effect is larger when the ``SELECT`` list is expensive — an
+    in-query :ref:`abstract() <sql-server-funcs:abstract>` is paid once
+    per candidate, not once per returned row.
+
+
+rrfK
+""""
+    Damping constant in the fusion formula (default ``60``, the value
+    from the original RRF paper).  Practical range is roughly ``10`` to
+    ``200``.
+
+    What it really sets is **how much agreement between the two engines
+    is worth against one strong hit**.  A row at position *p* in both
+    lists scores ``2 * SCALE/(rrfK + p)``, while the best row from a
+    single list scores ``SCALE/(rrfK + 1)``; those are equal when
+    ``p = rrfK + 2``.  So at the default, a document sitting at position
+    62 in *both* lists ties the top hit of either list alone.
+
+    * Lower — the top of each list dominates and agreement counts for
+      little.  At ``rrfK 10`` the crossover is position 12.
+    * Higher — a flatter curve, where breadth of agreement outweighs
+      depth.  At ``rrfK 200`` the crossover is position 202.
+
+    ``0`` is a legal setting, not a sentinel: it is the maximally
+    top-heavy end of the scale, where the first position of either list
+    is worth ``1000000`` and nothing can outrank it.  A negative value
+    means the same as ``0``.
+
+    ``rrfK 60`` is inherited from the literature, where it was tuned on
+    runs with different list lengths than these pools.  It is not
+    necessarily right for a given corpus.
+
+
+rrfTieBreak
+"""""""""""
+    Which side wins when two rows fuse to exactly the same score —
+    ``'keyword'`` (the default) or ``'vector'``.
+
+    Exact ties are routine rather than rare: with the default weights,
+    the keyword row at position *N* and the vector row at position *N*
+    produce identical scores whenever neither appears in the other's
+    list.  Something has to break them, and without this setting the
+    order would fall to each row's physical position in the table, which
+    is both arbitrary and not stable — those positions are reused file
+    offsets, so maintenance can reshuffle equally-scored rows.
+
+    This is therefore a **determinism guarantee, not a relevance
+    control**.  It fires only on exactly equal evidence; it cannot
+    promote a row over one with a genuinely higher score, including a
+    fractionally higher one produced by the weights below.  Rows found
+    by both engines carry a contribution from each side, so they take
+    the tie-break either way and their order relative to each other
+    never changes.
+
+
+rrfKwWeight, rrfVecWeight
+"""""""""""""""""""""""""
+    Multipliers on the keyword and vector terms respectively (both
+    default ``1.0``, permissible ``0.0`` to ``10.0``).
+
+    Only the *ratio* matters, so leave one at ``1.0`` and move the
+    other.  ``rrfKwWeight 2.0`` makes keyword evidence worth twice as
+    much as semantic evidence at the same position.
+
+    These are the one place to express a corpus-level judgement that one
+    engine is simply more trustworthy than the other — plain RRF weights
+    both equally by construction.  Setting a weight to ``0.0`` keeps
+    that side's rows in the result union but contributes no score for
+    them, so they sort to the bottom rather than disappearing.
+
+    A negative weight means the same as ``0.0``.
+
+    Neither weight has a measurable cost; both are arithmetic in the
+    merge step.
 
 
 Embedding Properties
@@ -1851,6 +2142,77 @@ addExp
     index) will *not* be added.
 
 
+expressionsList
+"""""""""""""""
+
+    An array of REX expressions that **replaces** the whole index word
+    expression list, rather than adding to it one entry at a time.  An
+    empty array or ``null`` clears the list.  Elements may be strings or
+    JavaScript ``RegExp`` objects.
+
+    Every entry is checked before anything changes: each must be a string
+    or expression, each must compile as REX the way the indexer will
+    compile it, and the list must fit the engine limit of 15 entries.  If
+    any entry is rejected the **existing list is left untouched**, so a
+    typo cannot leave a half-replaced list behind.
+
+    .. code-block:: javascript
+
+       sql.set({ expressionsList: [
+           "[\\uword]+",                  // words in any script
+           "[\\alnum\\$\\%\\@\\-\\_\\+]+" // code-ish tokens
+       ]});
+
+       sql.set({ expressionsList: [] });   // clear
+
+    Note the same caveat as `addExp`_\ : only the expressions in effect when
+    an index is **first** created are stored with it.
+
+    An invalid expression is reported with its position and the reason:
+
+    .. code-block:: none
+
+       sql.set: expressionsList[1] - invalid expression '[unterminated': ...
+
+    This is worth preferring over `addExp`_ for that reason -- ``addExp``
+    stores what it is given verbatim, so a malformed expression is accepted
+    silently and only fails later, when an index is built or a query runs.
+
+
+indexTempList
+"""""""""""""
+
+    An array of directories that **replaces** the whole index temporary
+    directory list.  An empty array or ``null`` clears it.  Each entry must
+    be a string, and the list must fit the engine limit of 15 entries; as
+    with `expressionsList`_\ , nothing is changed unless every entry is
+    acceptable.
+
+    .. code-block:: javascript
+
+       sql.set({ indexTempList: ["/mnt/fast", "/var/tmp"] });
+
+    These are **candidates to choose among, not a single directory.**  While
+    building a Metamorph index, Texis stats every path in the list, measures
+    the free space on each, and uses the one with the most room for its
+    intermediate merge files.  For a candidate on the same filesystem as the
+    index itself, the estimated final index size is subtracted first, so a
+    volume that the finished index will fill is not chosen to also hold the
+    temporary files.  Supplying several paths on different filesystems is
+    the intended use.
+
+    When the list is empty, the candidates are the index file's own
+    directory, then ``$TMP``, then ``$TMPDIR``.  If no candidate is usable,
+    the index file's own directory is used.
+
+    A path that does not exist is **skipped silently** -- it is not an
+    error, it simply stops being a candidate.  If temporary files are not
+    appearing where expected, check the paths for typos.
+
+    This list affects Metamorph index builds only.  It is not a general
+    temporary directory for Texis.
+
+
 delExp
 """"""
 
@@ -1917,8 +2279,9 @@ addIndexTmp
     effect.  It becomes observable on very large indexes, or if ``indexMem``
     is lowered.
 
-    Note also that this list is process-wide and is not restored by
-    `sql.reset()`_ -- see the second NOTE at the top of this page.
+    Note also that this list is process-wide -- see the second NOTE at the
+    top of this page.  `sql.reset()`_ restores it to the engine default,
+    and `indexTempList`_ replaces it outright.
 
 
 delIndexTmp
@@ -2437,28 +2800,9 @@ indexMaxSingle
     inverted index) may be large enough to bloat the B-tree and thus negate
     the savings, so if the single-recid word occurs more than
     ``indexMaxSingle`` times, it is stored in the ``.dat``. The default is
-    ``8``.
-
-.. skip this
-  uniqnewlist
-  """""""""""
-    Whether/how to unique the new list during Metamorph index searches.
-    Works around a potential bug in old versions of Texis; not generally
-    set. The possible values are:
-
-    0
-        : do not unique at all
-
-    1
-        : unique auxillary/compound index new list only
-
-    2
-        : unique all new lists
-
-    3
-        : unique all new lists and report first few duplicates
-
-    The default is 0.
+    ``8``.  Requires Metamorph index version 2 or later, and
+    ``CREATE INDEX ... WITH ...`` can override it for an individual
+    index.  ``-1`` disables the optimization.
 
 
 tableReadBufSz
@@ -2811,29 +3155,6 @@ unalignedBufferWarning
     buffers are encountered in certain situations. Messages are issued
     if this setting is true/nonzero (the default).
 
-unneededRexEscapeWarning
-""""""""""""""""""""""""
-    Whether to issue “REX: Unneeded escape sequence ...” warnings when a
-    REX expression uses certain unneeded escapes. An unneeded escape is
-    when a character is escaped that has no special meaning in the
-    current context in REX, either alone or escaped. Such escapes are
-    interpreted as just the literal character alone (respect-case); e.g
-    “``\w``” has no special meaning in REX, and is taken as “``w``”.
-
-    While such escapes have no meaning currently, some may take on a
-    specific new meaning in a future Texis release, if REX syntax is
-    expanded. Thus using them in an expression now may unexpectedly (and
-    silently) result in their behavior changing after a Texis update;
-    hence the warning message. Expressions using such escapes should
-    thus have them changed to the unescaped literal character.
-
-    If updating the code is not feasible, the warning may be silenced by
-    setting ``unneededRexEscapeWarning`` to ``false`` – at the risk of silent
-    behavior change at an upgrade.
-    Overrides Unneeded REX Escape Warning setting in ``conf/texis.ini`` and
-    is set ``false`` regardless in Rampart by default.
-
-
 nullOutputString
 """"""""""""""""
 
@@ -2993,6 +3314,12 @@ denyMode
    A message such as "'delimiters' not allowed in query" may be generated when
    a disallowed query is attempted and ``denyMode`` is not ``silent``.
 
+   The integer forms are accepted but normalized, so `sql.get()`_ always
+   reports one of the three keywords.  Any other value is an error:
+   ``sql.set({denyMode: "loud"})`` throws rather than falling back to a
+   mode, since the fallback would have been ``silent`` -- the most
+   permissive of the three.
+
    Note that "failing" the query under ``error`` does not throw a
    JavaScript exception: as with other non-syntax Texis refusals, the
    query returns **zero rows** and the reason is recorded in
@@ -3085,6 +3412,96 @@ querySettings
 
 .. this was removed above
    sdexp/edexp are empty
+
+Reading Current Settings
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+sql.get()
+"""""""""
+
+   Return the settings this ``sql`` handle will apply.  With no argument it
+   returns an object of every setting; with a property name it returns that
+   one value.
+
+   .. code-block:: javascript
+
+      var all = sql.get();         // every setting, as an object
+      var n   = sql.get("likevRows");   // 1000
+
+   Keys are the documented names used with ``sql.set()``, so the object can
+   be fed straight back:
+
+   .. code-block:: javascript
+
+      var saved = sql.get();       // snapshot
+      sql.set({likepRows: 500, rrfK: 10});
+      ...
+      sql.set(saved);              // restore exactly
+
+   The property name is matched without regard to case, and the documented
+   aliases resolve, so ``sql.get("rrfrows")`` and ``sql.get("rrfRows")`` are
+   the same.  An unrecognized name returns ``undefined``; a non-string
+   argument throws.
+
+   Numeric settings are returned as Numbers whether they came from a default
+   or from a ``sql.set()``, so ``sql.set({rrfRows: "55"})`` reads back as
+   ``55``.
+
+   The four word lists (`noiseList`_, `suffixList`_, `suffixEquivsList`_,
+   `prefixList`_) and the two index lists (`expressionsList`_,
+   `indexTempList`_) are included as arrays.
+
+   What it reports is **what the next statement on this handle will use**.
+   It is assembled from the documented defaults overlaid with what this
+   handle has set -- the same information the handle re-applies before each
+   statement -- rather than being read back out of the engine.  Two
+   consequences:
+
+   *  A setting changed with ``sql.exec("SET property = value;")`` instead
+      of ``sql.set()`` will not appear.  This is one more reason to prefer
+      ``sql.set()`` in JavaScript, as described at the top of this page.
+   *  The add and delete list *operations* are not reported, since they are
+      operations rather than values: use `expressionsList`_ and
+      `indexTempList`_ to read or replace those lists.  For the same reason
+      ``optimize`` and ``nooptimize`` are absent -- each takes a list of
+      optimization names and turns those flags on or off, so there is no
+      single value to report.
+   *  `querySettings`_ is likewise absent, and leaving it out matters:
+      ``querySettings: "defaults"`` reinitializes the structure that
+      `alWild`_, `qMinWordLen`_ and the rest of that family live on.  Were
+      it reported, feeding the object back to ``sql.set()`` could discard
+      those settings, depending on the order the keys happened to be
+      applied in.  ``querySettings`` is still honored by `sql.reset()`_ --
+      that is how the family returns to its defaults.
+   *  The embedding settings (`llamaEmbed`_, `onnxEmbed`_, `clipEmbed`_)
+      are not reported.  They load a model rather than store a value, and
+      the loaded model stays attached to the handle: ``embed()`` continues
+      to work after a `sql.reset()`_, and keeps using the same model until
+      another is set.
+
+   Values are reported in their natural JavaScript type, so that a
+   setting reads back the same whichever accepted form was used to write
+   it:
+
+   *  Numeric settings come back as Numbers, so ``sql.set({rrfRows:
+      "55"})`` reads back as ``55``.
+   *  The settings that are simple on/off switches -- `alWild`_,
+      `suffixProc`_, `paramChk`_ and the like -- come back as ``true`` or
+      ``false``, whether the value reported is one a script set or the
+      built-in default.
+   *  `exactPhrase`_ is three-valued, so it reports ``true``, ``false``
+      or ``"ignorewordposition"``.
+   *  Everything else comes back as a string.
+
+   ``sql.set()`` accepts every one of those forms, so a snapshot always
+   restores correctly.
+
+   Only settings that are genuinely binary are reported as Booleans.  A
+   good many take a small number without being switches -- `likepMode`_ is
+   a mode, `indexMmap`_ is a bit-mask, and `ramRows`_, `likevEf`_,
+   `likevMinRank`_ and `likepTime`_ are counts or limits in which ``0``
+   means "automatic" or "no limit" -- and those are reported as Numbers
+   even when they happen to hold ``0`` or ``1``.
 
 Restoring Defaults
 ~~~~~~~~~~~~~~~~~~

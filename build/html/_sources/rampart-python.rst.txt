@@ -29,6 +29,17 @@ does not function in parallel in multiple threads, if run in
 will run in multiple processes.
 
 
+Using Python in Threads
+~~~~~~~~~~~~~~~~~~~~~~~
+
+In a :ref:`rampart.thread <rampart-thread:Rampart Thread Functions>`, each
+thread uses its own Python process.  As a result:
+
+* Modules (and models they load) are loaded separately in each thread.
+* A Python variable can only be used in the thread that created it.
+* Functions called with `rampart.call`_ must be global in that thread.
+* Each call to Python costs a little more than in the main thread.
+
 Loading the Javascript Module
 -----------------------------
 
@@ -188,6 +199,32 @@ pvar.toValue()
             ]
         */
 
+Accessing Attributes and Items
+------------------------------
+
+    Attributes of a Python variable are looked up when they are accessed,
+    and are read fresh each time.  ``pvar.name`` returns the attribute;
+    for dictionaries and other subscriptable objects without such an
+    attribute, ``pvar["key"]`` and ``pvar[0]`` return the item (the same
+    as ``pvar["key"]`` and ``pvar[0]`` in Python).
+
+    If an item has the same name as an attribute, the attribute is
+    returned.  For example, ``df["count"]`` on a pandas DataFrame returns
+    the ``count`` method, not a column named "count".  Use
+    ``pvar.__getitem__("key")`` to get the item.
+
+    Because attributes are looked up only when accessed, ``Object.keys()``
+    and ``for...in`` do not list them.  To list the attributes of a Python
+    variable, use Python's ``dir()``:
+
+    .. code-block:: javascript
+
+        var python = require("rampart-python");
+        var builtins = python.import("builtins");
+        var pathlib = python.import("pathlib");
+
+        var names = builtins.dir(pathlib).toValue();  // an Array of names
+
 Handling Variables
 ------------------
 
@@ -322,7 +359,8 @@ Python to Python
 ~~~~~~~~~~~~~~~~
 
     Variables returned from a Python function can be used as parameters to other Python functions.
-    No translation will be performed.
+    No translation will be performed, including when they are inside an :green:`Array` or
+    :green:`Object` (e.g. ``torch.stack([t1, t2])``).
 
     Example:
 
@@ -356,7 +394,7 @@ Python to Python
 Python Named Arguments
 ~~~~~~~~~~~~~~~~~~~~~~
 
-    Named arguments to Python functions may be use as shown
+    Named arguments to Python functions may be used as shown
     in the following example:
 
     .. code-block:: javascript
@@ -432,6 +470,22 @@ rampart.call
         */
 
 
+    Notes:
+
+    * An exception thrown by the JavaScript function is raised in Python
+      as a ``RuntimeError`` (with the JavaScript error message and stack),
+      so it can be caught with ``try``/``except``.
+    * ``rampart.call`` may be used from Python threads, such as the thread
+      pools used by LangChain's ``batch()`` or by agents running tools, and
+      the JavaScript function may itself call Python functions.  JavaScript
+      functions called this way run one at a time; however, when one of them
+      calls a Python function, others may run until that Python function
+      returns (similar to ``await`` in an async function).
+    * JavaScript can only be called while it is waiting on a Python function
+      to return.  A Python thread that calls ``rampart.call`` after that
+      (e.g. a background thread still running after the function that
+      started it returned) gets a ``RuntimeError``.
+
 rampart.triggerEvent
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -446,7 +500,7 @@ rampart.triggerEvent
 
         var iscript =
         `
-        #when operating from within rampart, the rampart module is availabe
+        #when operating from within rampart, the rampart module is available
         import rampart
 
         #trigger a rampart event and pass a "triggerVar" to it

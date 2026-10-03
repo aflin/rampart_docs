@@ -75,6 +75,14 @@ Notable extras:
     * ``port``         - :green:`Number`, use this value to set ``ipPort`` and
       ``ipv6Port``.
 
+    * ``listen``       - :green:`Array`, serve several ports from one
+      process, each with its own routes and its own optional TLS.  This is
+      the :ref:`multi-listener shape <multi-listener>` of
+      :ref:`server.start() <rampart-server:start()>`, passed straight
+      through: when it is set, ``ipAddr``, ``ipv6Addr``, ``ipPort``,
+      ``ipv6Port``, ``port`` and ``bindAll`` are not used, and each block
+      says where it listens.  See `Serving more than one port`_ below.
+
     * ``redirPort``    - :green:`Number`, when launching a secure ``https``
       server, also listen on this port for plain ``http`` and 301-redirect
       every request to the ``https`` listener.  This runs in-process via
@@ -139,6 +147,77 @@ Notable extras:
     macOS does not restrict ports below 1024 to root, a server may bind,
     e.g., port 443 without being started as root (though the TLS
     key/certificate files must be readable by the user starting it).
+
+Serving more than one port
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Normally ``web_server_conf.js`` names one address and port (or a pair,
+one for each ip family) and the settings below it apply to everything
+served.  When ports need to differ -- a private port only this machine
+may reach, a second certificate, plain ``http`` beside ``https`` -- give
+``listen`` instead: an :green:`Array` of listener blocks, one per port,
+which is handed to :ref:`server.start() <rampart-server:start()>`
+unchanged.  See :ref:`the multi-listener shape <multi-listener>` for what
+a block may contain.
+
+.. code-block:: javascript
+
+    var wd = process.scriptPath;
+
+    require("rampart-webserver").web_server_conf({
+        serverRoot: wd,
+        htmlRoot:   wd + "/html",
+        appsRoot:   wd + "/apps",
+        wsappsRoot: wd + "/wsapps",
+        threads:    8,
+        daemon:     true,
+
+        // resolves the certificate; the secure block below inherits it
+        letsencrypt: "example.com",
+
+        listen: [
+            // the public site, on both ip families
+            { bind: ["0.0.0.0:443", "[::]:443"] },
+
+            // a plain-http port nothing outside this machine can reach.
+            // `secure: false' is required: letsencrypt turned TLS on for
+            // the whole config, and a block inherits that unless it says
+            // otherwise.
+            { bind: "127.0.0.1:8099", secure: false }
+        ]
+    });
+
+All listeners share one thread pool, so adding a port does not add
+threads or JavaScript contexts.  Process-wide settings (``threads``,
+``daemon``, ``user``, ``rateLimit``, ``threadLimit``, the log settings,
+and so on) stay at the top level as usual, and ``start``, ``stop``,
+``restart`` and ``status`` work exactly as they do for a single port.
+
+**Routes.** A block with no ``map`` of its own gets the usual one -- the
+top-level ``map``, or the map built from ``htmlRoot``, ``appsRoot``,
+``wsappsRoot``, ``appendMap`` and ``rootScripts`` -- so, as above, a
+second port usually needs nothing but an address.  A block that does
+name a ``map`` keeps exactly that map and nothing is added to it, which
+is how a port is given a smaller set of routes than the public one.
+
+**Privileged ports.** The rule is unchanged: on systems other than
+macOS, binding any port below 1024 requires starting as ``root``.
+
+**TLS.**  ``secure``, ``sslKeyFile`` and ``sslCertFile`` may be set at
+the top level, where every block inherits them, or inside a block, which
+overrides.  A plain-http port beside secure ones therefore needs
+``secure: false`` in its block unless nothing above it turned TLS on.
+``letsencrypt: 'example.com'`` works as it always has: it resolves the
+certificate for the whole config, and the secure blocks inherit it.
+
+Settings that describe where the single listener binds are refused
+alongside ``listen``, since it decides that instead: ``bind``,
+``irohProxy``, ``redirPort`` and ``letsencrypt: "setup"`` (the initial
+issuance step, which rebinds the server to serve ``/.well-known``
+alone -- run it once with an ordinary single-port config).  For a
+plain-http port that redirects to the secure one, use
+:ref:`httpRedirect <tls-certificates>` or simply write the redirect as
+another block.
 
 Building a command line utility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

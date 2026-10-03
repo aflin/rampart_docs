@@ -114,6 +114,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#query">query()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#one">one()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#set">set()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get">get()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#reset">reset()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#importcsvfile">importCsvFile()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#importcsv">importCsv()</a></li>
@@ -428,7 +429,7 @@ the location specified.</td>
 <tr class="row-even"><td>options</td>
 <td><span class="green">Object</span></td>
 <td><p class="first">options must include <cite>path</cite> and may include any
-of the remaining three:</p>
+of the others:</p>
 <ul class="last simple">
 <li><code class="docutils literal notranslate"><span class="pre">path</span></code> - <span class="green">String</span> - The path to the
 directory containing the database.</li>
@@ -448,6 +449,9 @@ Default is <code class="docutils literal notranslate"><span class="pre">&quot;PU
 this should be left unset.</li>
 <li><code class="docutils literal notranslate"><span class="pre">pass</span></code> - <span class="green">String</span> - The password
 for above <code class="docutils literal notranslate"><span class="pre">user</span></code>.  Default is <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">noUpdater</span></code> - <span class="green">Boolean</span> - if true, do
+not check for or launch the index monitor
+process.  See <a class="reference internal" href="#scheduleupdate">scheduleUpdate()</a> below.</li>
 <li><strong>DO NOT USE</strong> the sql command <code class="docutils literal notranslate"><span class="pre">GRANT</span></code>, and/or
 <code class="docutils literal notranslate"><span class="pre">user</span></code> and <code class="docutils literal notranslate"><span class="pre">pass</span></code> above to implement
 security for your application.</li>
@@ -1345,6 +1349,24 @@ returned with corresponding keys <code class="docutils literal notranslate"><spa
 </pre></div>
 </div>
 </div>
+<div class="section" id="get">
+<h3>get()<a class="headerlink" href="#get" title="Permalink to this headline">¶</a></h3>
+<p>Return the settings this <code class="docutils literal notranslate"><span class="pre">sql</span></code> handle will apply.  With no argument it
+returns an <span class="green">Object</span> of every setting, keyed by the same names
+<a class="reference internal" href="#set">set()</a> takes, so the result can be passed straight back to <a class="reference internal" href="#set">set()</a> to
+restore them.  With a <span class="green">String</span> property name it returns that one
+value.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">all</span>   <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">get</span><span class="p">();</span>              <span class="c1">// every setting</span>
+<span class="kd">var</span> <span class="nx">rows</span>  <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;likevRows&quot;</span><span class="p">);</span>   <span class="c1">// 1000</span>
+
+<span class="kd">var</span> <span class="nx">saved</span> <span class="o">=</span> <span class="nx">sql</span><span class="p">.</span><span class="nx">get</span><span class="p">();</span>              <span class="c1">// snapshot, change, restore</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">likepRows</span><span class="o">:</span> <span class="mi">500</span><span class="p">});</span>
+<span class="nx">sql</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">saved</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="sql-set.html#reading-current-settings"><span class="std std-ref">Reading Current Settings</span></a> for
+what is and is not included.</p>
+</div>
 <div class="section" id="reset">
 <h3>reset()<a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h3>
 <p>Reset all settings set with <a class="reference internal" href="#set">set()</a> above to their original default values.</p>
@@ -2189,7 +2211,7 @@ than 1000 rows have been changed.</p>
 </div>
 <div class="section" id="scheduleupdate">
 <h3>scheduleUpdate()<a class="headerlink" href="#scheduleupdate" title="Permalink to this headline">¶</a></h3>
-<p>Auto Maintenance (currently experimental) of a fulltext or vector index is accomplished by
+<p>Auto Maintenance of a fulltext or vector index is accomplished by
 scheduling a time for an <code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code> pass using <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate()</span></code>.</p>
 <p>For vector indexes, <code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code> folds accumulated inserts/updates from the delta tier
 back into the sealed index but does not retrain quantizers or rebuild the graph.  To
@@ -2208,14 +2230,17 @@ embedding distribution), use <code class="docutils literal notranslate"><span cl
 <div><ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">indexName</span></code> is a <span class="green">String</span>, the name of the index to be updated.</li>
 <li><code class="docutils literal notranslate"><span class="pre">startTime</span></code> is a <span class="green">String</span> passed to <a class="reference internal" href="rampart-utils.html#autoscandate"><span class="std std-ref">autoScanDate</span></a>,
-The start time of the first update/check.  Note that times are system local time unless a timezone
-offset or abbreviation is given.</li>
+a <span class="green">Date</span>, or a <span class="green">Number</span> (seconds since the epoch), the start time of
+the first update/check.  A time given without a timezone offset or abbreviation is
+taken as system local time, using the UTC offset in effect on that date.
+The <span class="green">String</span> <code class="docutils literal notranslate"><span class="pre">&quot;now&quot;</span></code> starts checking immediately.</li>
 <li><code class="docutils literal notranslate"><span class="pre">Interval</span></code> is a <span class="green">Number</span> or <span class="green">String</span>, the time between update checks.
 If a <span class="green">Number</span>, the number of seconds between checks (i.e. <code class="docutils literal notranslate"><span class="pre">86400</span></code> for one day).
-If a <span class="green">String</span>, it will parse plain English values in minutes, hours, days or weeks.
-(i.e. “every third day” or “120 minutes”);</li>
-<li><code class="docutils literal notranslate"><span class="pre">minRows</span></code> is an optional <span class="green">Number</span>, the threshold number of pending rows
-needed to trigger an index update when checked.  Default is <code class="docutils literal notranslate"><span class="pre">1000</span></code> for
+If a <span class="green">String</span>, it will parse plain English values in minutes, hours, days or weeks
+(i.e. <code class="docutils literal notranslate"><span class="pre">&quot;hourly&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;120</span> <span class="pre">minutes&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;every</span> <span class="pre">third</span> <span class="pre">day&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;2</span> <span class="pre">weeks&quot;</span></code>).
+The minimum interval is 60 seconds.</li>
+<li><code class="docutils literal notranslate"><span class="pre">minRows</span></code> is an optional <span class="green">Number</span>.  An update is only run when the number of
+pending rows found at a check is strictly greater than <code class="docutils literal notranslate"><span class="pre">minRows</span></code>.  Default is <code class="docutils literal notranslate"><span class="pre">1000</span></code> for
 fulltext indexes and <code class="docutils literal notranslate"><span class="pre">10000</span></code> for vector indexes (vector <code class="docutils literal notranslate"><span class="pre">OPTIMIZE</span></code> rewrites the
 sealed index file, so a larger delta amortizes the cost better).  For a vector
 index the count is added plus deleted rows – an <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> is both, so it counts
@@ -2224,19 +2249,48 @@ twice.  For a fulltext index it is added rows only.</li>
 </div></blockquote>
 <p>Return Value:</p>
 <blockquote>
-<div><code class="docutils literal notranslate"><span class="pre">Undefined</span></code>.</div></blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">Undefined</span></code>.  An <span class="green">Error</span> is thrown for an unknown index, an index that is not
+a fulltext or vector index, or an invalid time, interval or <code class="docutils literal notranslate"><span class="pre">minRows</span></code>.</div></blockquote>
 <p>Note:</p>
 <blockquote>
 <div><ul class="simple">
-<li>If <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is run again with the same index name, the old value is replaced.</li>
-<li>If <code class="docutils literal notranslate"><span class="pre">startTime</span></code> is set to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, the record for the index is deleted.</li>
-<li>The schedule is saved in the <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> table in the database in question.</li>
-<li>The first time an index is scheduled for update on a database, an index monitor process is launched.</li>
-<li>The monitor for a database is also checked and relaunched if necessary every time <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection(database)</span></code>
-is called.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is run again with the same index name, the old schedule is replaced.</li>
+<li>If <code class="docutils literal notranslate"><span class="pre">startTime</span></code> is <code class="docutils literal notranslate"><span class="pre">-1</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;never&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;delete&quot;</span></code>, the index is unscheduled.  Its row
+in <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> is kept, with <code class="docutils literal notranslate"><span class="pre">NEXT</span></code>, <code class="docutils literal notranslate"><span class="pre">INTV</span></code> and <code class="docutils literal notranslate"><span class="pre">THRESH</span></code> set to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, so the
+<code class="docutils literal notranslate"><span class="pre">PREVIOUS</span></code> and <code class="docutils literal notranslate"><span class="pre">COMMENTS</span></code> history remains visible.</li>
+<li>The schedule is saved in the <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> table in the database in question.  Texis
+creates this table automatically; if it has been dropped, <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> recreates it.</li>
 <li>If <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is never run for an index, the index will not be touched by
 the monitor process (i.e. in cases where the table/index is never or rarely updated, or
 another method such as a cron job is used instead).</li>
+<li>Dropping an index (or its table) removes its schedule.  An index re-created with the
+same name is not scheduled until <code class="docutils literal notranslate"><span class="pre">sql.scheduleUpdate</span></code> is run again.</li>
+</ul>
+</div></blockquote>
+<p>The monitor process:</p>
+<blockquote>
+<div><ul class="simple">
+<li>The first time an index is scheduled for update on a database, an index monitor process
+is launched.  It appears in process listings as <code class="docutils literal notranslate"><span class="pre">rampart</span> <span class="pre">indexUpdater</span> <span class="pre">/path/to/db</span></code>, records
+its process id in <code class="docutils literal notranslate"><span class="pre">updater.pid</span></code> and logs its activity to <code class="docutils literal notranslate"><span class="pre">update.log</span></code>, both in the
+database directory.</li>
+<li>The monitor is also checked and relaunched if necessary every time <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection(database)</span></code>
+is called.  Only one monitor runs per database, no matter how many processes or threads
+connect.  Passing <code class="docutils literal notranslate"><span class="pre">{path:</span> <span class="pre">&quot;/path/to/db&quot;,</span> <span class="pre">noUpdater:</span> <span class="pre">true}</span></code> to <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection()</span></code>
+skips this check.</li>
+<li>The monitor checks the schedule once a minute.  An update whose time has come is run
+at the next check, so it may start up to a minute late.  Updates are run one at a time;
+a manual <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">INDEX</span></code> on an index the monitor is working on is refused with the message
+<code class="docutils literal notranslate"><span class="pre">Index</span> <span class="pre">...</span> <span class="pre">appears</span> <span class="pre">to</span> <span class="pre">be</span> <span class="pre">being</span> <span class="pre">updated</span> <span class="pre">or</span> <span class="pre">rebuilt</span></code>.</li>
+<li>If the monitor was not running when a scheduled time passed by more than a minute
+(e.g. the machine was down), that update is skipped and the next one runs at the
+following interval.</li>
+<li>A check that is long-running (longer than one minute) does not cause missed checks
+to pile up; the next check happens one minute after the long check finishes.</li>
+<li>The monitor exits when no index in the database is scheduled.</li>
+<li>If the monitor is killed during an update, the index is left as it was before the update
+started.  The next monitor (launched by the next <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Sql.connection(database)</span></code>) removes
+any temporary files and runs the update again.</li>
 <li>Status and progress can be viewed in the relevant row of the <code class="docutils literal notranslate"><span class="pre">SYSUPDATE</span></code> table.
 Useful columns:<ul>
 <li><code class="docutils literal notranslate"><span class="pre">PREVIOUS</span></code> and <code class="docutils literal notranslate"><span class="pre">NEXT</span></code>: UNIX-epoch seconds for the previous and next scheduled run.</li>
@@ -2738,15 +2792,47 @@ live on incomparable scales (metamorph proximity vs scaled cosine):</p>
 </div>
 <p>When <strong>both</strong> columns are indexed (a metamorph index on <code class="docutils literal notranslate"><span class="pre">doc</span></code>, a
 vector index on <code class="docutils literal notranslate"><span class="pre">v</span></code>), the engine takes each side’s ranked candidate
-list — the keyword list capped by <a class="reference internal" href="sql-set.html#likeprows"><span class="std std-ref">likeprows</span></a>,
-the vector list capped by <a class="reference internal" href="sql-set.html#likevrows"><span class="std std-ref">likevRows</span></a> and
-already re-scored by exact distance — and fuses them with a
-<strong>modified Reciprocal Rank Fusion</strong>: each side contributes by its list
-position, so no score calibration between the two retrievers is
-needed; a document found by <strong>both</strong> sides outranks documents found by
-only one, and on otherwise-equal evidence the keyword match wins.
-The fused <code class="docutils literal notranslate"><span class="pre">$rank</span></code> is a positional score, not a calibrated relevance
-value.</p>
+list and fuses them with a <strong>modified Reciprocal Rank Fusion</strong>: each
+side contributes by its list position, so no score calibration between
+the two retrievers is needed; a document found by <strong>both</strong> sides
+outranks documents found by only one, and on otherwise-equal evidence
+the keyword match wins.  The fused <code class="docutils literal notranslate"><span class="pre">$rank</span></code> is a positional score, not
+a calibrated relevance value.</p>
+<p>Both lists are cut to the same depth, <a class="reference internal" href="sql-set.html#rrfrows"><span class="std std-ref">rrfRows</span></a>, so a position carries the same meaning on either
+side.  The vector index still searches to <a class="reference internal" href="sql-set.html#likevrows"><span class="std std-ref">likevRows</span></a> and its list is truncated afterwards, leaving ANN
+recall untouched.</p>
+<p>The fusion is adjustable per connection:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="57%" />
+<col width="43%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">setting</th>
+<th class="head">controls</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><a class="reference internal" href="sql-set.html#rrfrows"><span class="std std-ref">rrfRows</span></a></td>
+<td>pool depth for both sides</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="sql-set.html#rrfk"><span class="std std-ref">rrfK</span></a></td>
+<td>how much cross-engine agreement is worth
+against one strong hit</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="sql-set.html#rrftiebreak"><span class="std std-ref">rrfTieBreak</span></a></td>
+<td>which side wins an exact tie</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="sql-set.html#rrfkwweight-rrfvecweight"><span class="std std-ref">rrfKwWeight</span></a></td>
+<td>relative weight of each side</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="sql-set.html#likevminrank"><span class="std std-ref">likevMinRank</span></a></td>
+<td>similarity floor for vector candidates</td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="sql-set.html#rank-fusion-properties"><span class="std std-ref">Rank Fusion Properties</span></a> for
+the formula and the full description of each.</p>
 <p>Rows are returned <strong>automatically ordered by the fused rank</strong>, best
 first — no <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> needed, exactly as a single <code class="docutils literal notranslate"><span class="pre">LIKEP</span></code> or
 <code class="docutils literal notranslate"><span class="pre">LIKEV</span></code> returns rank-ordered rows on its own.  This holds with or

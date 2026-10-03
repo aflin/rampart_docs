@@ -126,7 +126,7 @@ Usage:
 |        |                  | the location specified.                           |
 +--------+------------------+---------------------------------------------------+
 |options |:green:`Object`   | options must include `path` and may include any   |
-|        |                  | of the remaining three:                           |
+|        |                  | of the others:                                    |
 |        |                  |                                                   |
 |        |                  | * ``path`` - :green:`String` - The path to the    |
 |        |                  |   directory containing the database.              |
@@ -146,6 +146,9 @@ Usage:
 |        |                  |   this should be left unset.                      |
 |        |                  | * ``pass`` - :green:`String` - The password       |
 |        |                  |   for above ``user``.  Default is ``""``.         |
+|        |                  | * ``noUpdater`` - :green:`Boolean` - if true, do  |
+|        |                  |   not check for or launch the index monitor       |
+|        |                  |   process.  See `scheduleUpdate()`_ below.        |
 |        |                  | * **DO NOT USE** the sql command ``GRANT``, and/or|
 |        |                  |   ``user`` and ``pass`` above to implement        |
 |        |                  |   security for your application.                  |
@@ -1117,6 +1120,27 @@ Example:
 	   }
 	*/
 
+get()
+'''''
+
+Return the settings this ``sql`` handle will apply.  With no argument it
+returns an :green:`Object` of every setting, keyed by the same names
+`set()`_ takes, so the result can be passed straight back to `set()`_ to
+restore them.  With a :green:`String` property name it returns that one
+value.
+
+.. code-block:: javascript
+
+    var all   = sql.get();              // every setting
+    var rows  = sql.get("likevRows");   // 1000
+
+    var saved = sql.get();              // snapshot, change, restore
+    sql.set({likepRows: 500});
+    sql.set(saved);
+
+See :ref:`Reading Current Settings <sql-set:Reading Current Settings>` for
+what is and is not included.
+
 reset()
 '''''''
 
@@ -1965,7 +1989,7 @@ Then adding a crontab entry like the following would execute the script at 2 am 
 scheduleUpdate()
 ''''''''''''''''
 
-Auto Maintenance (currently experimental) of a fulltext or vector index is accomplished by
+Auto Maintenance of a fulltext or vector index is accomplished by
 scheduling a time for an ``OPTIMIZE`` pass using ``sql.scheduleUpdate()``.
 
 For vector indexes, ``OPTIMIZE`` folds accumulated inserts/updates from the delta tier
@@ -1988,16 +2012,19 @@ Where:
     * ``indexName`` is a :green:`String`, the name of the index to be updated.
 
     * ``startTime`` is a :green:`String` passed to :ref:`autoScanDate <rampart-utils:autoScanDate>`,
-      The start time of the first update/check.  Note that times are system local time unless a timezone
-      offset or abbreviation is given.
+      a :green:`Date`, or a :green:`Number` (seconds since the epoch), the start time of
+      the first update/check.  A time given without a timezone offset or abbreviation is
+      taken as system local time, using the UTC offset in effect on that date.
+      The :green:`String` ``"now"`` starts checking immediately.
 
     * ``Interval`` is a :green:`Number` or :green:`String`, the time between update checks.
       If a :green:`Number`, the number of seconds between checks (i.e. ``86400`` for one day).
-      If a :green:`String`, it will parse plain English values in minutes, hours, days or weeks.
-      (i.e. "every third day" or "120 minutes");
+      If a :green:`String`, it will parse plain English values in minutes, hours, days or weeks
+      (i.e. ``"hourly"``, ``"120 minutes"``, ``"every third day"`` or ``"2 weeks"``).
+      The minimum interval is 60 seconds.
 
-    * ``minRows`` is an optional :green:`Number`, the threshold number of pending rows
-      needed to trigger an index update when checked.  Default is ``1000`` for
+    * ``minRows`` is an optional :green:`Number`.  An update is only run when the number of
+      pending rows found at a check is strictly greater than ``minRows``.  Default is ``1000`` for
       fulltext indexes and ``10000`` for vector indexes (vector ``OPTIMIZE`` rewrites the
       sealed index file, so a larger delta amortizes the cost better).  For a vector
       index the count is added plus deleted rows -- an ``UPDATE`` is both, so it counts
@@ -2005,24 +2032,56 @@ Where:
 
 Return Value:
 
-    ``Undefined``.
+    ``Undefined``.  An :green:`Error` is thrown for an unknown index, an index that is not
+    a fulltext or vector index, or an invalid time, interval or ``minRows``.
 
 Note:
 
-    * If ``sql.scheduleUpdate`` is run again with the same index name, the old value is replaced.
+    * If ``sql.scheduleUpdate`` is run again with the same index name, the old schedule is replaced.
 
-    * If ``startTime`` is set to ``-1``, the record for the index is deleted.
+    * If ``startTime`` is ``-1``, ``"never"`` or ``"delete"``, the index is unscheduled.  Its row
+      in ``SYSUPDATE`` is kept, with ``NEXT``, ``INTV`` and ``THRESH`` set to ``-1``, so the
+      ``PREVIOUS`` and ``COMMENTS`` history remains visible.
 
-    * The schedule is saved in the ``SYSUPDATE`` table in the database in question.
-
-    * The first time an index is scheduled for update on a database, an index monitor process is launched.
-
-    * The monitor for a database is also checked and relaunched if necessary every time ``new Sql.connection(database)``
-      is called.
+    * The schedule is saved in the ``SYSUPDATE`` table in the database in question.  Texis
+      creates this table automatically; if it has been dropped, ``sql.scheduleUpdate`` recreates it.
 
     * If ``sql.scheduleUpdate`` is never run for an index, the index will not be touched by
       the monitor process (i.e. in cases where the table/index is never or rarely updated, or
       another method such as a cron job is used instead).
+
+    * Dropping an index (or its table) removes its schedule.  An index re-created with the
+      same name is not scheduled until ``sql.scheduleUpdate`` is run again.
+
+The monitor process:
+
+    * The first time an index is scheduled for update on a database, an index monitor process
+      is launched.  It appears in process listings as ``rampart indexUpdater /path/to/db``, records
+      its process id in ``updater.pid`` and logs its activity to ``update.log``, both in the
+      database directory.
+
+    * The monitor is also checked and relaunched if necessary every time ``new Sql.connection(database)``
+      is called.  Only one monitor runs per database, no matter how many processes or threads
+      connect.  Passing ``{path: "/path/to/db", noUpdater: true}`` to ``new Sql.connection()``
+      skips this check.
+
+    * The monitor checks the schedule once a minute.  An update whose time has come is run
+      at the next check, so it may start up to a minute late.  Updates are run one at a time;
+      a manual ``ALTER INDEX`` on an index the monitor is working on is refused with the message
+      ``Index ... appears to be being updated or rebuilt``.
+
+    * If the monitor was not running when a scheduled time passed by more than a minute
+      (e.g. the machine was down), that update is skipped and the next one runs at the
+      following interval.
+
+    * A check that is long-running (longer than one minute) does not cause missed checks
+      to pile up; the next check happens one minute after the long check finishes.
+
+    * The monitor exits when no index in the database is scheduled.
+
+    * If the monitor is killed during an update, the index is left as it was before the update
+      started.  The next monitor (launched by the next ``new Sql.connection(database)``) removes
+      any temporary files and runs the update again.
 
     * Status and progress can be viewed in the relevant row of the ``SYSUPDATE`` table.
       Useful columns:
@@ -2509,15 +2568,38 @@ live on incomparable scales (metamorph proximity vs scaled cosine):
 
 When **both** columns are indexed (a metamorph index on ``doc``, a
 vector index on ``v``), the engine takes each side's ranked candidate
-list — the keyword list capped by :ref:`likeprows <sql-set:likeprows>`,
-the vector list capped by :ref:`likevRows <sql-set:likevRows>` and
-already re-scored by exact distance — and fuses them with a
-**modified Reciprocal Rank Fusion**: each side contributes by its list
-position, so no score calibration between the two retrievers is
-needed; a document found by **both** sides outranks documents found by
-only one, and on otherwise-equal evidence the keyword match wins.
-The fused ``$rank`` is a positional score, not a calibrated relevance
-value.
+list and fuses them with a **modified Reciprocal Rank Fusion**: each
+side contributes by its list position, so no score calibration between
+the two retrievers is needed; a document found by **both** sides
+outranks documents found by only one, and on otherwise-equal evidence
+the keyword match wins.  The fused ``$rank`` is a positional score, not
+a calibrated relevance value.
+
+Both lists are cut to the same depth, :ref:`rrfRows
+<sql-set:rrfRows>`, so a position carries the same meaning on either
+side.  The vector index still searches to :ref:`likevRows
+<sql-set:likevRows>` and its list is truncated afterwards, leaving ANN
+recall untouched.
+
+The fusion is adjustable per connection:
+
++--------------------------------------------------------+------------------------------------------+
+| setting                                                | controls                                 |
++========================================================+==========================================+
+| :ref:`rrfRows <sql-set:rrfRows>`                       | pool depth for both sides                |
++--------------------------------------------------------+------------------------------------------+
+| :ref:`rrfK <sql-set:rrfK>`                             | how much cross-engine agreement is worth |
+|                                                        | against one strong hit                   |
++--------------------------------------------------------+------------------------------------------+
+| :ref:`rrfTieBreak <sql-set:rrfTieBreak>`               | which side wins an exact tie             |
++--------------------------------------------------------+------------------------------------------+
+| :ref:`rrfKwWeight <sql-set:rrfKwWeight, rrfVecWeight>` | relative weight of each side             |
++--------------------------------------------------------+------------------------------------------+
+| :ref:`likevMinRank <sql-set:likevMinRank>`             | similarity floor for vector candidates   |
++--------------------------------------------------------+------------------------------------------+
+
+See :ref:`Rank Fusion Properties <sql-set:Rank Fusion Properties>` for
+the formula and the full description of each.
 
 Rows are returned **automatically ordered by the fused rank**, best
 first — no ``ORDER BY`` needed, exactly as a single ``LIKEP`` or

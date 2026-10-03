@@ -398,14 +398,16 @@ function parse_html_file(file, tofile){
     {
         var el=sections.eq(i);
 
-        if     ( el.findTag('h1').length==1 )
-            els.push(getSect(1,el));
-        else if( el.findTag('h2').length==1 )
-            els.push(getSect(2,el));
-        else if( el.findTag('h3').length==1 )
-            els.push(getSect(3,el));
-        else if( el.findTag('h4').length==1 )
-            els.push(getSect(4,el));
+        /* h5/h6 sections used to match no branch and were dropped
+           silently, keeping their text out of the search index. */
+        for (var lev=1; lev<=6; lev++)
+        {
+            if( el.findTag('h'+lev).length==1 )
+            {
+                els.push(getSect(lev,el));
+                break;
+            }
+        }
     }
 
     return els;
@@ -627,7 +629,10 @@ function make_database(docpath,destpath) {
             fullpath[el.level-1] = title;
             fullname = fullpath.slice(0,el.level).join(' : ')
 
-            link = file + "#" + title.replace(/[ \.\/]/g,'-').replace(/[\(\)\?]/g,'');
+            /* use the id sphinx emitted.  Deriving it from the title left
+               ':', '[]', '$' and others in the fragment, so the link missed. */
+            link = file + "#" + (el.id ? el.id :
+                   title.replace(/[^a-z0-9]+/g,'-').replace(/^[-0-9]+|-+$/g,''));
 
             // Some debugging code:
             //printf("SECTION %s, level:%d, length %d\n", link, el.level, el.text.length);
@@ -648,7 +653,7 @@ function make_index() {
     sql.exec("create index sections_title_x on sections(title);");
     sql.exec("create fulltext index sections_full_text_mmix on sections(full\\text) " +
              "WITH WORDEXPRESSIONS "+
-             "('[\\alnum]+', '[\\alnum_,]+', '[\\alnum_]+>>()=', '[\\alnum_]+(=>>[\\alnum_\\,\\. ]{1,25})=')" +
+             "('[\\ualnum]+', '[\\ualnum_,$]+', '[\\ualnum_]+>>()=', '[\\ualnum_]+(=>>[\\ualnum_\\,\\. ]{1,25})=')" +
              "INDEXMETER 'on'"
     );
 }

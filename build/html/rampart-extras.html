@@ -117,6 +117,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#loading-the-module">Loading the module.</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#standard-server-layout">Standard Server Layout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#usage-from-a-configuration-file">Usage from a configuration file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#serving-more-than-one-port">Serving more than one port</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#building-a-command-line-utility">Building a command line utility</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#use-with-letsencrypt">Use with Letsencrypt</a></li>
 </ul>
@@ -313,6 +314,13 @@ as well as extras to simplify the process and add extra functionality.</p>
 <li><code class="docutils literal notranslate"><span class="pre">bindAll</span></code>      - <span class="green">Boolean</span>, if true, bind the server to <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">[::]</span></code> ip addresses</li>
 <li><code class="docutils literal notranslate"><span class="pre">port</span></code>         - <span class="green">Number</span>, use this value to set <code class="docutils literal notranslate"><span class="pre">ipPort</span></code> and
 <code class="docutils literal notranslate"><span class="pre">ipv6Port</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">listen</span></code>       - <span class="green">Array</span>, serve several ports from one
+process, each with its own routes and its own optional TLS.  This is
+the <a class="reference internal" href="rampart-server.html#multi-listener"><span class="std std-ref">multi-listener shape</span></a> of
+<a class="reference internal" href="rampart-server.html#start"><span class="std std-ref">server.start()</span></a>, passed straight
+through: when it is set, <code class="docutils literal notranslate"><span class="pre">ipAddr</span></code>, <code class="docutils literal notranslate"><span class="pre">ipv6Addr</span></code>, <code class="docutils literal notranslate"><span class="pre">ipPort</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ipv6Port</span></code>, <code class="docutils literal notranslate"><span class="pre">port</span></code> and <code class="docutils literal notranslate"><span class="pre">bindAll</span></code> are not used, and each block
+says where it listens.  See <a class="reference internal" href="#serving-more-than-one-port">Serving more than one port</a> below.</li>
 <li><code class="docutils literal notranslate"><span class="pre">redirPort</span></code>    - <span class="green">Number</span>, when launching a secure <code class="docutils literal notranslate"><span class="pre">https</span></code>
 server, also listen on this port for plain <code class="docutils literal notranslate"><span class="pre">http</span></code> and 301-redirect
 every request to the <code class="docutils literal notranslate"><span class="pre">https</span></code> listener.  This runs in-process via
@@ -370,6 +378,70 @@ macOS does not restrict ports below 1024 to root, a server may bind,
 e.g., port 443 without being started as root (though the TLS
 key/certificate files must be readable by the user starting it).</p>
 </div>
+</div>
+<div class="section" id="serving-more-than-one-port">
+<h3>Serving more than one port<a class="headerlink" href="#serving-more-than-one-port" title="Permalink to this headline">¶</a></h3>
+<p>Normally <code class="docutils literal notranslate"><span class="pre">web_server_conf.js</span></code> names one address and port (or a pair,
+one for each ip family) and the settings below it apply to everything
+served.  When ports need to differ – a private port only this machine
+may reach, a second certificate, plain <code class="docutils literal notranslate"><span class="pre">http</span></code> beside <code class="docutils literal notranslate"><span class="pre">https</span></code> – give
+<code class="docutils literal notranslate"><span class="pre">listen</span></code> instead: an <span class="green">Array</span> of listener blocks, one per port,
+which is handed to <a class="reference internal" href="rampart-server.html#start"><span class="std std-ref">server.start()</span></a>
+unchanged.  See <a class="reference internal" href="rampart-server.html#multi-listener"><span class="std std-ref">the multi-listener shape</span></a> for what
+a block may contain.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">wd</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">scriptPath</span><span class="p">;</span>
+
+<span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-webserver&quot;</span><span class="p">).</span><span class="nx">web_server_conf</span><span class="p">({</span>
+    <span class="nx">serverRoot</span><span class="o">:</span> <span class="nx">wd</span><span class="p">,</span>
+    <span class="nx">htmlRoot</span><span class="o">:</span>   <span class="nx">wd</span> <span class="o">+</span> <span class="s2">&quot;/html&quot;</span><span class="p">,</span>
+    <span class="nx">appsRoot</span><span class="o">:</span>   <span class="nx">wd</span> <span class="o">+</span> <span class="s2">&quot;/apps&quot;</span><span class="p">,</span>
+    <span class="nx">wsappsRoot</span><span class="o">:</span> <span class="nx">wd</span> <span class="o">+</span> <span class="s2">&quot;/wsapps&quot;</span><span class="p">,</span>
+    <span class="nx">threads</span><span class="o">:</span>    <span class="mi">8</span><span class="p">,</span>
+    <span class="nx">daemon</span><span class="o">:</span>     <span class="kc">true</span><span class="p">,</span>
+
+    <span class="c1">// resolves the certificate; the secure block below inherits it</span>
+    <span class="nx">letsencrypt</span><span class="o">:</span> <span class="s2">&quot;example.com&quot;</span><span class="p">,</span>
+
+    <span class="nx">listen</span><span class="o">:</span> <span class="p">[</span>
+        <span class="c1">// the public site, on both ip families</span>
+        <span class="p">{</span> <span class="nx">bind</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;0.0.0.0:443&quot;</span><span class="p">,</span> <span class="s2">&quot;[::]:443&quot;</span><span class="p">]</span> <span class="p">},</span>
+
+        <span class="c1">// a plain-http port nothing outside this machine can reach.</span>
+        <span class="c1">// `secure: false&#39; is required: letsencrypt turned TLS on for</span>
+        <span class="c1">// the whole config, and a block inherits that unless it says</span>
+        <span class="c1">// otherwise.</span>
+        <span class="p">{</span> <span class="nx">bind</span><span class="o">:</span> <span class="s2">&quot;127.0.0.1:8099&quot;</span><span class="p">,</span> <span class="nx">secure</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>All listeners share one thread pool, so adding a port does not add
+threads or JavaScript contexts.  Process-wide settings (<code class="docutils literal notranslate"><span class="pre">threads</span></code>,
+<code class="docutils literal notranslate"><span class="pre">daemon</span></code>, <code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">rateLimit</span></code>, <code class="docutils literal notranslate"><span class="pre">threadLimit</span></code>, the log settings,
+and so on) stay at the top level as usual, and <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>,
+<code class="docutils literal notranslate"><span class="pre">restart</span></code> and <code class="docutils literal notranslate"><span class="pre">status</span></code> work exactly as they do for a single port.</p>
+<p><strong>Routes.</strong> A block with no <code class="docutils literal notranslate"><span class="pre">map</span></code> of its own gets the usual one – the
+top-level <code class="docutils literal notranslate"><span class="pre">map</span></code>, or the map built from <code class="docutils literal notranslate"><span class="pre">htmlRoot</span></code>, <code class="docutils literal notranslate"><span class="pre">appsRoot</span></code>,
+<code class="docutils literal notranslate"><span class="pre">wsappsRoot</span></code>, <code class="docutils literal notranslate"><span class="pre">appendMap</span></code> and <code class="docutils literal notranslate"><span class="pre">rootScripts</span></code> – so, as above, a
+second port usually needs nothing but an address.  A block that does
+name a <code class="docutils literal notranslate"><span class="pre">map</span></code> keeps exactly that map and nothing is added to it, which
+is how a port is given a smaller set of routes than the public one.</p>
+<p><strong>Privileged ports.</strong> The rule is unchanged: on systems other than
+macOS, binding any port below 1024 requires starting as <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p>
+<p><strong>TLS.</strong>  <code class="docutils literal notranslate"><span class="pre">secure</span></code>, <code class="docutils literal notranslate"><span class="pre">sslKeyFile</span></code> and <code class="docutils literal notranslate"><span class="pre">sslCertFile</span></code> may be set at
+the top level, where every block inherits them, or inside a block, which
+overrides.  A plain-http port beside secure ones therefore needs
+<code class="docutils literal notranslate"><span class="pre">secure:</span> <span class="pre">false</span></code> in its block unless nothing above it turned TLS on.
+<code class="docutils literal notranslate"><span class="pre">letsencrypt:</span> <span class="pre">'example.com'</span></code> works as it always has: it resolves the
+certificate for the whole config, and the secure blocks inherit it.</p>
+<p>Settings that describe where the single listener binds are refused
+alongside <code class="docutils literal notranslate"><span class="pre">listen</span></code>, since it decides that instead: <code class="docutils literal notranslate"><span class="pre">bind</span></code>,
+<code class="docutils literal notranslate"><span class="pre">irohProxy</span></code>, <code class="docutils literal notranslate"><span class="pre">redirPort</span></code> and <code class="docutils literal notranslate"><span class="pre">letsencrypt:</span> <span class="pre">&quot;setup&quot;</span></code> (the initial
+issuance step, which rebinds the server to serve <code class="docutils literal notranslate"><span class="pre">/.well-known</span></code>
+alone – run it once with an ordinary single-port config).  For a
+plain-http port that redirects to the secure one, use
+<a class="reference internal" href="rampart-server.html#tls-certificates"><span class="std std-ref">httpRedirect</span></a> or simply write the redirect as
+another block.</p>
 </div>
 <div class="section" id="building-a-command-line-utility">
 <h3>Building a command line utility<a class="headerlink" href="#building-a-command-line-utility" title="Permalink to this headline">¶</a></h3>

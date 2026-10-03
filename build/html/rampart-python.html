@@ -103,6 +103,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#license">License</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-does-it-do">What does it do?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#how-does-it-work">How does it work?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-python-in-threads">Using Python in Threads</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#loading-the-javascript-module">Loading the Javascript Module</a></li>
@@ -114,6 +115,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pvar-tovalue">pvar.toValue()</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-attributes-and-items">Accessing Attributes and Items</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#handling-variables">Handling Variables</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#from-javascript-to-python">From Javascript to Python</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#from-python-to-javascript">From Python to JavaScript</a></li>
@@ -228,6 +230,17 @@ between the two languages are handled automatically.  As the Python Library
 does not function in parallel in multiple threads, if run in
 <a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">rampart.threads</span></a> the module
 will run in multiple processes.</p>
+</div>
+<div class="section" id="using-python-in-threads">
+<h3>Using Python in Threads<a class="headerlink" href="#using-python-in-threads" title="Permalink to this headline">¶</a></h3>
+<p>In a <a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">rampart.thread</span></a>, each
+thread uses its own Python process.  As a result:</p>
+<ul class="simple">
+<li>Modules (and models they load) are loaded separately in each thread.</li>
+<li>A Python variable can only be used in the thread that created it.</li>
+<li>Functions called with <a class="reference internal" href="#rampart-call">rampart.call</a> must be global in that thread.</li>
+<li>Each call to Python costs a little more than in the main thread.</li>
+</ul>
 </div>
 </div>
 <div class="section" id="loading-the-javascript-module">
@@ -383,6 +396,30 @@ variable.</p>
 </div></blockquote>
 </div>
 </div>
+<div class="section" id="accessing-attributes-and-items">
+<h2>Accessing Attributes and Items<a class="headerlink" href="#accessing-attributes-and-items" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Attributes of a Python variable are looked up when they are accessed,
+and are read fresh each time.  <code class="docutils literal notranslate"><span class="pre">pvar.name</span></code> returns the attribute;
+for dictionaries and other subscriptable objects without such an
+attribute, <code class="docutils literal notranslate"><span class="pre">pvar[&quot;key&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">pvar[0]</span></code> return the item (the same
+as <code class="docutils literal notranslate"><span class="pre">pvar[&quot;key&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">pvar[0]</span></code> in Python).</p>
+<p>If an item has the same name as an attribute, the attribute is
+returned.  For example, <code class="docutils literal notranslate"><span class="pre">df[&quot;count&quot;]</span></code> on a pandas DataFrame returns
+the <code class="docutils literal notranslate"><span class="pre">count</span></code> method, not a column named “count”.  Use
+<code class="docutils literal notranslate"><span class="pre">pvar.__getitem__(&quot;key&quot;)</span></code> to get the item.</p>
+<p>Because attributes are looked up only when accessed, <code class="docutils literal notranslate"><span class="pre">Object.keys()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">for...in</span></code> do not list them.  To list the attributes of a Python
+variable, use Python’s <code class="docutils literal notranslate"><span class="pre">dir()</span></code>:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">python</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-python&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">builtins</span> <span class="o">=</span> <span class="nx">python</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="s2">&quot;builtins&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">pathlib</span> <span class="o">=</span> <span class="nx">python</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="s2">&quot;pathlib&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">names</span> <span class="o">=</span> <span class="nx">builtins</span><span class="p">.</span><span class="nx">dir</span><span class="p">(</span><span class="nx">pathlib</span><span class="p">).</span><span class="nx">toValue</span><span class="p">();</span>  <span class="c1">// an Array of names</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 <div class="section" id="handling-variables">
 <h2>Handling Variables<a class="headerlink" href="#handling-variables" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="from-javascript-to-python">
@@ -529,7 +566,8 @@ representation (same as <code class="docutils literal notranslate"><span class="
 <h3>Python to Python<a class="headerlink" href="#python-to-python" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Variables returned from a Python function can be used as parameters to other Python functions.
-No translation will be performed.</p>
+No translation will be performed, including when they are inside an <span class="green">Array</span> or
+<span class="green">Object</span> (e.g. <code class="docutils literal notranslate"><span class="pre">torch.stack([t1,</span> <span class="pre">t2])</span></code>).</p>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span> <span class="kd">var</span> <span class="nx">python</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-python&quot;</span><span class="p">);</span>
  <span class="kd">var</span> <span class="nx">printf</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">;</span>
@@ -562,7 +600,7 @@ No translation will be performed.</p>
 <div class="section" id="python-named-arguments">
 <h3>Python Named Arguments<a class="headerlink" href="#python-named-arguments" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><p>Named arguments to Python functions may be use as shown
+<div><p>Named arguments to Python functions may be used as shown
 in the following example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">python</span><span class="o">=</span><span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-python&quot;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">printf</span> <span class="o">=</span> <span class="nx">rampart</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">printf</span><span class="p">;</span>
@@ -633,6 +671,22 @@ is available to python.  It includes two methods: <code class="docutils literal 
 <span class="cm">*/</span>
 </pre></div>
 </div>
+<p>Notes:</p>
+<ul class="simple">
+<li>An exception thrown by the JavaScript function is raised in Python
+as a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> (with the JavaScript error message and stack),
+so it can be caught with <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">except</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">rampart.call</span></code> may be used from Python threads, such as the thread
+pools used by LangChain’s <code class="docutils literal notranslate"><span class="pre">batch()</span></code> or by agents running tools, and
+the JavaScript function may itself call Python functions.  JavaScript
+functions called this way run one at a time; however, when one of them
+calls a Python function, others may run until that Python function
+returns (similar to <code class="docutils literal notranslate"><span class="pre">await</span></code> in an async function).</li>
+<li>JavaScript can only be called while it is waiting on a Python function
+to return.  A Python thread that calls <code class="docutils literal notranslate"><span class="pre">rampart.call</span></code> after that
+(e.g. a background thread still running after the function that
+started it returned) gets a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>.</li>
+</ul>
 </div></blockquote>
 </div>
 <div class="section" id="rampart-triggerevent">
@@ -645,7 +699,7 @@ is available to python.  It includes two methods: <code class="docutils literal 
 
 <span class="kd">var</span> <span class="nx">iscript</span> <span class="o">=</span>
 <span class="sb">`</span>
-<span class="sb">#when operating from within rampart, the rampart module is availabe</span>
+<span class="sb">#when operating from within rampart, the rampart module is available</span>
 <span class="sb">import rampart</span>
 
 <span class="sb">#trigger a rampart event and pass a &quot;triggerVar&quot; to it</span>

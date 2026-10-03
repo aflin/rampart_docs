@@ -141,6 +141,8 @@ Every option goes at the top level.  Multiple ip:port pairs are supported
 via an array (``bind: ['0.0.0.0:8088', '[::]:8088']``); all share the same
 configuration.
 
+.. _multi-listener:
+
 The multi-listener shape (``listen:[]``)
 ''''''''''''''''''''''''''''''''''''''''
 
@@ -174,7 +176,7 @@ not multiply the number of worker threads or JavaScript contexts.
 
 **Process-global options** (``threads``, ``daemon``, ``user``, ``mimeMap``,
 log options, etc.) and routing-related options that are currently
-process-wide (``notFoundFunc``, ``authMod``, ``rateLimit``, ``compress*``,
+process-wide (``notFoundFunc``, ``authMod``, ``rateLimit``, ``threadLimit``, ``compress*``,
 ``directoryFunc``, ``logFunc``, ``cacheControl``, ``defaultCharset``,
 ``beginFunc``/``endFunc``, ``defaultRangeMBytes``, ``sslMinVersion``)
 go at the top level.  Putting any of them inside a block is rejected by
@@ -654,6 +656,65 @@ Each option below is tagged with its *scope*:
   Tokens refill at a constant rate (``rate / window`` tokens per second).
   A client that stops sending requests will naturally recover its full
   token allowance within one window period.
+
+* ``threadLimit`` *(top-level)* - An :green:`Object`.  Cap the number of
+  server threads that may run a given URL path.  Each key is a URL path
+  prefix and the value is either a :green:`Number` (the maximum number of
+  threads) or an :green:`Object` with these properties:
+
+  - ``threads`` - :green:`Number`.  Maximum number of threads for this
+    path.  Required.
+  - ``group`` - :green:`String`.  Optional name.  Rules with the same
+    group name share one set of threads, sized by the largest ``threads``
+    value among them.  Rules without a group each get their own set.
+
+  Example:
+
+  .. code-block:: javascript
+
+      threadLimit: {
+          "/apps/report/":   4,
+          "/apps/export/":   { threads: 2, group: "heavy" },
+          "/apps/reindex/":  { threads: 2, group: "heavy" }
+      }
+
+  Requests whose path begins with ``/apps/report/`` run on at most four
+  threads.  Requests for ``/apps/export/`` and ``/apps/reindex/`` together
+  run on at most two.  When more requests arrive than the set can serve
+  at once, the extra requests wait in the queues of those threads rather
+  than spilling onto others.  Other paths are unaffected and may use any
+  thread, including the ones in a set.
+
+  Path matching uses prefix comparison and the longest matching prefix
+  wins, so ``"/apps/"`` may carry a broad limit while ``"/apps/report/"``
+  carries a tighter one.  The limit applies to requests served by
+  JavaScript functions and modules; static files are not affected.
+  WebSocket connections are not affected.
+
+  Threads are assigned from the highest numbered thread downward, leaving
+  thread 0 out so at least one thread never runs a limited path.  New
+  connections are handed to the lowest numbered idle thread, so under
+  light load the assigned threads are the least busy ones and limited
+  requests rarely delay anything else.  A request that arrives on a
+  thread outside its set is handed to the least loaded member of the set
+  before any JavaScript runs.  The move costs a few microseconds and
+  happens once per connection.
+
+  If the rules together ask for more threads than the server has, the
+  sets wrap around and share threads.  A single rule asking for more than
+  ``threads - 1`` is reduced to that.  Neither case is an error.  The
+  resolved thread numbers for every rule are written to the access log
+  at startup, for example:
+
+  .. code-block:: none
+
+      threadLimit: /apps/report/ -> 4 threads [15,14,13,12]
+      threadLimit: /apps/export/ -> 2 threads [11,10] group=heavy
+
+  The limit is a cap on concurrency, not a reservation: a thread in a set
+  still serves ordinary requests that land on it, and a slow limited
+  handler will delay those.  With ``threads: 1`` the option has no
+  effect.
 
 * ``mimeMap`` *(top-level)* - An :green:`Object`, additions or changes
   to the standard extension to mime mappings.  Normally, if, e.g.,

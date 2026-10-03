@@ -431,7 +431,7 @@ via an array (<code class="docutils literal notranslate"><span class="pre">bind:
 configuration.</p>
 </div>
 <div class="section" id="the-multi-listener-shape-listen">
-<h5>The multi-listener shape (<code class="docutils literal notranslate"><span class="pre">listen:[]</span></code>)<a class="headerlink" href="#the-multi-listener-shape-listen" title="Permalink to this headline">¶</a></h5>
+<span id="multi-listener"></span><h5>The multi-listener shape (<code class="docutils literal notranslate"><span class="pre">listen:[]</span></code>)<a class="headerlink" href="#the-multi-listener-shape-listen" title="Permalink to this headline">¶</a></h5>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span>
     <span class="nx">listen</span><span class="o">:</span> <span class="p">[</span>
         <span class="p">{</span> <span class="nx">bind</span><span class="o">:</span> <span class="s1">&#39;0.0.0.0:80&#39;</span><span class="p">,</span>
@@ -458,7 +458,7 @@ not multiply the number of worker threads or JavaScript contexts.</p>
 <code class="docutils literal notranslate"><span class="pre">scriptTimeout</span></code>, <code class="docutils literal notranslate"><span class="pre">maxBodySize</span></code>.</p>
 <p><strong>Process-global options</strong> (<code class="docutils literal notranslate"><span class="pre">threads</span></code>, <code class="docutils literal notranslate"><span class="pre">daemon</span></code>, <code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">mimeMap</span></code>,
 log options, etc.) and routing-related options that are currently
-process-wide (<code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">authMod</span></code>, <code class="docutils literal notranslate"><span class="pre">rateLimit</span></code>, <code class="docutils literal notranslate"><span class="pre">compress*</span></code>,
+process-wide (<code class="docutils literal notranslate"><span class="pre">notFoundFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">authMod</span></code>, <code class="docutils literal notranslate"><span class="pre">rateLimit</span></code>, <code class="docutils literal notranslate"><span class="pre">threadLimit</span></code>, <code class="docutils literal notranslate"><span class="pre">compress*</span></code>,
 <code class="docutils literal notranslate"><span class="pre">directoryFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">logFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">cacheControl</span></code>, <code class="docutils literal notranslate"><span class="pre">defaultCharset</span></code>,
 <code class="docutils literal notranslate"><span class="pre">beginFunc</span></code>/<code class="docutils literal notranslate"><span class="pre">endFunc</span></code>, <code class="docutils literal notranslate"><span class="pre">defaultRangeMBytes</span></code>, <code class="docutils literal notranslate"><span class="pre">sslMinVersion</span></code>)
 go at the top level.  Putting any of them inside a block is rejected by
@@ -897,6 +897,58 @@ be a power of 2).</p>
 <p>Tokens refill at a constant rate (<code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">/</span> <span class="pre">window</span></code> tokens per second).
 A client that stops sending requests will naturally recover its full
 token allowance within one window period.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">threadLimit</span></code> <em>(top-level)</em> - An <span class="green">Object</span>.  Cap the number of
+server threads that may run a given URL path.  Each key is a URL path
+prefix and the value is either a <span class="green">Number</span> (the maximum number of
+threads) or an <span class="green">Object</span> with these properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">threads</span></code> - <span class="green">Number</span>.  Maximum number of threads for this
+path.  Required.</li>
+<li><code class="docutils literal notranslate"><span class="pre">group</span></code> - <span class="green">String</span>.  Optional name.  Rules with the same
+group name share one set of threads, sized by the largest <code class="docutils literal notranslate"><span class="pre">threads</span></code>
+value among them.  Rules without a group each get their own set.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">threadLimit</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;/apps/report/&quot;</span><span class="o">:</span>   <span class="mi">4</span><span class="p">,</span>
+    <span class="s2">&quot;/apps/export/&quot;</span><span class="o">:</span>   <span class="p">{</span> <span class="nx">threads</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">group</span><span class="o">:</span> <span class="s2">&quot;heavy&quot;</span> <span class="p">},</span>
+    <span class="s2">&quot;/apps/reindex/&quot;</span><span class="o">:</span>  <span class="p">{</span> <span class="nx">threads</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">group</span><span class="o">:</span> <span class="s2">&quot;heavy&quot;</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Requests whose path begins with <code class="docutils literal notranslate"><span class="pre">/apps/report/</span></code> run on at most four
+threads.  Requests for <code class="docutils literal notranslate"><span class="pre">/apps/export/</span></code> and <code class="docutils literal notranslate"><span class="pre">/apps/reindex/</span></code> together
+run on at most two.  When more requests arrive than the set can serve
+at once, the extra requests wait in the queues of those threads rather
+than spilling onto others.  Other paths are unaffected and may use any
+thread, including the ones in a set.</p>
+<p>Path matching uses prefix comparison and the longest matching prefix
+wins, so <code class="docutils literal notranslate"><span class="pre">&quot;/apps/&quot;</span></code> may carry a broad limit while <code class="docutils literal notranslate"><span class="pre">&quot;/apps/report/&quot;</span></code>
+carries a tighter one.  The limit applies to requests served by
+JavaScript functions and modules; static files are not affected.
+WebSocket connections are not affected.</p>
+<p>Threads are assigned from the highest numbered thread downward, leaving
+thread 0 out so at least one thread never runs a limited path.  New
+connections are handed to the lowest numbered idle thread, so under
+light load the assigned threads are the least busy ones and limited
+requests rarely delay anything else.  A request that arrives on a
+thread outside its set is handed to the least loaded member of the set
+before any JavaScript runs.  The move costs a few microseconds and
+happens once per connection.</p>
+<p>If the rules together ask for more threads than the server has, the
+sets wrap around and share threads.  A single rule asking for more than
+<code class="docutils literal notranslate"><span class="pre">threads</span> <span class="pre">-</span> <span class="pre">1</span></code> is reduced to that.  Neither case is an error.  The
+resolved thread numbers for every rule are written to the access log
+at startup, for example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>threadLimit: /apps/report/ -&gt; 4 threads [15,14,13,12]
+threadLimit: /apps/export/ -&gt; 2 threads [11,10] group=heavy
+</pre></div>
+</div>
+<p>The limit is a cap on concurrency, not a reservation: a thread in a set
+still serves ordinary requests that land on it, and a slow limited
+handler will delay those.  With <code class="docutils literal notranslate"><span class="pre">threads:</span> <span class="pre">1</span></code> the option has no
+effect.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">mimeMap</span></code> <em>(top-level)</em> - An <span class="green">Object</span>, additions or changes
 to the standard extension to mime mappings.  Normally, if, e.g.,
