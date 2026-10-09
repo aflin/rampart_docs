@@ -77,7 +77,10 @@ search and local LLM inference inside Rampart:
 
 *  **rampart-llamacpp** runs GGUF models directly inside the rampart
    process: text embedding (`initEmbed`_\ ), reranking
-   (`initRerank`_\ ) and text generation (`initGen`_\ ).
+   (`initRerank`_\ ) and text generation (`initGen`_\ ).  With a
+   multimodal model it also embeds **images and audio**, alone or
+   mixed with text, into the same space as its text vectors
+   (`emb.embedMediaToNumbers()`_\ , experimental).
 
 *  **rampart-onnx** runs ONNX models: text embedding
    (`onnx.initEmbed`_\ ) and reranking (`onnx.initRerank`_\ ) with
@@ -295,6 +298,68 @@ modelInfo
             printf("accepts: %s\n", m ? m[1] : "(not stated)");
         }
 
+mediaInfo
+~~~~~~~~~
+
+    **Experimental.**  Multimodal (image and audio) embedding is new in
+    this release and under active development; its API and defaults may
+    change.  It has so far been tested on Linux (CPU and CUDA).
+
+    The ``mediaInfo`` function reports what a multimodal projector
+    (an ``mmproj`` GGUF file) can encode.  It loads the projector against
+    its text model, reads its capabilities and frees both before
+    returning, so nothing outlives the call.  Use it to check that a
+    projector matches its model before passing it to `initEmbed`_\ .
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+
+        var info = llamacpp.mediaInfo(modelPath, mmprojPath[, options]);
+
+    Where:
+
+    *  ``modelPath`` is a :green:`String`, the path to the text model's
+       ``.gguf`` file.
+
+    *  ``mmprojPath`` is a :green:`String`, the path to the projector's
+       ``.gguf`` file.
+
+    *  ``options`` is an optional :green:`Object` accepting the settings
+       in `Common Model and Context Options`_ (e.g. ``gpuLayers: 0`` to
+       stay on the CPU).
+
+    Return Value:
+        An :green:`Object` with the following properties:
+
+        *  ``vision`` - A :green:`Boolean`, whether the projector can
+           encode images.
+
+        *  ``audio`` - A :green:`Boolean`, whether it can encode audio.
+
+        *  ``audioSampleRate`` - A :green:`Number`, the sample rate the
+           audio encoder works at (audio of any rate is resampled to it),
+           or ``0`` without audio.
+
+        *  ``gpu`` - A :green:`Boolean`, whether the projector was asked
+           to run on the GPU.
+
+        Throws if either file cannot be loaded, or if the projector does
+        not belong to the text model.
+
+    Example:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+        var models   = require("rampart-models");
+
+        var info = llamacpp.mediaInfo(models.ggufGet("embeddinggemma-2"),
+                                      models.mmprojGet("embeddinggemma-2"));
+        /* { vision: true, audio: true, audioSampleRate: 16000, gpu: true } */
+
 initEmbed
 ~~~~~~~~~
 
@@ -391,6 +456,25 @@ initEmbed
           be raised.  Given here they apply to this handle only, and
           take precedence over the ``embedDefaults`` values.
 
+       *  ``mmproj`` - **Experimental.**  A :green:`String`, the path to a multimodal
+          projector (``mmproj`` GGUF file) for a model that embeds
+          images and audio as well as text.  Currently the only
+          supported model is ``embeddinggemma-2``.  It enables the
+          `emb.embedMediaToNumbers()`_ family of functions; the text
+          functions are unaffected.  `models.mmprojGet()`_ downloads the
+          projector that matches a catalog model.  The projector is
+          loaded once and shared by every handle and thread using the
+          same model and settings.
+
+       *  ``imageTokens`` - **Experimental.**  A :green:`Number`, how many tokens each image
+          is encoded into.  Default ``280``, the budget of the model's
+          reference implementation; vectors made with it agree most
+          closely with that implementation's.  ``embeddinggemma-2``
+          accepts ``70`` to ``1120``: fewer tokens is faster and lets more
+          images share one input, more keeps finer detail.  ``0`` lets
+          the projector size each image from its resolution.  Only used
+          with ``mmproj``.
+
        The legacy option names ``nctx``, ``ubatch``, ``nthreads``
        and ``nthreads_batch`` are accepted as aliases for ``nCtx``,
        ``nUBatch``, ``threads`` and ``threadsBatch``.
@@ -402,7 +486,9 @@ initEmbed
     several handles or rampart threads keeps a single copy of the
     weights in memory.  A handle that is copied to another
     :ref:`rampart thread <rampart-thread:Rampart Thread Functions>`
-    transparently builds its own per-thread context on first use.
+    transparently builds its own per-thread context on first use, and
+    that context is freed when the thread exits.  See `Threads and
+    fork()`_\ .
 
     Note:
         The rampart-sql ``embed()`` SQL function runs this same
@@ -418,8 +504,14 @@ initEmbed
     Return Value:
         An :green:`Object` (the embedding handle) with the functions
         `emb.embedTextToFp16Buf()`_\ , `emb.embedTextToFp32Buf()`_\ ,
-        `emb.embedTextToNumbers()`_ and `emb.destroy()`_ documented
-        below.
+        `emb.embedTextToNumbers()`_\ , `emb.embedMediaToNumbers()`_
+        (and its ``Fp16Buf`` / ``Fp32Buf`` forms) and `emb.destroy()`_
+        documented below.
+
+        A handle created with ``mmproj`` also has a ``media`` property,
+        an :green:`Object` with ``vision`` and ``audio``
+        (:green:`Booleans`, what the projector can encode),
+        ``imageTokens`` (:green:`Number`) and ``gpu`` (:green:`Boolean`).
 
     Example:
 
@@ -524,14 +616,138 @@ emb.embedTextToNumbers()
 
         var ret = emb.embedTextToNumbers(text);
 
+emb.embedMediaToNumbers()
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    **Experimental.**  Multimodal (image and audio) embedding is new in
+    this release and under active development; its API and defaults may
+    change.  It has so far been tested on Linux (CPU and CUDA).
+
+    Embed images and/or audio — alone, or interleaved with text — into
+    a single vector in the same space as the model's text vectors, so an
+    image can be compared directly against a text query, and vice
+    versa.  Requires a handle created with the `initEmbed`_ ``mmproj``
+    option.
+
+    Currently the only supported model is ``embeddinggemma-2``
+    (`EmbeddingGemma 2 <https://huggingface.co/google/embeddinggemma-2>`_\ ,
+    as GGUF in the catalog — see `models.mmprojGet()`_\ ).  Other
+    multimodal GGUF models are untested and may not work.
+
+    ``emb.embedMediaToFp16Buf()`` and ``emb.embedMediaToFp32Buf()`` are
+    the same function returning packed :green:`Buffers`, exactly as
+    `emb.embedTextToFp16Buf()`_ / `emb.embedTextToFp32Buf()`_ do for
+    text.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var ret = emb.embedMediaToNumbers({
+            text:  text,         /* optional */
+            image: image,        /* optional */
+            audio: audio         /* optional */
+        });
+
+    Where:
+
+    *  ``image`` and ``audio`` are each a :green:`String` (the path to a
+       file), a :green:`Buffer` (the file's contents) or an
+       :green:`Array` of those, freely mixed.
+
+       *  Images: any format `stb_image
+          <https://github.com/nothings/stb>`_ reads — JPEG, PNG, BMP,
+          GIF, TGA, PSD, HDR, PNM.  WebP is not supported.
+
+       *  Audio: WAV, MP3 or FLAC, at any sample rate and channel count;
+          it is converted to the model's rate (16 kHz mono for
+          ``embeddinggemma-2``).
+
+       The kind of each item is detected from its contents, not its file
+       name.  An audio file given under ``image`` (or the reverse) throws
+       rather than being silently re-routed.
+
+    *  ``text`` is an optional :green:`String`.  To embed text and media
+       together, mark where each item goes with the placeholders
+       ``<|image|>`` and ``<|audio|>``; they are filled in order from the
+       ``image`` and ``audio`` lists, and their counts must match:
+
+       .. code-block:: javascript
+
+           emb.embedMediaToNumbers({
+               text:  "Waterproof running shoe <|image|> grip test on wet rock: <|audio|>",
+               image: "shoe.jpg",
+               audio: "squeak.wav"
+           });
+
+       Without ``text``, the images are embedded, then the audio, as one
+       input.  Text with no placeholders alongside media throws: omit
+       ``text`` to embed the media alone.
+
+    The whole input — text and every image and audio clip — must fit in
+    the model's window (8192 tokens for ``embeddinggemma-2``).  Unlike
+    text, it is never chunked: an image cannot be split, and a
+    multimodal input means one vector.  An input that does not fit throws
+    with its token count and the limit.  For ``embeddinggemma-2`` an
+    image costs ``imageTokens`` (280 by default) and audio about 25 tokens
+    per second, so a single input holds about 29 images or 5 minutes of
+    audio.
+
+    Retrieval prompts (see `Retrieval prompt sidecars`_) apply to text
+    only.  Embed a query as ``emb.embedTextToNumbers(prompt + query)``
+    and compare it with media vectors made **without** a prefix, as the
+    model was trained.
+
+    Return Value:
+        An :green:`Object` with:
+
+        *  ``avgVec`` - The vector (an :green:`Array` of
+           :green:`Numbers`, or a :green:`Buffer` from the ``Fp16Buf`` /
+           ``Fp32Buf`` forms), L2-normalized.
+
+        *  ``vecs`` - An :green:`Array` holding that same vector, so code
+           written for `emb.embedTextToNumbers()`_ results works unchanged.
+
+        *  ``nTokens`` - A :green:`Number`, the tokens the input used.
+
+    Note:
+        Video is not yet supported.  Speed depends on the backend: on a
+        GPU an image takes on the order of 0.1 seconds.  On a CPU it
+        takes seconds, and like text embedding it uses 4 threads unless
+        ``threadsBatch`` is set (see `embedDefaults`_).
+
+    Example — search images with text:
+
+    .. code-block:: javascript
+
+        var llamacpp = require("rampart-llamacpp");
+        var models   = require("rampart-models");
+
+        var emb = llamacpp.initEmbed(models.ggufGet("embeddinggemma-2"),
+                                     {mmproj: models.mmprojGet("embeddinggemma-2")});
+
+        var files = ["beach.jpg", "city.jpg", "forest.jpg"];
+        var vecs  = files.map(function(f) {
+            return emb.embedMediaToNumbers({image: f}).avgVec;
+        });
+
+        var q = emb.embedTextToNumbers("task: search result | query: a walk in the woods").avgVec;
+
+        function dot(a, b) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
+
+        var best = 0;
+        for (var i = 1; i < vecs.length; i++)
+            if (dot(q, vecs[i]) > dot(q, vecs[best])) best = i;
+        printf("%s\n", files[best]);    /* forest.jpg */
+
 emb.destroy()
 ^^^^^^^^^^^^^
 
-    Free the model context (and release the model weights if this
-    was the last handle using them).  Using the handle after calling
-    ``destroy()`` throws an error.  Handles are also freed
-    automatically when garbage collected, but for large models it is
-    good practice to free them deterministically.
+    Free the model context (and release the model weights and any
+    ``mmproj`` projector if this was the last handle using them).  Using
+    the handle after calling ``destroy()`` throws an error.  Handles are
+    also freed automatically when garbage collected, but for large models
+    it is good practice to free them deterministically.
 
     Usage:
 
@@ -1306,6 +1522,51 @@ embedDefaults
     generated by a build that predates it, and A/B measuring the
     difference on a particular machine.  For ordinary use, leave it
     at auto.
+
+Threads and fork()
+~~~~~~~~~~~~~~~~~~
+
+    **Threads.**  Handles from `initEmbed`_ and `initRerank`_ may be
+    copied into
+    :ref:`rampart threads <rampart-thread:Rampart Thread Functions>`
+    (passed to ``thr.exec()``, or copied automatically into
+    rampart-server worker threads).  The weights, and an ``mmproj``
+    projector, are shared; each thread builds its own context the first
+    time it uses its copy.  That context is freed when the thread exits
+    — or earlier, if that thread calls ``destroy()`` on its copy.  A
+    copy may outlive the handle it was copied from, but a thread that
+    first uses its copy *after* the original was destroyed gets an error
+    rather than a context on freed weights.  Text and media embedding
+    behave the same in every case.  (An `initGen`_ handle works
+    differently: requests from every thread are served by its one
+    dedicated thread.)
+
+    **fork().**  A forked child may keep using llama.cpp on the CPU: a
+    handle created before the fork works in the child, and the child can
+    load models of its own.  A GPU runtime (CUDA or Metal) does not
+    survive a fork, so once a GPU backend has been initialized in a
+    process, its forked children get an error instead of hanging or
+    crashing:
+
+    *  using a handle created before the fork throws, and
+
+    *  loading any model in the child — `initEmbed`_\ , `initRerank`_\ ,
+       `initGen`_\ , `mediaInfo`_\ , `modelInfo`_ or the rampart-sql
+       ``llamaEmbed`` path — throws.
+
+    To use a GPU in forked processes, fork **before** any model is
+    loaded and load models in the children: with rampart-server, run
+    in daemon mode and load models in ``postForkFunc``.  A process that
+    has only ``require()``\ d the module has not touched the GPU, so its
+    children may load models normally.
+
+    On macOS, fork before ``require("rampart-llamacpp")`` itself, not
+    just before loading a model.  The module links Apple's Metal
+    framework, and Apple does not support using Metal (or other
+    Objective-C frameworks) in a child that was forked from a process
+    that had loaded them, without an ``exec()``.  A child of a parent
+    that had only required the module usually works, but a model load in
+    such a child has been seen to hang.
 
 getLog
 ~~~~~~
@@ -3308,7 +3569,8 @@ A short name is resolved in this order:
    text-generation, CLIP and OCR), each pinned to a specific repository
    revision.  Embedding entries also record the model's vector dimension
    and its retrieval prompts, when it has them (see
-   `Retrieval prompt sidecars`_ below).  ``models.list()`` (or
+   `Retrieval prompt sidecars`_ below), and a multimodal model's
+   projector files (see `models.mmprojGet()`_\ ).  ``models.list()`` (or
    ``--list`` on the command line) shows them; it returns an
    :green:`Object` keyed by category, each value an :green:`Array` of the
    model names in that category.  The catalog comes in two halves — one
@@ -3424,6 +3686,44 @@ models.ggufGet() / models.onnxGet()
 
         var emb  = llamacpp.initEmbed( models.ggufGet("bge-m3") );
         var oemb = onnx.initEmbed(     models.onnxGet("bge-m3") );
+
+models.mmprojGet()
+~~~~~~~~~~~~~~~~~~
+
+    **Experimental.**  Multimodal (image and audio) embedding is new in
+    this release and under active development; its API and defaults may
+    change.  It has so far been tested on Linux (CPU and CUDA).
+
+    Fetch a multimodal model's projector (``mmproj`` file) — the image
+    and audio encoders the model loads beside its text weights, passed
+    to `initEmbed`_ as the ``mmproj`` option.  Only catalog entries that
+    record a projector have one (``embeddinggemma-2``); other names
+    throw.
+
+    Usage:
+
+    .. code-block:: javascript
+
+        var path = models.mmprojGet(name[, options]);
+
+    ``options`` are those of `models.get()`_\ .  ``quant`` picks the
+    projector's own precision, ``"F16"``, ``"BF16"`` or ``"Q8_0"``, and
+    is independent of the text model's quant.  The default is ``"F16"``:
+    a projector is small next to its accuracy cost, and the
+    full-precision one matches the reference implementation most closely.
+    The file is saved as ``<name>-<file>`` (e.g.
+    ``embeddinggemma-2-mmproj-F16.gguf``), because every repository names
+    its projector ``mmproj-F16.gguf`` and two models' projectors would
+    otherwise overwrite each other.
+
+    Return Value:
+        A :green:`String`, the local path, or ``null`` when a ``confirm``
+        callback declines the download.
+
+    .. code-block:: javascript
+
+        var emb = llamacpp.initEmbed(models.ggufGet("embeddinggemma-2"),
+                                     {mmproj: models.mmprojGet("embeddinggemma-2")});
 
 ocrGet
 ~~~~~~

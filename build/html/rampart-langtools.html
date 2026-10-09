@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The rampart-langtools modules &mdash; Rampart 0.7.1 documentation</title>
+  <title>The rampart-langtools modules &mdash; Rampart 0.7.2 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.1 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.2 documentation" href="index.html"/>
         <link rel="next" title="The rampart-almanac module" href="rampart-almanac.html"/>
         <link rel="prev" title="The rampart-treesitter module" href="rampart-treesitter.html"/> 
 
@@ -113,10 +113,12 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#the-rampart-llamacpp-module">The rampart-llamacpp module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#modelinfo">modelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mediainfo">mediaInfo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#initembed">initEmbed</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#emb-embedtexttonumbers">emb.embedTextToNumbers()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#emb-embedmediatonumbers">emb.embedMediaToNumbers()</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#emb-destroy">emb.destroy()</a></li>
 </ul>
 </li>
@@ -134,6 +136,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#initgenasync">initGenAsync</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#embeddefaults">embedDefaults</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#threads-and-fork">Threads and fork()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#getlog">getLog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#resetlog">resetLog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
@@ -219,6 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#the-rampart-models-module">The rampart-models module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#models-get">models.get()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#models-ggufget-models-onnxget">models.ggufGet() / models.onnxGet()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#models-mmprojget">models.mmprojGet()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ocrget">ocrGet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#models-url">models.url()</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#models-resolve">models.resolve()</a></li>
@@ -373,7 +377,10 @@ search and local LLM inference inside Rampart:</p>
 <ul class="simple">
 <li><strong>rampart-llamacpp</strong> runs GGUF models directly inside the rampart
 process: text embedding (<a class="reference internal" href="#initembed">initEmbed</a>), reranking
-(<a class="reference internal" href="#initrerank">initRerank</a>) and text generation (<a class="reference internal" href="#initgen">initGen</a>).</li>
+(<a class="reference internal" href="#initrerank">initRerank</a>) and text generation (<a class="reference internal" href="#initgen">initGen</a>).  With a
+multimodal model it also embeds <strong>images and audio</strong>, alone or
+mixed with text, into the same space as its text vectors
+(<a class="reference internal" href="#emb-embedmediatonumbers">emb.embedMediaToNumbers()</a>, experimental).</li>
 <li><strong>rampart-onnx</strong> runs ONNX models: text embedding
 (<a class="reference internal" href="#onnx-initembed">onnx.initEmbed</a>) and reranking (<a class="reference internal" href="#onnx-initrerank">onnx.initRerank</a>) with
 the same handle API as rampart-llamacpp, plus a general-purpose
@@ -570,6 +577,61 @@ accepts.</p>
 </div>
 </div></blockquote>
 </div>
+<div class="section" id="mediainfo">
+<h3>mediaInfo<a class="headerlink" href="#mediainfo" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><strong>Experimental.</strong>  Multimodal (image and audio) embedding is new in
+this release and under active development; its API and defaults may
+change.  It has so far been tested on Linux (CPU and CUDA).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">mediaInfo</span></code> function reports what a multimodal projector
+(an <code class="docutils literal notranslate"><span class="pre">mmproj</span></code> GGUF file) can encode.  It loads the projector against
+its text model, reads its capabilities and frees both before
+returning, so nothing outlives the call.  Use it to check that a
+projector matches its model before passing it to <a class="reference internal" href="#initembed">initEmbed</a>.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">mediaInfo</span><span class="p">(</span><span class="nx">modelPath</span><span class="p">,</span> <span class="nx">mmprojPath</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">modelPath</span></code> is a <span class="green">String</span>, the path to the text model’s
+<code class="docutils literal notranslate"><span class="pre">.gguf</span></code> file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">mmprojPath</span></code> is a <span class="green">String</span>, the path to the projector’s
+<code class="docutils literal notranslate"><span class="pre">.gguf</span></code> file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">options</span></code> is an optional <span class="green">Object</span> accepting the settings
+in <a class="reference internal" href="#common-model-and-context-options">Common Model and Context Options</a> (e.g. <code class="docutils literal notranslate"><span class="pre">gpuLayers:</span> <span class="pre">0</span></code> to
+stay on the CPU).</li>
+</ul>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with the following properties:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">vision</span></code> - A <span class="green">Boolean</span>, whether the projector can
+encode images.</li>
+<li><code class="docutils literal notranslate"><span class="pre">audio</span></code> - A <span class="green">Boolean</span>, whether it can encode audio.</li>
+<li><code class="docutils literal notranslate"><span class="pre">audioSampleRate</span></code> - A <span class="green">Number</span>, the sample rate the
+audio encoder works at (audio of any rate is resampled to it),
+or <code class="docutils literal notranslate"><span class="pre">0</span></code> without audio.</li>
+<li><code class="docutils literal notranslate"><span class="pre">gpu</span></code> - A <span class="green">Boolean</span>, whether the projector was asked
+to run on the GPU.</li>
+</ul>
+<p class="last">Throws if either file cannot be loaded, or if the projector does
+not belong to the text model.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">models</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">info</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">mediaInfo</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ggufGet</span><span class="p">(</span><span class="s2">&quot;embeddinggemma-2&quot;</span><span class="p">),</span>
+                              <span class="nx">models</span><span class="p">.</span><span class="nx">mmprojGet</span><span class="p">(</span><span class="s2">&quot;embeddinggemma-2&quot;</span><span class="p">));</span>
+<span class="cm">/* { vision: true, audio: true, audioSampleRate: 16000, gpu: true } */</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 <div class="section" id="initembed">
 <h3>initEmbed<a class="headerlink" href="#initembed" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -662,6 +724,25 @@ on each backend, and why <code class="docutils literal notranslate"><span class=
 be raised.  Given here they apply to this handle only, and
 take precedence over the <code class="docutils literal notranslate"><span class="pre">embedDefaults</span></code> values.</p>
 </li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">mmproj</span></code> - <strong>Experimental.</strong>  A <span class="green">String</span>, the path to a multimodal
+projector (<code class="docutils literal notranslate"><span class="pre">mmproj</span></code> GGUF file) for a model that embeds
+images and audio as well as text, such as
+<code class="docutils literal notranslate"><span class="pre">embeddinggemma-2</span></code>.  It enables the
+<a class="reference internal" href="#emb-embedmediatonumbers">emb.embedMediaToNumbers()</a> family of functions; the text
+functions are unaffected.  <a class="reference internal" href="#models-mmprojget">models.mmprojGet()</a> downloads the
+projector that matches a catalog model.  The projector is
+loaded once and shared by every handle and thread using the
+same model and settings.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">imageTokens</span></code> - <strong>Experimental.</strong>  A <span class="green">Number</span>, how many tokens each image
+is encoded into.  Default <code class="docutils literal notranslate"><span class="pre">280</span></code>, the budget of the model’s
+reference implementation; vectors made with it agree most
+closely with that implementation’s.  <code class="docutils literal notranslate"><span class="pre">embeddinggemma-2</span></code>
+accepts <code class="docutils literal notranslate"><span class="pre">70</span></code> to <code class="docutils literal notranslate"><span class="pre">1120</span></code>: fewer tokens is faster and lets more
+images share one input, more keeps finer detail.  <code class="docutils literal notranslate"><span class="pre">0</span></code> lets
+the projector size each image from its resolution.  Only used
+with <code class="docutils literal notranslate"><span class="pre">mmproj</span></code>.</p>
+</li>
 </ul>
 <p>The legacy option names <code class="docutils literal notranslate"><span class="pre">nctx</span></code>, <code class="docutils literal notranslate"><span class="pre">ubatch</span></code>, <code class="docutils literal notranslate"><span class="pre">nthreads</span></code>
 and <code class="docutils literal notranslate"><span class="pre">nthreads_batch</span></code> are accepted as aliases for <code class="docutils literal notranslate"><span class="pre">nCtx</span></code>,
@@ -674,7 +755,9 @@ model’s trained maximum, capped at 8192 tokens.</p>
 several handles or rampart threads keeps a single copy of the
 weights in memory.  A handle that is copied to another
 <a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">rampart thread</span></a>
-transparently builds its own per-thread context on first use.</p>
+transparently builds its own per-thread context on first use, and
+that context is freed when the thread exits.  See <a class="reference internal" href="#threads-and-fork">Threads and
+fork()</a>.</p>
 <dl class="docutils">
 <dt>Note:</dt>
 <dd>The rampart-sql <code class="docutils literal notranslate"><span class="pre">embed()</span></code> SQL function runs this same
@@ -687,10 +770,16 @@ through JavaScript — see
 <a class="reference internal" href="rampart-sql.html#generating-embeddings"><span class="std std-ref">Generating embeddings</span></a>
 and the <a class="reference internal" href="sql-set.html#llamaembed"><span class="std std-ref">llamaEmbed</span></a> property.</dd>
 <dt>Return Value:</dt>
-<dd>An <span class="green">Object</span> (the embedding handle) with the functions
+<dd><p class="first">An <span class="green">Object</span> (the embedding handle) with the functions
 <a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a>, <a class="reference internal" href="#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a>,
-<a class="reference internal" href="#emb-embedtexttonumbers">emb.embedTextToNumbers()</a> and <a class="reference internal" href="#emb-destroy">emb.destroy()</a> documented
-below.</dd>
+<a class="reference internal" href="#emb-embedtexttonumbers">emb.embedTextToNumbers()</a>, <a class="reference internal" href="#emb-embedmediatonumbers">emb.embedMediaToNumbers()</a>
+(and its <code class="docutils literal notranslate"><span class="pre">Fp16Buf</span></code> / <code class="docutils literal notranslate"><span class="pre">Fp32Buf</span></code> forms) and <a class="reference internal" href="#emb-destroy">emb.destroy()</a>
+documented below.</p>
+<p class="last">A handle created with <code class="docutils literal notranslate"><span class="pre">mmproj</span></code> also has a <code class="docutils literal notranslate"><span class="pre">media</span></code> property,
+an <span class="green">Object</span> with <code class="docutils literal notranslate"><span class="pre">vision</span></code> and <code class="docutils literal notranslate"><span class="pre">audio</span></code>
+(<span class="green">Booleans</span>, what the projector can encode),
+<code class="docutils literal notranslate"><span class="pre">imageTokens</span></code> (<span class="green">Number</span>) and <code class="docutils literal notranslate"><span class="pre">gpu</span></code> (<span class="green">Boolean</span>).</p>
+</dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
@@ -788,14 +877,123 @@ a packed <span class="green">Buffer</span>.</p>
 </div>
 </div></blockquote>
 </div>
+<div class="section" id="emb-embedmediatonumbers">
+<h4>emb.embedMediaToNumbers()<a class="headerlink" href="#emb-embedmediatonumbers" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p><strong>Experimental.</strong>  Multimodal (image and audio) embedding is new in
+this release and under active development; its API and defaults may
+change.  It has so far been tested on Linux (CPU and CUDA).</p>
+<p>Embed images and/or audio — alone, or interleaved with text — into
+a single vector in the same space as the model’s text vectors, so an
+image can be compared directly against a text query, and vice
+versa.  Requires a handle created with the <a class="reference internal" href="#initembed">initEmbed</a> <code class="docutils literal notranslate"><span class="pre">mmproj</span></code>
+option.</p>
+<p><code class="docutils literal notranslate"><span class="pre">emb.embedMediaToFp16Buf()</span></code> and <code class="docutils literal notranslate"><span class="pre">emb.embedMediaToFp32Buf()</span></code> are
+the same function returning packed <span class="green">Buffers</span>, exactly as
+<a class="reference internal" href="#emb-embedtexttofp16buf">emb.embedTextToFp16Buf()</a> / <a class="reference internal" href="#emb-embedtexttofp32buf">emb.embedTextToFp32Buf()</a> do for
+text.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedMediaToNumbers</span><span class="p">({</span>
+    <span class="nx">text</span><span class="o">:</span>  <span class="nx">text</span><span class="p">,</span>         <span class="cm">/* optional */</span>
+    <span class="nx">image</span><span class="o">:</span> <span class="nx">image</span><span class="p">,</span>        <span class="cm">/* optional */</span>
+    <span class="nx">audio</span><span class="o">:</span> <span class="nx">audio</span>         <span class="cm">/* optional */</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">image</span></code> and <code class="docutils literal notranslate"><span class="pre">audio</span></code> are each a <span class="green">String</span> (the path to a
+file), a <span class="green">Buffer</span> (the file’s contents) or an
+<span class="green">Array</span> of those, freely mixed.</p>
+<ul class="simple">
+<li>Images: any format <a class="reference external" href="https://github.com/nothings/stb">stb_image</a> reads — JPEG, PNG, BMP,
+GIF, TGA, PSD, HDR, PNM.  WebP is not supported.</li>
+<li>Audio: WAV, MP3 or FLAC, at any sample rate and channel count;
+it is converted to the model’s rate (16 kHz mono for
+<code class="docutils literal notranslate"><span class="pre">embeddinggemma-2</span></code>).</li>
+</ul>
+<p>The kind of each item is detected from its contents, not its file
+name.  An audio file given under <code class="docutils literal notranslate"><span class="pre">image</span></code> (or the reverse) throws
+rather than being silently re-routed.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">text</span></code> is an optional <span class="green">String</span>.  To embed text and media
+together, mark where each item goes with the placeholders
+<code class="docutils literal notranslate"><span class="pre">&lt;|image|&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;|audio|&gt;</span></code>; they are filled in order from the
+<code class="docutils literal notranslate"><span class="pre">image</span></code> and <code class="docutils literal notranslate"><span class="pre">audio</span></code> lists, and their counts must match:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">emb</span><span class="p">.</span><span class="nx">embedMediaToNumbers</span><span class="p">({</span>
+    <span class="nx">text</span><span class="o">:</span>  <span class="s2">&quot;Waterproof running shoe &lt;|image|&gt; grip test on wet rock: &lt;|audio|&gt;&quot;</span><span class="p">,</span>
+    <span class="nx">image</span><span class="o">:</span> <span class="s2">&quot;shoe.jpg&quot;</span><span class="p">,</span>
+    <span class="nx">audio</span><span class="o">:</span> <span class="s2">&quot;squeak.wav&quot;</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">text</span></code>, the images are embedded, then the audio, as one
+input.  Text with no placeholders alongside media throws: omit
+<code class="docutils literal notranslate"><span class="pre">text</span></code> to embed the media alone.</p>
+</li>
+</ul>
+<p>The whole input — text and every image and audio clip — must fit in
+the model’s window (8192 tokens for <code class="docutils literal notranslate"><span class="pre">embeddinggemma-2</span></code>).  Unlike
+text, it is never chunked: an image cannot be split, and a
+multimodal input means one vector.  An input that does not fit throws
+with its token count and the limit.  For <code class="docutils literal notranslate"><span class="pre">embeddinggemma-2</span></code> an
+image costs <code class="docutils literal notranslate"><span class="pre">imageTokens</span></code> (280 by default) and audio about 25 tokens
+per second, so a single input holds about 29 images or 5 minutes of
+audio.</p>
+<p>Retrieval prompts (see <a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a>) apply to text
+only.  Embed a query as <code class="docutils literal notranslate"><span class="pre">emb.embedTextToNumbers(prompt</span> <span class="pre">+</span> <span class="pre">query)</span></code>
+and compare it with media vectors made <strong>without</strong> a prefix, as the
+model was trained.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd><p class="first">An <span class="green">Object</span> with:</p>
+<ul class="last simple">
+<li><code class="docutils literal notranslate"><span class="pre">avgVec</span></code> - The vector (an <span class="green">Array</span> of
+<span class="green">Numbers</span>, or a <span class="green">Buffer</span> from the <code class="docutils literal notranslate"><span class="pre">Fp16Buf</span></code> /
+<code class="docutils literal notranslate"><span class="pre">Fp32Buf</span></code> forms), L2-normalized.</li>
+<li><code class="docutils literal notranslate"><span class="pre">vecs</span></code> - An <span class="green">Array</span> holding that same vector, so code
+written for <a class="reference internal" href="#emb-embedtexttonumbers">emb.embedTextToNumbers()</a> results works unchanged.</li>
+<li><code class="docutils literal notranslate"><span class="pre">nTokens</span></code> - A <span class="green">Number</span>, the tokens the input used.</li>
+</ul>
+</dd>
+<dt>Note:</dt>
+<dd>Video is not yet supported.  Speed depends on the backend: on a
+GPU an image takes on the order of 0.1 seconds.  On a CPU it
+takes seconds, and like text embedding it uses 4 threads unless
+<code class="docutils literal notranslate"><span class="pre">threadsBatch</span></code> is set (see <a class="reference internal" href="#embeddefaults">embedDefaults</a>).</dd>
+</dl>
+<p>Example — search images with text:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">llamacpp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-llamacpp&quot;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">models</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">&quot;rampart-models&quot;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ggufGet</span><span class="p">(</span><span class="s2">&quot;embeddinggemma-2&quot;</span><span class="p">),</span>
+                             <span class="p">{</span><span class="nx">mmproj</span><span class="o">:</span> <span class="nx">models</span><span class="p">.</span><span class="nx">mmprojGet</span><span class="p">(</span><span class="s2">&quot;embeddinggemma-2&quot;</span><span class="p">)});</span>
+
+<span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;beach.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;city.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;forest.jpg&quot;</span><span class="p">];</span>
+<span class="kd">var</span> <span class="nx">vecs</span>  <span class="o">=</span> <span class="nx">files</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedMediaToNumbers</span><span class="p">({</span><span class="nx">image</span><span class="o">:</span> <span class="nx">f</span><span class="p">}).</span><span class="nx">avgVec</span><span class="p">;</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="nx">emb</span><span class="p">.</span><span class="nx">embedTextToNumbers</span><span class="p">(</span><span class="s2">&quot;task: search result | query: a walk in the woods&quot;</span><span class="p">).</span><span class="nx">avgVec</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">dot</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span> <span class="kd">var</span> <span class="nx">s</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">a</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="nx">s</span> <span class="o">+=</span> <span class="nx">a</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">*</span> <span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span> <span class="k">return</span> <span class="nx">s</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">best</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">vecs</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">dot</span><span class="p">(</span><span class="nx">q</span><span class="p">,</span> <span class="nx">vecs</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="nx">dot</span><span class="p">(</span><span class="nx">q</span><span class="p">,</span> <span class="nx">vecs</span><span class="p">[</span><span class="nx">best</span><span class="p">]))</span> <span class="nx">best</span> <span class="o">=</span> <span class="nx">i</span><span class="p">;</span>
+<span class="nx">printf</span><span class="p">(</span><span class="s2">&quot;%s\n&quot;</span><span class="p">,</span> <span class="nx">files</span><span class="p">[</span><span class="nx">best</span><span class="p">]);</span>    <span class="cm">/* forest.jpg */</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
 <div class="section" id="emb-destroy">
 <h4>emb.destroy()<a class="headerlink" href="#emb-destroy" title="Permalink to this headline">¶</a></h4>
 <blockquote>
-<div><p>Free the model context (and release the model weights if this
-was the last handle using them).  Using the handle after calling
-<code class="docutils literal notranslate"><span class="pre">destroy()</span></code> throws an error.  Handles are also freed
-automatically when garbage collected, but for large models it is
-good practice to free them deterministically.</p>
+<div><p>Free the model context (and release the model weights and any
+<code class="docutils literal notranslate"><span class="pre">mmproj</span></code> projector if this was the last handle using them).  Using
+the handle after calling <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> throws an error.  Handles are
+also freed automatically when garbage collected, but for large models
+it is good practice to free them deterministically.</p>
 <p>Usage:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">emb</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
 </pre></div>
@@ -1563,6 +1761,42 @@ call made afterwards will silently not apply to that model.</dd>
 generated by a build that predates it, and A/B measuring the
 difference on a particular machine.  For ordinary use, leave it
 at auto.</p>
+</div></blockquote>
+</div>
+<div class="section" id="threads-and-fork">
+<h3>Threads and fork()<a class="headerlink" href="#threads-and-fork" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><strong>Threads.</strong>  Handles from <a class="reference internal" href="#initembed">initEmbed</a> and <a class="reference internal" href="#initrerank">initRerank</a> may be
+copied into
+<a class="reference internal" href="rampart-thread.html#rampart-thread-functions"><span class="std std-ref">rampart threads</span></a>
+(passed to <code class="docutils literal notranslate"><span class="pre">thr.exec()</span></code>, or copied automatically into
+rampart-server worker threads).  The weights, and an <code class="docutils literal notranslate"><span class="pre">mmproj</span></code>
+projector, are shared; each thread builds its own context the first
+time it uses its copy.  That context is freed when the thread exits
+— or earlier, if that thread calls <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> on its copy.  A
+copy may outlive the handle it was copied from, but a thread that
+first uses its copy <em>after</em> the original was destroyed gets an error
+rather than a context on freed weights.  Text and media embedding
+behave the same in every case.  (An <a class="reference internal" href="#initgen">initGen</a> handle works
+differently: requests from every thread are served by its one
+dedicated thread.)</p>
+<p><strong>fork().</strong>  A forked child may keep using llama.cpp on the CPU: a
+handle created before the fork works in the child, and the child can
+load models of its own.  A GPU runtime (CUDA or Metal) does not
+survive a fork, so once a GPU backend has been initialized in a
+process, its forked children get an error instead of hanging or
+crashing:</p>
+<ul class="simple">
+<li>using a handle created before the fork throws, and</li>
+<li>loading any model in the child — <a class="reference internal" href="#initembed">initEmbed</a>, <a class="reference internal" href="#initrerank">initRerank</a>,
+<a class="reference internal" href="#initgen">initGen</a>, <a class="reference internal" href="#mediainfo">mediaInfo</a>, <a class="reference internal" href="#modelinfo">modelInfo</a> or the rampart-sql
+<code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> path — throws.</li>
+</ul>
+<p>To use a GPU in forked processes, fork <strong>before</strong> any model is
+loaded and load models in the children: with rampart-server, run
+in daemon mode and load models in <code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code>.  A process that
+has only <code class="docutils literal notranslate"><span class="pre">require()</span></code>d the module has not touched the GPU, so its
+children may load models normally.</p>
 </div></blockquote>
 </div>
 <div class="section" id="getlog">
@@ -3409,7 +3643,8 @@ single-line progress display.</p>
 text-generation, CLIP and OCR), each pinned to a specific repository
 revision.  Embedding entries also record the model’s vector dimension
 and its retrieval prompts, when it has them (see
-<a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a> below).  <code class="docutils literal notranslate"><span class="pre">models.list()</span></code> (or
+<a class="reference internal" href="#retrieval-prompt-sidecars">Retrieval prompt sidecars</a> below), and a multimodal model’s
+projector files (see <a class="reference internal" href="#models-mmprojget">models.mmprojGet()</a>).  <code class="docutils literal notranslate"><span class="pre">models.list()</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">--list</span></code> on the command line) shows them; it returns an
 <span class="green">Object</span> keyed by category, each value an <span class="green">Array</span> of the
 model names in that category.  The catalog comes in two halves — one
@@ -3513,6 +3748,41 @@ configuration from its directory, so it feeds them (and the
 reads as the engine it feeds:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">emb</span>  <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span> <span class="nx">models</span><span class="p">.</span><span class="nx">ggufGet</span><span class="p">(</span><span class="s2">&quot;bge-m3&quot;</span><span class="p">)</span> <span class="p">);</span>
 <span class="kd">var</span> <span class="nx">oemb</span> <span class="o">=</span> <span class="nx">onnx</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span>     <span class="nx">models</span><span class="p">.</span><span class="nx">onnxGet</span><span class="p">(</span><span class="s2">&quot;bge-m3&quot;</span><span class="p">)</span> <span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="models-mmprojget">
+<h3>models.mmprojGet()<a class="headerlink" href="#models-mmprojget" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p><strong>Experimental.</strong>  Multimodal (image and audio) embedding is new in
+this release and under active development; its API and defaults may
+change.  It has so far been tested on Linux (CPU and CUDA).</p>
+<p>Fetch a multimodal model’s projector (<code class="docutils literal notranslate"><span class="pre">mmproj</span></code> file) — the image
+and audio encoders the model loads beside its text weights, passed
+to <a class="reference internal" href="#initembed">initEmbed</a> as the <code class="docutils literal notranslate"><span class="pre">mmproj</span></code> option.  Only catalog entries that
+record a projector have one (<code class="docutils literal notranslate"><span class="pre">embeddinggemma-2</span></code>); other names
+throw.</p>
+<p>Usage:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">models</span><span class="p">.</span><span class="nx">mmprojGet</span><span class="p">(</span><span class="nx">name</span><span class="p">[,</span> <span class="nx">options</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">options</span></code> are those of <a class="reference internal" href="#models-get">models.get()</a>.  <code class="docutils literal notranslate"><span class="pre">quant</span></code> picks the
+projector’s own precision, <code class="docutils literal notranslate"><span class="pre">&quot;F16&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;BF16&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;Q8_0&quot;</span></code>, and
+is independent of the text model’s quant.  The default is <code class="docutils literal notranslate"><span class="pre">&quot;F16&quot;</span></code>:
+a projector is small next to its accuracy cost, and the
+full-precision one matches the reference implementation most closely.
+The file is saved as <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;-&lt;file&gt;</span></code> (e.g.
+<code class="docutils literal notranslate"><span class="pre">embeddinggemma-2-mmproj-F16.gguf</span></code>), because every repository names
+its projector <code class="docutils literal notranslate"><span class="pre">mmproj-F16.gguf</span></code> and two models’ projectors would
+otherwise overwrite each other.</p>
+<dl class="docutils">
+<dt>Return Value:</dt>
+<dd>A <span class="green">String</span>, the local path, or <code class="docutils literal notranslate"><span class="pre">null</span></code> when a <code class="docutils literal notranslate"><span class="pre">confirm</span></code>
+callback declines the download.</dd>
+</dl>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">emb</span> <span class="o">=</span> <span class="nx">llamacpp</span><span class="p">.</span><span class="nx">initEmbed</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">ggufGet</span><span class="p">(</span><span class="s2">&quot;embeddinggemma-2&quot;</span><span class="p">),</span>
+                             <span class="p">{</span><span class="nx">mmproj</span><span class="o">:</span> <span class="nx">models</span><span class="p">.</span><span class="nx">mmprojGet</span><span class="p">(</span><span class="s2">&quot;embeddinggemma-2&quot;</span><span class="p">)});</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -3939,7 +4209,7 @@ better final ordering.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.1',
+            VERSION:'0.7.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
