@@ -1,6 +1,10 @@
 var Sql=require("rampart-sql");
 
-var db=process.scriptPath + '/data/docs/db';
+/* As a server module, find the database relative to this script
+   (apps/docs/ -> data/docs/db), as build_db() does from the command line.
+   process.scriptPath is the directory of the server's config, which need not
+   be the directory that holds apps/ and data/.                          */
+var db = (module && module.path ? module.path + '/../..' : process.scriptPath) + '/data/docs/db';
 
 var sql;
 
@@ -673,6 +677,7 @@ function build_db() {
     sql = new Sql.init(dbpath,true);
 
     var trypaths = [
+        process.scriptPath + "/../../docs/html", //web_server/ide/docs/html in the rampart source tree
         "../../../build/html", //relative to github dirs
         "/usr/local/src/rampart_docs/build/html" //absolute, if script moved
     ];
