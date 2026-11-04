@@ -810,8 +810,8 @@ process and shared by all worker threads.
 
 The same trick is used to launch ``texislockd`` (the SQL / vector-index
 lock daemon) when needed: the bundled binary is extracted, ``exec``\ed
-with a self-unlink flag and an idle-timeout flag, and removes its own
-on-disk file once running.
+with a self-unlink flag, and removes its own on-disk file once running.
+Like any ``texislockd``, it exits after 60 seconds with no connections.
 
 What Is Not Supported
 ~~~~~~~~~~~~~~~~~~~~~

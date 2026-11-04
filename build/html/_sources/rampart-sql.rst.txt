@@ -335,7 +335,8 @@ parameters, an optional :green:`Object` of options and an optional callback
 |statement     |:green:`String`   | The sql statement                                      |
 +--------------+------------------+--------------------------------------------------------+
 |options       |:green:`Object`   | Options (skipRows, maxRows, returnType, includeCounts  |
-|              |                  | returnRows and arg) *as described below*               |
+|              |                  | returnRows, withId, rawVectors and arg) *as described* |
+|              |                  | *below*                                                |
 +--------------+------------------+--------------------------------------------------------+
 |sql_parameters|:green:`Array`    | ``?`` substitution parameters                          |
 +              +------------------+--------------------------------------------------------+
@@ -435,6 +436,42 @@ Options:
      function as ``{returnType: "object"}`` above.  If set ``false``,
      performs the same function as ``{returnType: "novars"}`` above.  This
      If both are present, the ``returnType`` setting takes precedence.
+
+   * ``withId`` (:green:`Boolean`): for ``insert``, ``update`` and
+     ``delete`` statements, include the :ref:`$recid <recid-column>` of
+     each affected row, as a :green:`Number`.  If rows are also returned
+     (``returnRows`` or ``returnType`` above), ``$recid`` is added to each
+     row as its last column; otherwise each member of ``rows`` is just
+     ``{"$recid": n}``.  For an ``update``, it is the row's location
+     after the update.  For a ``delete``, it is where the row was, which
+     no longer finds anything.  It has no effect on ``select``
+     statements; select ``$recid`` as a column instead.
+
+     .. code-block:: javascript
+
+        var res = sql.exec("insert into notes values(counter, ?);",
+                           ["first note"], {withId: true});
+        /* res.rows: [ {"$recid": 7046} ] */
+
+        var row = sql.one("select * from notes where $recid = ?;",
+                          [res.rows[0]["$recid"]]);
+
+   * ``rawVectors`` (:green:`Boolean`): if ``true``, vector columns
+     (``varvecF16``, ``varvecF32``, etc.) are returned as a plain
+     :green:`Buffer` of the raw cells instead of a ``rampart.vector``
+     object.  The :green:`Buffer` does not record its element type, so it
+     is meant for the
+     :ref:`raw vector functions <rampart-vector:Raw Vector Distance Function>`,
+     which take the type as an argument, or for passing the bytes on
+     unchanged.  A value made by ``chunkembed()`` loses its chunk spans in
+     this form.  Default is ``false``.
+
+     .. code-block:: javascript
+
+        var res = sql.exec("select Vec from docs;", {rawVectors: true});
+        /* res.rows[0].Vec is a Buffer: 2 bytes per cell for varvecF16 */
+        var score = rampart.vector.raw.distance(queryF16, res.rows[0].Vec,
+                                                'dot', 'f16');
 
    * ``includeCounts`` (:green:`Boolean`): whether to include count
      information in the return :green:`Object`.  Default is ``false``.  The
@@ -1479,8 +1516,10 @@ Binary and blob
      - Variable-length binary; N is a typical-size hint, not a limit.
    * - ``blob``
      - Binary Large Object stored out-of-line; for large text, images, audio.
+       Selected as text.
    * - ``blobz``
-     - Compressed BLOB variant.
+     - Compressed BLOB variant, selected as text.  See
+       :ref:`blobzCompressLevel <sql-set:blobzCompressLevel>`.
    * - ``indirect``
      - Stores a filename; the actual data lives outside the database.
 
@@ -1574,7 +1613,48 @@ Identifier and special
    * - ``counter``
      - 8-byte unique row identifier combining a timestamp and a sequence.
    * - ``recid``
-     - Internal row identifier.
+     - Internal row identifier.  See ``$recid`` below.
+
+.. _recid-column:
+
+The ``$recid`` column
+'''''''''''''''''''''
+
+Every table has a ``$recid`` column that is not declared and not
+stored: it is the row's location, a byte offset into the table's file.
+Selected, it is returned as a :green:`Number`:
+
+.. code-block:: javascript
+
+    var res = sql.exec("select $recid, Name from employees;");
+    /* res.rows: [ {"$recid": 4546, "Name": "Ann"}, ... ] */
+
+A row can be fetched by its ``$recid`` with ``where $recid = ?``, or
+several at once with ``IN`` and :ref:`Sql.list() <sqllist>`.  Texis goes
+directly to that location rather than scanning the table, so the
+lookup costs the same no matter how large the table is.  It can be
+combined with other conditions, which still apply:
+
+.. code-block:: javascript
+
+    var row  = sql.one("select * from employees where $recid = ?;", [4546]);
+
+    var rows = sql.exec("select * from employees where $recid in (?);",
+                        [Sql.list([4546, 4596, 4646])]).rows;
+
+A number that is not the location of a row matches nothing; no error
+is raised.  The ``$recid`` of rows written by ``insert``, ``update`` or
+``delete`` can be obtained with the :ref:`withId <execopts>` option of
+``exec()``.
+
+A ``$recid`` is **not a permanent key**.  It changes when an
+``update`` makes a row too large for its current space and Texis moves
+it.  When a row is moved or deleted, its old space is freed and a later
+``insert`` may reuse it, at which point the old ``$recid`` finds the
+*new* row, with no indication that it is a different one.  Use a
+``$recid`` soon after obtaining it, e.g. to return to a row just
+inserted or updated, and store a ``counter`` or other unique column for
+references that must last.
 
 Vector
 ~~~~~~
@@ -3099,7 +3179,8 @@ Chunked documents (multi-vector rows)
 texts, but a long document's meaning gets averaged away.
 :ref:`chunkembed() <sql-server-funcs:chunkembed>` instead has the
 embedding engine split the document into chunks (structure-aware:
-paragraph boundaries first, then the model's token window) and returns
+paragraph boundaries first, then sentences, then word-boundary windows
+for anything still too large for the model's token window) and returns
 **all** of the chunk vectors concatenated — a ``k × dim``-cell value
 stored in the ordinary ``varvec*`` column types.  No new column type, no
 separate chunk table: one document, one row.

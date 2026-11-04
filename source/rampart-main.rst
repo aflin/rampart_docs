@@ -1670,6 +1670,36 @@ getter or setter, so omitting it matters only for accessor properties.
 ``Reflect.has()``, ``Reflect.deleteProperty()`` and ``Reflect.ownKeys()``
 take no ``receiver`` and are unaffected.
 
+BigInt
+""""""
+
+Rampart supports the ES2020 ``BigInt`` type for arbitrarily large integers,
+built into the JavaScript engine.  This includes ``123n`` literals,
+``typeof x === "bigint"``, the ``BigInt()`` function, ``BigInt.asIntN()`` and
+``BigInt.asUintN()``, ``toString(radix)``, the arithmetic, bitwise and
+comparison operators, ``BigInt64Array`` / ``BigUint64Array``, and
+``DataView``'s ``getBigInt64()`` / ``setBigInt64()`` / ``getBigUint64()`` /
+``setBigUint64()``.  No transpiler is needed.
+
+.. code-block:: javascript
+
+   var big = 2n ** 100n;
+   console.log(big);                      /* 1267650600228229401496703205376 */
+   console.log(big.toString(16));         /* 10000000000000000000000000 */
+   console.log(BigInt("0x1f") + 1n);      /* 32 */
+   console.log(10n / 3n);                 /* 3 -- division truncates */
+
+As in the standard, ``BigInt`` and :green:`Number` values cannot be mixed in
+arithmetic (``1n + 1`` throws a ``TypeError``) and ``JSON.stringify()`` throws
+on a ``BigInt``.  Convert explicitly with ``Number(x)``, ``BigInt(n)`` or
+``String(x)``.
+
+``BigInt64Array`` and ``BigUint64Array`` are correct but slower than the
+other typed arrays.
+
+The older ``JSBI`` functions in ``rampart-crypto`` are deprecated in favor of
+the native ``BigInt``.  See :ref:`BigInt in rampart-crypto <rampart-crypto:BigInt>`.
+
 WHATWG / W3C Web Platform APIs (experimental)
 """""""""""""""""""""""""""""""""""""""""""""
 
@@ -1706,6 +1736,22 @@ All eight ECMA-402 constructors are available once loaded:
 ``Segmenter``, ``DurationFormat``, plus ``Intl.getCanonicalLocales``
 and ``Intl.supportedValuesOf``.  Behaves per
 `MDN's Intl reference <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl>`_.
+
+``Date.prototype.toLocaleString()``, ``toLocaleDateString()``,
+``toLocaleTimeString()``, ``Number.prototype.toLocaleString()`` and
+``String.prototype.localeCompare()`` use ``Intl`` when given a locale or
+options, loading it on first use:
+
+.. code-block:: javascript
+
+   new Date(2026, 9, 22).toLocaleDateString("en-US", { weekday: "long", year: "numeric",
+                                                      month: "long", day: "numeric" });
+   /* "Thursday, October 22, 2026" */
+   (1234567.5).toLocaleString("de-DE");      /* "1.234.567,5" */
+
+Called with no arguments, they return Rampart's default format and do not
+load ``Intl``.  If ``rampart-intl`` is not installed, the locale and options
+are ignored and the default format is returned.
 
 Other Globals
 """""""""""""

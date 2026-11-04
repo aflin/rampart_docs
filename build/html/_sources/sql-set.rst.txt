@@ -368,6 +368,18 @@ stringCompareMode/textSearchMode parameters
        details.
 
 
+blobzCompressLevel
+""""""""""""""""""
+    The gzip compression level for new ``blobz`` writes, from ``0`` (stored
+    uncompressed) to ``9`` (smallest), or ``-1`` for the zlib default,
+    which is level 6.  The default is ``-1``.
+
+    It only affects rows written while it is set, and reading needs no
+    setting, so a table can hold rows written at different levels.  Each
+    value is compressed on its own, so higher levels gain little on short
+    documents: on a Wikipedia table level 9 saved 0.02% over the default.
+    Lower levels make bulk loads cheaper at a real cost in size.
+
 btreeCacheSize
 """"""""""""""
     Index pages are cached in memory while the index is used. The size
@@ -1887,7 +1899,7 @@ onnxEmbed
     descriptions): ``split`` (``'auto'`` | ``'window'``),
     ``minTokens``, ``packParagraphs``, and ``sentenceSplit``
     (sentence-boundary packing of oversized paragraphs; multi-script,
-    default ``false``).  These change ``chunkembed()``'s chunk
+    default ``true``).  These change ``chunkembed()``'s chunk
     boundaries: a table's build settings and any HEADERLESS serving
     must agree — values written by current ``chunkembed()`` carry
     their spans in-band and don't depend on this agreement.

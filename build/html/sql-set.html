@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Server Properties &mdash; Rampart 0.7.2 documentation</title>
+  <title>Server Properties &mdash; Rampart 0.7.5 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Rampart 0.7.2 documentation" href="index.html"/>
+    <link rel="top" title="Rampart 0.7.5 documentation" href="index.html"/>
         <link rel="up" title="The rampart-sql module" href="sqltoc.html"/>
         <link rel="next" title="The rampart-sql Command Line Utilities" href="sql-utils.html"/>
         <link rel="prev" title="Server Functions" href="sql-server-funcs.html"/> 
@@ -106,6 +106,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#textsearchmode">textSearchMode</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stringcomparemode">stringCompareMode</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stringcomparemode-textsearchmode-parameters">stringCompareMode/textSearchMode parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blobzcompresslevel">blobzCompressLevel</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#btreecachesize">btreeCacheSize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ramrows">ramRows</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ramlimit">ramLimit</a></li>
@@ -641,6 +642,19 @@ initial creation, not the current value. However, when multiple Metamorph
 indexes exist on the same fields, at search time the Texis optimizer will
 attempt to use the index whose (creation-time) textsearchmode is closest to
 the current value.</p>
+</div></blockquote>
+</div>
+<div class="section" id="blobzcompresslevel">
+<h3>blobzCompressLevel<a class="headerlink" href="#blobzcompresslevel" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The gzip compression level for new <code class="docutils literal notranslate"><span class="pre">blobz</span></code> writes, from <code class="docutils literal notranslate"><span class="pre">0</span></code> (stored
+uncompressed) to <code class="docutils literal notranslate"><span class="pre">9</span></code> (smallest), or <code class="docutils literal notranslate"><span class="pre">-1</span></code> for the zlib default,
+which is level 6.  The default is <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+<p>It only affects rows written while it is set, and reading needs no
+setting, so a table can hold rows written at different levels.  Each
+value is compressed on its own, so higher levels gain little on short
+documents: on a Wikipedia table level 9 saved 0.02% over the default.
+Lower levels make bulk loads cheaper at a real cost in size.</p>
 </div></blockquote>
 </div>
 <div class="section" id="btreecachesize">
@@ -2032,7 +2046,7 @@ stack.</p>
 descriptions): <code class="docutils literal notranslate"><span class="pre">split</span></code> (<code class="docutils literal notranslate"><span class="pre">'auto'</span></code> | <code class="docutils literal notranslate"><span class="pre">'window'</span></code>),
 <code class="docutils literal notranslate"><span class="pre">minTokens</span></code>, <code class="docutils literal notranslate"><span class="pre">packParagraphs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sentenceSplit</span></code>
 (sentence-boundary packing of oversized paragraphs; multi-script,
-default <code class="docutils literal notranslate"><span class="pre">false</span></code>).  These change <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>’s chunk
+default <code class="docutils literal notranslate"><span class="pre">true</span></code>).  These change <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code>’s chunk
 boundaries: a table’s build settings and any HEADERLESS serving
 must agree — values written by current <code class="docutils literal notranslate"><span class="pre">chunkembed()</span></code> carry
 their spans in-band and don’t depend on this agreement.</p>
@@ -3379,7 +3393,7 @@ even when they happen to hold <code class="docutils literal notranslate"><span c
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.2',
+            VERSION:'0.7.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
