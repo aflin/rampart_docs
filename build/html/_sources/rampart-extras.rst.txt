@@ -272,7 +272,7 @@ as such:
     --appsRoot           String. Root directory from which to serve apps
     --wsappsRoot         String. Root directory from which to serve wsapps
     --dataRoot           String. Setting for user scripts
-    --logRoot            String. Log directory
+    --logRoot            String. Log directory (created if missing)
     --accessLog          String. Log file name. "" for stdout
     --errorLog           String. error log file name. "" for stderr
     --irohProxy          Bool.   Start the iroh webproxy server for this server

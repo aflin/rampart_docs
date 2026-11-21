@@ -11,7 +11,7 @@ License
 ~~~~~~~
 
 Use of the ``rampart-sql`` module and the Texis library is governed by the
-`Rampart Source Available License <https://github.com/aflin/rampart/blob/main/LICENSE-rsal.txt>`_\ .
+`Texis Source Available License (TSAL-1.0) <https://github.com/aflin/rampart/blob/main/LICENSE-tsal.txt>`_\ .
 
 Vector Index Acknowledgment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,7 +106,8 @@ The ``connection`` constructor function takes a :green:`String`, the path to the
 and an optional :green:`Boolean` as parameters. It returns an :green:`Object` representing a
 new connection to the specified database.  The return :green:`Object` includes the
 following :green:`Functions`: ``exec()``, ``one()``, ``set()``,
-``reset()``, ``importCsvFile()``, ``importCsv`` and ``close()``.
+``reset()``, ``importCsvFile()``, ``importCsv()``, ``importJsonlFile()``,
+``importJsonl()`` and ``close()``.
 
 Usage:
 
@@ -171,6 +172,8 @@ Return Value:
         addTable:        {_func:true},
         importCsv:       {_func:true},
         importCsvFile:   {_func:true},
+        importJsonl:     {_func:true},
+        importJsonlFile: {_func:true},
         scheduleUpdate:  {_func:true},
         scheduleRebuild: {_func:true},
         errMsg:          "",
@@ -1239,6 +1242,16 @@ options:
       * ``callbackStep`` - :green:`Number` - Where number is ``n``, execute
         callback, if provided, for every nth row imported.
 
+      * ``lockTable`` - :green:`Boolean` (default ``false``): Lock the table
+        once for the whole import instead of once per row.  This makes the
+        import much faster, but other processes and threads can neither
+        read nor write the table until it finishes, and permission changes
+        made meanwhile are not seen by it.  ``callback`` may still use the
+        table.  The locks are released however the import ends, including
+        when ``callback`` returns ``false`` or throws.  If the lock is lost
+        part way (the lock server was restarted), the import stops with an
+        error.
+
       * ``stripLeadingWhite`` -  :green:`Boolean` (default ``true``):
         Remove leading whitespace characters from cells.
 
@@ -1416,6 +1429,137 @@ Example:
    1 ["marketing",20,"Dell XPS 15",1150,23000,350,"Pens",0.5,175,23175]
    2 ["logistics",30,"iPad Air",300,9000,100,"Duktape",1.5,150,9150]
    */
+
+importJsonlFile()
+'''''''''''''''''
+
+The importJsonlFile :green:`Function` imports a JSON Lines file (one JSON
+:green:`Object` per line) into a table.  The table must already exist.  The
+file is read a piece at a time, so its size is not limited by memory.
+
+Usage:
+
+.. code-block:: javascript
+
+    var res = sql.importJsonlFile(filename, options [, callback]);
+
++--------------+------------------+---------------------------------------------------+
+|Argument      |Type              |Description                                        |
++==============+==================+===================================================+
+|filename      |:green:`String`   | The JSON Lines file to import                     |
++--------------+------------------+---------------------------------------------------+
+|options       |:green:`Object`   | Options, as described below                       |
++--------------+------------------+---------------------------------------------------+
+|callback      |:green:`Function` | a function to monitor the progress of the import. |
++--------------+------------------+---------------------------------------------------+
+
+How a line becomes a row:
+    Each key of the line's :green:`Object` goes to the table column of the
+    same name.  A value is stored exactly as it would be if passed to
+    `exec()`_ as a parameter: a :green:`Number` or :green:`String` as
+    itself, a :green:`Boolean` as ``"true"`` or ``"false"``, and a nested
+    :green:`Object` or :green:`Array` as its JSON text.  A column with no
+    key in the line (or a ``null`` value) gets ``""`` if it is a text
+    column and ``0`` otherwise.  Keys that match no column are ignored.  A
+    ``counter`` column always gets a new value from the database.  Blank
+    lines are ignored.
+
+options:
+    The ``options`` :green:`Object` may contain any of the following.
+
+      * ``tableName`` - :green:`String` (no default; **required**) -
+        The name of the table into which the rows will be inserted.
+
+      * ``map`` - :green:`Object` - JSON key names and the column each one
+        goes to, for keys named differently from their columns.  Example:
+        ``{title: "Title", body: "Doc"}``.  Keys not listed still go to the
+        column of the same name.
+
+      * ``rowFunc`` - :green:`Function` - Called for every line as
+        ``rowFunc(object, lineNumber)`` before it is inserted, to change or
+        filter it.  Return an :green:`Object` to insert that instead;
+        return ``false`` to skip the line; return nothing to insert
+        ``object`` as the function left it.  ``lineNumber`` starts at
+        ``1`` and counts blank lines.
+
+      * ``skipInvalid`` - :green:`Boolean` (default ``false``) - A line that
+        is not a JSON :green:`Object` normally stops the import with an
+        error naming the line.  If ``true``, such lines are skipped and
+        counted instead.
+
+      * ``lockTable`` - :green:`Boolean` (default ``false``) - Lock the
+        table once for the whole import instead of once per row, as
+        described for `importCsvFile()`_.
+
+      * ``callbackStep`` - :green:`Number` (default ``1``) - Where number is
+        ``n``, execute ``callback`` after every nth row imported.
+
+callback:
+   A :green:`Function` called as ``callback(rowsImported, bytesRead,
+   fileSize)`` after every ``callbackStep`` rows, and once more at the end.
+   ``bytesRead / fileSize`` is the fraction of the file done.  Return
+   ``false`` to stop the import.
+
+Return Value:
+   An :green:`Object`: ``{imported: n, skipped: n, invalid: n}`` -- the rows
+   inserted, the lines ``rowFunc`` skipped, and the lines skipped because of
+   ``skipInvalid``.
+
+If the import stops with an error -- an invalid line, an error thrown by
+``rowFunc`` or ``callback``, or a row the database refuses -- the rows
+before that line stay in the table.
+
+Example:
+
+.. code-block:: javascript
+
+   var Sql = require("rampart-sql");
+   var sql = new Sql.connection("/path/mytestdb", true);
+
+   /* articles.jsonl:
+   {"id": 1, "title": "First",  "body": "<p>Hello</p>", "tags": ["a", "b"]}
+   {"id": 2, "title": "Draft",  "body": "<p>Not yet</p>", "draft": true}
+   {"id": 3, "title": "Third",  "body": "<p>Goodbye</p>"}
+   */
+
+   sql.exec("create table articles (Id int, Title varchar(32), Doc varchar(64), " +
+            "Tags varchar(32), Len int);");
+
+   var res = sql.importJsonlFile("articles.jsonl",
+       {
+           tableName: "articles",
+           map:       { id: "Id", title: "Title", body: "Doc", tags: "Tags" },
+           lockTable: true,
+           rowFunc:   function (o, lineNumber) {
+               if (o.draft) return false;              /* skip this line   */
+               o.body = o.body.replace(/<[^>]+>/g, ""); /* strip the tags   */
+               o.Len = o.body.length;                  /* fill a column    */
+           }
+       },
+       function (rows, bytes, total) {
+           console.log(rows + " rows, " + Math.round(100 * bytes / total) + "%");
+       }
+   );
+
+   console.log(res);
+   sql.exec("select * from articles", {returnType: "array"}, function (row) {
+       console.log(row);
+   });
+
+   /* expected output:
+   1 rows, 37%
+   2 rows, 100%
+   {imported:2,skipped:1,invalid:0}
+   [1,"First","Hello","[\"a\", \"b\"]",5]
+   [3,"Third","Goodbye","",7]
+   */
+
+importJsonl()
+'''''''''''''
+
+Same as `importJsonlFile()`_ except instead of a file name, a :green:`String`
+or :green:`Buffer` containing the JSON Lines text is passed as a parameter.
+The callback's ``fileSize`` is then the length of that text.
 
 addTable()
 ''''''''''
