@@ -1833,22 +1833,43 @@ are ignored and the default format is returned.</p>
 </div>
 <div class="section" id="other-globals">
 <h3>Other Globals<a class="headerlink" href="#other-globals" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">globalThis</span></code> and <code class="docutils literal notranslate"><span class="pre">global</span></code> — both reference the global object
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">globalThis</span></code> and <code class="docutils literal notranslate"><span class="pre">global</span></code> — both reference the global object
 (Rampart adds the node-style <code class="docutils literal notranslate"><span class="pre">global</span></code> alias alongside
-<code class="docutils literal notranslate"><span class="pre">globalThis</span></code>).</li>
-<li><code class="docutils literal notranslate"><span class="pre">JSON.parse(text[,</span> <span class="pre">reviver])</span></code> — extended to accept a
+<code class="docutils literal notranslate"><span class="pre">globalThis</span></code>).</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">JSON.parse(text[,</span> <span class="pre">reviver])</span></code> — extended to accept a
 <span class="green">Buffer</span> as <code class="docutils literal notranslate"><span class="pre">text</span></code>.  When <code class="docutils literal notranslate"><span class="pre">reviver</span> <span class="pre">===</span> <span class="pre">true</span></code>, walks the
 parsed tree and resolves <code class="docutils literal notranslate"><span class="pre">{&quot;_cyclic_ref&quot;:&quot;$.path&quot;}</span></code> placeholders
 produced by <code class="docutils literal notranslate"><span class="pre">rampart.utils.sprintf(&quot;%!J&quot;,</span> <span class="pre">obj)</span></code> back into shared
 references, restoring cyclic graphs.  This is a <strong>rampart-specific</strong>
-reviver convention; passing a function reviver behaves per spec.</li>
-<li><code class="docutils literal notranslate"><span class="pre">eval</span></code> — when the transpiler is in effect (<code class="docutils literal notranslate"><span class="pre">-t</span></code> or
-<code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>), the source is lowered before evaluation.
-Otherwise behaves as standard ES5 <code class="docutils literal notranslate"><span class="pre">eval</span></code>.</li>
-<li><code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Function(...)</span></code> — bodies are run through the transpiler so
+reviver convention; passing a function reviver behaves per spec.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">eval</span></code> — always evaluates in the <strong>global scope</strong>, like an indirect
+<code class="docutils literal notranslate"><span class="pre">eval</span></code> in standard JavaScript.  The code cannot read or change the
+local variables of the function that calls <code class="docutils literal notranslate"><span class="pre">eval</span></code>, a <code class="docutils literal notranslate"><span class="pre">var</span></code> it
+declares becomes a global, and <code class="docutils literal notranslate"><span class="pre">this</span></code> is the global object.  The
+value of the last expression is returned.  When the transpiler is in
+effect (<code class="docutils literal notranslate"><span class="pre">-t</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;use</span> <span class="pre">transpiler&quot;</span></code>), the source is lowered before
+evaluation, so ES2015+ syntax may be used.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">g</span> <span class="o">=</span> <span class="s2">&quot;global&quot;</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">f</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">loc</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span><span class="p">,</span> <span class="nx">g</span> <span class="o">=</span> <span class="s2">&quot;shadow&quot;</span><span class="p">;</span>
+
+    <span class="nb">eval</span><span class="p">(</span><span class="s2">&quot;g&quot;</span><span class="p">);</span>                 <span class="cm">/* &quot;global&quot;, not &quot;shadow&quot;            */</span>
+    <span class="nb">eval</span><span class="p">(</span><span class="s2">&quot;var made = 5;&quot;</span><span class="p">);</span>     <span class="cm">/* creates the global variable made  */</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="s2">&quot;loc&quot;</span><span class="p">);</span>        <span class="cm">/* throws ReferenceError             */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To give evaluated code access to a local value, pass it in: build a
+function with <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Function(&quot;x&quot;,</span> <span class="pre">code)</span></code> and call it with the value.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">Function(...)</span></code> — bodies are run through the transpiler so
 ES2015+ syntax (classes, <code class="docutils literal notranslate"><span class="pre">async</span></code>, generators) compiles inside
-dynamically-built functions.</li>
+dynamically-built functions.</p>
+</li>
 </ul>
 </div>
 <div class="section" id="settimeout">

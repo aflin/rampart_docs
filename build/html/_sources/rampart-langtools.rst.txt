@@ -754,7 +754,8 @@ emb.destroy()
 ^^^^^^^^^^^^^
 
     Free the model context (and release the model weights and any
-    ``mmproj`` projector if this was the last handle using them).  Using
+    ``mmproj`` projector if this was the last handle using them, not
+    counting copies that other threads have yet to use).  Using
     the handle after calling ``destroy()`` throws an error.  Handles are
     also freed automatically when garbage collected, but for large models
     it is good practice to free them deterministically.
@@ -1544,10 +1545,15 @@ Threads and fork()
     projector, are shared; each thread builds its own context the first
     time it uses its copy.  That context is freed when the thread exits
     — or earlier, if that thread calls ``destroy()`` on its copy.  A
-    copy may outlive the handle it was copied from, but a thread that
-    first uses its copy *after* the original was destroyed gets an error
-    rather than a context on freed weights.  Text and media embedding
-    behave the same in every case.  (An `initGen`_ handle works
+    copy may outlive the handle it was copied from:  each copy keeps the
+    weights loaded, so a handle made in one thread and passed on with
+    ``rampart.thread.put()`` works after the original was garbage
+    collected or its thread ended.  (A copy left on the thread clipboard
+    also keeps them loaded, until it is overwritten or removed with
+    ``rampart.thread.del()``.)  An explicit ``destroy()`` of the original
+    does release them:  a thread that first uses its copy *after* that
+    gets an error rather than a context on freed weights.  Text and media
+    embedding behave the same in every case.  (An `initGen`_ handle works
     differently: requests from every thread are served by its one
     dedicated thread.)
 
@@ -1555,14 +1561,18 @@ Threads and fork()
     handle created before the fork works in the child, and the child can
     load models of its own.  A GPU runtime (CUDA or Metal) does not
     survive a fork, so once a GPU backend has been initialized in a
-    process, its forked children get an error instead of hanging or
-    crashing:
+    process — by rampart-llamacpp or rampart-clip, and even if that
+    model load failed — its forked children get an error instead of
+    hanging or crashing:
 
     *  using a handle created before the fork throws, and
 
     *  loading any model in the child — `initEmbed`_\ , `initRerank`_\ ,
        `initGen`_\ , `mediaInfo`_\ , `modelInfo`_ or the rampart-sql
-       ``llamaEmbed`` path — throws.
+       ``llamaEmbed`` path, or rampart-clip's ``initEmbed`` — throws.
+
+    A Mac with no Metal device (most Intel virtual machines) runs on the
+    CPU and follows the CPU rules above.
 
     To use a GPU in forked processes, fork **before** any model is
     loaded and load models in the children: with rampart-server, run

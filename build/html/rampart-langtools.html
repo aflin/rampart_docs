@@ -1004,7 +1004,8 @@ takes seconds, and like text embedding it uses 4 threads unless
 <h4>emb.destroy()<a class="headerlink" href="#emb-destroy" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><p>Free the model context (and release the model weights and any
-<code class="docutils literal notranslate"><span class="pre">mmproj</span></code> projector if this was the last handle using them).  Using
+<code class="docutils literal notranslate"><span class="pre">mmproj</span></code> projector if this was the last handle using them, not
+counting copies that other threads have yet to use).  Using
 the handle after calling <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> throws an error.  Handles are
 also freed automatically when garbage collected, but for large models
 it is good practice to free them deterministically.</p>
@@ -1788,24 +1789,32 @@ rampart-server worker threads).  The weights, and an <code class="docutils liter
 projector, are shared; each thread builds its own context the first
 time it uses its copy.  That context is freed when the thread exits
 — or earlier, if that thread calls <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> on its copy.  A
-copy may outlive the handle it was copied from, but a thread that
-first uses its copy <em>after</em> the original was destroyed gets an error
-rather than a context on freed weights.  Text and media embedding
-behave the same in every case.  (An <a class="reference internal" href="#initgen">initGen</a> handle works
+copy may outlive the handle it was copied from:  each copy keeps the
+weights loaded, so a handle made in one thread and passed on with
+<code class="docutils literal notranslate"><span class="pre">rampart.thread.put()</span></code> works after the original was garbage
+collected or its thread ended.  (A copy left on the thread clipboard
+also keeps them loaded, until it is overwritten or removed with
+<code class="docutils literal notranslate"><span class="pre">rampart.thread.del()</span></code>.)  An explicit <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> of the original
+does release them:  a thread that first uses its copy <em>after</em> that
+gets an error rather than a context on freed weights.  Text and media
+embedding behave the same in every case.  (An <a class="reference internal" href="#initgen">initGen</a> handle works
 differently: requests from every thread are served by its one
 dedicated thread.)</p>
 <p><strong>fork().</strong>  A forked child may keep using llama.cpp on the CPU: a
 handle created before the fork works in the child, and the child can
 load models of its own.  A GPU runtime (CUDA or Metal) does not
 survive a fork, so once a GPU backend has been initialized in a
-process, its forked children get an error instead of hanging or
-crashing:</p>
+process — by rampart-llamacpp or rampart-clip, and even if that
+model load failed — its forked children get an error instead of
+hanging or crashing:</p>
 <ul class="simple">
 <li>using a handle created before the fork throws, and</li>
 <li>loading any model in the child — <a class="reference internal" href="#initembed">initEmbed</a>, <a class="reference internal" href="#initrerank">initRerank</a>,
 <a class="reference internal" href="#initgen">initGen</a>, <a class="reference internal" href="#mediainfo">mediaInfo</a>, <a class="reference internal" href="#modelinfo">modelInfo</a> or the rampart-sql
-<code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> path — throws.</li>
+<code class="docutils literal notranslate"><span class="pre">llamaEmbed</span></code> path, or rampart-clip’s <code class="docutils literal notranslate"><span class="pre">initEmbed</span></code> — throws.</li>
 </ul>
+<p>A Mac with no Metal device (most Intel virtual machines) runs on the
+CPU and follows the CPU rules above.</p>
 <p>To use a GPU in forked processes, fork <strong>before</strong> any model is
 loaded and load models in the children: with rampart-server, run
 in daemon mode and load models in <code class="docutils literal notranslate"><span class="pre">postForkFunc</span></code>.  A process that

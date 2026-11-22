@@ -1765,9 +1765,28 @@ Other Globals
   produced by ``rampart.utils.sprintf("%!J", obj)`` back into shared
   references, restoring cyclic graphs.  This is a **rampart-specific**
   reviver convention; passing a function reviver behaves per spec.
-* ``eval`` — when the transpiler is in effect (``-t`` or
-  ``"use transpiler"``), the source is lowered before evaluation.
-  Otherwise behaves as standard ES5 ``eval``.
+* ``eval`` — always evaluates in the **global scope**, like an indirect
+  ``eval`` in standard JavaScript.  The code cannot read or change the
+  local variables of the function that calls ``eval``, a ``var`` it
+  declares becomes a global, and ``this`` is the global object.  The
+  value of the last expression is returned.  When the transpiler is in
+  effect (``-t`` or ``"use transpiler"``), the source is lowered before
+  evaluation, so ES2015+ syntax may be used.
+
+  .. code-block:: javascript
+
+     var g = "global";
+
+     function f() {
+         var loc = "local", g = "shadow";
+
+         eval("g");                 /* "global", not "shadow"            */
+         eval("var made = 5;");     /* creates the global variable made  */
+         return eval("loc");        /* throws ReferenceError             */
+     }
+
+  To give evaluated code access to a local value, pass it in: build a
+  function with ``new Function("x", code)`` and call it with the value.
 * ``new Function(...)`` — bodies are run through the transpiler so
   ES2015+ syntax (classes, ``async``, generators) compiles inside
   dynamically-built functions.
